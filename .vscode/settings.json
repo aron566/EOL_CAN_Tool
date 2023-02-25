@@ -1,0 +1,25 @@
+{
+  "files.associations": {
+    "string": "cpp",
+    "xlocnum": "cpp",
+    "fstream": "cpp",
+    "system_error": "cpp",
+    "type_traits": "cpp",
+    "xtr1common": "cpp",
+    "xutility": "cpp",
+    "vector": "cpp",
+    "xstring": "cpp",
+    "compare": "cpp",
+    "memory": "cpp",
+    "tuple": "cpp",
+    "utility": "cpp",
+    "xmemory": "cpp",
+    "atomic": "cpp",
+    "ios": "cpp",
+    "list": "cpp",
+    "xhash": "cpp",
+    "xiosbase": "cpp",
+    "algorithm": "cpp",
+    "sstream": "cpp"
+  }
+}

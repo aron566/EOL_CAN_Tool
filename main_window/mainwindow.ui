@@ -1,0 +1,962 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_3">
+    <item row="0" column="0" colspan="6">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QGroupBox" name="device_groupBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="title">
+         <string>设备</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="3">
+          <widget class="QLabel" name="device_index_label">
+           <property name="text">
+            <string>设备索引：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="5">
+          <widget class="QLabel" name="channel_num_label">
+           <property name="text">
+            <string>通道：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="device_name_label">
+           <property name="text">
+            <string>设备：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QComboBox" name="device_index_comboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>3</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>4</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>5</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>6</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>7</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>8</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>9</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="6">
+          <widget class="QComboBox" name="channel_num_comboBox">
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="device_list_comboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCI5121</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCI9810</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCAN1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCAN2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCI9820</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CAN232</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCI5110</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANLITE</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_ISA9620</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_ISA5420</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PC104CAN</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANETUDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANETE</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_DNP9810</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCI9840</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PC104CAN2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCI9820I</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANETTCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIE_9220</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCI5010U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCAN_E_U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCAN_2E_U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCI5020U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_EG20T_CAN</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIE9221</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_WIFICAN_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_WIFICAN_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIe9120</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIe9110</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIe9140</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCAN_4E_U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANDTU_200UR</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANDTU_MINI</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCAN_8E_U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANREPLAY</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANDTU_NET</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANDTU_100UR</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIE_CANFD_100U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIE_CANFD_200U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIE_CANFD_400U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCANFD_200U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCANFD_100U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCANFD_MINI</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDCOM_100IE</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANSCOPE</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CLOUD</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANDTU_NET_400</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_200U_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_200U_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDWIFI_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDWIFI_100U_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDWIFI_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDWIFI_100U_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_400U_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_400U_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDBLUE_200U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_100U_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_100U_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_800U_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDNET_800U_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_USBCANFD_800U</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIE_CANFD_100U_EX</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIE_CANFD_400U_EX</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIE_CANFD_200U_MINI</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_PCIE_CANFD_200U_M2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDDTU_400_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDDTU_400_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDWIFI_200U_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDWIFI_200U_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDDTU_800ER_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDDTU_800ER_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDDTU_800EWGR_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDDTU_800EWGR_UDP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDDTU_600EWGR_TCP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ZCAN_CANFDDTU_600EWGR_UDP</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="1" column="0" colspan="6">
+     <widget class="QGroupBox" name="par_groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title">
+       <string>参数设置</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="bps_groupBox">
+         <property name="title">
+          <string>波特率</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="1" column="5">
+           <widget class="QLabel" name="bps_label">
+            <property name="text">
+             <string>波特率：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="6">
+           <widget class="QComboBox" name="bps_comboBox">
+            <item>
+             <property name="text">
+              <string>1Mbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>800Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>500Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>250Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>125Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>100Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>50Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>20Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>10Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>5Kbps</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QCheckBox" name="end_resistance_checkBox">
+            <property name="text">
+             <string>终端电阻使能</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QComboBox" name="data_bps_comboBox">
+            <item>
+             <property name="text">
+              <string>5Mbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>4Mbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2Mbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>1Mbps</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="arbitration_bps_comboBox">
+            <item>
+             <property name="text">
+              <string>1Mbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>800Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>500Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>250Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>125Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>100Kbps</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>50Kbps</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="arbitration_bps_label">
+            <property name="text">
+             <string>仲裁域波特率：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="data_bps_label">
+            <property name="text">
+             <string>数据域波特率：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5" colspan="2">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="mode_label">
+            <property name="text">
+             <string>模式：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="2">
+           <widget class="QComboBox" name="mode_comboBox">
+            <item>
+             <property name="text">
+              <string>正常</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>只听</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="7">
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="diy_bps_groupBox">
+         <property name="title">
+          <string>自定义波特率</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0" colspan="3">
+           <widget class="QLabel" name="diy_bps_label">
+            <property name="text">
+             <string>Tips：自定义波特率，使用ZCANPro目录下的baudcal计算</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="diy_bps_checkBox">
+            <property name="text">
+             <string>自定义波特率使能</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="diy_bps_set_label">
+            <property name="text">
+             <string>波特率：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="diy_bps_lineEdit"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="filter_par_groupBox">
+         <property name="title">
+          <string>滤波设置</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="0" column="0">
+           <widget class="QLabel" name="filter_mode_label">
+            <property name="text">
+             <string>滤波模式：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="filter_mode_comboBox">
+            <item>
+             <property name="text">
+              <string>双滤波</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>单滤波</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="verification_code_label">
+            <property name="text">
+             <string>验收码（0x）：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLineEdit" name="verification_code_lineEdit">
+            <property name="text">
+             <string>00000000</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLabel" name="mask_code_label">
+            <property name="text">
+             <string>屏蔽码（0x）：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <widget class="QLineEdit" name="mask_code_lineEdit">
+            <property name="text">
+             <string>FFFFFFFF</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QGroupBox" name="net_groupBox">
+         <property name="title">
+          <string>网络设置</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0">
+           <widget class="QLabel" name="role_label">
+            <property name="text">
+             <string>工作方：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="role_comboBox">
+            <item>
+             <property name="text">
+              <string>服务器</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>客户端</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="remote_ip_label">
+            <property name="text">
+             <string>服务器IP：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="remote_ip_lineEdit">
+            <property name="text">
+             <string>192.168.3.176</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="remote_port_label">
+            <property name="text">
+             <string>服务器端口：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLineEdit" name="remote_port_lineEdit">
+            <property name="text">
+             <string>8000</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QLabel" name="local_port_label">
+            <property name="text">
+             <string>客户端端口：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="5">
+           <widget class="QLineEdit" name="local_port_lineEdit">
+            <property name="text">
+             <string>1080</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QPushButton" name="open_device_pushButton">
+      <property name="text">
+       <string>打开设备</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="QPushButton" name="init_can_pushButton">
+      <property name="text">
+       <string>初始化CAN</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QPushButton" name="start_can_pushButton">
+      <property name="text">
+       <string>启动CAN</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QPushButton" name="reset_device_pushButton">
+      <property name="text">
+       <string>复位设备</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="4">
+     <widget class="QPushButton" name="close_device_pushButton">
+      <property name="text">
+       <string>关闭设备</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="5">
+     <widget class="QPushButton" name="more_pushButton">
+      <property name="text">
+       <string>更多</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
