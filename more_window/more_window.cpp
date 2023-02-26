@@ -145,3 +145,33 @@ void more_window::slot_timeout()
     can_driver_obj->send();
   }
 }
+
+void more_window::on_display_mask_lineEdit_textChanged(const QString &arg1)
+{
+  bool ok;
+  quint32 canid_mask = arg1.toUInt(&ok, 16);
+  if(ok)
+  {
+    can_driver_obj->set_msg_canid_mask(canid_mask, ui->mask_en_checkBox->isChecked());
+  }
+  else
+  {
+    can_driver_obj->set_msg_canid_mask(0xFFFF, ui->mask_en_checkBox->isChecked());
+  }
+}
+
+
+void more_window::on_mask_en_checkBox_clicked(bool checked)
+{
+  bool ok;
+  quint32 canid_mask = ui->display_mask_lineEdit->text().toUInt(&ok, 16);
+  if(ok)
+  {
+    can_driver_obj->set_msg_canid_mask(canid_mask, ui->mask_en_checkBox->isChecked());
+  }
+  else
+  {
+    can_driver_obj->set_msg_canid_mask(0xFFFF, ui->mask_en_checkBox->isChecked());
+  }
+}
+

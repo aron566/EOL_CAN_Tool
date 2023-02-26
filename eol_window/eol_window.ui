@@ -365,7 +365,11 @@
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="frame_lcdNumber"/>
+              <widget class="QLCDNumber" name="frame_lcdNumber">
+               <property name="digitCount">
+                <number>6</number>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -379,7 +383,11 @@
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="bytes_lcdNumber"/>
+              <widget class="QLCDNumber" name="bytes_lcdNumber">
+               <property name="digitCount">
+                <number>6</number>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>

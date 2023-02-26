@@ -110,6 +110,36 @@
          </layout>
         </item>
         <item>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QLabel" name="display_mask_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>显示CAN ID掩码(0x)：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="display_mask_lineEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>FFFF</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <widget class="QCheckBox" name="display_direction_checkBox_2">
           <property name="enabled">
            <bool>false</bool>
@@ -143,9 +173,16 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="mask_en_checkBox">
+          <property name="text">
+           <string>掩码使能</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="clear_pushButton_2">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>

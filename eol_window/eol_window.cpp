@@ -34,6 +34,9 @@ eol_window::eol_window(QString titile, QWidget *parent) :
 
 eol_window::~eol_window()
 {
+  /* 停止协议栈 */
+  eol_protocol_obj->stop();
+
   run_state = false;
 
   /* 等待线程结束 */
@@ -54,6 +57,9 @@ void eol_window::closeEvent(QCloseEvent *event)
 
   table_list.clear();
   ui->transfer_list_val_label->clear();
+
+  /* 停止协议栈 */
+  eol_protocol_obj->stop();
 
   this->hide();
   emit signal_eol_window_closed();
@@ -85,7 +91,15 @@ void eol_window::reset_ui_info()
   ui->frame_lcdNumber->display(0);
   ui->time_cnt_val_label->setNum(0);
   ui->error_num_val_label->setNum(0);
-  ui->update_pushButton->setEnabled(false);
+  if(table_list.size() > 0)
+  {
+    ui->update_pushButton->setEnabled(true);
+  }
+  else
+  {
+    ui->update_pushButton->setEnabled(false);
+  }
+  ui->upload_pushButton->setEnabled(true);
 }
 
 void eol_window::update_show_table_list()
@@ -130,8 +144,8 @@ void eol_window::csv_data_analysis(QByteArray &data, quint64 line_num, int table
     /* 天线间距坐标信息表 */
     /* 天线初相信息表 */
     /* 天线间距坐标与初相信息表，双表合并 */
-    case eol_protocol::DAA_ANT_POS_TABLE:
-    case eol_protocol::DOA_PHASE_COMPS_TABLE:
+//    case eol_protocol::DAA_ANT_POS_TABLE:
+//    case eol_protocol::DOA_PHASE_COMPS_TABLE:
     case eol_protocol::DOA_ANT_BOTH_TABLE:
     {
       quint8 unit_byets;
@@ -268,13 +282,10 @@ bool eol_window::csv_analysis(QString &file_path, int table_type_index, int data
   table_info.Version_MAJOR = 0;
   table_info.Version_MINOR = 0;
   table_info.Version_REVISION = 1;
-  ui->transfer_progressBar->setValue(0);
-  ui->transfer_progressBar->setMaximum((int)table_info.Data_Size);
   bool ret = eol_protocol_obj->eol_master_send_table_data(table_info, (const quint8 *)num_buf);
   if(false == ret)
   {
     qDebug() << "transfer error";
-    timer_obj->stop();
     return false;
   }
   return true;
@@ -298,12 +309,12 @@ void eol_window::run_eol_window_task()
     if(true == ret)
     {
       /* 更新为ok状态 */
-      str = table_list.value(i).show_info.replace("\r\n", " -- <font size='3' color='green'>[ok]</font>\r\n");
+      str = table_list.value(i).show_info.replace("\r\n", " -- [ok]\r\n");
     }
     else
     {
       /* 更新为error状态 */
-      str = table_list.value(i).show_info.replace("\r\n", " -- <font size='3' color='red'>[err]</font>\r\n");
+      str = table_list.value(i).show_info.replace("\r\n", " -- [err]\r\n");
     }
     TABLE_INFO_Typedef_t table = table_list.value(i);
     table.show_info = str;
@@ -370,7 +381,22 @@ void eol_window::on_file_sel_pushButton_clicked()
 void eol_window::on_upload_pushButton_clicked()
 {
   eol_protocol::DOA_TABLE_Typedef_t table_type = (eol_protocol::DOA_TABLE_Typedef_t)ui->table_type_comboBox->currentIndex();
-//  eol_master_get_table_data(table_type, num_buf);
+  eol_protocol_obj->eol_master_get_table_data(table_type);
+
+  /* 重置计时 */
+  time_cnt = 0;
+
+  /* 重置进度 */
+  ui->transfer_progressBar->setValue(0);
+
+  /* 启动计时 */
+  timer_obj->start();
+
+  /* 启动接收数据线程 */
+  g_thread_pool->start(eol_protocol_obj);
+
+  /* 本按钮不可用 */
+  ui->upload_pushButton->setEnabled(false);
 }
 
 
@@ -382,6 +408,12 @@ void eol_window::on_update_pushButton_clicked()
     return;
   }
 
+  /* 重置计时 */
+  time_cnt = 0;
+
+  /* 重置进度 */
+  ui->transfer_progressBar->setValue(0);
+
   /* 启动计时 */
   timer_obj->start();
 
@@ -390,6 +422,9 @@ void eol_window::on_update_pushButton_clicked()
 
   /* 启动任务线程 */
   g_thread_pool->start(this);
+
+  /* 本按钮不可用 */
+  ui->update_pushButton->setEnabled(false);
 }
 
 void eol_window::on_add_list_pushButton_clicked()
@@ -435,6 +470,27 @@ void eol_window::slot_protocol_no_response()
   quint32 cnt = ui->error_num_val_label->text().toUInt();
   cnt++;
   ui->error_num_val_label->setText(QString("%1").arg(cnt));
+
+  /* 连续错误统计 */
+  err_constanly_cnt++;
+  if(err_constanly_cnt >= 3)
+  {
+    /* 停止协议栈 */
+    eol_protocol_obj->stop();
+
+    timer_obj->stop();
+
+    /* 本按钮可用 */
+    if(table_list.size() > 0)
+    {
+      ui->update_pushButton->setEnabled(true);
+    }
+    else
+    {
+      ui->update_pushButton->setEnabled(false);
+    }
+    ui->upload_pushButton->setEnabled(true);
+  }
 }
 
 void eol_window::slot_protocol_error_occur(quint8 error_msg)
@@ -452,6 +508,11 @@ void eol_window::slot_protocol_error_occur(quint8 error_msg)
 void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data, quint16
                                  data_len)
 {
+  err_constanly_cnt = 0;
+
+  qint32 frame_num_display = ui->frame_lcdNumber->value();
+  ui->frame_lcdNumber->display(frame_num == 0xFFFF ? frame_num_display++ : frame_num_display + 1);
+
   /* 0帧为表信息数据 */
   if(0 == frame_num)
   {
@@ -465,17 +526,89 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
     table_info.Data_Size |= data[6];
     memcpy(&table_info.Crc_Val, data + 8, 4);
     ui->transfer_progressBar->setMaximum(table_info.Data_Size);
+    /* 显示接收完成 */
+    QString tips_str = QString("<font size='5' color='green'><div align='legt'> Table Type: </div> <div align='right'> %1 </div> </font>\n"
+                               "<font size='5' color='orange'><div align='legt'> Ver: </div> <div align='right'> %2.%3.%4 </div> </font>\n"
+                               "<font size='5' color='blue'><div align='legt'> Data Type: </div> <div align='right'> %5 </div> </font>\n"
+                               "<font size='5' color='blue'><div align='legt'> Data Size: </div> <div align='right'> %6 </div> </font>\n")
+                                .arg(table_info.Data_Type)
+                                .arg(table_info.Version_MAJOR)
+                                .arg(table_info.Version_MINOR)
+                                .arg(table_info.Version_REVISION)
+                                .arg(table_info.Data_Type)
+                                .arg(table_info.Data_Size);
+    QMessageBox message(QMessageBox::Information, tr("Table Info"), tr(tips_str.toUtf8()), QMessageBox::Yes, nullptr);
+    message.exec();
+    /* 选择文件存储区域 */
+    /* 参数：父对象，标题，默认路径，格式 */
+    QString path = QFileDialog::getSaveFileName(this, tr("Save  "), "../", tr("BIN(*.bin)"));
+    if(path.isEmpty() == true)
+    {
+      run_state = false;
+      return;
+    }
+
+    /* 先关闭 */
+    if(recv_file.isOpen() == true)
+    {
+      recv_file.close();
+    }
+
+    /* 关联文件名 */
+    recv_file.setFileName(path);
+
+    /* 打开文件，只写方式 */
+    recv_file.open(QIODevice::WriteOnly);
+    return;
   }
 
-  /* 表大小，每帧4字节，显示进度 */
-  quint32 size = 4 * frame_num;
-  ui->transfer_progressBar->setValue(size > table_info.Data_Size ? table_info.Data_Size : size);
+  if(0 < frame_num && 0xFFFF > frame_num)
+  {
+    /* 表大小，每帧4字节，显示进度 */
+    quint32 size = 4 * frame_num;
+    if(recv_file.isOpen() == false)
+    {
+      return;
+    }
+    qDebug() << "get pack num: " << frame_num;
+    recv_file.seek((frame_num - 1) * 4);
+    recv_file.write((const char *)data, 4);
+
+    ui->transfer_progressBar->setValue(size > table_info.Data_Size ? table_info.Data_Size : size);
+    ui->bytes_lcdNumber->display((int)size);
+  }
+  else
+  {
+    /* 关闭文件 */
+    recv_file.close();
+
+    /* 停止运行 */
+    run_state = false;
+    QMessageBox message(QMessageBox::Information, tr(" Info "), tr("<font size='10' color='green'>上载完成！</font>"), QMessageBox::Yes, nullptr);
+    message.exec();
+
+    /* 本按钮可用 */
+    if(table_list.size() > 0)
+    {
+      ui->update_pushButton->setEnabled(true);
+    }
+    else
+    {
+      ui->update_pushButton->setEnabled(false);
+    }
+    ui->upload_pushButton->setEnabled(true);
+  }
 }
 
 void eol_window::slot_send_progress(quint32 current_size, quint32 total_size)
 {
+  err_constanly_cnt = 0;
+
   /* 显示发送进度 */
+  ui->transfer_progressBar->setMaximum((int)table_info.Data_Size);
+
   ui->transfer_progressBar->setValue(current_size > total_size ? total_size : current_size);
+  ui->bytes_lcdNumber->display((int)current_size);
 }
 
 /**
@@ -483,9 +616,23 @@ void eol_window::slot_send_progress(quint32 current_size, quint32 total_size)
  */
 void eol_window::slot_recv_eol_data_complete()
 {
+  /* 停止协议栈 */
+  eol_protocol_obj->stop();
+
   timer_obj->stop();
 
   /* 显示接收完成 */
   QMessageBox message(QMessageBox::Information, "通知", "<font size='10' color='green'>上载传输完成！</font>", QMessageBox::Yes, nullptr);
   message.exec();
+
+  /* 本按钮可用 */
+  if(table_list.size() > 0)
+  {
+    ui->update_pushButton->setEnabled(true);
+  }
+  else
+  {
+    ui->update_pushButton->setEnabled(false);
+  }
+  ui->upload_pushButton->setEnabled(true);
 }

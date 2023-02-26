@@ -316,6 +316,17 @@ public:
   void receice_data();
 
   /**
+   * @brief 设置canid掩码
+   * @param mask 掩码
+   * @param en 掩码使能
+   */
+  void set_msg_canid_mask(quint32 can_id_mask, bool en = false)
+  {
+    can_id_mask_en_ = en;
+    can_id_mask_ = can_id_mask;
+  }
+
+  /**
    * @brief 添加消息过滤器
    * @param can_id can id
    * @param cq_obj_ 消息存储区
@@ -777,6 +788,8 @@ private:
 
   bool thread_run_state = false;
 
+  quint32 can_id_mask_ = 0xFFFF;
+  bool can_id_mask_en_ = false;
   /* 消息过滤器 */
   typedef struct
   {

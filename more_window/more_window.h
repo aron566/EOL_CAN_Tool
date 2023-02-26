@@ -65,6 +65,10 @@ private slots:
 
 private slots:
     void slot_timeout();
+    void on_display_mask_lineEdit_textChanged(const QString &arg1);
+
+    void on_mask_en_checkBox_clicked(bool checked);
+
 private:
     Ui::more_window *ui;
 

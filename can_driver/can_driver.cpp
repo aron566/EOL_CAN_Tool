@@ -729,6 +729,7 @@ void can_driver::show_message(const ZCAN_Receive_Data *data, quint32 len)
   uint8_t temp_buf[64 + 4] = {0};
 
   QString item;
+  quint32 id_temp;
   for(quint32 i = 0; i < len; ++i)
   {
     const ZCAN_Receive_Data& can = data[i];
@@ -743,7 +744,13 @@ void can_driver::show_message(const ZCAN_Receive_Data *data, quint32 len)
     {
       item += QString::asprintf("%02X ", can.frame.data[i]);
     }
-    show_message(item, true);
+
+    /* 消息过滤 */
+    id_temp = (GET_ID(id) & can_id_mask_);
+    if((GET_ID(id) == id_temp) || false == can_id_mask_en_)
+    {
+      show_message(item, true);
+    }
 
     /* 加入数据到cq */
     if(nullptr == cq_obj)
@@ -775,6 +782,7 @@ void can_driver::show_message(const ZCAN_ReceiveFD_Data *data, quint32 len)
   uint8_t temp_buf[64 + 4] = {0};
 
   QString item;
+  quint32 id_temp;
   for(quint32 i = 0; i < len; ++i)
   {
     const ZCAN_ReceiveFD_Data& canfd = data[i];
@@ -786,7 +794,13 @@ void can_driver::show_message(const ZCAN_ReceiveFD_Data *data, quint32 len)
     {
       item += QString::asprintf("%02X ", canfd.frame.data[i]);
     }
-    show_message(item, true);
+
+    /* 消息过滤 */
+    id_temp = (GET_ID(id) & can_id_mask_);
+    if((GET_ID(id) == id_temp) || false == can_id_mask_en_)
+    {
+      show_message(item, true);
+    }
 
     /* 加入数据到cq */
     if(nullptr == cq_obj)

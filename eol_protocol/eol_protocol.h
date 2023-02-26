@@ -156,6 +156,23 @@ private:
     uint32_t data_total_size;
     uint8_t *buf_ptr;
   }SEND_TASK_LIST_Typedef_t;
+
+  /* 发送检测状态 */
+  typedef enum
+  {
+    WAIT_NOTHING = 0,
+    WAIT_SEND,
+    SEND_ERR
+  }SNED_CHECK_STATUS_Typedef_t;
+
+  typedef struct EOL_TASK_LIST_
+  {
+    DOA_TABLE_Typedef_t table_type;
+    void *param;
+    DOA_DATA_Typedef_t data_type;
+    bool run_state;
+    bool (eol_protocol::*task)(void *param);
+  }EOL_TASK_LIST_Typedef_t;
 public:
   /**
    * @brief eol协议线程
@@ -196,10 +213,9 @@ public:
   /**
    * @brief 获取表数据
    * @param table_type 表类型
-   * @param data 数据存储区
    * @return true正确
    */
-  bool eol_master_get_table_data(DOA_TABLE_Typedef_t table_type, quint8 *data);
+  bool eol_master_get_table_data(DOA_TABLE_Typedef_t table_type);
 
 signals:
   /**
@@ -243,9 +259,9 @@ private:
   /**
    * @brief 待回复任务检测
    * @param force 强制发送
-   * @return true 存在待回复任务
+   * @return 状态
    */
-  bool check_wait_send_task(bool force = false);
+  SNED_CHECK_STATUS_Typedef_t check_wait_send_task(bool force = false);
 
   /**
    * @brief 创建一帧报文并发送
@@ -293,6 +309,14 @@ private:
    * @return 数据长度
    */
   uint32_t check_can_read(CircularQueue::CQ_handleTypeDef *cq);
+
+//public:
+  /**
+   * @brief 线程任务--获取表数据
+   * @param param 参数
+   * @return
+   */
+  bool get_eol_table_data_task(void *param_);
 private:
   /* 定时器 */
   QTimer *protocol_Timer = nullptr;
@@ -310,6 +334,8 @@ private:
 
   /* 响应队列 */
   QList<WAIT_RESPONSE_LIST_Typedef_t>wait_response_list;
+
+  QList<EOL_TASK_LIST_Typedef_t>eol_task_list;
 private slots:
     void slot_timer_timeout();
 private:

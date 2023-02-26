@@ -116,7 +116,7 @@ private:
 
   bool thread_run_state = false;
 
-  qint8 num_buf[25 * 1024];
+  quint8 num_buf[25 * 1024];
 
   typedef struct
   {
@@ -141,6 +141,9 @@ private:
 
   eol_protocol::DOA_TABLE_HEADER_Typedef_t table_info;
 
+  quint32 err_constanly_cnt = 0;
+
+  QFile recv_file;
 private:
   /**
    * @brief 定时器初始化
