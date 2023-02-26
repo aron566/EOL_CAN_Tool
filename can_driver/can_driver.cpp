@@ -138,7 +138,7 @@ can_driver::can_driver(QObject *parent)
   cq_obj = new CircularQueue(CircularQueue::UINT8_DATA_BUF, CircularQueue::CQ_BUF_512, this);
   if(nullptr == cq_obj)
   {
-    qDebug() << "创建 cq 失败";
+    qDebug() << "create cq faild";
   }
 }
 
@@ -172,14 +172,14 @@ bool can_driver::open()
   device_handle_ = ZCAN_OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0);
   if(INVALID_DEVICE_HANDLE == device_handle_)
   {
-    show_message(tr(" 打开设备失败 "));
+    show_message(tr(" open device faild "));
     return false;
   }
   device_opened_ = true;
 
   /* 发送can打开状态 */
   emit signal_can_is_opened(true);
-  show_message(tr(" 打开设备成功 "));
+  show_message(tr(" open device ok "));
   return true;
 }
 
@@ -187,7 +187,7 @@ bool can_driver::init()
 {
   if(false == device_opened_)
   {
-    show_message(tr(" 设备还没打开！ "));
+    show_message(tr(" device is not open "));
     return false;
   }
   ZCAN_CHANNEL_INIT_CONFIG config;
@@ -259,7 +259,7 @@ bool can_driver::init()
       qDebug() << "set diy bps";
       if(!custom_baud_rate_config())
       {
-        show_message(tr(" 设置自定义波特率失败！ "));
+        show_message(tr(" set diy baudrate faild "));
         return false;
       }
     }
@@ -268,7 +268,7 @@ bool can_driver::init()
       qDebug() << "set bps";
       if(!canfdDevice && !baud_rate_config())
       {
-        show_message(tr(" 设置波特率失败！ "));
+        show_message(tr(" set baudrate faild "));
         return false;
       }
     }
@@ -290,7 +290,7 @@ bool can_driver::init()
         qDebug() << "usbcanfd diy bps set ...";
         if(!custom_baud_rate_config())
         {
-          show_message(tr(" 设置自定义波特率失败！ "));
+          show_message(tr(" set diy baudrate faild "));
           return false;
         }
       }
@@ -299,7 +299,7 @@ bool can_driver::init()
         qDebug() << "usbcanfd bps set ...";
         if(!cand_fd_bps_config())
         {
-          show_message(tr(" 设置波特率失败！ "));
+          show_message(tr(" set baudrate faild "));
           return false;
         }
       }
@@ -317,7 +317,7 @@ bool can_driver::init()
       char value[100] = { 0 };
       if(!cand_fd_bps_config())
       {
-        show_message(tr(" 设置波特率失败！ "));
+        show_message(tr(" set baudrate faild "));
         return false;
       }
 
@@ -350,18 +350,18 @@ bool can_driver::init()
   channel_handle_ = ZCAN_InitCAN(device_handle_, channel_index_, &config);
   if(INVALID_CHANNEL_HANDLE == channel_handle_)
   {
-    show_message(tr(" 初始化CAN失败 "));
+    show_message(tr(" can init faild "));
     return false;
   }
   if(usbcanfd)
   {
     if(resistance_enable_ && !resistance_config())
     {
-      show_message(tr(" 设置终端电阻失败！ "));
+      show_message(tr(" set resistance faild "));
       return false;
     }
   }
-  show_message(tr(" 初始化成功！ "));
+  show_message(tr(" intit ok "));
   return true;
 }
 
@@ -369,12 +369,12 @@ bool can_driver::start()
 {
   if(ZCAN_StartCAN(channel_handle_) != STATUS_OK)
   {
-    show_message(tr(" 启动CAN失败 "));
+    show_message(tr(" start can faild "));
     return false;
   }
 
   start_ = true;
-  show_message(tr(" 启动CAN成功 "));
+  show_message(tr(" start can ok "));
   return true;
 }
 
@@ -382,12 +382,12 @@ bool can_driver::reset()
 {
   if(ZCAN_ResetCAN(channel_handle_) != STATUS_OK)
   {
-    show_message(tr(" 复位失败 "));
+    show_message(tr(" reset faild "));
     return false;
   }
 
   start_ = false;
-  show_message(tr(" 复位成功 "));
+  show_message(tr(" reset ok "));
   return true;
 }
 
@@ -409,7 +409,7 @@ void can_driver::close()
   emit signal_can_is_closed(true);
 
   device_opened_ = false;
-  show_message(tr(" 设备已关闭！"));
+  show_message(tr(" device closed "));
 }
 
 bool can_driver::send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol)
