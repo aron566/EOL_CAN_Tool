@@ -29,6 +29,7 @@
 #include <QRunnable>
 #include "zlgcan.h"
 #include "circularqueue.h"
+#include "utility.h"
 /** Private defines ----------------------------------------------------------*/
 
 /** Exported typedefines -----------------------------------------------------*/
@@ -51,6 +52,12 @@ public:
     /* 关闭设备 */
     close();
 
+    /* 等待线程结束 */
+    while(thread_run_state)
+    {
+      utility::delay_ms(1);
+    }
+
     /* 删除cq */
     delete cq_obj;
   }
@@ -60,15 +67,30 @@ public:
    */
   virtual void run() override
   {
+    thread_run_state = true;
     while(start_)
     {
       receice_data();
       QThread::msleep(15);
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << " listen end";
+    thread_run_state = false;
   }
 
 public:
+
+  typedef enum
+  {
+    STD_FRAME_TYPE = 0,
+    EXT_FRAME_TYPE,
+  }FRAME_TYPE_Typedef_t;
+
+  typedef enum
+  {
+    CAN_PROTOCOL_TYPE = 0,
+    CANFD_PROTOCOL_TYPE,
+  }PROTOCOL_TYPE_Typedef_t;
+
   /* 数据缓冲队列 */
   CircularQueue *cq_obj = nullptr;
 signals:
@@ -294,6 +316,19 @@ public:
   void receice_data();
 
   /**
+   * @brief 添加消息过滤器
+   * @param can_id can id
+   * @param cq_obj_ 消息存储区
+   */
+  void add_msg_filter(quint32 can_id, CircularQueue *cq_obj_);
+
+  /**
+   * @brief 移除消息过滤器
+   * @param can_id can id
+   */
+  void remove_msg_filter(quint32 can_id);
+
+  /**
    * @brief 触发发送数据
    *
    */
@@ -306,8 +341,9 @@ public:
    * @param id canid
    * @param frame_type 0标准帧 1扩展帧
    * @param protocol 0can 1canfd
+   * @return true发送成功
    */
-  void send(const quint8 *data, quint8 size, quint32 id, quint32 frame_type, quint32 protocol);
+  bool send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol);
 
   /**
    * @brief 设置设备类型
@@ -738,6 +774,17 @@ private:
   bool support_delay_send_ = false;            //设备是否支持队列发送
   bool support_delay_send_mode_ = false;       //设备队列发送是否需要设置队列发送模式,USBCANFD系列，PCIECANFD系列设备需要设置发送模式才可以进行队列发送
   bool support_get_send_mode_ = false;         //设备是否支持查询当前模式
+
+  bool thread_run_state = false;
+
+  /* 消息过滤器 */
+  typedef struct
+  {
+    quint32 can_id;
+    CircularQueue *cq_obj;
+  }MSG_FILTER_Typedef_t;
+
+  QList<MSG_FILTER_Typedef_t>msg_filter_list;
 };
 
 #endif // CAN_DRIVER_H

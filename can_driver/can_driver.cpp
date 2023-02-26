@@ -412,18 +412,18 @@ void can_driver::close()
   show_message(tr(" 设备已关闭！"));
 }
 
-void can_driver::send(const quint8 *data, quint8 size, quint32 id, quint32 frame_type, quint32 protocol)
+bool can_driver::send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol)
 {
   if(NULL == data)
   {
-    return;
+    return false;
   }
   quint32 nSendCount = 1;
   quint32 result = 0;//发送的帧数
-  if(0 == protocol)//can
+  if(0 == (quint32)protocol)//can
   {
     ZCAN_Transmit_Data can_data;
-    can_frame_packed(can_data, id, frame_type, data, size);
+    can_frame_packed(can_data, id, (quint32)frame_type, data, size);
 
     if(nSendCount > 0)
     {
@@ -461,10 +461,12 @@ void can_driver::send(const quint8 *data, quint8 size, quint32 id, quint32 frame
   if(result != nSendCount)
   {
     show_message(tr("send data faild! ") + csText);
+    return false;
   }
   else
   {
     show_message(tr("send data sucessful! ") + csText);
+    return true;
   }
 }
 
@@ -686,6 +688,42 @@ void can_driver::receice_data()
   }
 }
 
+
+void can_driver::add_msg_filter(quint32 can_id, CircularQueue *cq_obj_)
+{
+  if(nullptr == cq_obj_)
+  {
+    return;
+  }
+
+  MSG_FILTER_Typedef_t msg_filter;
+  msg_filter.can_id = can_id;
+  msg_filter.cq_obj = cq_obj_;
+
+  /* 查重 */
+  for(qint32 i = 0; i < msg_filter_list.size(); i++)
+  {
+    if(can_id == msg_filter_list.value(i).can_id)
+    {
+      return;
+    }
+  }
+
+  msg_filter_list.append(msg_filter);
+}
+
+void can_driver::remove_msg_filter(quint32 can_id)
+{
+  for(qint32 i = 0; i < msg_filter_list.size(); i++)
+  {
+    if(can_id == msg_filter_list.value(i).can_id)
+    {
+      msg_filter_list.removeAt(i);
+      return;
+    }
+  }
+}
+
 void can_driver::show_message(const ZCAN_Receive_Data *data, quint32 len)
 {
   uint8_t temp_buf[64 + 4] = {0};
@@ -715,6 +753,20 @@ void can_driver::show_message(const ZCAN_Receive_Data *data, quint32 len)
     memcpy(temp_buf, &id, sizeof(canid_t));
     memcpy(temp_buf + sizeof(canid_t), can.frame.data, can.frame.can_dlc);
     CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, can.frame.can_dlc + sizeof(canid_t));
+
+    /* 消息过滤分发 */
+    if(msg_filter_list.isEmpty())
+    {
+      continue;
+    }
+    for(qint32 index = 0; index < msg_filter_list.size(); index++)
+    {
+      if(msg_filter_list.value(index).can_id == id)
+      {
+        CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), can.frame.data, can.frame.can_dlc);
+        break;
+      }
+    }
   }
 }
 
@@ -744,6 +796,20 @@ void can_driver::show_message(const ZCAN_ReceiveFD_Data *data, quint32 len)
     memcpy(temp_buf, &id, sizeof(canid_t));
     memcpy(temp_buf + sizeof(canid_t), canfd.frame.data, canfd.frame.len);
     CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, canfd.frame.len + sizeof(canid_t));
+
+    /* 消息过滤分发 */
+    if(msg_filter_list.isEmpty())
+    {
+      continue;
+    }
+    for(qint32 index = 0; index < msg_filter_list.size(); index++)
+    {
+      if(msg_filter_list.value(index).can_id == id)
+      {
+        CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), canfd.frame.data, canfd.frame.len);
+        break;
+      }
+    }
   }
 }
 

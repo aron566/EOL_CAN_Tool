@@ -22,8 +22,19 @@ MainWindow::MainWindow(QWidget *parent)
   /* 设置窗口标题 */
   this->setWindowTitle(tr("EOL CAN Tool ") + tr(PC_SOFTWARE_VERSION));
 
+  /* 获取线程池 */
+  g_thread_pool = QThreadPool::globalInstance();
+  g_thread_pool->setExpiryTimeout(-1);
+  g_thread_pool->setMaxThreadCount(static_cast<qint32>(std::thread::hardware_concurrency()));
+  qDebug() << "main thread id:" << QThread::currentThreadId() \
+           << " max:" << g_thread_pool->maxThreadCount() \
+           << " stack size:" << g_thread_pool->stackSize();
+
   /* can驱动初始化 */
   can_driver_init();
+
+  /* eol协议栈初始化 */
+  eol_protocol_init();
 
   /* 子窗口初始化 */
   eol_window_init(tr("EOL CAN Tool - EOL调试"));
@@ -31,25 +42,24 @@ MainWindow::MainWindow(QWidget *parent)
   /* 子窗口初始化 */
   more_window_init(tr("EOL CAN Tool - More"));
 
-  /* eol协议栈初始化 */
-  eol_protocol_init();
-
   /* 恢复参数 */
   para_restore_init();
-
-  /* 获取线程池 */
-  g_thread_pool = QThreadPool::globalInstance();
-  g_thread_pool->setExpiryTimeout(-1);
-  g_thread_pool->setMaxThreadCount(static_cast<qint32>(std::thread::hardware_concurrency()));
-  qDebug() << "main thread id:" << QThread::currentThreadId();
 }
 
 MainWindow::~MainWindow()
 {
   delete can_driver_obj;
+  qDebug() << "del can_driver_obj";
   delete eol_window_obj;
+  qDebug() << "del eol_window_obj";
+
+  g_thread_pool->waitForDone();
+  g_thread_pool->clear();
+
   delete more_window_obj;
+  qDebug() << "del more_window_obj";
   delete ui;
+  qDebug() << "del ui";
 }
 
 /**
@@ -74,11 +84,24 @@ void MainWindow::eol_window_init(QString titile)
 {
   eol_window_obj = new eol_window(titile);
   connect(eol_window_obj, &eol_window::signal_eol_window_closed, this, &MainWindow::slot_show_this_window);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_error_occur, eol_window_obj, &eol_window::slot_protocol_error_occur);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_no_response, eol_window_obj, &eol_window::slot_protocol_no_response);
+  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, eol_window_obj, &eol_window::slot_recv_eol_table_data);
+  connect(eol_protocol_obj, &eol_protocol::signal_send_progress, eol_window_obj, &eol_window::slot_send_progress);
+  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_data_complete, eol_window_obj, &eol_window::slot_recv_eol_data_complete);
+  /* 设置线程池 */
+  eol_window_obj->set_thread_pool(g_thread_pool);
+
+  /* 禁止线程完成后执行析构对象 */
+  eol_window_obj->setAutoDelete(false);
+
+  /* 设置协议栈 */
+  eol_window_obj->set_eol_protocol(eol_protocol_obj);
 }
 
 void MainWindow::can_driver_init()
 {
-  can_driver_obj = new can_driver();
+  can_driver_obj = new can_driver(this);
 
   /* 禁止线程完成后执行析构对象 */
   can_driver_obj->setAutoDelete(false);
@@ -115,7 +138,7 @@ void MainWindow::can_driver_init()
 void MainWindow::eol_protocol_init()
 {
   /* eol协议栈初始化 */
-  eol_protocol_obj = new eol_protocol(this);
+  eol_protocol_obj = new eol_protocol(can_driver_obj);
 
   /* 禁止线程完成后执行析构对象 */
   eol_protocol_obj->setAutoDelete(false);
@@ -128,6 +151,8 @@ void MainWindow::para_restore_init()
 {
   /* 设置默认值 */
   ui->device_list_comboBox->setCurrentText("ZCAN_USBCANFD_200U");
+  ui->arbitration_bps_comboBox->setCurrentIndex(2);
+  ui->data_bps_comboBox->setCurrentIndex(2);
 }
 
 void MainWindow::slot_show_this_window()

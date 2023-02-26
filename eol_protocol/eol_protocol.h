@@ -24,10 +24,12 @@
 /** Private includes ---------------------------------------------------------*/
 #include <QObject>
 #include <QCoreApplication>
+#include <QTimer>
 #include <QThread>
 #include <QRunnable>
 #include "circularqueue.h"
 #include "can_driver.h"
+#include "utility.h"
 /** Private defines ----------------------------------------------------------*/
 
 /** Exported typedefines -----------------------------------------------------*/
@@ -46,7 +48,16 @@ public:
 
   ~eol_protocol()
   {
+    stop();
 
+    /* 等待线程结束 */
+    while(thread_run_state)
+    {
+      utility::delay_ms(1);
+    }
+
+    /* 删除cq */
+    delete cq_obj;
   }
 
   /* 操作返回值 */
@@ -66,7 +77,7 @@ public:
     DOA_UNKNOW_CMD_ERR,                   /**< 未知命令类型错误 */
   }DOA_TABLE_OPT_STATUS_Typedef_t;
 
-  /* 导向矢量数据格式 */
+  /* 数据格式 */
   typedef enum
   {
     DOA_CALTERAH_CFX_28BIT_DATA_TYPE = 0, /**< 加特兰CFX 28位数据格式 */
@@ -82,7 +93,7 @@ public:
     DOA_UNKNOW_DATA_TYPE = 0xFF,          /**< 未知数据类型 */
   }DOA_DATA_Typedef_t;
 
-  /* 存储的导向矢量表类型 */
+  /* 表类型 */
   typedef enum
   {
     DOA_SV_AZIMUTH_TABLE = 0, /**< 方位导向矢量表 */
@@ -93,6 +104,58 @@ public:
     DOA_UNKNOW_TABLE = 0xFF,  /**< 未知表类型 */
   }DOA_TABLE_Typedef_t;
 
+  /* 表头信息 */
+  typedef struct
+  {
+    uint16_t Class_ID_Num;          /**< 类ID标识 DOA_CLASS_ID_NUM */
+    uint16_t Version_MAJOR      :4; /**< 主版本号 v0 - 15 */
+    uint16_t Version_MINOR      :4; /**< 副版本号 0 - 15 */
+    uint16_t Version_REVISION   :8; /**< 修订版本号 0 - 255 */
+    DOA_DATA_Typedef_t Data_Type;   /**< 存储在flash中的数据类型 @ref DOA_DATA_Typedef_t */
+    DOA_TABLE_Typedef_t Table_Type; /**< 表类型 @ref DOA_TABLE_Typedef_t */
+    uint32_t Data_Size;             /**< 表数据字节数，也是校验CRC部分大小 */
+    uint32_t Crc_Val;               /**< 表数据CRC */
+  }DOA_TABLE_HEADER_Typedef_t;
+
+private:
+  /* 等待回复结果 */
+  typedef enum
+  {
+    RETURN_OK = 0,
+    RETURN_UPGRADE_FRAME_REDIRECT,/**< 升级帧重定向 */
+    RETURN_UPLOAD_FRAME_REDIRECT,
+    RETURN_TIMEOUT,
+    RETURN_WAITTING,              /**< 等待中 */
+    RETURN_UPLOAD_END,            /**< 升级结束 */
+    RETURN_ERROR,
+    RETURN_LOST_FRAME,            /**< 丢帧 */
+  }RETURN_TYPE_Typedef_t;
+
+  /* 功能码 */
+  typedef enum
+  {
+    EOL_WRITE_CMD = 0x03,
+    EOL_READ_CMD  = 0x04,
+  }EOL_CMD_Typedef_t;
+
+  /* 响应队列 */
+  typedef struct
+  {
+    uint16_t reg_addr;      /**< 等待响应的寄存器地址 */
+    uint32_t start_time;    /**< 等待相应的起始时间 */
+    uint8_t command;        /**< 等待的命令类型 0x03 0x04 */
+  }WAIT_RESPONSE_LIST_Typedef_t;
+
+  /* 分包分送句柄 */
+  typedef struct
+  {
+    quint32 last_send_time_ms;
+    quint32 hw_send_err_times;
+    uint32_t wait_send_size;
+    uint32_t current_send_index;
+    uint32_t data_total_size;
+    uint8_t *buf_ptr;
+  }SEND_TASK_LIST_Typedef_t;
 public:
   /**
    * @brief eol协议线程
@@ -100,19 +163,16 @@ public:
   virtual void run() override
   {
     run_state = true;
+    thread_run_state = true;
     run_eol_task();
+    thread_run_state = false;
   }
 
   void stop()
   {
+    eol_protocol_clear();
     run_state = false;
   }
-
-  /**
-   * @brief 设置协议栈数据源
-   * @param cq_
-   */
-  void set_cq(CircularQueue *cq_ = nullptr);
 
   void set_can_driver_obj(can_driver *can_driver_ = nullptr)
   {
@@ -121,15 +181,151 @@ public:
     {
       return;
     }
-    cq_obj = can_driver_obj->cq_obj;
+    /* 设置消息过滤器 */
+    can_driver_obj->add_msg_filter(0x666, cq_obj);
   }
 
+  /**
+   * @brief 发送表数据
+   * @param table_info 表信息
+   * @param data 表数据
+   * @return true正确
+   */
+  bool eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_info, const quint8 *data);
+
+  /**
+   * @brief 获取表数据
+   * @param table_type 表类型
+   * @param data 数据存储区
+   * @return true正确
+   */
+  bool eol_master_get_table_data(DOA_TABLE_Typedef_t table_type, quint8 *data);
+
+signals:
+  /**
+   * @brief 从机无应答信号
+   */
+  void signal_protocol_no_response();
+
+  void signal_protocol_error_occur(quint8 error_msg);
+
+  /**
+   * @brief 表数据
+   * @param frame_num 帧号
+   * @param data 数据
+   * @param data_len 数据长度
+   */
+  void signal_recv_eol_table_data(quint16 frame_num, const quint8 *data, quint16
+                                   data_len);
+
+  void signal_send_progress(quint32 current_size, quint32 total_size);
+
+  /**
+   * @brief 接收数据完成
+   */
+  void signal_recv_eol_data_complete();
 private:
+  /**
+   * @brief 定时器初始化
+   */
+  void timer_init();
+
+  /**
+   * @brief 清除等待列表，缓冲区数据
+   */
+  void eol_protocol_clear();
+
+  /**
+   * @brief eol任务
+   */
   void run_eol_task();
+
+  /**
+   * @brief 待回复任务检测
+   * @param force 强制发送
+   * @return true 存在待回复任务
+   */
+  bool check_wait_send_task(bool force = false);
+
+  /**
+   * @brief 创建一帧报文并发送
+   * @param command 命令类型
+   * @param reg_addr 寄存器地址
+   * @param data 数据
+   * @param data_len 数据长度
+   * @return 报文状态
+   */
+  RETURN_TYPE_Typedef_t protocol_stack_create_task(EOL_CMD_Typedef_t command, uint16_t reg_addr,
+                                            const uint8_t *data, uint16_t data_len);
+
+  /**
+   * @brief 等待回复数据
+   * @return 0正常
+   */
+  RETURN_TYPE_Typedef_t protocol_stack_wait_reply_start();
+
+  /**
+   * @brief 解析ack应答帧
+   * @param data 帧数据
+   * @return 应答消息
+   */
+  DOA_TABLE_OPT_STATUS_Typedef_t decode_ack_frame(const quint8 *data);
+
+  /**
+   * @brief 解析接收数据
+   * @param wait 等待列表
+   * @param data 数据
+   * @param data_len 数据长度
+   * @return 状态
+   */
+  RETURN_TYPE_Typedef_t decode_data_frame(WAIT_RESPONSE_LIST_Typedef_t &wait, const quint8 *data, quint16 data_len);
+
+  /**
+   * @brief 回复超时检测
+   * @param wait 队列
+   * @return
+   */
+  bool response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait);
+
+  /**
+   * @brief 缓冲区有效数据长度
+   * @param cq 环形队列
+   * @return 数据长度
+   */
+  uint32_t check_can_read(CircularQueue::CQ_handleTypeDef *cq);
+private:
+  /* 定时器 */
+  QTimer *protocol_Timer = nullptr;
+  quint64 current_time_sec = 0;
+  quint64 current_time_ms = 0;
+
+  /* 错误统计 */
+  quint32 acc_error_cnt = 0;
+
+  /* 协议栈运行状态 */
+  bool file_transfer_stack_run_state = true;
+  bool upgrade_frame_stack_run_state = true;
+
+  SEND_TASK_LIST_Typedef_t send_task_handle;
+
+  /* 响应队列 */
+  QList<WAIT_RESPONSE_LIST_Typedef_t>wait_response_list;
+private slots:
+    void slot_timer_timeout();
 private:
   bool run_state = false;
+  bool thread_run_state = false;
   CircularQueue *cq_obj = nullptr;
   can_driver *can_driver_obj = nullptr;
+
+  typedef struct
+  {
+    quint8 data_buf[25 * 1024];
+    quint16 frame_num;
+    quint32 data_size;
+  }DATA_RECORD_Typedef_t;
+
+  DATA_RECORD_Typedef_t data_record;
 };
 #endif
 /******************************** End of file *********************************/

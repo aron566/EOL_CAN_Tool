@@ -116,6 +116,16 @@
               <string>天线位置表</string>
              </property>
             </item>
+            <item>
+             <property name="text">
+              <string>天线相位补偿表</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>天线位置与相位补偿表</string>
+             </property>
+            </item>
            </widget>
           </item>
           <item>
@@ -145,6 +155,36 @@
             <item>
              <property name="text">
               <string>32位浮点类型</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>32位整型</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>16位整型</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>8位整型</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>32位无符号整型</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>16位无符号整型</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>8位无符号整型</string>
              </property>
             </item>
            </widget>
