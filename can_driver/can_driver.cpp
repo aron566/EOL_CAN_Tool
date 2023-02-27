@@ -183,13 +183,8 @@ bool can_driver::open()
   return true;
 }
 
-bool can_driver::init()
+bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
 {
-  if(false == device_opened_)
-  {
-    show_message(tr(" device is not open "));
-    return false;
-  }
   ZCAN_CHANNEL_INIT_CONFIG config;
   memset(&config, 0, sizeof(config));
 
@@ -220,34 +215,34 @@ bool can_driver::init()
     if(tcpDevice)
     {
       qDebug() << "tcpDevice/";
-      sprintf(path, "%d/work_mode", channel_index_);
+      sprintf(path, "%d/work_mode", channel_state.channel_num);
       sprintf(value, "%d", server ? 1 : 0);
       ZCAN_SetValue(device_handle_, path, value);
       if(server)
       {
         qDebug() << "server";
-        sprintf(path, "%d/local_port", channel_index_);
+        sprintf(path, "%d/local_port", channel_state.channel_num);
         ZCAN_SetValue(device_handle_, path, local_port_str.toStdString().data());
       } // server
       else
       {
         qDebug() << "client";
-        sprintf(path, "%d/ip", channel_index_);
+        sprintf(path, "%d/ip", channel_state.channel_num);
         ZCAN_SetValue(device_handle_, path, service_ip_str.toStdString().data());
 
-        sprintf(path, "%d/work_port", channel_index_);
+        sprintf(path, "%d/work_port", channel_state.channel_num);
         ZCAN_SetValue(device_handle_, path, service_port_str.toStdString().data());
       }
     } // tcp
     else
     {
       qDebug() << "udpDevice";
-      sprintf(path, "%d/local_port", channel_index_);
+      sprintf(path, "%d/local_port", channel_state.channel_num);
       ZCAN_SetValue(device_handle_, path, local_port_str.toStdString().data());
-      sprintf(path, "%d/ip", channel_index_);
+      sprintf(path, "%d/ip", channel_state.channel_num);
 
       ZCAN_SetValue(device_handle_, path, service_ip_str.toStdString().data());
-      sprintf(path, "%d/work_port", channel_index_);
+      sprintf(path, "%d/work_port", channel_state.channel_num);
       ZCAN_SetValue(device_handle_, path, service_port_str.toStdString().data());
     }
   }
@@ -257,7 +252,7 @@ bool can_driver::init()
     if(custom_baud_enable_)
     {
       qDebug() << "set diy bps";
-      if(!custom_baud_rate_config())
+      if(!custom_baud_rate_config(channel_state))
       {
         show_message(tr(" set diy baudrate faild "));
         return false;
@@ -266,7 +261,7 @@ bool can_driver::init()
     else
     {
       qDebug() << "set bps";
-      if(!canfdDevice && !baud_rate_config())
+      if(!canfdDevice && !baud_rate_config(channel_state))
       {
         show_message(tr(" set baudrate faild "));
         return false;
@@ -278,7 +273,7 @@ bool can_driver::init()
       qDebug() << "set usbcanfd channel";
       char path[50] = {0};
       char value[100] = {0};
-      sprintf(path, "%d/canfd_standard", channel_index_);
+      sprintf(path, "%d/canfd_standard", channel_state.channel_num);
       sprintf(value, "%d", 0);
       ZCAN_SetValue(device_handle_, path, value);
     }
@@ -288,7 +283,7 @@ bool can_driver::init()
       if(custom_baud_enable_)
       {
         qDebug() << "usbcanfd diy bps set ...";
-        if(!custom_baud_rate_config())
+        if(!custom_baud_rate_config(channel_state))
         {
           show_message(tr(" set diy baudrate faild "));
           return false;
@@ -297,7 +292,7 @@ bool can_driver::init()
       else
       {
         qDebug() << "usbcanfd bps set ...";
-        if(!cand_fd_bps_config())
+        if(!cand_fd_bps_config(channel_state))
         {
           show_message(tr(" set baudrate faild "));
           return false;
@@ -315,7 +310,7 @@ bool can_driver::init()
 
       char path[50] = { 0 };
       char value[100] = { 0 };
-      if(!cand_fd_bps_config())
+      if(!cand_fd_bps_config(channel_state))
       {
         show_message(tr(" set baudrate faild "));
         return false;
@@ -347,51 +342,117 @@ bool can_driver::init()
     }
   }
 
-  channel_handle_ = ZCAN_InitCAN(device_handle_, channel_index_, &config);
-  if(INVALID_CHANNEL_HANDLE == channel_handle_)
+  channel_state.channel_hadle = ZCAN_InitCAN(device_handle_, channel_state.channel_num, &config);
+  if(INVALID_CHANNEL_HANDLE == channel_state.channel_hadle)
   {
-    show_message(tr(" can init faild "));
+    show_message(tr(" can ch %1 init faild ").arg(channel_state.channel_num));
     return false;
   }
   if(usbcanfd)
   {
-    if(resistance_enable_ && !resistance_config())
+    if(resistance_enable_ && !resistance_config(channel_state))
     {
       show_message(tr(" set resistance faild "));
       return false;
     }
   }
-  show_message(tr(" intit ok "));
+  show_message(tr(" can ch %1 intit ok ").arg(channel_state.channel_num));
+  return true;
+}
+
+bool can_driver::init()
+{
+  if(false == device_opened_)
+  {
+    show_message(tr(" device is not open "));
+    return false;
+  }
+
+  /* 初始化对应通道号 */
+  bool ret = false;
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    if(false == channel_state_list.value(i).channel_en)
+    {
+      continue;
+    }
+    channel_state = channel_state_list.takeAt(i);
+
+    ret = init(channel_state);
+
+    channel_state_list.insert(i, channel_state);
+  }
+  return ret;
+}
+
+bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
+{
+  if(ZCAN_StartCAN(channel_state.channel_hadle) != STATUS_OK)
+  {
+    show_message(tr(" start can ch %1 faild ").arg(channel_state.channel_num));
+    return false;
+  }
+
+  show_message(tr(" start can ch %1 ok ").arg(channel_state.channel_num));
   return true;
 }
 
 bool can_driver::start()
 {
-  if(ZCAN_StartCAN(channel_handle_) != STATUS_OK)
+  if(false == device_opened_)
   {
-    show_message(tr(" start can faild "));
+    show_message(tr(" device is not open "));
     return false;
   }
 
+  /* 启动对应通道号 */
+  bool ret = false;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    if(false == channel_state_list.value(i).channel_en)
+    {
+      continue;
+    }
+    ret = start(channel_state_list.value(i));
+  }
+
   start_ = true;
-  show_message(tr(" start can ok "));
+
+  return ret;
+}
+
+bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
+{
+  if(ZCAN_ResetCAN(channel_state.channel_hadle) != STATUS_OK)
+  {
+    show_message(tr(" reset can ch %1 faild ").arg(channel_state.channel_num));
+    return false;
+  }
+
+  show_message(tr(" reset can ch %1 ok ").arg(channel_state.channel_num));
   return true;
 }
 
 bool can_driver::reset()
 {
-  if(ZCAN_ResetCAN(channel_handle_) != STATUS_OK)
+  /* 复位对应通道号 */
+  bool ret = false;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
-    show_message(tr(" reset faild "));
-    return false;
+    if(false == channel_state_list.value(i).channel_en)
+    {
+      continue;
+    }
+    ret = reset(channel_state_list.value(i));
   }
 
   start_ = false;
-  show_message(tr(" reset ok "));
-  return true;
+
+  return ret;
 }
 
-void can_driver::close()
+void can_driver::close(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   // TODO: Add your control notification handler code here
 
@@ -399,8 +460,25 @@ void can_driver::close()
   {
     ZCLOUD_DisconnectServer();
   }
-  ZCAN_ResetCAN(channel_handle_);
+  ZCAN_ResetCAN(channel_state.channel_hadle);
   ZCAN_CloseDevice(device_handle_);
+
+  show_message(tr(" device can ch %1 closed ").arg(channel_state.channel_num));
+}
+
+void can_driver::close()
+{
+  /* 关闭对应通道号 */
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    if(false == channel_state_list.value(i).channel_en)
+    {
+      continue;
+    }
+
+    close(channel_state_list.value(i));
+  }
+
   start_ = false;
 
   /* 发送can关闭状态 */
@@ -409,15 +487,10 @@ void can_driver::close()
   emit signal_can_is_closed(true);
 
   device_opened_ = false;
-  show_message(tr(" device closed "));
 }
 
-bool can_driver::send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol)
+bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol)
 {
-  if(NULL == data)
-  {
-    return false;
-  }
   quint32 nSendCount = 1;
   quint32 result = 0;//发送的帧数
   if(0 == (quint32)protocol)//can
@@ -433,8 +506,8 @@ bool can_driver::send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Ty
         memcpy_s(&pData[i], sizeof(ZCAN_Transmit_Data), &can_data, sizeof(can_data));
       }
 
-      show_message(pData, 1);
-      result = ZCAN_Transmit(channel_handle_, pData, nSendCount);
+      show_message(channel_state, pData, 1);
+      result = ZCAN_Transmit(channel_state.channel_hadle, pData, nSendCount);
       delete [] pData;
     }
   }
@@ -451,26 +524,48 @@ bool can_driver::send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Ty
         memcpy_s(&pData[i], sizeof(ZCAN_TransmitFD_Data), &canfd_data, sizeof(canfd_data));
       }
 
-      show_message(pData, 1);
-      result = ZCAN_TransmitFD(channel_handle_, pData, nSendCount);
+      show_message(channel_state, pData, 1);
+      result = ZCAN_TransmitFD(channel_state.channel_hadle, pData, nSendCount);
       delete [] pData;
     }
   }
   QString csText;
-  csText = QString::asprintf(tr("send num:%d, sucess num:%d").toUtf8().data(), nSendCount, result);
+  csText = QString::asprintf(tr("[%u]send num:%d, sucess num:%d").toUtf8().data(), channel_state.channel_num, nSendCount, result);
   if(result != nSendCount)
   {
-    show_message(tr("send data faild! ") + csText);
+    show_message(tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText);
     return false;
   }
   else
   {
-    show_message(tr("send data sucessful! ") + csText);
+    show_message(tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText);
     return true;
   }
 }
 
-void can_driver::send()
+bool can_driver::send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol, quint8 channel_num)
+{
+  if(NULL == data)
+  {
+    return false;
+  }
+
+  bool ret = false;
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    channel_state = channel_state_list.value(i);
+    if((channel_num == channel_state.channel_num || 0xFF == channel_num) \
+       && true == channel_state.channel_en)
+    {
+      ret = send(channel_state, data, size, id, frame_type, protocol);
+      break;
+    }
+  }
+  return ret;
+}
+
+void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   if(datas_.isEmpty())
   {
@@ -493,8 +588,8 @@ void can_driver::send()
         memcpy_s(&pData[i], sizeof(ZCAN_Transmit_Data), &can_data, sizeof(can_data));
       }
 
-      show_message(pData, 1);
-      result = ZCAN_Transmit(channel_handle_, pData, nSendCount);
+      show_message(channel_state, pData, 1);
+      result = ZCAN_Transmit(channel_state.channel_hadle, pData, nSendCount);
       delete [] pData;
     }
   }
@@ -511,20 +606,72 @@ void can_driver::send()
         memcpy_s(&pData[i], sizeof(ZCAN_TransmitFD_Data), &canfd_data, sizeof(canfd_data));
       }
 
-      show_message(pData, 1);
-      result = ZCAN_TransmitFD(channel_handle_, pData, nSendCount);
+      show_message(channel_state, pData, 1);
+      result = ZCAN_TransmitFD(channel_state.channel_hadle, pData, nSendCount);
       delete [] pData;
     }
   }
   QString csText;
-  csText = QString::asprintf(tr("send num:%d, sucess num:%d").toUtf8().data(), nSendCount, result);
+  csText = QString::asprintf(tr("[%u]send num:%d, sucess num:%d").toUtf8().data(), channel_state.channel_num, nSendCount, result);
   if(result != nSendCount)
   {
-    show_message(tr("send data faild! ") + csText);
+    show_message(tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText);
   }
   else
   {
-    show_message(tr("send data sucessful! ") + csText);
+    show_message(tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText);
+  }
+}
+
+void can_driver::send()
+{
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    channel_state = channel_state_list.value(i);
+    if(true == channel_state.channel_en)
+    {
+      send(channel_state);
+    }
+  }
+}
+
+/**
+ * @brief 设置通讯通道号
+ *
+ * @param index
+ */
+void can_driver::set_channel_index(quint8 index)
+{
+  /* 判断通道号是否全部使能 */
+  CHANNEL_STATE_Typedef_t channel_state;
+  if(kDeviceType[device_type_index_].channel_count <= index)
+  {
+    for(qint32 i = 0; i < channel_state_list.size(); i++)
+    {
+      channel_state = channel_state_list.takeAt(i);
+      channel_state.channel_en = true;
+      channel_state_list.insert(i, channel_state);
+    }
+  }
+  /* 启动特定的通道，其他关闭 */
+  else
+  {
+    for(qint32 i = 0; i < channel_state_list.size(); i++)
+    {
+      if(index == channel_state_list.value(i).channel_num)
+      {
+        channel_state = channel_state_list.takeAt(i);
+        channel_state.channel_en = true;
+        channel_state_list.insert(i, channel_state);
+      }
+      else
+      {
+        channel_state = channel_state_list.takeAt(i);
+        channel_state.channel_en = false;
+        channel_state_list.insert(i, channel_state);
+      }
+    }
   }
 }
 
@@ -547,6 +694,24 @@ void can_driver::function_can_use_update()
 
   const bool canfdDevice = usbcanfd || pciecanfd || netcanfd;
   const bool accFilter = pciecanfd || type == ZCAN_USBCAN1 || type == ZCAN_USBCAN2;
+
+  /* 更新设备通道列表 */
+  channel_state_list.clear();
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(quint8 i = 0; i < kDeviceType[device_type_index_].channel_count; i++)
+  {
+    /* 默认通道1开启 */
+    if(0 == i)
+    {
+      channel_state.channel_en = true;
+    }
+    else
+    {
+      channel_state.channel_en = false;
+    }
+    channel_state.channel_num = i;
+    channel_state_list.append(channel_state);
+  }
 
   //队列发送支持
   support_delay_send_ = usbcanfd || pciecanfd || netcanfd;
@@ -659,35 +824,48 @@ void can_driver::function_can_use_update()
 }
 
 //设置自定义波特率, 需要从CANMaster目录下的baudcal生成字符串
-bool can_driver::custom_baud_rate_config()
+bool can_driver::custom_baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   char path[50] = {0};
-  sprintf(path, "%d/baud_rate_custom", channel_index_);
+  sprintf(path, "%d/baud_rate_custom", channel_state.channel_num);
   return 1 == ZCAN_SetValue(device_handle_, path, custom_baudrate_.toUtf8().data());
 }
 
-void can_driver::receice_data()
+
+void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   ZCAN_Receive_Data can_data[100];
   ZCAN_ReceiveFD_Data canfd_data[100];
   quint32 len;
   /* 获取can数据长度 */
-  len = ZCAN_GetReceiveNum(channel_handle_, TYPE_CAN);
+  len = ZCAN_GetReceiveNum(channel_state.channel_hadle, TYPE_CAN);
   if(0 < len)
   {
-    len = ZCAN_Receive(channel_handle_, can_data, 100, 50);
-    show_message(can_data, len);
+    len = ZCAN_Receive(channel_state.channel_hadle, can_data, 100, 50);
+    show_message(channel_state, can_data, len);
   }
 
   /* 获取canfd数据长度 */
-  len = ZCAN_GetReceiveNum(channel_handle_, TYPE_CANFD);
+  len = ZCAN_GetReceiveNum(channel_state.channel_hadle, TYPE_CANFD);
   if(0 < len)
   {
-    len = ZCAN_ReceiveFD(channel_handle_, canfd_data, 100, 50);
-    show_message(canfd_data, len);
+    len = ZCAN_ReceiveFD(channel_state.channel_hadle, canfd_data, 100, 50);
+    show_message(channel_state, canfd_data, len);
   }
 }
 
+void can_driver::receice_data()
+{
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    channel_state = channel_state_list.value(i);
+    if(true == channel_state.channel_en)
+    {
+      receice_data(channel_state);
+    }
+  }
+}
 
 void can_driver::add_msg_filter(quint32 can_id, CircularQueue *cq_obj_)
 {
@@ -724,7 +902,7 @@ void can_driver::remove_msg_filter(quint32 can_id)
   }
 }
 
-void can_driver::show_message(const ZCAN_Receive_Data *data, quint32 len)
+void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Receive_Data *data, quint32 len)
 {
   uint8_t temp_buf[64 + 4] = {0};
 
@@ -736,8 +914,9 @@ void can_driver::show_message(const ZCAN_Receive_Data *data, quint32 len)
     const canid_t& id = can.frame.can_id;
     const bool is_eff = IS_EFF(id);
     const bool is_rtr = IS_RTR(id);
-    item = QString::asprintf(tr(" Rx CAN ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
-        GET_ID(id), is_eff ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+    item = QString::asprintf(tr("[%u]Rx CAN ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
+                             channel_state.channel_num, \
+                             GET_ID(id), is_eff ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
                              is_rtr ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), \
                              can.frame.can_dlc);
     for(quint32 i = 0; i < can.frame.can_dlc; ++i)
@@ -777,7 +956,7 @@ void can_driver::show_message(const ZCAN_Receive_Data *data, quint32 len)
   }
 }
 
-void can_driver::show_message(const ZCAN_ReceiveFD_Data *data, quint32 len)
+void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_ReceiveFD_Data *data, quint32 len)
 {
   uint8_t temp_buf[64 + 4] = {0};
 
@@ -787,8 +966,8 @@ void can_driver::show_message(const ZCAN_ReceiveFD_Data *data, quint32 len)
   {
     const ZCAN_ReceiveFD_Data& canfd = data[i];
     const canid_t& id = canfd.frame.can_id;
-    item = QString::asprintf(tr(" Rx CANFD ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
-            GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data()
+    item = QString::asprintf(tr("[%u]Rx CANFD ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
+            channel_state.channel_num, GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data()
         , IS_RTR(id) ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), canfd.frame.len);
     for (quint32 i = 0; i < canfd.frame.len; ++i)
     {
@@ -827,15 +1006,16 @@ void can_driver::show_message(const ZCAN_ReceiveFD_Data *data, quint32 len)
   }
 }
 
-void can_driver::show_message(const ZCAN_Transmit_Data *data, quint32 len)
+void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Transmit_Data *data, quint32 len)
 {
   QString item;
   for(quint32 i = 0; i < len; ++i)
   {
     const ZCAN_Transmit_Data& can = data[i];
     const canid_t &id = can.frame.can_id;
-    item = QString::asprintf(tr(" Tx CAN ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
-          GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+    item = QString::asprintf(tr("[%u]Tx CAN ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
+                             channel_state.channel_num, \
+                             GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
           IS_RTR(id) ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), can.frame.can_dlc);
     for(quint32 i = 0; i < can.frame.can_dlc; ++i)
     {
@@ -845,15 +1025,16 @@ void can_driver::show_message(const ZCAN_Transmit_Data *data, quint32 len)
   }
 }
 
-void can_driver::show_message(const ZCAN_TransmitFD_Data *data, quint32 len)
+void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_TransmitFD_Data *data, quint32 len)
 {
   QString item;
   for(quint32 i = 0; i < len; ++i)
   {
     const ZCAN_TransmitFD_Data& can = data[i];
     const canid_t &id = can.frame.can_id;
-    item = QString::asprintf(tr(" Tx CANFD ID:%08X %s %s LEN:%d DATA: ").toUtf8().data(), \
-          GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+    item = QString::asprintf(tr("[%u]Tx CANFD ID:%08X %s %s LEN:%d DATA: ").toUtf8().data(), \
+                             channel_state.channel_num, \
+                             GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
           IS_RTR(id) ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), can.frame.len);
     for(quint32 i = 0; i < can.frame.len; ++i)
     {
@@ -880,103 +1061,142 @@ void can_driver::show_message(const QString &data, bool thread_mode)
   qDebug() << message;
 }
 
-bool can_driver::transmit_type_config()
+bool can_driver::transmit_type_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   char path[50] = {0};
   char value[100] = {0};
-  sprintf(path, "%d/send_type", channel_index_);
+  sprintf(path, "%d/send_type", channel_state.channel_num);
   sprintf(value, "%d", send_type_index_);
   return 1 == ZCAN_SetValue(device_handle_, path, value);
 }
 
 //设置终端电阻使能
-bool can_driver::resistance_config()
+bool can_driver::resistance_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   char path[50] = {0};
-  sprintf(path, "%d/initenal_resistance", channel_index_);
+  sprintf(path, "%d/initenal_resistance", channel_state.channel_num);
   char value[10] = {0};
   sprintf(value, "%d", resistance_enable_);
   return 1 == ZCAN_SetValue(device_handle_, path, value);
 }
 
 //设置CAN卡波特率
-bool can_driver::baud_rate_config()
+bool can_driver::baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   qDebug() << "/baud_rate_config";
   char path[50] = {0};
-  sprintf(path, "%d/baud_rate", channel_index_);
+  sprintf(path, "%d/baud_rate", channel_state.channel_num);
   char value[10] = {0};
   sprintf(value, "%d", kBaudrate[baud_index_]);
   return 1 == ZCAN_SetValue(device_handle_, path, value);
 }
 
 //设置USBCANFD卡波特率
-bool can_driver::cand_fd_bps_config()
+bool can_driver::cand_fd_bps_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
-  qDebug() << channel_index_<< "/canfd_abit_baud_rate " << kAbitTimingUSB[abit_baud_index_];
+  qDebug() << channel_state.channel_num << "/canfd_abit_baud_rate " << kAbitTimingUSB[abit_baud_index_];
   char path[50] = { 0 };
-  sprintf(path, "%d/canfd_abit_baud_rate", channel_index_);
+  sprintf(path, "%d/canfd_abit_baud_rate", channel_state.channel_num);
   char value[10] = { 0 };
   sprintf(value, "%d", kAbitTimingUSB[abit_baud_index_]);
   int ret_a = ZCAN_SetValue(device_handle_, path, value);
 
-  qDebug() << channel_index_<< "/canfd_dbit_baud_rate " << kDbitTimingUSB[dbit_baud_index_];
-  sprintf(path, "%d/canfd_dbit_baud_rate", channel_index_);
+  qDebug() << channel_state.channel_num << "/canfd_dbit_baud_rate " << kDbitTimingUSB[dbit_baud_index_];
+  sprintf(path, "%d/canfd_dbit_baud_rate", channel_state.channel_num);
   sprintf(value, "%d", kDbitTimingUSB[dbit_baud_index_]);
   int ret_d = ZCAN_SetValue(device_handle_, path, value);
   return 1 == (ret_a && ret_d);
 }
 
-void can_driver::show_tx_queue_available()
+void can_driver::show_tx_queue_available(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   // TODO: Add your control notification handler code here
 
   char path[50] = {0};
 //  char value[100] = {0};
   QString csText;
-  sprintf(path, "%d/get_device_available_tx_count/1", channel_index_);
+  sprintf(path, "%d/get_device_available_tx_count/1", channel_state.channel_num);
   const char* pRet = (const char *)ZCAN_GetValue(device_handle_, path);
   if (pRet)
   {
     quint32 nSpace = *(int *)pRet;
-    csText = QString((tr(" 队列可用空间:%1 ")).arg(nSpace));
+    csText = QString((tr(" [%1]queue can use space %2 ")).arg(channel_state.channel_num).arg(nSpace));
   }
   else
   {
-    csText = tr(" 获取队列可用空间失败！ ");
+    csText = tr(" get queue can use space faild ");
   }
   show_message(csText);
 }
 
-void can_driver::clear_tx_queue()
+void can_driver::show_tx_queue_available()
+{
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    channel_state = channel_state_list.value(i);
+    if(true == channel_state.channel_en)
+    {
+      show_tx_queue_available(channel_state);
+    }
+  }
+}
+
+void can_driver::clear_tx_queue(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   // TODO: Add your control notification handler code here
 
   char path[50] = {0};
   char value[100] = {0};
-  sprintf(path, "%d/clear_delay_send_queue", channel_index_);
+  sprintf(path, "%d/clear_delay_send_queue", channel_state.channel_num);
   int nRet = ZCAN_SetValue(device_handle_, path, value);
   QString csText;
-  csText = QString(tr(" 清除队列发送 [%1] ").arg(nRet > 0 ? tr(" 成功 ") : tr(" 失败 ")));
+  csText = QString(tr("[%1]clear tx queue [%2] ").arg(channel_state.channel_num).arg(nRet > 0 ? tr(" ok ") : tr(" faild ")));
   show_message(csText);
 }
+void can_driver::clear_tx_queue()
+{
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    channel_state = channel_state_list.value(i);
+    if(true == channel_state.channel_en)
+    {
+      clear_tx_queue(channel_state);
+    }
+  }
+}
 
-bool can_driver::set_send_queue_mode(bool en)
+bool can_driver::set_send_queue_mode(const CHANNEL_STATE_Typedef_t &channel_state, bool en)
 {
   // TODO: Add your control notification handler code here
 
   char path[50] = {0};
   char value[100] = {0};
   int nDelaySendQueueMode = (send_queue_mode == true && en == true);
-  sprintf(path, "%d/set_send_mode", channel_index_);
+  sprintf(path, "%d/set_send_mode", channel_state.channel_num);
   sprintf(value, "%d", nDelaySendQueueMode);
   int nRet = ZCAN_SetValue(device_handle_, path, value);
   QString csText, csRet;
-  csText = (nDelaySendQueueMode ? tr(" 开启队列发送模式 ") : tr(" 关闭队列发送模式 "));
+  csText = (nDelaySendQueueMode ? tr("[%1]open tx queue mode ").arg(channel_state.channel_num) : tr("[%1]close tx queue mode").arg(channel_state.channel_num));
   csRet = QString::asprintf((tr(" [%s]").toUtf8().data(), \
-          nRet > 0 ? tr(" 成功 ").toUtf8().data() : tr(" 失败 ").toUtf8().data()));
+          nRet > 0 ? tr(" ok ").toUtf8().data() : tr(" faild ").toUtf8().data()));
   show_message(csText + csRet);
   return nDelaySendQueueMode;
+}
+bool can_driver::set_send_queue_mode(bool en)
+{
+  bool ret = false;
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    channel_state = channel_state_list.value(i);
+    if(true == channel_state.channel_en)
+    {
+      ret =set_send_queue_mode(channel_state, en);
+    }
+  }
+  return ret;
 }
 
 void can_driver::delay_send_can_use_update(bool delay_send, bool send_queue_mode, bool get_send_mode)
@@ -1026,24 +1246,36 @@ bool can_driver::is_net_udp_type(quint32 type)
           type == ZCAN_CANFDWIFI_UDP);
 }
 
-void can_driver::show_send_mode()
+void can_driver::show_send_mode(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   // TODO: Add your control notification handler code here
 
   QString csText;
   char path[50] = {0};
-  sprintf(path, "%d/get_send_mode/1", channel_index_);
+  sprintf(path, "%d/get_send_mode/1", channel_state.channel_num);
   const char* pRet = (const char*)ZCAN_GetValue(device_handle_, path);
   if(pRet)
   {
     quint32 nMode = *(int*)pRet;
-    csText = QString(tr(" 设备当前模式:[%1] ").arg(nMode ? tr(" 队列发送模式 ") : tr(" 正常发送模式 ")));
+    csText = QString(tr("[%1] device current mode: [%2] ").arg(channel_state.channel_num).arg(nMode ? tr("tx queue mode") : tr("tx normal mode")));
   }
   else
   {
-    csText = tr(" 获取通道模式失败！ ");
+    csText = tr("[%1]get channel modefaild").arg(channel_state.channel_num);
   }
   show_message(csText);
+}
+void can_driver::show_send_mode()
+{
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    channel_state = channel_state_list.value(i);
+    if(true == channel_state.channel_en)
+    {
+      show_send_mode(channel_state);
+    }
+  }
 }
 
 void can_driver::auto_send_can_use_update(bool support_can, bool support_canfd, bool support_index, bool support_single_cancel, bool support_get_autosend_list)
@@ -1069,90 +1301,6 @@ void can_driver::auto_send_can_use_update(bool support_can, bool support_canfd, 
 
   /* 获取设备自动发送列表 */
   emit signal_get_dev_auto_send_list_can_use(support_get_autosend_list);
-}
-
-void can_driver::add_auto_can(quint32 nEnable)
-{
-  // TODO: Add your control notification handler code here
-
-  ZCAN_AUTO_TRANSMIT_OBJ autoObj;
-  memset(&autoObj, 0, sizeof(autoObj));
-  autoObj.enable = nEnable;
-  autoObj.interval = auto_send_period_;
-  autoObj.index = auto_send_index_;
-  can_frame_packed(autoObj.obj, false);
-
-  char path[50] = {0};
-  sprintf(path, "%d/auto_send", channel_index_);
-  int nRet = ZCAN_SetValue(device_handle_, path, (const char *)&autoObj);
-  QString csText;
-  csText = QString::asprintf(tr(" 添加CAN定时发送 索引:%d 启用:%d 周期:%d ms ID:0x%X [%s] ").toUtf8().data(), \
-                             autoObj.index, autoObj.enable, autoObj.interval, autoObj.obj.frame.can_id, \
-                             (nRet ? tr(" 成功 ").toUtf8().data() : tr(" 失败 ").toUtf8().data()));
-  show_message(csText);
-}
-
-void can_driver::add_auto_can_fd(quint32 nEnable)
-{
-  // TODO: Add your control notification handler code here
-
-  ZCANFD_AUTO_TRANSMIT_OBJ autoObj;
-  memset(&autoObj, 0, sizeof(autoObj));
-  autoObj.enable = nEnable;
-  autoObj.interval = auto_send_period_;
-  autoObj.index = auto_send_index_;
-  can_frame_packed(autoObj.obj, false);
-
-  char path[50] = {0};
-  sprintf(path, "%d/auto_send_canfd", channel_index_);
-  int nRet =  ZCAN_SetValue(device_handle_, path, (const char*)&autoObj);
-  QString csText;
-  csText = QString::asprintf(tr(" 添加CANFD定时发送 索引:%d 启用:%d 周期:%d ms ID:0x%X [%s] ").toUtf8().data(), \
-                             autoObj.index, autoObj.enable, autoObj.interval, autoObj.obj.frame.can_id, \
-                             (nRet ? tr(" 成功 ").toUtf8().data() : tr(" 失败 ").toUtf8().data()));
-  show_message(csText);
-}
-
-void can_driver::auto_send_start()
-{
-  // TODO: Add your control notification handler code here
-
-  char path[50] = {0};
-  sprintf(path, "%d/apply_auto_send", channel_index_);
-  int nRet = ZCAN_SetValue(device_handle_, path,"0");
-  QString csText = tr(" 开始定时发送 ");
-  QString ret_str = nRet ? tr(" [成功] ") : tr(" [失败] ");
-  csText += ret_str;
-  show_message(csText);
-}
-
-void can_driver::auto_send_stop()
-{
-  // TODO: Add your control notification handler code here
-
-  char path[50] = {0};
-  sprintf(path, "%d/clear_auto_send", channel_index_);
-  int nRet = ZCAN_SetValue(device_handle_, path, "0");
-  QString csText = tr(" 停止定时发送 ");
-  QString ret_str = nRet ? tr(" [成功] ") : tr(" [失败] ");
-  csText += ret_str;
-  show_message(csText);
-}
-
-void can_driver::auto_send_stop_single()
-{
-  // TODO: Add your control notification handler code here
-
-  if (0 == protocol_index_)
-  {
-    //CAN
-    add_auto_can(0);
-  }
-  else
-  {
-    // CANFD
-    add_auto_can_fd(0);
-  }
 }
 
 void can_driver::can_frame_packed(ZCAN_Transmit_Data &can_data, quint32 id, quint32 frame_type, const quint8 *data, quint8 size)
@@ -1240,6 +1388,92 @@ void can_driver::can_frame_packed(ZCAN_TransmitFD_Data &canfd_data, bool add_del
     canfd_data.frame.__res1 = (BYTE)((nDelayTime >> 8) & 0xFF);
   }
 }
+
+
+void can_driver::add_auto_can(quint32 nEnable)
+{
+  // TODO: Add your control notification handler code here
+
+  ZCAN_AUTO_TRANSMIT_OBJ autoObj;
+  memset(&autoObj, 0, sizeof(autoObj));
+  autoObj.enable = nEnable;
+  autoObj.interval = auto_send_period_;
+  autoObj.index = auto_send_index_;
+  can_frame_packed(autoObj.obj, false);
+
+  char path[50] = {0};
+  sprintf(path, "%d/auto_send", channel_index_);
+  int nRet = ZCAN_SetValue(device_handle_, path, (const char *)&autoObj);
+  QString csText;
+  csText = QString::asprintf(tr(" 添加CAN定时发送 索引:%d 启用:%d 周期:%d ms ID:0x%X [%s] ").toUtf8().data(), \
+                             autoObj.index, autoObj.enable, autoObj.interval, autoObj.obj.frame.can_id, \
+                             (nRet ? tr(" 成功 ").toUtf8().data() : tr(" 失败 ").toUtf8().data()));
+  show_message(csText);
+}
+
+void can_driver::add_auto_can_fd(quint32 nEnable)
+{
+  // TODO: Add your control notification handler code here
+
+  ZCANFD_AUTO_TRANSMIT_OBJ autoObj;
+  memset(&autoObj, 0, sizeof(autoObj));
+  autoObj.enable = nEnable;
+  autoObj.interval = auto_send_period_;
+  autoObj.index = auto_send_index_;
+  can_frame_packed(autoObj.obj, false);
+
+  char path[50] = {0};
+  sprintf(path, "%d/auto_send_canfd", channel_index_);
+  int nRet =  ZCAN_SetValue(device_handle_, path, (const char*)&autoObj);
+  QString csText;
+  csText = QString::asprintf(tr(" 添加CANFD定时发送 索引:%d 启用:%d 周期:%d ms ID:0x%X [%s] ").toUtf8().data(), \
+                             autoObj.index, autoObj.enable, autoObj.interval, autoObj.obj.frame.can_id, \
+                             (nRet ? tr(" 成功 ").toUtf8().data() : tr(" 失败 ").toUtf8().data()));
+  show_message(csText);
+}
+
+void can_driver::auto_send_start()
+{
+  // TODO: Add your control notification handler code here
+
+  char path[50] = {0};
+  sprintf(path, "%d/apply_auto_send", channel_index_);
+  int nRet = ZCAN_SetValue(device_handle_, path,"0");
+  QString csText = tr(" 开始定时发送 ");
+  QString ret_str = nRet ? tr(" [成功] ") : tr(" [失败] ");
+  csText += ret_str;
+  show_message(csText);
+}
+
+void can_driver::auto_send_stop()
+{
+  // TODO: Add your control notification handler code here
+
+  char path[50] = {0};
+  sprintf(path, "%d/clear_auto_send", channel_index_);
+  int nRet = ZCAN_SetValue(device_handle_, path, "0");
+  QString csText = tr(" 停止定时发送 ");
+  QString ret_str = nRet ? tr(" [成功] ") : tr(" [失败] ");
+  csText += ret_str;
+  show_message(csText);
+}
+
+void can_driver::auto_send_stop_single()
+{
+  // TODO: Add your control notification handler code here
+
+  if (0 == protocol_index_)
+  {
+    //CAN
+    add_auto_can(0);
+  }
+  else
+  {
+    // CANFD
+    add_auto_can_fd(0);
+  }
+}
+
 
 void can_driver::add_auto_send()
 {

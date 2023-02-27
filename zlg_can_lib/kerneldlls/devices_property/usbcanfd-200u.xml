@@ -518,7 +518,7 @@
 				</meta>
 			</canfd_exp>
 			<canfd_abit_baud_rate flag="0x0146" at_initcan="pre">
-				<value>1000000</value>
+				<value>500000</value>
 				<meta>
 					<type>options.int32</type>
 					<desc>仲裁域波特率</desc>
@@ -535,7 +535,7 @@
 				</meta>
 			</canfd_abit_baud_rate>
 			<canfd_dbit_baud_rate flag="0x0147" at_initcan="pre">
-				<value>1000000</value>
+				<value>2000000</value>
 				<meta>
 					<type>options.int32</type>
 					<desc>数据域波特率</desc>

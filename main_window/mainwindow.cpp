@@ -360,6 +360,9 @@ void MainWindow::on_device_list_comboBox_currentTextChanged(const QString &arg1)
   {
     ui->channel_num_comboBox->addItem(QString("%1").arg(i));
   }
+
+  /* 打开全部通道 */
+  ui->channel_num_comboBox->addItem("ALL");
 }
 
 void MainWindow::on_device_index_comboBox_currentTextChanged(const QString &arg1)
@@ -437,6 +440,7 @@ void MainWindow::on_diy_bps_checkBox_clicked(bool checked)
 void MainWindow::on_channel_num_comboBox_currentIndexChanged(int index)
 {
   /* 设置通道号 */
+  qDebug() << " set channel index:" << index;
   can_driver_obj->set_channel_index(index);
 }
 

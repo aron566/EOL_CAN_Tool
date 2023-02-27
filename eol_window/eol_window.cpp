@@ -344,32 +344,32 @@ void eol_window::on_file_sel_pushButton_clicked()
   current_file_path = QFileDialog::getOpenFileName(this, tr("Open File"), last_file_path, tr("csv (*.csv);;BIN (*.bin)"));
   if(current_file_path.isEmpty() == false)
   {
-      current_file_name.clear();
-      current_filesize = 0;
-      /* 获取文件信息 */
-      QFileInfo info(current_file_path);
-      current_file_name = info.fileName();
-      current_filesize = info.size();
+    current_file_name.clear();
+    current_filesize = 0;
+    /* 获取文件信息 */
+    QFileInfo info(current_file_path);
+    current_file_name = info.fileName();
+    current_filesize = info.size();
 
-      /* 更新最近路径信息 */
-      last_file_path = info.absolutePath();
+    /* 更新最近路径信息 */
+    last_file_path = info.absolutePath();
 
-      /* 检查非法空格字段 */
-      current_file_name.replace(QChar(' '), QChar('_'));
+    /* 检查非法空格字段 */
+    current_file_name.replace(QChar(' '), QChar('_'));
 
-      /* 设置待写入表信息 */
-      if(table_list.size() == 0)
-      {
-        /* 设置文件名 */
-        current_file.setFileName(current_file_path);
-      }
+    /* 设置待写入表信息 */
+    if(table_list.size() == 0)
+    {
+      /* 设置文件名 */
+      current_file.setFileName(current_file_path);
+    }
 
-      /* 选择框显示更新 */
-      ui->file_name_lineEdit->setText(current_file_name);
-      ui->file_size_lineEdit->setText(QString("%1").arg((float)current_filesize / 1024.f));
+    /* 选择框显示更新 */
+    ui->file_name_lineEdit->setText(current_file_name);
+    ui->file_size_lineEdit->setText(QString("%1").arg((float)current_filesize / 1024.f));
 
-      /* 允许点击更新 */
-      ui->update_pushButton->setEnabled(true);
+    /* 允许点击更新 */
+    ui->update_pushButton->setEnabled(true);
   }
   else
   {

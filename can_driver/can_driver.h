@@ -91,6 +91,13 @@ public:
     CANFD_PROTOCOL_TYPE,
   }PROTOCOL_TYPE_Typedef_t;
 
+  typedef  struct
+  {
+    void *channel_hadle;
+    qint32 channel_num;
+    bool channel_en;
+  }CHANNEL_STATE_Typedef_t;
+
   /* 数据缓冲队列 */
   CircularQueue *cq_obj = nullptr;
 signals:
@@ -352,9 +359,10 @@ public:
    * @param id canid
    * @param frame_type 0标准帧 1扩展帧
    * @param protocol 0can 1canfd
+   * @param channel_num 通道号，不写时默认用第一个可用的通道
    * @return true发送成功
    */
-  bool send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol);
+  bool send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol, quint8 channel_num = 0xFF);
 
   /**
    * @brief 设置设备类型
@@ -446,14 +454,11 @@ public:
   }
 
   /**
-   * @brief 设置通道号
+   * @brief 设置通讯通道号
    *
    * @param index
    */
-  void set_channel_index(quint8 index = 0)
-  {
-    channel_index_ = index;
-  }
+  void set_channel_index(quint8 index = 0);
 
   /**
    * @brief 设置自定义波特率
@@ -688,13 +693,20 @@ public:
   void function_can_use_update();
 
 private:
+  bool init(CHANNEL_STATE_Typedef_t &channel_state);
+  bool start(const CHANNEL_STATE_Typedef_t &channel_state);
+  bool reset(const CHANNEL_STATE_Typedef_t &channel_state);
+  void close(const CHANNEL_STATE_Typedef_t &channel_state);
+  void send(const CHANNEL_STATE_Typedef_t &channel_state);
+  bool send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol);
+  void receice_data(const CHANNEL_STATE_Typedef_t &channel_state);
   void delay_send_can_use_update(bool delay_send, bool send_queue_mode, bool get_send_mode);
   void auto_send_can_use_update(bool support_can, bool support_canfd, bool support_index, bool support_single_cancel, bool support_get_autosend_list);
-  bool custom_baud_rate_config();
-  void show_message(const ZCAN_Receive_Data *data, quint32 len);
-  void show_message(const ZCAN_ReceiveFD_Data *data, quint32 len);
-  void show_message(const ZCAN_Transmit_Data *data, quint32 len);
-  void show_message(const ZCAN_TransmitFD_Data *data, quint32 len);
+  bool custom_baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state);
+  void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Receive_Data *data, quint32 len);
+  void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_ReceiveFD_Data *data, quint32 len);
+  void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Transmit_Data *data, quint32 len);
+  void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_TransmitFD_Data *data, quint32 len);
 
   /**
    * @brief 显示消息
@@ -702,11 +714,15 @@ private:
    * @param thread_mode 当前消息是否来自线程
    */
   void show_message(const QString &data, bool thread_mode = false);
-  bool transmit_type_config();
-  bool resistance_config();
-  bool baud_rate_config();
-  bool cand_fd_bps_config();
+  bool transmit_type_config(const CHANNEL_STATE_Typedef_t &channel_state);
+  bool resistance_config(const CHANNEL_STATE_Typedef_t &channel_state);
+  bool baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state);
+  bool cand_fd_bps_config(const CHANNEL_STATE_Typedef_t &channel_state);
 
+  void show_tx_queue_available(const CHANNEL_STATE_Typedef_t &channel_state);
+  void clear_tx_queue(const CHANNEL_STATE_Typedef_t &channel_state);
+  bool set_send_queue_mode(const CHANNEL_STATE_Typedef_t &channel_state, bool en);
+  void show_send_mode(const CHANNEL_STATE_Typedef_t &channel_state);
   /**
    * @brief 是否是相关类型设备
    *
@@ -798,6 +814,7 @@ private:
   }MSG_FILTER_Typedef_t;
 
   QList<MSG_FILTER_Typedef_t>msg_filter_list;
+  QList<CHANNEL_STATE_Typedef_t>channel_state_list;
 };
 
 #endif // CAN_DRIVER_H
