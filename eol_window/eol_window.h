@@ -48,7 +48,7 @@ public:
     thread_run_state = true;
     while(run_state)
     {
-      run_eol_window_task();
+      run_eol_window_file_decode_task();
       QThread::msleep(15);
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << " eol window end";
@@ -185,9 +185,9 @@ private:
   void csv_data_analysis(QByteArray &data, quint64 line_num, int table_type_index, int data_type);
 
   /**
-   * @brief 执行eol协议
+   * @brief 执行eol文件解析任务
    */
-  void run_eol_window_task();
+  void run_eol_window_file_decode_task();
 signals:
   void signal_eol_window_closed();
 

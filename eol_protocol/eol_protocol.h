@@ -165,6 +165,13 @@ private:
     SEND_ERR
   }SNED_CHECK_STATUS_Typedef_t;
 
+  /* 发送表数据任务参数 */
+  typedef struct
+  {
+    DOA_TABLE_HEADER_Typedef_t head_data;
+    const quint8 *data;
+  }EOL_SEND_TABBLE_DATA_Typedef_t;
+
   typedef struct EOL_TASK_LIST_
   {
     DOA_TABLE_Typedef_t table_type;
@@ -317,6 +324,13 @@ private:
    * @return
    */
   bool get_eol_table_data_task(void *param_);
+
+  /**
+   * @brief 线程任务--发送表数据
+   * @param param_ 参数
+   * @return
+   */
+  bool send_eol_table_data_task(void *param_);
 private:
   /* 定时器 */
   QTimer *protocol_Timer = nullptr;
@@ -352,6 +366,8 @@ private:
   }DATA_RECORD_Typedef_t;
 
   DATA_RECORD_Typedef_t data_record;
+
+  EOL_SEND_TABBLE_DATA_Typedef_t send_table_data;
 };
 #endif
 /******************************** End of file *********************************/

@@ -282,19 +282,25 @@ bool eol_window::csv_analysis(QString &file_path, int table_type_index, int data
   table_info.Version_MAJOR = 0;
   table_info.Version_MINOR = 0;
   table_info.Version_REVISION = 1;
+
+  /* 添加到eol发送数据任务 */
   bool ret = eol_protocol_obj->eol_master_send_table_data(table_info, (const quint8 *)num_buf);
   if(false == ret)
   {
-    qDebug() << "transfer error";
+    qDebug() << "add task error";
     return false;
   }
+
+  /* 启动发送数据线程 */
+  g_thread_pool->start(eol_protocol_obj);
+
   return true;
 }
 
 /**
- * @brief eol_window::执行eol协议任务
+ * @brief eol_window::执行eol文件解析任务
  */
-void eol_window::run_eol_window_task()
+void eol_window::run_eol_window_file_decode_task()
 {
   bool ret = false;
   QString str;
@@ -429,8 +435,12 @@ void eol_window::on_update_pushButton_clicked()
 
 void eol_window::on_add_list_pushButton_clicked()
 {
-  TABLE_INFO_Typedef_t table;
+  if(current_file_path.isEmpty())
+  {
+    return;
+  }
 
+  TABLE_INFO_Typedef_t table;
   /* 查重 */
   for(qint32 i = 0; i < table_list.size(); i++)
   {

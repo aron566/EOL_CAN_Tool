@@ -76,7 +76,7 @@ PS：
 总帧长为：9Bytes + 数据长度
 */
 #define ENABLE_SEND_DELAY             1       /**< 为1开启分包发送 */
-#define ENABLE_SEND_DELAY_MS          5U      /**< 分包发送间隔ms >5ms */
+#define ENABLE_SEND_DELAY_MS          10U      /**< 分包发送间隔ms >10ms */
 #define ENABLE_SEND_DELAY_LIMIT_SIZE  8U      /**< >8Bytes时开启发送 */
 #define SEND_ONE_PACKET_SIZE_MAX      8U      /**< 每包发送大小 */
 
@@ -103,7 +103,7 @@ PS：
 
 #define RETRY_NUM_MAX                 3U      /**< 无法发出数据，超时重试次数 */
 #define NOT_FULL_TIMEOUT_SEC_MAX      15U     /**< 允许帧不全超时时间 */
-#define WAIT_SEND_HW_ERR_TIME         1U      /**< 60s */
+#define WAIT_SEND_HW_ERR_TIMES        3U      /**< 硬件发送失败3次 */
 /* 寄存器表 */
 #define EOL_RW_TABLE_DATA_REG          0x0007U
 #define EOL_W_TABLE_SEL_REG            0x0008U
@@ -291,18 +291,18 @@ eol_protocol::SNED_CHECK_STATUS_Typedef_t eol_protocol::check_wait_send_task(boo
   {
     return WAIT_NOTHING;
   }
-  uint16_t can_send_size = 0;
 
   /* 检测经过时间 */
   quint32 elapsed_time_ms = (quint32)current_time_ms - send_task_handle.last_send_time_ms;
   if(elapsed_time_ms < ENABLE_SEND_DELAY_MS && force == false)
   {
+    qDebug() << "wait send";
     return WAIT_SEND;
   }
 
   send_task_handle.last_send_time_ms = current_time_ms;
 
-  can_send_size = (send_task_handle.data_total_size - send_task_handle.current_send_index) > SEND_ONE_PACKET_SIZE_MAX ? \
+  quint32 can_send_size = (send_task_handle.data_total_size - send_task_handle.current_send_index) > SEND_ONE_PACKET_SIZE_MAX ? \
         SEND_ONE_PACKET_SIZE_MAX : (send_task_handle.data_total_size - send_task_handle.current_send_index);
 
   /* 发送 */
@@ -311,18 +311,20 @@ eol_protocol::SNED_CHECK_STATUS_Typedef_t eol_protocol::check_wait_send_task(boo
                                   can_driver::CANFD_PROTOCOL_TYPE);
   if(false == ret)
   {
-    qDebug() << "send error";
+    qDebug() << "hw send error " << send_task_handle.hw_send_err_times;
     /* 关闭发送 */
     send_task_handle.hw_send_err_times++;
-    if((send_task_handle.hw_send_err_times / 1000) > WAIT_SEND_HW_ERR_TIME)
+    if(send_task_handle.hw_send_err_times > WAIT_SEND_HW_ERR_TIMES)
     {
-      send_task_handle.hw_send_err_times = 0;
+      qDebug() << "hw send close";
       send_task_handle.wait_send_size = 0;
     }
     return SEND_ERR;
   }
   send_task_handle.hw_send_err_times = 0;
-  send_task_handle.current_send_index = (send_task_handle.current_send_index + SEND_ONE_PACKET_SIZE_MAX) > send_task_handle.data_total_size?send_task_handle.current_send_index:(send_task_handle.current_send_index + SEND_ONE_PACKET_SIZE_MAX);
+
+  /* 更新发送指针 */
+  send_task_handle.current_send_index = (send_task_handle.current_send_index + SEND_ONE_PACKET_SIZE_MAX) > send_task_handle.data_total_size ? send_task_handle.current_send_index : (send_task_handle.current_send_index + SEND_ONE_PACKET_SIZE_MAX);
   send_task_handle.wait_send_size -= can_send_size;
   return WAIT_SEND;
 }
@@ -433,6 +435,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
     send_task_handle.data_total_size = index;
     send_task_handle.wait_send_size = index;
     send_task_handle.buf_ptr = send_buf;
+    send_task_handle.last_send_time_ms = current_time_ms;
     SNED_CHECK_STATUS_Typedef_t state = check_wait_send_task(true);
 
     if(SEND_ERR == state)
@@ -681,13 +684,17 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
   }
 }
 
-bool eol_protocol::eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_info, const quint8 *data)
+bool eol_protocol::send_eol_table_data_task(void *param_)
 {
+
+  qDebug() << "sned_eol_table_data_task start";
   quint8 data_buf[FRAME_TEMP_BUF_SIZE];
   quint8 index = 0;
   quint16 frame_num = 0;
   quint8 error_cnt = 0;
   RETURN_TYPE_Typedef_t ret;
+
+  EOL_SEND_TABBLE_DATA_Typedef_t *param = (EOL_SEND_TABBLE_DATA_Typedef_t *)param_;
 
   /* 清空 */
   eol_protocol_clear();
@@ -697,20 +704,21 @@ bool eol_protocol::eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_
   frame_num = 0;
   data_buf[index++] = frame_num;// 第0包表头信息
   data_buf[index++] = (quint8)(frame_num >> 8);
-  data_buf[index++] = (quint8)table_info.Table_Type;
-  data_buf[index] = table_info.Version_MINOR;
+  data_buf[index++] = (quint8)param->head_data.Table_Type;
+  data_buf[index] = param->head_data.Version_MINOR;
   data_buf[index] <<= 4;
-  data_buf[index++] |= table_info.Version_MAJOR;
-  data_buf[index++] = table_info.Version_REVISION;
-  data_buf[index++] = table_info.Data_Type;
-  data_buf[index++] = table_info.Data_Size;
-  data_buf[index++] = (quint8)(table_info.Data_Size >> 8);
-  quint32 crc = utility::get_crc32_with_tab(data, table_info.Data_Size);
+  data_buf[index++] |= param->head_data.Version_MAJOR;
+  data_buf[index++] = param->head_data.Version_REVISION;
+  data_buf[index++] = param->head_data.Data_Type;
+  data_buf[index++] = param->head_data.Data_Size;
+  data_buf[index++] = (quint8)(param->head_data.Data_Size >> 8);
+  quint32 crc = utility::get_crc32_with_tab(param->data, param->head_data.Data_Size);
   data_buf[index++] = (quint8)crc;
   data_buf[index++] = (quint8)(crc >> 8);
   data_buf[index++] = (quint8)(crc >> 16);
   data_buf[index++] = (quint8)(crc >> 24);
   /* 发送表头信息 */
+  qDebug() << " send table head ";
   do
   {
     ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index);
@@ -730,17 +738,17 @@ bool eol_protocol::eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_
 
   /* 清空错误统计 */
   error_cnt = 0;
-
+  qDebug() << " send table data ";
   /* 发送表数据，每包4Bytes，不足0填充 */
-  for(quint32 i = 0; i < table_info.Data_Size + 3;)
+  for(quint32 i = 0; i < param->head_data.Data_Size + 3;)
   {
     frame_num++;
     index = 0;
     data_buf[index++] = frame_num;
     data_buf[index++] = (quint8)(frame_num >> 8);
-    data_buf[index++] = (quint8)table_info.Data_Type;
+    data_buf[index++] = (quint8)param->head_data.Data_Type;
 
-    memcpy(&data_buf[index], data + i, 4);
+    memcpy(&data_buf[index], param->data + i, 4);
     index += 4;
 
     /* 发送表数据 */
@@ -766,7 +774,7 @@ bool eol_protocol::eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_
 
     i += 4;
     qDebug() << "signal_send_progress";
-    emit signal_send_progress(i, table_info.Data_Size);
+    emit signal_send_progress(i, param->head_data.Data_Size);
   }
 
   error_cnt = 0;
@@ -791,6 +799,20 @@ bool eol_protocol::eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_
     }
     break;
   }while(RETRY_NUM_MAX > error_cnt);
+  return true;
+}
+
+bool eol_protocol::eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_info, const quint8 *data)
+{
+  memcpy(&send_table_data.head_data, &table_info, sizeof(DOA_TABLE_HEADER_Typedef_t));
+  send_table_data.data = data;
+
+  EOL_TASK_LIST_Typedef_t task;
+  task.run_state = true;
+  task.param = &send_table_data;
+  task.table_type = table_info.Table_Type;
+  task.task = &eol_protocol::send_eol_table_data_task;
+  eol_task_list.append(task);
   return true;
 }
 

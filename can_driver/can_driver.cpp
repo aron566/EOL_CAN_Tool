@@ -530,7 +530,7 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8
     }
   }
   QString csText;
-  csText = QString::asprintf(tr("[%u]send num:%d, sucess num:%d").toUtf8().data(), channel_state.channel_num, nSendCount, result);
+  csText = QString::asprintf(tr("send num:%d, sucess num:%d").toUtf8().data(), nSendCount, result);
   if(result != nSendCount)
   {
     show_message(tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText);
@@ -562,6 +562,7 @@ bool can_driver::send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Ty
       break;
     }
   }
+
   return ret;
 }
 
@@ -612,7 +613,7 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
     }
   }
   QString csText;
-  csText = QString::asprintf(tr("[%u]send num:%d, sucess num:%d").toUtf8().data(), channel_state.channel_num, nSendCount, result);
+  csText = QString::asprintf(tr("send num:%d, sucess num:%d").toUtf8().data(), nSendCount, result);
   if(result != nSendCount)
   {
     show_message(tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText);
