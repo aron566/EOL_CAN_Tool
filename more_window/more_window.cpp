@@ -167,11 +167,11 @@ void more_window::on_mask_en_checkBox_clicked(bool checked)
   quint32 canid_mask = ui->display_mask_lineEdit->text().toUInt(&ok, 16);
   if(ok)
   {
-    can_driver_obj->set_msg_canid_mask(canid_mask, ui->mask_en_checkBox->isChecked());
+    can_driver_obj->set_msg_canid_mask(canid_mask, checked);
   }
   else
   {
-    can_driver_obj->set_msg_canid_mask(0xFFFF, ui->mask_en_checkBox->isChecked());
+    can_driver_obj->set_msg_canid_mask(0xFFFF, checked);
   }
 }
 

@@ -119,6 +119,30 @@ public:
    * @return true正确
    */
   static bool get_crc32_rsl_with_tab(const quint8 *data_blk_ptr, quint32 data_blk_size, quint32 crc_accum = 0);
+
+  /**
+   * @brief 验证和校验是否正确
+   * @param data 数据
+   * @param len 累积数据长度
+   * @return true正确
+   */
+  static bool get_sum_rsl(const quint8 *data, quint32 len);
+
+  /**
+   * @brief 获取数据和
+   * @param data 数据
+   * @param len 累积数据长度
+   * @return sum
+   */
+  static quint8 get_data_sum(const quint8 *data, quint32 len);
+
+  /**
+   * @brief 16进制格式调试打印
+   *
+   * @param msg 数据
+   * @param msg_len 数据长度
+   */
+  static void debug_print(const uint8_t *msg, uint32_t msg_len);
 };
 
 #endif // UTILITY_H

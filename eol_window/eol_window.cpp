@@ -26,6 +26,10 @@ eol_window::eol_window(QString titile, QWidget *parent) :
   /* 初始化定时器 */
   timer_init();
 
+  /* 设置不可添加文件 */
+  ui->add_list_pushButton->setEnabled(false);
+  ui->upload_pushButton->setEnabled(false);
+
   /* 初始化状态 */
   reset_ui_info();
 
@@ -288,12 +292,15 @@ bool eol_window::csv_analysis(QString &file_path, int table_type_index, int data
   if(false == ret)
   {
     qDebug() << "add task error";
+    current_task_complete_state = TASK_ERROR;
     return false;
   }
 
   /* 启动发送数据线程 */
   g_thread_pool->start(eol_protocol_obj);
 
+  /* 设置当前任务状态 */
+  current_task_complete_state = TASK_RUNNING;
   return true;
 }
 
@@ -302,7 +309,6 @@ bool eol_window::csv_analysis(QString &file_path, int table_type_index, int data
  */
 void eol_window::run_eol_window_file_decode_task()
 {
-  bool ret = false;
   QString str;
   /* 列表循环 */
   for(int i = 0; i < table_list.size(); i++)
@@ -310,9 +316,14 @@ void eol_window::run_eol_window_file_decode_task()
     /* 设置传输的文件 */
     current_file_path = table_list.value(i).file_path;
 
-    ret = csv_analysis(current_file_path, table_list.value(i).table_type, table_list.value(i).data_type);
+    csv_analysis(current_file_path, table_list.value(i).table_type, table_list.value(i).data_type);
 
-    if(true == ret)
+    while(current_task_complete_state == TASK_RUNNING)
+    {
+      QThread::msleep(1);
+    }
+
+    if(TASK_COMPLETE == current_task_complete_state)
     {
       /* 更新为ok状态 */
       str = table_list.value(i).show_info.replace("\r\n", " -- [ok]\r\n");
@@ -325,10 +336,10 @@ void eol_window::run_eol_window_file_decode_task()
     TABLE_INFO_Typedef_t table = table_list.value(i);
     table.show_info = str;
     table_list.replace(i, table);
-  }
 
-  /* 更新显示列表 */
-  emit signal_update_show_table_list();
+    /* 更新显示列表 */
+    emit signal_update_show_table_list();
+  }
 
   /* 任务结束 */
   run_state = false;
@@ -389,6 +400,9 @@ void eol_window::on_upload_pushButton_clicked()
   eol_protocol::DOA_TABLE_Typedef_t table_type = (eol_protocol::DOA_TABLE_Typedef_t)ui->table_type_comboBox->currentIndex();
   eol_protocol_obj->eol_master_get_table_data(table_type);
 
+  /* 重置错误统计 */
+  err_constantly_cnt = 0;
+
   /* 重置计时 */
   time_cnt = 0;
 
@@ -403,6 +417,7 @@ void eol_window::on_upload_pushButton_clicked()
 
   /* 本按钮不可用 */
   ui->upload_pushButton->setEnabled(false);
+  ui->add_list_pushButton->setEnabled(false);
 }
 
 
@@ -413,6 +428,9 @@ void eol_window::on_update_pushButton_clicked()
   {
     return;
   }
+
+  /* 重置错误统计 */
+  err_constantly_cnt = 0;
 
   /* 重置计时 */
   time_cnt = 0;
@@ -431,6 +449,7 @@ void eol_window::on_update_pushButton_clicked()
 
   /* 本按钮不可用 */
   ui->update_pushButton->setEnabled(false);
+  ui->add_list_pushButton->setEnabled(false);
 }
 
 void eol_window::on_add_list_pushButton_clicked()
@@ -460,6 +479,9 @@ void eol_window::on_add_list_pushButton_clicked()
 
   /* 更新显示列表 */
   update_show_table_list();
+
+  /* 发送按钮可用 */
+  ui->update_pushButton->setEnabled(true);
 }
 
 
@@ -472,23 +494,35 @@ void eol_window::on_clear_list_pushButton_clicked()
 }
 
 /**
- * @brief 从机无应答信号
+ * @brief 从机无应答超时时间
  */
-void eol_window::slot_protocol_no_response()
+void eol_window::slot_protocol_timeout(quint32 sec)
 {
   /* 错误累计 */
   quint32 cnt = ui->error_num_val_label->text().toUInt();
   cnt++;
-  ui->error_num_val_label->setText(QString("%1").arg(cnt));
+  ui->error_num_val_label->setText(QString("%1 sec:%2s").arg(cnt).arg(sec));
+}
 
+/**
+ * @brief 从机无应答信号
+ */
+void eol_window::slot_protocol_no_response()
+{
   /* 连续错误统计 */
-  err_constanly_cnt++;
-  if(err_constanly_cnt >= 3)
+  err_constantly_cnt++;
+  if(err_constantly_cnt > 0)
   {
+    /* 重置错误统计 */
+    err_constantly_cnt = 0;
+
     /* 停止协议栈 */
     eol_protocol_obj->stop();
 
     timer_obj->stop();
+
+    /* 设置错误状态 */
+    current_task_complete_state = TASK_ERROR;
 
     /* 本按钮可用 */
     if(table_list.size() > 0)
@@ -500,6 +534,7 @@ void eol_window::slot_protocol_no_response()
       ui->update_pushButton->setEnabled(false);
     }
     ui->upload_pushButton->setEnabled(true);
+    ui->add_list_pushButton->setEnabled(true);
   }
 }
 
@@ -518,7 +553,8 @@ void eol_window::slot_protocol_error_occur(quint8 error_msg)
 void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data, quint16
                                  data_len)
 {
-  err_constanly_cnt = 0;
+  /* 重置错误统计 */
+  err_constantly_cnt = 0;
 
   qint32 frame_num_display = ui->frame_lcdNumber->value();
   ui->frame_lcdNumber->display(frame_num == 0xFFFF ? frame_num_display++ : frame_num_display + 1);
@@ -607,18 +643,39 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
       ui->update_pushButton->setEnabled(false);
     }
     ui->upload_pushButton->setEnabled(true);
+    ui->add_list_pushButton->setEnabled(true);
   }
 }
 
 void eol_window::slot_send_progress(quint32 current_size, quint32 total_size)
 {
-  err_constanly_cnt = 0;
+  /* 重置错误统计 */
+  err_constantly_cnt = 0;
 
   /* 显示发送进度 */
   ui->transfer_progressBar->setMaximum((int)table_info.Data_Size);
 
   ui->transfer_progressBar->setValue(current_size > total_size ? total_size : current_size);
   ui->bytes_lcdNumber->display((int)current_size);
+}
+
+/**
+ * @brief 接收发送完成信号
+ */
+void eol_window::slot_send_eol_data_complete()
+{
+  /* 设置完成状态 */
+  current_task_complete_state = TASK_COMPLETE;
+  /* 本按钮可用 */
+  if(table_list.size() > 0)
+  {
+    ui->update_pushButton->setEnabled(true);
+  }
+  else
+  {
+    ui->update_pushButton->setEnabled(false);
+  }
+  ui->add_list_pushButton->setEnabled(true);
 }
 
 /**
@@ -630,6 +687,9 @@ void eol_window::slot_recv_eol_data_complete()
   eol_protocol_obj->stop();
 
   timer_obj->stop();
+
+  /* 设置完成状态 */
+  current_task_complete_state = TASK_COMPLETE;
 
   /* 显示接收完成 */
   QMessageBox message(QMessageBox::Information, "通知", "<font size='10' color='green'>上载传输完成！</font>", QMessageBox::Yes, nullptr);
@@ -645,4 +705,60 @@ void eol_window::slot_recv_eol_data_complete()
     ui->update_pushButton->setEnabled(false);
   }
   ui->upload_pushButton->setEnabled(true);
+  ui->add_list_pushButton->setEnabled(true);
 }
+
+void eol_window::on_entry_produce_mode_pushButton_clicked()
+{
+  if(ui->entry_produce_mode_pushButton->text() == "entry produce mode")
+  {
+    if(ui->produce_noral_radioButton->isChecked())
+    {
+      qDebug() << "set produce normal mode";
+      eol_protocol_obj->eol_master_set_device_mode(eol_protocol::PRODUCE_MODE_NORMAL);
+    }
+    else
+    {
+      qDebug() << "set produce calibration mode";
+      eol_protocol_obj->eol_master_set_device_mode(eol_protocol::PRODUCE_MODE_CALIBRATION);
+    }
+    g_thread_pool->start(eol_protocol_obj);
+  }
+  if(ui->entry_produce_mode_pushButton->text() == "exit produce mode")
+  {
+    qDebug() << "set exit produce mode";
+    eol_protocol_obj->eol_master_set_device_mode(eol_protocol::NORMAL_MODE_RUN);
+    g_thread_pool->start(eol_protocol_obj);
+  }
+}
+
+void eol_window::slot_device_mode(const void *pass_data)
+{
+  const quint8 *data_ptr = (const quint8 *)pass_data;
+  eol_protocol::DEVICE_MODE_Typedef_t mode = (eol_protocol::DEVICE_MODE_Typedef_t)data_ptr[0];
+  if(ui->produce_noral_radioButton->isChecked() && eol_protocol::PRODUCE_MODE_NORMAL == mode)
+  {
+    ui->add_list_pushButton->setEnabled(true);
+    ui->upload_pushButton->setEnabled(true);
+    ui->entry_produce_mode_pushButton->setText("exit produce mode");
+  }
+  else if(ui->produce_calibratio_radioButton->isChecked() && eol_protocol::PRODUCE_MODE_CALIBRATION == mode)
+  {
+    ui->add_list_pushButton->setEnabled(true);
+    ui->upload_pushButton->setEnabled(true);
+    ui->entry_produce_mode_pushButton->setText("exit produce mode");
+  }
+  else if(eol_protocol::NORMAL_MODE_RUN == mode)
+  {
+    ui->add_list_pushButton->setEnabled(false);
+    ui->upload_pushButton->setEnabled(true);
+    ui->entry_produce_mode_pushButton->setText("entry produce mode");
+  }
+  /* 显示设备信息 */
+  QMessageBox message(QMessageBox::Information, "device info", \
+                      tr("<font size='10' color='green'>profile amount:%1</font>\r\n").arg(data_ptr[1]) +
+                      tr("<font size='10' color='green'>channel amount:%1</font>\r\n").arg(data_ptr[2]), \
+                      QMessageBox::Yes, nullptr);
+  message.exec();
+}
+

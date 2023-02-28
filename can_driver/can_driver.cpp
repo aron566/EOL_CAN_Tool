@@ -879,11 +879,12 @@ void can_driver::add_msg_filter(quint32 can_id, CircularQueue *cq_obj_)
   msg_filter.can_id = can_id;
   msg_filter.cq_obj = cq_obj_;
 
-  /* 查重 */
+  /* 查到id重复的，则替换 */
   for(qint32 i = 0; i < msg_filter_list.size(); i++)
   {
-    if(can_id == msg_filter_list.value(i).can_id)
+    if(can_id == msg_filter_list.value(i).can_id || msg_filter_list.value(i).cq_obj == cq_obj_)
     {
+      msg_filter_list.replace(i, msg_filter);
       return;
     }
   }
@@ -905,10 +906,11 @@ void can_driver::remove_msg_filter(quint32 can_id)
 
 void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Receive_Data *data, quint32 len)
 {
-  uint8_t temp_buf[64 + 4] = {0};
+  uint8_t temp_buf[64 + 2] = {0};
 
   QString item;
   quint32 id_temp;
+  quint16 can_id = 0;
   for(quint32 i = 0; i < len; ++i)
   {
     const ZCAN_Receive_Data& can = data[i];
@@ -925,21 +927,22 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
       item += QString::asprintf("%02X ", can.frame.data[i]);
     }
 
+    can_id = GET_ID(id);
+
     /* 消息过滤 */
-    id_temp = (GET_ID(id) & can_id_mask_);
+    id_temp = (can_id & can_id_mask_);
     if((GET_ID(id) == id_temp) || false == can_id_mask_en_)
     {
       show_message(item, true);
     }
 
     /* 加入数据到cq */
-    if(nullptr == cq_obj)
+    if(nullptr != cq_obj)
     {
-      continue;
+      memcpy(temp_buf, &can_id, sizeof(quint16));
+      memcpy(temp_buf + sizeof(quint16), can.frame.data, can.frame.can_dlc);
+      CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, can.frame.can_dlc + sizeof(quint16));
     }
-    memcpy(temp_buf, &id, sizeof(canid_t));
-    memcpy(temp_buf + sizeof(canid_t), can.frame.data, can.frame.can_dlc);
-    CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, can.frame.can_dlc + sizeof(canid_t));
 
     /* 消息过滤分发 */
     if(msg_filter_list.isEmpty())
@@ -948,7 +951,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     }
     for(qint32 index = 0; index < msg_filter_list.size(); index++)
     {
-      if(msg_filter_list.value(index).can_id == id)
+      if(msg_filter_list.value(index).can_id == can_id)
       {
         CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), can.frame.data, can.frame.can_dlc);
         break;
@@ -959,10 +962,11 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
 
 void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_ReceiveFD_Data *data, quint32 len)
 {
-  uint8_t temp_buf[64 + 4] = {0};
+  uint8_t temp_buf[64 + 2] = {0};
 
   QString item;
   quint32 id_temp;
+  quint16 can_id = 0;
   for(quint32 i = 0; i < len; ++i)
   {
     const ZCAN_ReceiveFD_Data& canfd = data[i];
@@ -975,21 +979,22 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
       item += QString::asprintf("%02X ", canfd.frame.data[i]);
     }
 
+    can_id = GET_ID(id);
+
     /* 消息过滤 */
-    id_temp = (GET_ID(id) & can_id_mask_);
+    id_temp = (can_id & can_id_mask_);
     if((GET_ID(id) == id_temp) || false == can_id_mask_en_)
     {
       show_message(item, true);
     }
 
     /* 加入数据到cq */
-    if(nullptr == cq_obj)
-    {
-      continue;
+    if(nullptr != cq_obj)
+    {  
+      memcpy(temp_buf, &can_id, sizeof(quint16));
+      memcpy(temp_buf + sizeof(quint16), canfd.frame.data, canfd.frame.len);
+      CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, canfd.frame.len + sizeof(quint16));
     }
-    memcpy(temp_buf, &id, sizeof(canid_t));
-    memcpy(temp_buf + sizeof(canid_t), canfd.frame.data, canfd.frame.len);
-    CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, canfd.frame.len + sizeof(canid_t));
 
     /* 消息过滤分发 */
     if(msg_filter_list.isEmpty())
@@ -998,7 +1003,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     }
     for(qint32 index = 0; index < msg_filter_list.size(); index++)
     {
-      if(msg_filter_list.value(index).can_id == id)
+      if(msg_filter_list.value(index).can_id == can_id)
       {
         CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), canfd.frame.data, canfd.frame.len);
         break;

@@ -168,7 +168,7 @@ utility::utility(QObject *parent)
 /**
  * @brief modbusCRC calc with table
  *
- * @param data data 数据
+ * @param data 数据
  * @param data_len crc区域数据长度
  * @return uint16_t crc结果
  */
@@ -176,15 +176,15 @@ uint16_t utility::get_modbus_crc16_with_tab(uint8_t *data, uint16_t data_len)
 {
   uint8_t ucCRCHi = 0xFF;
   uint8_t ucCRCLo = 0xFF;
-  int iIndex;
+  uint16_t index = 0;
 
   while(data_len--)
   {
-    iIndex = ucCRCLo ^ *(data++);
+    index = ucCRCLo ^ *(data++);
     //
     //
-    ucCRCLo = (uint8_t)(ucCRCHi ^ auchCRCHi[iIndex]);
-    ucCRCHi = auchCRCLo[iIndex];
+    ucCRCLo = (uint8_t)(ucCRCHi ^ auchCRCHi[index]);
+    ucCRCHi = auchCRCLo[index];
   }
   return (uint16_t)( ucCRCHi << 8 | ucCRCLo );
 }
@@ -192,7 +192,7 @@ uint16_t utility::get_modbus_crc16_with_tab(uint8_t *data, uint16_t data_len)
 /**
  * @brief modbusCRC calc with table
  *
- * @param data data 数据与crc
+ * @param data 数据与crc
  * @param data_len crc区域数据长度
  * @return bool crc结果正确
  */
@@ -200,15 +200,16 @@ bool utility::get_modbus_crc16_rsl_with_tab(uint8_t *data, uint16_t data_len)
 {
   uint8_t ucCRCHi = 0xFF;
   uint8_t ucCRCLo = 0xFF;
-  int iIndex;
+  uint16_t index = 0;
+  uint16_t data_size = data_len;
 
-  while(data_len--)
+  while(data_size--)
   {
-    iIndex = ucCRCLo ^ *(data++);
+    index = ucCRCLo ^ *(data++);
     //
     //
-    ucCRCLo = (uint8_t)(ucCRCHi ^ auchCRCHi[iIndex]);
-    ucCRCHi = auchCRCLo[iIndex];
+    ucCRCLo = (uint8_t)(ucCRCHi ^ auchCRCHi[index]);
+    ucCRCHi = auchCRCLo[index];
   }
   // return (uint16_t)( ucCRCHi << 8 | ucCRCLo );
 
@@ -373,4 +374,47 @@ quint32 utility::str2int(void *buf, const QStringList &num_str_list, utility::NU
   }
   return num_size;
 }
+
+quint8 utility::get_data_sum(const quint8 *data, quint32 len)
+{
+  quint32 val = 0;
+  for(quint32 i = 0; i < len; i++)
+  {
+    val += data[i];
+  }
+  return (quint8)val;
+}
+
+bool utility::get_sum_rsl(const quint8 *data, quint32 len)
+{
+  quint32 val = 0;
+  for(quint32 i = 0; i < len; i++)
+  {
+    val += data[i];
+  }
+  if(data[len] == (quint8)val)
+  {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * @brief 16进制格式调试打印
+ *
+ * @param msg 数据
+ * @param msg_len 数据长度
+ */
+void utility::debug_print(const uint8_t *msg, uint32_t msg_len)
+{
+  for(uint32_t i = 0; i < msg_len; i++)
+  {
+    fprintf(stdout, "%02X ", msg[i]);
+    fflush(stdout);
+  }
+  printf("\n");
+  fflush(stderr);
+  fflush(stdout);
+}
+
 /******************************** End of file *********************************/

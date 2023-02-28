@@ -67,6 +67,12 @@ private:
 
 public slots:
   /**
+   * @brief 协议栈无回复超时
+   * @param sec 秒
+   */
+  void slot_protocol_timeout(quint32 sec);
+
+  /**
    * @brief 从机无应答信号
    */
   void slot_protocol_no_response();
@@ -84,10 +90,18 @@ public slots:
 
   void slot_send_progress(quint32 current_size, quint32 total_size);
 
+
+  void slot_send_eol_data_complete();
   /**
    * @brief 接收数据完成
    */
   void slot_recv_eol_data_complete();
+
+  /**
+   * @brief 设备当前模式
+   * @param pass_data 返回数据[0]模式 [1]配置数 [2]天线通道数
+   */
+  void slot_device_mode(const void *pass_data);
 private:
   quint32 time_cnt = 0;
 
@@ -141,9 +155,18 @@ private:
 
   eol_protocol::DOA_TABLE_HEADER_Typedef_t table_info;
 
-  quint32 err_constanly_cnt = 0;
+  quint32 err_constantly_cnt = 0;
 
   QFile recv_file;
+
+  typedef enum
+  {
+    TASK_RUNNING = 0,
+    TASK_COMPLETE,
+    TASK_ERROR,
+  }TASK_STATE_Tyedef_t;
+
+  TASK_STATE_Tyedef_t current_task_complete_state = TASK_COMPLETE;
 private:
   /**
    * @brief 定时器初始化
@@ -203,6 +226,8 @@ private slots:
   void on_update_pushButton_clicked();
   void on_add_list_pushButton_clicked();
   void on_clear_list_pushButton_clicked();
+  void on_entry_produce_mode_pushButton_clicked();
+
 };
 
 #endif // EOL_WINDOW_H

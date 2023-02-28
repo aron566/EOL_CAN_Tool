@@ -89,6 +89,9 @@ void MainWindow::eol_window_init(QString titile)
   connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, eol_window_obj, &eol_window::slot_recv_eol_table_data);
   connect(eol_protocol_obj, &eol_protocol::signal_send_progress, eol_window_obj, &eol_window::slot_send_progress);
   connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_data_complete, eol_window_obj, &eol_window::slot_recv_eol_data_complete);
+  connect(eol_protocol_obj, &eol_protocol::signal_send_eol_data_complete, eol_window_obj, &eol_window::slot_send_eol_data_complete);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_timeout, eol_window_obj, &eol_window::slot_protocol_timeout);
+  connect(eol_protocol_obj, &eol_protocol::signal_device_mode, eol_window_obj, &eol_window::slot_device_mode);
   /* 设置线程池 */
   eol_window_obj->set_thread_pool(g_thread_pool);
 
@@ -300,6 +303,8 @@ void MainWindow::on_open_device_pushButton_clicked()
 {
   /* 打开设备 */
   can_driver_obj->open();
+  /* 禁用打开设备按钮 */
+  ui->open_device_pushButton->setEnabled(false);
 }
 
 void MainWindow::on_init_can_pushButton_clicked()
@@ -342,6 +347,8 @@ void MainWindow::on_close_device_pushButton_clicked()
   /* 关闭设备 */
   eol_protocol_obj->stop();
   can_driver_obj->close();
+  /* 禁用打开设备按钮 */
+  ui->open_device_pushButton->setEnabled(true);
 }
 
 void MainWindow::on_more_pushButton_clicked()

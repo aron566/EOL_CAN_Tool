@@ -60,6 +60,14 @@ public:
     delete cq_obj;
   }
 
+  /* 设备工作模式 */
+  typedef enum
+  {
+    NORMAL_MODE_RUN = 0,
+    PRODUCE_MODE_NORMAL = 1,            /**< 雷达一直发送目标列表给上位机 */
+    PRODUCE_MODE_CALIBRATION = 2        /**< 雷达一直发送目标的2D-FFT数据给上位机 */
+  }DEVICE_MODE_Typedef_t;
+
   /* 操作返回值 */
   typedef enum
   {
@@ -136,6 +144,8 @@ private:
   {
     EOL_WRITE_CMD = 0x03,
     EOL_READ_CMD  = 0x04,
+
+    EOL_META_CMD  = 0xFF,
   }EOL_CMD_Typedef_t;
 
   /* 响应队列 */
@@ -170,11 +180,11 @@ private:
   {
     DOA_TABLE_HEADER_Typedef_t head_data;
     const quint8 *data;
-  }EOL_SEND_TABBLE_DATA_Typedef_t;
+    quint8 buf[256];
+  }EOL_SEND_DATA_Typedef_t;
 
   typedef struct EOL_TASK_LIST_
   {
-    DOA_TABLE_Typedef_t table_type;
     void *param;
     DOA_DATA_Typedef_t data_type;
     bool run_state;
@@ -196,18 +206,21 @@ public:
   {
     eol_protocol_clear();
     run_state = false;
+    qDebug() << "eol wait to stop";
   }
 
-  void set_can_driver_obj(can_driver *can_driver_ = nullptr)
-  {
-    can_driver_obj = can_driver_;
-    if(nullptr == can_driver_)
-    {
-      return;
-    }
-    /* 设置消息过滤器 */
-    can_driver_obj->add_msg_filter(0x666, cq_obj);
-  }
+  /**
+   * @brief 设置can驱动对象
+   * @param can_driver_
+   */
+  void set_can_driver_obj(can_driver *can_driver_ = nullptr);
+
+  /**
+   * @brief 添加设置设备工作模式任务
+   * @param mode 0生产普通 1生产校准
+   * @return true 任务添加成功
+   */
+  bool eol_master_set_device_mode(DEVICE_MODE_Typedef_t mode);
 
   /**
    * @brief 发送表数据
@@ -225,6 +238,12 @@ public:
   bool eol_master_get_table_data(DOA_TABLE_Typedef_t table_type);
 
 signals:
+  /**
+   * @brief 协议栈无回复超时
+   * @param sec 秒
+   */
+  void signal_protocol_timeout(quint32 sec);
+
   /**
    * @brief 从机无应答信号
    */
@@ -244,9 +263,20 @@ signals:
   void signal_send_progress(quint32 current_size, quint32 total_size);
 
   /**
+   * @brief 发送完成信号
+   */
+  void signal_send_eol_data_complete();
+
+  /**
    * @brief 接收数据完成
    */
   void signal_recv_eol_data_complete();
+
+  /**
+   * @brief 设备当前模式
+   * @param pass_data 返回数据[0]模式 [1]配置数 [2]天线通道数
+   */
+  void signal_device_mode(const void *pass_data);
 private:
   /**
    * @brief 定时器初始化
@@ -317,7 +347,6 @@ private:
    */
   uint32_t check_can_read(CircularQueue::CQ_handleTypeDef *cq);
 
-//public:
   /**
    * @brief 线程任务--获取表数据
    * @param param 参数
@@ -331,6 +360,14 @@ private:
    * @return
    */
   bool send_eol_table_data_task(void *param_);
+
+  /**
+   * @brief 线程任务--设置设备模式
+   * @param param_ 参数
+   * @return
+   */
+  bool set_device_mode_task(void *param_);
+
 private:
   /* 定时器 */
   QTimer *protocol_Timer = nullptr;
@@ -358,6 +395,8 @@ private:
   CircularQueue *cq_obj = nullptr;
   can_driver *can_driver_obj = nullptr;
 
+  quint32 current_send_can_id;
+
   typedef struct
   {
     quint8 data_buf[25 * 1024];
@@ -367,7 +406,7 @@ private:
 
   DATA_RECORD_Typedef_t data_record;
 
-  EOL_SEND_TABBLE_DATA_Typedef_t send_table_data;
+  EOL_SEND_DATA_Typedef_t send_table_data;
 };
 #endif
 /******************************** End of file *********************************/
