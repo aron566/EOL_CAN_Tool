@@ -172,7 +172,7 @@ utility::utility(QObject *parent)
  * @param data_len crc区域数据长度
  * @return uint16_t crc结果
  */
-uint16_t utility::get_modbus_crc16_with_tab(uint8_t *data, uint16_t data_len)
+uint16_t utility::get_modbus_crc16_with_tab(const uint8_t *data, uint16_t data_len)
 {
   uint8_t ucCRCHi = 0xFF;
   uint8_t ucCRCLo = 0xFF;
@@ -196,16 +196,17 @@ uint16_t utility::get_modbus_crc16_with_tab(uint8_t *data, uint16_t data_len)
  * @param data_len crc区域数据长度
  * @return bool crc结果正确
  */
-bool utility::get_modbus_crc16_rsl_with_tab(uint8_t *data, uint16_t data_len)
+bool utility::get_modbus_crc16_rsl_with_tab(const uint8_t *data, uint16_t data_len)
 {
   uint8_t ucCRCHi = 0xFF;
   uint8_t ucCRCLo = 0xFF;
   uint16_t index = 0;
   uint16_t data_size = data_len;
+  const uint8_t *data_ptr = data;
 
   while(data_size--)
   {
-    index = ucCRCLo ^ *(data++);
+    index = ucCRCLo ^ *(data_ptr++);
     //
     //
     ucCRCLo = (uint8_t)(ucCRCHi ^ auchCRCHi[index]);

@@ -94,7 +94,7 @@ public:
    * @param data_len 数据区域长度
    * @return true正确
    */
-  static bool get_modbus_crc16_rsl_with_tab(uint8_t *data, uint16_t data_len);
+  static bool get_modbus_crc16_rsl_with_tab(const uint8_t *data, uint16_t data_len);
 
   /**
    * @brief 计算数据的crc
@@ -102,7 +102,7 @@ public:
    * @param data_len 数据长度
    * @return crc结果
    */
-  static uint16_t get_modbus_crc16_with_tab(uint8_t *data, uint16_t data_len);
+  static uint16_t get_modbus_crc16_with_tab(const uint8_t *data, uint16_t data_len);
 
   /**
    * @brief 计算数据的crc
