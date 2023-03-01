@@ -761,12 +761,28 @@ void eol_window::slot_device_mode(const void *pass_data)
   {
     ui->add_list_pushButton->setEnabled(true);
     ui->upload_pushButton->setEnabled(true);
+    if(table_list.size() > 0)
+    {
+      ui->update_pushButton->setEnabled(true);
+    }
+    else
+    {
+      ui->update_pushButton->setEnabled(false);
+    }
     ui->entry_produce_mode_pushButton->setText("exit produce mode");
   }
   else if(ui->produce_calibratio_radioButton->isChecked() && eol_protocol::PRODUCE_MODE_CALIBRATION == mode)
   {
     ui->add_list_pushButton->setEnabled(true);
     ui->upload_pushButton->setEnabled(true);
+    if(table_list.size() > 0)
+    {
+      ui->update_pushButton->setEnabled(true);
+    }
+    else
+    {
+      ui->update_pushButton->setEnabled(false);
+    }
     ui->entry_produce_mode_pushButton->setText("exit produce mode");
   }
   else if(eol_protocol::NORMAL_MODE_RUN == mode)
