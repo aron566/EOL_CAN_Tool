@@ -71,7 +71,7 @@ public:
     while(start_)
     {
       receice_data();
-      QThread::msleep(15);
+      QThread::msleep(1);
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << " listen end";
     thread_run_state = false;
@@ -326,9 +326,19 @@ public:
    * @brief 设置canid掩码
    * @param mask 掩码
    * @param en 掩码使能
+   * @param plast_can_id_mask 上次掩码
+   * @param plast_en 上次掩码使能
    */
-  void set_msg_canid_mask(quint32 can_id_mask, bool en = false)
+  void set_msg_canid_mask(quint32 can_id_mask, bool en = false, quint32 *plast_can_id_mask = nullptr, bool *plast_en = nullptr)
   {
+    if(nullptr != plast_can_id_mask)
+    {
+      *plast_can_id_mask = can_id_mask_;
+    }
+    if(nullptr != plast_en)
+    {
+      *plast_en = can_id_mask_en_;
+    }
     can_id_mask_en_ = en;
     can_id_mask_ = can_id_mask;
   }

@@ -92,6 +92,7 @@ void MainWindow::eol_window_init(QString titile)
   connect(eol_protocol_obj, &eol_protocol::signal_send_eol_data_complete, eol_window_obj, &eol_window::slot_send_eol_data_complete);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_timeout, eol_window_obj, &eol_window::slot_protocol_timeout);
   connect(eol_protocol_obj, &eol_protocol::signal_device_mode, eol_window_obj, &eol_window::slot_device_mode);
+  connect(eol_protocol_obj, &eol_protocol::signal_send_rec_one_frame, eol_window_obj, &eol_window::slot_send_rec_one_frame);
   /* 设置线程池 */
   eol_window_obj->set_thread_pool(g_thread_pool);
 

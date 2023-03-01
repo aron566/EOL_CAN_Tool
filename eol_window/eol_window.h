@@ -102,6 +102,11 @@ public slots:
    * @param pass_data 返回数据[0]模式 [1]配置数 [2]天线通道数
    */
   void slot_device_mode(const void *pass_data);
+
+  /**
+   * @brief 传输一帧触发计数
+   */
+  void slot_send_rec_one_frame();
 private:
   quint32 time_cnt = 0;
 
@@ -177,6 +182,11 @@ private:
    * @brief 重置显示
    */
   void reset_ui_info();
+
+  /**
+   * @brief 重置传输信息显示
+   */
+  void reset_base_ui_info();
 
   /**
    * @brief 更新显示列表

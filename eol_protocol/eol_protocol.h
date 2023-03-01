@@ -277,6 +277,12 @@ signals:
    * @param pass_data 返回数据[0]模式 [1]配置数 [2]天线通道数
    */
   void signal_device_mode(const void *pass_data);
+
+  /**
+   * @brief 传输一帧触发计数
+   * @param dir true发送
+   */
+  void signal_send_rec_one_frame(bool dir);
 private:
   /**
    * @brief 定时器初始化

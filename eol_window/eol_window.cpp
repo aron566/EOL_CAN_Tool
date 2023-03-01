@@ -90,11 +90,9 @@ void eol_window::slot_update_show_table_list()
 void eol_window::reset_ui_info()
 {
   timer_obj->stop();
-  ui->transfer_progressBar->setValue(0);
-  ui->bytes_lcdNumber->display(0);
-  ui->frame_lcdNumber->display(0);
-  ui->time_cnt_val_label->setNum(0);
-  ui->error_num_val_label->setNum(0);
+
+  reset_base_ui_info();
+
   if(table_list.size() > 0)
   {
     ui->update_pushButton->setEnabled(true);
@@ -313,6 +311,17 @@ void eol_window::run_eol_window_file_decode_task()
   /* 列表循环 */
   for(int i = 0; i < table_list.size(); i++)
   {
+    TABLE_INFO_Typedef_t table = table_list.value(i);
+
+    /* 移除上一次的状态 */
+    str = table_list.value(i).show_info.replace(" -- [ok]", "");
+    str = table_list.value(i).show_info.replace(" -- [err]", "");
+    table.show_info = str;
+    table_list.replace(i, table);
+
+    /* 更新显示列表 */
+    emit signal_update_show_table_list();
+
     /* 设置传输的文件 */
     current_file_path = table_list.value(i).file_path;
 
@@ -333,7 +342,8 @@ void eol_window::run_eol_window_file_decode_task()
       /* 更新为error状态 */
       str = table_list.value(i).show_info.replace("\r\n", " -- [err]\r\n");
     }
-    TABLE_INFO_Typedef_t table = table_list.value(i);
+
+    table = table_list.value(i);
     table.show_info = str;
     table_list.replace(i, table);
 
@@ -400,14 +410,14 @@ void eol_window::on_upload_pushButton_clicked()
   eol_protocol::DOA_TABLE_Typedef_t table_type = (eol_protocol::DOA_TABLE_Typedef_t)ui->table_type_comboBox->currentIndex();
   eol_protocol_obj->eol_master_get_table_data(table_type);
 
+  /* 重置界面 */
+  reset_base_ui_info();
+
   /* 重置错误统计 */
   err_constantly_cnt = 0;
 
   /* 重置计时 */
   time_cnt = 0;
-
-  /* 重置进度 */
-  ui->transfer_progressBar->setValue(0);
 
   /* 启动计时 */
   timer_obj->start();
@@ -435,8 +445,8 @@ void eol_window::on_update_pushButton_clicked()
   /* 重置计时 */
   time_cnt = 0;
 
-  /* 重置进度 */
-  ui->transfer_progressBar->setValue(0);
+  /* 重置界面 */
+  reset_base_ui_info();
 
   /* 启动计时 */
   timer_obj->start();
@@ -501,7 +511,7 @@ void eol_window::slot_protocol_timeout(quint32 sec)
   /* 错误累计 */
   quint32 cnt = ui->error_num_val_label->text().toUInt();
   cnt++;
-  ui->error_num_val_label->setText(QString("%1 sec:%2s").arg(cnt).arg(sec));
+  ui->error_num_val_label->setText(QString("%1").arg(cnt));
 }
 
 /**
@@ -555,9 +565,6 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 {
   /* 重置错误统计 */
   err_constantly_cnt = 0;
-
-  qint32 frame_num_display = ui->frame_lcdNumber->value();
-  ui->frame_lcdNumber->display(frame_num == 0xFFFF ? frame_num_display++ : frame_num_display + 1);
 
   /* 0帧为表信息数据 */
   if(0 == frame_num)
@@ -653,7 +660,7 @@ void eol_window::slot_send_progress(quint32 current_size, quint32 total_size)
   err_constantly_cnt = 0;
 
   /* 显示发送进度 */
-  ui->transfer_progressBar->setMaximum((int)table_info.Data_Size);
+  ui->transfer_progressBar->setMaximum((int)total_size);
 
   ui->transfer_progressBar->setValue(current_size > total_size ? total_size : current_size);
   ui->bytes_lcdNumber->display((int)current_size);
@@ -710,25 +717,39 @@ void eol_window::slot_recv_eol_data_complete()
 
 void eol_window::on_entry_produce_mode_pushButton_clicked()
 {
+  /* 是否时正在执行任务 */
+  if(TASK_RUNNING == current_task_complete_state)
+  {
+    return;
+  }
+  bool ret = false;
   if(ui->entry_produce_mode_pushButton->text() == "entry produce mode")
   {
     if(ui->produce_noral_radioButton->isChecked())
     {
-      qDebug() << "set produce normal mode";
-      eol_protocol_obj->eol_master_set_device_mode(eol_protocol::PRODUCE_MODE_NORMAL);
+      ret = eol_protocol_obj->eol_master_set_device_mode(eol_protocol::PRODUCE_MODE_NORMAL);
     }
     else
     {
-      qDebug() << "set produce calibration mode";
-      eol_protocol_obj->eol_master_set_device_mode(eol_protocol::PRODUCE_MODE_CALIBRATION);
+      ret = eol_protocol_obj->eol_master_set_device_mode(eol_protocol::PRODUCE_MODE_CALIBRATION);
     }
-    g_thread_pool->start(eol_protocol_obj);
+    goto __TASK_STATE_CHANGE;
   }
   if(ui->entry_produce_mode_pushButton->text() == "exit produce mode")
   {
-    qDebug() << "set exit produce mode";
-    eol_protocol_obj->eol_master_set_device_mode(eol_protocol::NORMAL_MODE_RUN);
+    ret = eol_protocol_obj->eol_master_set_device_mode(eol_protocol::NORMAL_MODE_RUN);
+    goto __TASK_STATE_CHANGE;
+  }
+  return;
+__TASK_STATE_CHANGE:
+  if(true == ret)
+  {
+    current_task_complete_state = TASK_RUNNING;
     g_thread_pool->start(eol_protocol_obj);
+  }
+  else
+  {
+    current_task_complete_state = TASK_ERROR;
   }
 }
 
@@ -751,9 +772,11 @@ void eol_window::slot_device_mode(const void *pass_data)
   else if(eol_protocol::NORMAL_MODE_RUN == mode)
   {
     ui->add_list_pushButton->setEnabled(false);
-    ui->upload_pushButton->setEnabled(true);
+    ui->upload_pushButton->setEnabled(false);
+    ui->update_pushButton->setEnabled(false);
     ui->entry_produce_mode_pushButton->setText("entry produce mode");
   }
+  current_task_complete_state = TASK_COMPLETE;
   /* 显示设备信息 */
   QMessageBox message(QMessageBox::Information, "device info", \
                       tr("<font size='10' color='green'>profile amount:%1</font>\r\n").arg(data_ptr[1]) +
@@ -762,3 +785,26 @@ void eol_window::slot_device_mode(const void *pass_data)
   message.exec();
 }
 
+void eol_window::reset_base_ui_info()
+{
+  /* 帧数 */
+  ui->frame_lcdNumber->display(0);
+
+  /* 字节数 */
+  ui->bytes_lcdNumber->display(0);
+
+  /* 耗时 */
+  ui->time_cnt_val_label->setNum(0);
+
+  /* 进度 */
+  ui->transfer_progressBar->setValue(0);
+
+  /* 错误 */
+  ui->error_num_val_label->setNum(0);
+}
+
+void eol_window::slot_send_rec_one_frame()
+{
+  qint32 frame_num_display = ui->frame_lcdNumber->value();
+  ui->frame_lcdNumber->display(++frame_num_display);
+}
