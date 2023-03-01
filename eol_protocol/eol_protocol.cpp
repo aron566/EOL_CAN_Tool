@@ -1013,6 +1013,7 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   data_buf[index++] = (quint8)(crc >> 8);
   data_buf[index++] = (quint8)(crc >> 16);
   data_buf[index++] = (quint8)(crc >> 24);
+//  qDebug("crc 0x%08X size %u", crc, param->head_data.Data_Size);
   /* 发送表头信息 */
   qDebug() << "step1 send table head ";
   do
@@ -1035,12 +1036,12 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   {
     goto __send_eol_table_data_err;
   }
-
+//  utility::debug_print(param->data, param->head_data.Data_Size);
   /* 清空错误统计 */
   error_cnt = 0;
   qDebug() << "step2 send table data ";
   /* 发送表数据，每包4Bytes，不足0填充 */
-  for(quint32 i = 0; i < param->head_data.Data_Size + 3;)
+  for(quint32 i = 0; i < param->head_data.Data_Size;)
   {
     frame_num++;
     index = 0;
@@ -1048,7 +1049,16 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
     data_buf[index++] = (quint8)(frame_num >> 8);
     data_buf[index++] = (quint8)param->head_data.Data_Type;
 
-    memcpy(&data_buf[index], param->data + i, 4);
+    if(index > param->head_data.Data_Size)
+    {
+      memset(&data_buf[index], 0, 4);
+      memcpy(&data_buf[index], param->data + i, param->head_data.Data_Size - index);
+    }
+    else
+    {
+      memcpy(&data_buf[index], param->data + i, 4);
+    }
+
     index += 4;
 
     /* 发送表数据 */

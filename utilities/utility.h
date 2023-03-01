@@ -86,7 +86,7 @@ public:
    * @param unit_bytes 转换后的类型占字节数，存储区
    * @param 转换相应类型数据的数量，两个浮点字符串转为复数浮点，则返回1
    */
-  static quint32 str2int(void *buf, const QStringList &num_str_list, NUM_TYPE_Typedef_t Type = INT32_DATA_TYPE, quint8 *unit_bytes = nullptr);
+  static quint32 str2num(void *buf, const QStringList &num_str_list, NUM_TYPE_Typedef_t Type = INT32_DATA_TYPE, quint8 *unit_bytes = nullptr);
 
   /**
    * @brief 验证数据crc是否正确

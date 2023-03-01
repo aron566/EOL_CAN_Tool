@@ -262,7 +262,7 @@ void utility::delay_ms(int ms)
   loop.exec();
 }
 
-quint32 utility::str2int(void *buf, const QStringList &num_str_list, utility::NUM_TYPE_Typedef_t Type, quint8 *unit_bytes)
+quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NUM_TYPE_Typedef_t Type, quint8 *unit_bytes)
 {
   if(num_str_list.isEmpty())
   {

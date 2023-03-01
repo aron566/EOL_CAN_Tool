@@ -129,7 +129,7 @@ void eol_window::csv_data_analysis(QByteArray &data, quint64 line_num, int table
     case eol_protocol::DOA_SV_AZIMUTH_TABLE:
     {
       quint8 unit_byets;
-      quint32 num = utility::str2int(&num_buf[sv_table_info.data_size], num_str_list, (utility::NUM_TYPE_Typedef_t)data_type, &unit_byets);
+      quint32 num = utility::str2num(&num_buf[sv_table_info.data_size], num_str_list, (utility::NUM_TYPE_Typedef_t)data_type, &unit_byets);
       sv_table_info.data_type = data_type;
       sv_table_info.data_size += (num * unit_byets);
       break;
@@ -138,7 +138,7 @@ void eol_window::csv_data_analysis(QByteArray &data, quint64 line_num, int table
     case eol_protocol::DOA_SV_ELEVATION_TABLE:
     {
       quint8 unit_byets;
-      quint32 num = utility::str2int(&num_buf[sv_table_info.data_size], num_str_list, (utility::NUM_TYPE_Typedef_t)data_type, &unit_byets);
+      quint32 num = utility::str2num(&num_buf[sv_table_info.data_size], num_str_list, (utility::NUM_TYPE_Typedef_t)data_type, &unit_byets);
       sv_table_info.data_type = data_type;
       sv_table_info.data_size += (num * unit_byets);
       break;
@@ -151,7 +151,7 @@ void eol_window::csv_data_analysis(QByteArray &data, quint64 line_num, int table
     case eol_protocol::DOA_ANT_BOTH_TABLE:
     {
       quint8 unit_byets;
-      quint32 num = utility::str2int(&num_buf[ant_table_info.data_size], num_str_list, (utility::NUM_TYPE_Typedef_t)data_type, &unit_byets);
+      quint32 num = utility::str2num(&num_buf[ant_table_info.data_size], num_str_list, (utility::NUM_TYPE_Typedef_t)data_type, &unit_byets);
       /* 天线间距 */
       if(1 == line_num)
       {
@@ -159,12 +159,15 @@ void eol_window::csv_data_analysis(QByteArray &data, quint64 line_num, int table
         ant_table_info.data_type = data_type;
         ant_table_info.channel_num = num / 2;
         ant_table_info.data_size += (num * unit_byets);
+        qDebug() << "channel_num " << ant_table_info.channel_num;
+        qDebug() << "ant_table_info.data_size " << ant_table_info.data_size;
       }
 
       /* 通道补偿 */
       if(2 <= line_num)
       {
         ant_table_info.data_size += (ant_table_info.channel_num * unit_byets);
+        qDebug() << "ant_table_info.data_size " << ant_table_info.data_size;
       }
 
       break;
@@ -280,7 +283,6 @@ bool eol_window::csv_analysis(QString &file_path, int table_type_index, int data
   }
   table_info.Data_Type = (eol_protocol::DOA_DATA_Typedef_t)data_type;
   table_info.Class_ID_Num = 0x0566U;
-  table_info.Crc_Val = 0;
   table_info.Version_MAJOR = 0;
   table_info.Version_MINOR = 0;
   table_info.Version_REVISION = 1;
