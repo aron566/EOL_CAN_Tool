@@ -59,9 +59,6 @@ void eol_window::closeEvent(QCloseEvent *event)
   /* 终止并清空传输任务 */
   run_state = false;
 
-  table_list.clear();
-  ui->transfer_list_val_label->clear();
-
   /* 停止协议栈 */
   eol_protocol_obj->stop();
 
