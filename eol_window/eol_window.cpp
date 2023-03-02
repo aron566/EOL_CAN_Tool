@@ -682,6 +682,9 @@ void eol_window::slot_send_eol_data_complete()
     ui->update_pushButton->setEnabled(false);
   }
   ui->add_list_pushButton->setEnabled(true);
+
+  /* 停止计时 */
+  timer_obj->stop();
 }
 
 /**
@@ -689,9 +692,7 @@ void eol_window::slot_send_eol_data_complete()
  */
 void eol_window::slot_recv_eol_data_complete()
 {
-  /* 停止协议栈 */
-  eol_protocol_obj->stop();
-
+  /* 停止计时 */
   timer_obj->stop();
 
   /* 设置完成状态 */
