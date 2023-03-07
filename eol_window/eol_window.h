@@ -51,7 +51,7 @@ public:
       run_eol_window_file_decode_task();
       QThread::msleep(15);
     }
-    qDebug() << "[thread]" << QThread::currentThreadId() << " eol window end";
+    qDebug() << "[thread]" << QThread::currentThreadId() << "eol window end";
     thread_run_state = false;
   }
 protected:

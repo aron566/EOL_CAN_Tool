@@ -313,8 +313,8 @@ void eol_window::run_eol_window_file_decode_task()
     TABLE_INFO_Typedef_t table = table_list.value(i);
 
     /* 移除上一次的状态 */
-    str = table_list.value(i).show_info.replace(" -- [ok]", "");
-    str = table_list.value(i).show_info.replace(" -- [err]", "");
+    str = table.show_info.replace(" -- [ok]", "");
+    str = table.show_info.replace(" -- [err]", "");
     table.show_info = str;
     table_list.replace(i, table);
 
@@ -322,7 +322,7 @@ void eol_window::run_eol_window_file_decode_task()
     emit signal_update_show_table_list();
 
     /* 设置传输的文件 */
-    current_file_path = table_list.value(i).file_path;
+    current_file_path = table.file_path;
 
     csv_analysis(current_file_path, table_list.value(i).table_type, table_list.value(i).data_type);
 
@@ -334,15 +334,14 @@ void eol_window::run_eol_window_file_decode_task()
     if(TASK_COMPLETE == current_task_complete_state)
     {
       /* 更新为ok状态 */
-      str = table_list.value(i).show_info.replace("\r\n", " -- [ok]\r\n");
+      str = table.show_info.replace("\r\n", " -- [ok]\r\n");
     }
     else
     {
       /* 更新为error状态 */
-      str = table_list.value(i).show_info.replace("\r\n", " -- [err]\r\n");
+      str = table.show_info.replace("\r\n", " -- [err]\r\n");
     }
 
-    table = table_list.value(i);
     table.show_info = str;
     table_list.replace(i, table);
 

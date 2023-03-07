@@ -24,25 +24,27 @@
 /*
 上位机写入
            /------------/------------/------------/------------/------------/------------/-----------/
-         /     帧头    /    功能码   /  寄存器地址  /   数据长度  /  变长数据   /    CRC16_L  /  CRC16_H  /
+         /     帧头    /    功能码   /  寄存器地址 /    数据长度  /   变长数据  /   CRC16_L   /  CRC16_H  /
        /------------/------------/------------/------------/------------/-------------/-----------/
-     /   2Bytes   /    1Byte   /   2Bytes   /   2Bytes   /     ...    /    1Byte    /    1Byte   /
+     /   2Bytes   /    bit0    /   bit1-7   /   2Bytes   /     ...    /    1Byte    /    1Byte   /
    /------------/------------/------------/------------/------------/-------------/------------/
- *//***********C*************R***************C**********************/
+*//***********C*************R***************C**********************/
 /*
 PS：
 默认小端模式：低8位在前
-帧长最小为：10Bytes
-总帧长为：9Bytes + 数据长度
+帧长最小为：8Bytes
+总帧长为：7Bytes + 数据长度
  */
 
 /*
 回复
-           /------------/------------/------------/------------/------------/
-         /    帧头     /    功能码   /  寄存器地址  / ACK RESULT /   MESSAGE  /
-       /------------/------------/------------/------------/------------/
-     /   2Bytes   /    1Byte   /   2Bytes   /   1Bytes   /   1Bytes   /
-   /------------/------------/------------/------------/------------/
+           /------------/------------/------------/------------/------------/------------/------------/
+         /     帧头    /   功能码    /  寄存器地址  / ACK RESULT /   MESSAGE  /   CRC16_L  /   CRC16_H  /
+       /------------/------------/------------/------------/------------/------------/------------/
+     /   2Bytes   /     bit0   /   bit1-7   /   1Bytes   /   1Bytes   /   1Byte    /    1Byte   /
+   /------------/------------/------------/------------/------------/------------/------------/
+*//***********C*************R***************C**********************/
+/*
 PS：
 帧长固定为：7Bytes
 */
@@ -50,33 +52,33 @@ PS：
 /*
 上位机读取
            /------------/------------/------------/------------/------------/
-         /    帧头    /    功能码   /   寄存器地址  /  CRC16_L   /   CRC16_H  /
+         /     帧头    /    功能码   /  寄存器地址  /  CRC16_L   /   CRC16_H  /
        /------------/------------/-------------/------------/------------/
-     /   2Bytes   / 1Byte 0x04 /    2Bytes   /   1Byte    /    1Byte   /
+     /   2Bytes   /    bit0    /    bit1-7   /   1Byte    /    1Byte   /
    /------------/------------/-------------/------------/------------/
- *//******C********R********C*************/
+*//******C********R********C*************/
 /*
 PS：
 默认小端模式：低8位在前
-帧长固定为：7Bytes
+帧长固定为：5Bytes
 */
 
 /*
 回复
            /------------/------------/------------/------------/------------/------------/------------/
-         /    帧头     /    功能码   /  寄存器地址  /   数据长度   /   变长数据  /  CRC16_L   /   CRC16_H  /
+         /     帧头    /    功能码   /   寄存器地址 /    数据长度  /   变长数据  /  CRC16_L   /   CRC16_H  /
        /------------/------------/-------------/------------/------------/------------/------------/
-     /   2Bytes   /    1Byte   /    2Bytes   /   2Bytes   /     ...    /    1Byte   /    1Byte   /
+     /   2Bytes   /    bit0    /    bit1-7   /   2Bytes   /     ...    /    1Byte   /    1Byte   /
    /------------/------------/-------------/------------/------------/------------/------------/
- *//*******************C******************R*************C************/
+*//*******************C******************R*************C************/
 /*
 PS：
 默认小端模式：低8位在前
-帧长最短为：10Bytes
-总帧长为：9Bytes + 数据长度
+帧长最短为：8Bytes
+总帧长为：7Bytes + 数据长度
 */
 #define ENABLE_SEND_DELAY             1       /**< 为1开启分包发送 */
-#define ENABLE_SEND_DELAY_MS          5U      /**< 分包发送间隔ms >5ms */
+#define ENABLE_SEND_DELAY_MS          1U      /**< 分包发送间隔ms >1ms */
 #define ENABLE_SEND_DELAY_LIMIT_SIZE  8U      /**< >8Bytes时开启发送 */
 #define SEND_ONE_PACKET_SIZE_MAX      8U      /**< 每包发送大小 */
 
@@ -95,22 +97,22 @@ PS：
 /* 最小帧长 7Bytes DATA */
 #define FRAME_MIN_SIZE                (EOL_FRAME_MIN_SIZE)
 
-#define FRAME_TEMP_BUF_SIZE           (64U)
+#define FRAME_TEMP_BUF_SIZE           (1024U) /**< 临时缓冲区大小 */
 
 #define WAIT_LIST_LEN                 100U
-#define FRAME_TIME_OUT                3U      /**< 3s超时检测 */
+#define FRAME_TIME_OUT                1U      /**< 1s超时检测 */
 #define NO_RESPONSE_TIMES             0U      /**< 允许超时无响应次数，发出无响应信号 */
 
 #define RETRY_NUM_MAX                 3U      /**< 无法发出数据，超时重试次数 */
 #define NOT_FULL_TIMEOUT_SEC_MAX      15U     /**< 允许帧不全超时时间 */
 #define WAIT_SEND_HW_ERR_TIMES        3U      /**< 硬件发送失败3次 */
 /* 寄存器表 */
-#define EOL_META_DATA_CHECK_REG        0x0000U/**< 安全认证请求 */
-#define EOL_META_DATA_CHECK_OK_REG     0x0001U/**< 安全认证确认 */
-#define EOL_META_DATA_SET_MODE_REG     0x0002U/**< 模式选择 */
-#define EOL_RW_TABLE_DATA_REG          0x0007U
-#define EOL_W_TABLE_SEL_REG            0x0008U
-#define EOL_W_TABLE_DATA_SEL_REG       0x0009U
+#define EOL_META_DATA_CHECK_REG        0x00U  /**< 安全认证请求 */
+#define EOL_META_DATA_CHECK_OK_REG     0x01U  /**< 安全认证确认 */
+#define EOL_META_DATA_SET_MODE_REG     0x02U  /**< 模式选择 */
+#define EOL_RW_TABLE_DATA_REG          0x07U
+#define EOL_W_TABLE_SEL_REG            0x08U
+#define EOL_W_TABLE_DATA_SEL_REG       0x09U
 
 /** Private typedef ----------------------------------------------------------*/
 
@@ -236,7 +238,7 @@ eol_protocol::SNED_CHECK_STATUS_Typedef_t eol_protocol::check_wait_send_task(boo
   /* 发送 */
   bool ret = can_driver_obj->send(reinterpret_cast<const quint8 *>(send_task_handle.buf_ptr + send_task_handle.current_send_index), \
                        (quint8)can_send_size, current_send_can_id, can_driver::STD_FRAME_TYPE, \
-                                  can_driver::CANFD_PROTOCOL_TYPE);
+                                  can_driver::CAN_PROTOCOL_TYPE);
   if(false == ret)
   {
     qDebug() << "hw send error " << send_task_handle.hw_send_err_times;
@@ -273,7 +275,9 @@ uint32_t eol_protocol::check_can_read(CircularQueue::CQ_handleTypeDef *cq)
   /* 判断CAN ID 跳过无效头 */
   if(CircularQueue::CQ_ManualGet_Offset_Data(cq, 0) != SLAVE_EOL_FRAME_HEADER || CircularQueue::CQ_ManualGet_Offset_Data(cq, 1) != EOL_DEVICE_COM_ADDR)
   {
-    if(CircularQueue::CQ_skipInvaildU8Header(cq, (quint8)EOL_PROTOCOL_MASTER_CAN_ID) == 0)
+    /* 帧头不对则删除一个 */
+    CircularQueue::CQ_ManualOffsetInc(cq, 1);
+    if(CircularQueue::CQ_skipInvaildU8Header(cq, (quint8)SLAVE_EOL_FRAME_HEADER) == 0)
     {
       return 0;
     }
@@ -307,7 +311,7 @@ void eol_protocol::slot_timer_timeout()
 }
 
 /* 打包报文进行发送并等待回复 */
-eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL_CMD_Typedef_t command, uint16_t reg_addr,
+eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL_CMD_Typedef_t command, uint8_t reg_addr,
                                           const uint8_t *data, uint16_t data_len)
 {
   static uint8_t send_buf[FRAME_TEMP_BUF_SIZE];
@@ -330,9 +334,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
   /* 写入 */
   if(EOL_WRITE_CMD == command)
   {
-    send_buf[index++] = (quint8)command;
-    send_buf[index++] = static_cast<uint8_t>(reg_addr&0x00FF);
-    send_buf[index++] = static_cast<uint8_t>((reg_addr>>8)&0xFF);
+    send_buf[index++] = static_cast<uint8_t>(reg_addr << 1 | (quint8)command);
     send_buf[index++] = static_cast<uint8_t>(data_len&0x00FF);
     send_buf[index++] = static_cast<uint8_t>((data_len>>8)&0xFF);
     for(uint16_t data_index = 0; data_index < data_len; data_index++)
@@ -347,9 +349,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
   /* 读取 */
   else if(EOL_READ_CMD == command)
   {
-    send_buf[index++] = (quint8)command;
-    send_buf[index++] = static_cast<uint8_t>(reg_addr&0x00FF);
-    send_buf[index++] = static_cast<uint8_t>((reg_addr>>8)&0xFF);
+    send_buf[index++] = static_cast<uint8_t>(reg_addr << 1 | (quint8)command);
 
     uint16_t crc_val = utility::get_modbus_crc16_with_tab(send_buf, index);
     send_buf[index++] = static_cast<uint8_t>((crc_val&0x00FF));
@@ -372,7 +372,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
     send_task_handle.wait_send_size = index;
     send_task_handle.buf_ptr = send_buf;
     send_task_handle.last_send_time_ms = current_time_ms;
-    SNED_CHECK_STATUS_Typedef_t state = check_wait_send_task(false);//不立即发
+    SNED_CHECK_STATUS_Typedef_t state = check_wait_send_task(false);// 不立即发
 
     if(EOL_WRITE_CMD == command || EOL_META_CMD == command)
     {
@@ -409,7 +409,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
   /* 发送 */
   bool ok = can_driver_obj->send(reinterpret_cast<const quint8 *>(send_buf), \
                          (quint8)index, current_send_can_id, can_driver::STD_FRAME_TYPE, \
-                                 can_driver::CANFD_PROTOCOL_TYPE);
+                                 can_driver::CAN_PROTOCOL_TYPE);
 
   if(EOL_WRITE_CMD == command || EOL_META_CMD == command)
   {
@@ -445,12 +445,10 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
 /* 从机ack应答 */
 eol_protocol::DOA_TABLE_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(const quint8 *data)
 {
-  quint16 reg_addr = 0;
-  reg_addr = data[4];
-  reg_addr <<= 8;
-  reg_addr |= data[3];
+  quint8 reg_addr = 0;
+  reg_addr = (data[2] >> 1);
 
-  quint8 ack_rsl = data[5];
+  quint8 ack_rsl = data[3];
   QString msg_str;
   if(0 == ack_rsl)
   {
@@ -461,7 +459,7 @@ eol_protocol::DOA_TABLE_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(cons
     msg_str = "error";
   }
 
-  DOA_TABLE_OPT_STATUS_Typedef_t msg = (DOA_TABLE_OPT_STATUS_Typedef_t)data[6];
+  DOA_TABLE_OPT_STATUS_Typedef_t msg = (DOA_TABLE_OPT_STATUS_Typedef_t)data[4];
   switch(reg_addr)
   {
     case EOL_RW_TABLE_DATA_REG:
@@ -525,7 +523,9 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
   static quint8 temp_buf[FRAME_TEMP_BUF_SIZE];
   uint16_t data_len = 0;
   quint32 package_len = 0;
-
+  uint32_t len = 0;
+  uint8_t reg = 0;
+  uint8_t cmd = 0;
 //  QCoreApplication::processEvents();
   /* 获取句柄是否为空 */
   if(cq_obj == nullptr)
@@ -583,14 +583,15 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
       return RETURN_WAITTING;
     }
 
-    uint32_t len = CircularQueue::CQ_getLength(cq);
+    len = CircularQueue::CQ_getLength(cq);
     if(EOL_FRAME_MIN_SIZE > len)
     {
       return RETURN_WAITTING;
     }
 
     /* 判断帧类型 */
-    uint8_t cmd = CircularQueue::CQ_ManualGet_Offset_Data(cq, 2);
+    reg = CircularQueue::CQ_ManualGet_Offset_Data(cq, 2);
+    cmd = reg & 0x01;
 
     switch((EOL_CMD_Typedef_t)cmd)
     {
@@ -602,12 +603,17 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         /* 写入应答完成 */
         CircularQueue::CQ_ManualGetData(cq, temp_buf, package_len);
 
-        /* 正常写入-->移除等待队列 */
-        wait_response_list.removeFirst();
+        /* 校验CRC */
+        if(utility::get_modbus_crc16_rsl_with_tab(temp_buf, static_cast<uint16_t>(package_len - 2)) == false)
+        {
+          break;
+        }
 
-        /* 缓冲区更新 */
+        /* 正常-->移除等待队列 */
+        wait_response_list.removeFirst();
         CircularQueue::CQ_ManualOffsetInc(cq, package_len);
 
+        /* 处理ack */
         DOA_TABLE_OPT_STATUS_Typedef_t ret = decode_ack_frame(temp_buf);
         if(DOA_TABLE_OPT_OK != ret)
         {
@@ -623,9 +629,9 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
       /* 主机读取，从机回复报文 */
       case EOL_READ_CMD:
       {
-        data_len = static_cast<uint16_t>(CircularQueue::CQ_ManualGet_Offset_Data(cq, 6) << 8);
-        data_len += CircularQueue::CQ_ManualGet_Offset_Data(cq, 5);
-        package_len = 9 + data_len;
+        data_len = static_cast<uint16_t>(CircularQueue::CQ_ManualGet_Offset_Data(cq, 4) << 8);
+        data_len += CircularQueue::CQ_ManualGet_Offset_Data(cq, 3);
+        package_len = 7 + data_len;
         package_len = (package_len > FRAME_TEMP_BUF_SIZE) ? FRAME_TEMP_BUF_SIZE : package_len;
 
         if(len < package_len)
@@ -639,9 +645,9 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         }
 
         /* 处理数据 */
-        RETURN_TYPE_Typedef_t ret = decode_data_frame(wait, temp_buf + 8, data_len);
+        RETURN_TYPE_Typedef_t ret = decode_data_frame(wait, temp_buf + 5, data_len);
 
-        /* 正常写入-->移除等待队列 */
+        /* 正常-->移除等待队列 */
         wait_response_list.removeFirst();
         CircularQueue::CQ_ManualOffsetInc(cq, package_len);
 

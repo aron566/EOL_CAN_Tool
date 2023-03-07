@@ -142,8 +142,8 @@ private:
   /* 功能码 */
   typedef enum
   {
-    EOL_WRITE_CMD = 0x03,
-    EOL_READ_CMD  = 0x04,
+    EOL_WRITE_CMD = 0x00,
+    EOL_READ_CMD  = 0x01,
 
     EOL_META_CMD  = 0xFF,
   }EOL_CMD_Typedef_t;
@@ -200,6 +200,7 @@ public:
     thread_run_state = true;
     run_eol_task();
     thread_run_state = false;
+    qDebug() << "[thread]" << QThread::currentThreadId() << "eol protocol end";
   }
 
   void stop()
@@ -314,7 +315,7 @@ private:
    * @param data_len 数据长度
    * @return 报文状态
    */
-  RETURN_TYPE_Typedef_t protocol_stack_create_task(EOL_CMD_Typedef_t command, uint16_t reg_addr,
+  RETURN_TYPE_Typedef_t protocol_stack_create_task(EOL_CMD_Typedef_t command, uint8_t reg_addr,
                                             const uint8_t *data, uint16_t data_len);
 
   /**

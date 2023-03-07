@@ -136,7 +136,8 @@ void MainWindow::can_driver_init()
   connect(can_driver_obj, &can_driver::signal_get_dev_auto_send_list_can_use, this, &MainWindow::slot_get_dev_auto_send_list_can_use);
   connect(can_driver_obj, &can_driver::signal_show_message, this, &MainWindow::slot_show_message);
   /* 线程同步 */
-  connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &MainWindow::slot_show_message, Qt::BlockingQueuedConnection);
+//  connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &MainWindow::slot_show_message, Qt::BlockingQueuedConnection);
+  connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &MainWindow::slot_show_message);
 }
 
 void MainWindow::eol_protocol_init()
