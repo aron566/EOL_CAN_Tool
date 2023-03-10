@@ -86,7 +86,7 @@ void MainWindow::eol_window_init(QString titile)
   connect(eol_window_obj, &eol_window::signal_eol_window_closed, this, &MainWindow::slot_show_this_window);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_error_occur, eol_window_obj, &eol_window::slot_protocol_error_occur);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_no_response, eol_window_obj, &eol_window::slot_protocol_no_response);
-  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, eol_window_obj, &eol_window::slot_recv_eol_table_data);
+  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, eol_window_obj, &eol_window::slot_recv_eol_table_data, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_send_progress, eol_window_obj, &eol_window::slot_send_progress);
   connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_data_complete, eol_window_obj, &eol_window::slot_recv_eol_data_complete);
   connect(eol_protocol_obj, &eol_protocol::signal_send_eol_data_complete, eol_window_obj, &eol_window::slot_send_eol_data_complete);
@@ -134,10 +134,6 @@ void MainWindow::can_driver_init()
   connect(can_driver_obj, &can_driver::signal_auto_send_stop_can_use, this, &MainWindow::slot_auto_send_stop_can_use);
   connect(can_driver_obj, &can_driver::signal_auto_send_cancel_once_can_use, this, &MainWindow::slot_auto_send_cancel_once_can_use);
   connect(can_driver_obj, &can_driver::signal_get_dev_auto_send_list_can_use, this, &MainWindow::slot_get_dev_auto_send_list_can_use);
-  connect(can_driver_obj, &can_driver::signal_show_message, this, &MainWindow::slot_show_message);
-  /* 线程同步 */
-//  connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &MainWindow::slot_show_message, Qt::BlockingQueuedConnection);
-  connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &MainWindow::slot_show_message);
 }
 
 void MainWindow::eol_protocol_init()
@@ -260,12 +256,6 @@ void MainWindow::slot_send_queue_mode_can_use(bool can_use)
   Q_UNUSED(can_use)
 }
 
-void MainWindow::slot_show_message(const QString &message)
-{
-  /* 显示消息到接收框 */
-  more_window_obj->show_message(message);
-}
-
 void MainWindow::slot_auto_send_dev_index_can_use(bool can_use)
 {
   Q_UNUSED(can_use)
@@ -372,6 +362,9 @@ void MainWindow::on_device_list_comboBox_currentTextChanged(const QString &arg1)
 
   /* 打开全部通道 */
   ui->channel_num_comboBox->addItem("ALL");
+
+  /* 设置可选通道 */
+  more_window_obj->set_channel_num(channel_num);
 }
 
 void MainWindow::on_device_index_comboBox_currentTextChanged(const QString &arg1)

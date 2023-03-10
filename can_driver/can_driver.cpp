@@ -624,13 +624,14 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
   }
 }
 
-void can_driver::send()
+void can_driver::send(quint8 channel_index)
 {
   CHANNEL_STATE_Typedef_t channel_state;
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     channel_state = channel_state_list.value(i);
-    if(true == channel_state.channel_en)
+    if(true == channel_state.channel_en && (channel_index == channel_state.channel_num \
+       || channel_index == channel_state_list.size()))
     {
       send(channel_state);
     }
@@ -933,6 +934,8 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     id_temp = (can_id & can_id_mask_);
     if((GET_ID(id) == id_temp) || false == can_id_mask_en_)
     {
+      /* 显示接收到的字节数 */
+      show_message_rx_bytes(can.frame.can_dlc);
       show_message(item, true);
     }
 
@@ -985,6 +988,8 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     id_temp = (can_id & can_id_mask_);
     if((GET_ID(id) == id_temp) || false == can_id_mask_en_)
     {
+      /* 显示接收到的字节数 */
+      show_message_rx_bytes(canfd.frame.len);
       show_message(item, true);
     }
 
@@ -1006,6 +1011,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
       if(msg_filter_list.value(index).can_id == can_id)
       {
         CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), canfd.frame.data, canfd.frame.len);
+//        utility::debug_print(canfd.frame.data, canfd.frame.len, "can driver:");
         break;
       }
     }
@@ -1065,6 +1071,11 @@ void can_driver::show_message(const QString &data, bool thread_mode)
   }
 
   qDebug() << message;
+}
+
+void can_driver::show_message_rx_bytes(quint8 bytes)
+{
+  emit signal_show_message_rx_bytes(bytes);
 }
 
 bool can_driver::transmit_type_config(const CHANNEL_STATE_Typedef_t &channel_state)

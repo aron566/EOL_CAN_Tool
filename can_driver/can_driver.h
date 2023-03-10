@@ -227,6 +227,7 @@ signals:
    */
   void signal_show_message(const QString &message);
   void signal_show_thread_message(const QString &message);
+  void signal_show_message_rx_bytes(quint8 bytes);
 
   /**
    * @brief 发送信号设置自动发送设备索引可用状态
@@ -358,9 +359,9 @@ public:
 
   /**
    * @brief 触发发送数据
-   *
+   * @param 通道号
    */
-  void send();
+  void send(quint8 channel_index = 0);
 
   /**
    * @brief send 发送数据
@@ -724,6 +725,7 @@ private:
    * @param thread_mode 当前消息是否来自线程
    */
   void show_message(const QString &data, bool thread_mode = false);
+  void show_message_rx_bytes(quint8 bytes);
   bool transmit_type_config(const CHANNEL_STATE_Typedef_t &channel_state);
   bool resistance_config(const CHANNEL_STATE_Typedef_t &channel_state);
   bool baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state);

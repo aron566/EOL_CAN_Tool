@@ -141,8 +141,9 @@ public:
    *
    * @param msg 数据
    * @param msg_len 数据长度
+   * @param prefix_str 前缀
    */
-  static void debug_print(const uint8_t *msg, uint32_t msg_len);
+  static void debug_print(const uint8_t *msg, uint32_t msg_len, QString prefix_str = "");
 };
 
 #endif // UTILITY_H

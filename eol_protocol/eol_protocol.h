@@ -122,6 +122,10 @@ public:
     DOA_DATA_Typedef_t Data_Type;   /**< 存储在flash中的数据类型 @ref DOA_DATA_Typedef_t */
     DOA_TABLE_Typedef_t Table_Type; /**< 表类型 @ref DOA_TABLE_Typedef_t */
     uint32_t Data_Size;             /**< 表数据字节数，也是校验CRC部分大小 */
+    int8_t Start_Angle;             /**< 起始角度 */
+    int8_t End_Angle;               /**< 结束角度 */
+    uint16_t Points;                /**< 点数 */
+    uint8_t Channel_Num;            /**< 通道数量 */
     uint32_t Crc_Val;               /**< 表数据CRC */
   }DOA_TABLE_HEADER_Typedef_t;
 

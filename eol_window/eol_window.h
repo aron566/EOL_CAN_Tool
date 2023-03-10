@@ -49,7 +49,6 @@ public:
     while(run_state)
     {
       run_eol_window_file_decode_task();
-      QThread::msleep(15);
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << "eol window end";
     thread_run_state = false;
@@ -140,6 +139,8 @@ private:
   typedef struct
   {
     quint16 angle_points;
+    qint8 start_angle;
+    qint8 end_angle;
     quint8 channel_num;
     int table_index;
     int data_type;
@@ -153,10 +154,6 @@ private:
     int data_type;
     quint32 data_size;
   }ANT_TABLE_INFO_Typedef_t;
-
-  SV_TABLE_INFO_Typedef_t sv_table_info;
-
-  ANT_TABLE_INFO_Typedef_t ant_table_info;
 
   eol_protocol::DOA_TABLE_HEADER_Typedef_t table_info;
 

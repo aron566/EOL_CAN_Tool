@@ -115,13 +115,6 @@ private slots:
   void slot_auto_send_cancel_once_can_use(bool can_use);
   void slot_get_dev_auto_send_list_can_use(bool can_use);
 
-  /**
-   * @brief 显示消息
-   *
-   * @param message
-   */
-  void slot_show_message(const QString &message);
-
   void on_device_list_comboBox_currentTextChanged(const QString &arg1);
   void on_device_index_comboBox_currentTextChanged(const QString &arg1);
   void on_end_resistance_checkBox_clicked(bool checked);

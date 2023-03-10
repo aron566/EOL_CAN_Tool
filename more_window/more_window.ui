@@ -215,6 +215,20 @@
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_9">
            <item>
+            <widget class="QComboBox" name="channel_num_comboBox">
+             <item>
+              <property name="text">
+               <string>通道0</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>通道1</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
             <widget class="QLabel" name="id_label">
              <property name="text">
               <string>ID（0x）:</string>

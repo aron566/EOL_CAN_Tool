@@ -16,6 +16,7 @@
 /** Includes -----------------------------------------------------------------*/
 /** Private includes ---------------------------------------------------------*/
 #include "utility.h"
+#include "qdebug.h"
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
@@ -406,16 +407,24 @@ bool utility::get_sum_rsl(const quint8 *data, quint32 len)
  * @param msg 数据
  * @param msg_len 数据长度
  */
-void utility::debug_print(const uint8_t *msg, uint32_t msg_len)
-{
+void utility::debug_print(const uint8_t *msg, uint32_t msg_len, QString prefix_str)
+{ 
+  QString hex_str = prefix_str;
   for(uint32_t i = 0; i < msg_len; i++)
   {
-    fprintf(stdout, "%02X ", msg[i]);
-    fflush(stdout);
+    hex_str += QString::asprintf("%02X ", msg[i]);
   }
-  printf("\n");
-  fflush(stderr);
-  fflush(stdout);
+  qDebug() << hex_str;
+
+//    for(uint32_t i = 0; i < msg_len; i++)
+//    {
+//      fprintf(stdout, "%02X ", msg[i]);
+//      fflush(stdout);
+//    }
+//    printf("\n");
+//    fflush(stderr);
+//    fflush(stdout);
+
 }
 
 /******************************** End of file *********************************/
