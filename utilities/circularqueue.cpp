@@ -462,6 +462,7 @@ uint8_t CircularQueue::CQ_ManualGet_Offset_Data(CQ_handleTypeDef *CircularQueue,
  */
 void CircularQueue::CQ_ManualOffsetInc(CQ_handleTypeDef *CircularQueue, uint32_t len)
 {
+  len = GET_MIN(CQ_getLength(CircularQueue), len);
   CircularQueue->exit += len;
 }
 

@@ -245,8 +245,14 @@ bool eol_window::csv_analysis(QString &file_path, int table_type_index, int data
       line_num++;
     }
 
-    /* 解析头部 */
+    /* 跳过头部 */
     if(1 == line_num)
+    {
+      continue;
+    }
+
+    /* 解析头部 */
+    if(2 == line_num)
     {
       csv_header_analysis(line_data, table_type_index);
       continue;
@@ -599,21 +605,24 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
     table_info.Points |= data[13];
 
     /* 组织表头信息 41,4,-20,20 */
+    quint16 version = table_info.Version_REVISION;
+    version <<= 4;
+    version |= table_info.Version_MINOR;
+    version <<= 4;
+    version |= table_info.Version_MAJOR;
     QString str;
     str = QString::asprintf("%u,%u,%d,%d,"
-                            "Table Type:%u,"
-                            "Ver:v%u.%u.%u,"
-                            "Data Type:%u,"
-                            "Data Size:%u,"
-                            "Crc Val:0x%08X\r\n", \
+                            "%u,"
+                            "%u,"
+                            "%u,"
+                            "%u,"
+                            "%u\r\n", \
                             table_info.Points, \
                             table_info.Channel_Num, \
                             table_info.Start_Angle, \
                             table_info.End_Angle, \
                             table_info.Table_Type, \
-                            table_info.Version_MAJOR, \
-                            table_info.Version_MINOR, \
-                            table_info.Version_REVISION, \
+                            version, \
                             table_info.Data_Type, \
                             table_info.Data_Size, \
                             table_info.Crc_Val);
@@ -665,6 +674,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
     }
 
     /* 表头写入文件 */
+    recv_file.write(QString("points,channel num,start angle,end angle,table type,version,data type,data size,data crc\r\n").toUtf8());
     recv_file.write(str.toUtf8());
     return;
   }
@@ -815,6 +825,8 @@ void eol_window::on_entry_produce_mode_pushButton_clicked()
 __TASK_STATE_CHANGE:
   if(true == ret)
   {
+    /* 重置帧计数 */
+    reset_base_ui_info();
     current_task_complete_state = TASK_RUNNING;
     g_thread_pool->start(eol_protocol_obj);
   }
