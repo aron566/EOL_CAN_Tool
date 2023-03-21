@@ -31,6 +31,12 @@
 /** Exported constants -------------------------------------------------------*/
 
 /** Exported macros-----------------------------------------------------------*/
+/**
+ * @brief 求结构体成员偏移字节
+ * @param struct_type 结构体类型
+ * @param member 成员名
+ */
+#define __HAL_OFFSETOF(struct_type, member) ((size_t)(&(((struct_type*)0)->member)))
 /** Exported variables -------------------------------------------------------*/
 /** Exported functions prototypes --------------------------------------------*/
 
@@ -55,6 +61,7 @@ public:
     UINT32_DATA_TYPE,                 /**< 无符号整型32位 */
     UINT16_DAYA_TYPE,                 /**< 无符号整型16位 */
     UINT8_DATA_TYPE,                  /**< 无符号整型8位 */
+    FLOAT32_BIN_DATA_TYPE,            /**< 32位浮点数二进制类型 */
     UNKNOW_DATA_TYPE = 0xFF,          /**< 未知数据类型 */
   }NUM_TYPE_Typedef_t;
 
@@ -78,6 +85,13 @@ public:
    * @param ms
    */
   static void delay_ms(int ms);
+
+  /**
+   * @brief 数据类型转字节数
+   * @param Type 类型
+   * @return 字节数
+   */
+  static quint32 num_type_to_bytes(utility::NUM_TYPE_Typedef_t Type);
 
   /**
    * @brief 字符串转特定类型数值

@@ -106,13 +106,6 @@ PS：
 #define RETRY_NUM_MAX                 3U      /**< 无法发出数据，超时重试次数 */
 #define NOT_FULL_TIMEOUT_SEC_MAX      15U     /**< 允许帧不全超时时间 */
 #define WAIT_SEND_HW_ERR_TIMES        3U      /**< 硬件发送失败3次 */
-/* 寄存器表 */
-#define EOL_META_DATA_CHECK_REG        0x00U  /**< 安全认证请求 */
-#define EOL_META_DATA_CHECK_OK_REG     0x01U  /**< 安全认证确认 */
-#define EOL_META_DATA_SET_MODE_REG     0x02U  /**< 模式选择 */
-#define EOL_RW_TABLE_DATA_REG          0x07U
-#define EOL_W_TABLE_SEL_REG            0x08U
-#define EOL_W_TABLE_DATA_SEL_REG       0x09U
 
 /** Private typedef ----------------------------------------------------------*/
 
@@ -208,7 +201,8 @@ void eol_protocol::run_eol_task()
       }
 //    }
   }
-  qDebug() << "eol protocol stack thread end";
+  eol_task_list.clear();
+  qDebug() << "eol_task end";
 }
 
 
@@ -400,7 +394,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
     if(EOL_WRITE_CMD == command || EOL_READ_CMD == command ||
        EOL_META_CMD == command)
     {
-      while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING);
+      while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state);
     }
 
     if(ret == RETURN_OK && (EOL_READ_CMD == command || EOL_META_CMD == command))
@@ -409,7 +403,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
       emit signal_send_rec_one_frame(false);
     }
 
-    eol_protocol_clear();
+//    eol_protocol_clear();
     return ret;
   }
 #endif
@@ -438,7 +432,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
   if(EOL_WRITE_CMD == command || EOL_READ_CMD == command ||
      EOL_META_CMD == command)
   {
-    while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING);
+    while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state);
   }
 
   if(ret == RETURN_OK && (EOL_READ_CMD == command || EOL_META_CMD == command))
@@ -447,12 +441,12 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
     emit signal_send_rec_one_frame(false);
   }
 
-  eol_protocol_clear();
+//  eol_protocol_clear();
   return ret;
 }
 
 /* 从机ack应答 */
-eol_protocol::DOA_TABLE_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(const quint8 *data)
+eol_protocol::EOL_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(const quint8 *data)
 {
   quint8 reg_addr = 0;
   reg_addr = (data[2] >> 1);
@@ -468,17 +462,29 @@ eol_protocol::DOA_TABLE_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(cons
     msg_str = "error";
   }
 
-  DOA_TABLE_OPT_STATUS_Typedef_t msg = (DOA_TABLE_OPT_STATUS_Typedef_t)data[4];
+  EOL_OPT_STATUS_Typedef_t msg = (EOL_OPT_STATUS_Typedef_t)data[4];
   switch(reg_addr)
   {
     case EOL_RW_TABLE_DATA_REG:
     default:
       qDebug() << msg_str << ":" << msg;
-      return msg;
+      break;
   }
-  return DOA_TABLE_OPT_OK;
+
+  switch(reg_addr)
+  {
+    case EOL_W_DEVICE_REBOOT_REG:
+    case EOL_R_VCAN_TEST_REG:
+    case EOL_RW_SN_REG:
+    default:
+      /* 发送完成信号 */
+      emit signal_rw_device_ok(reg_addr, nullptr, 0);
+      break;
+  }
+  return msg;
 }
 
+/* 读取数据解析 */
 eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONSE_LIST_Typedef_t &wait, const quint8 *data, quint16 data_len)
 {
   switch(wait.reg_addr)
@@ -522,6 +528,14 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONS
       break;
     }
 
+    case EOL_RW_VERSION_REG:
+    case EOL_RW_SN_REG:
+    case EOL_R_PIN7_8_REG:
+    {
+      /* 发送完成信号 */
+      emit signal_rw_device_ok(wait.reg_addr, data, data_len);
+    }
+
     default:
       break;
   }
@@ -555,7 +569,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
   /* 获取等待数据信息 */
   WAIT_RESPONSE_LIST_Typedef_t wait = wait_response_list.first();
 
-  while(1)
+  while(run_state)
   {
     /* 检测响应帧超时 */
     if(response_is_timeout(wait) == true)
@@ -626,8 +640,8 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         CircularQueue::CQ_ManualOffsetInc(cq, package_len);
 
         /* 处理ack */
-        DOA_TABLE_OPT_STATUS_Typedef_t ret = decode_ack_frame(temp_buf);
-        if(DOA_TABLE_OPT_OK != ret)
+        EOL_OPT_STATUS_Typedef_t ret = decode_ack_frame(temp_buf);
+        if(EOL_OPT_OK != ret)
         {
           qDebug() << "signal_protocol_error_occur";
           emit signal_protocol_error_occur((quint8)ret);
@@ -757,6 +771,7 @@ __META_CMD_DECDE:
     CircularQueue::CQ_ManualOffsetInc(cq, 1);
     return RETURN_ERROR;
   }
+  return RETURN_ERROR;
 }
 
 /* 获取表数据任务 */
@@ -783,7 +798,7 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
 
   /* 表选择 */
   index = 0;
-  data_buf[index++] = (quint8)param->Table_Type;
+  data_buf[index++] = (quint8)param->Common_Info.Table_Type;
   /* 发送 */
   do
   {
@@ -870,6 +885,50 @@ __get_eol_table_data_err:
   return false;
 }
 
+bool eol_protocol::common_rw_device_task(void *param_)
+{
+  /* 暂停其他数据接收显示 */
+  quint32 last_canid_mask = 0;
+  bool last_canid_mask_en = false;
+  can_driver_obj->set_msg_canid_mask(EOL_PROTOCOL_REPLY_CAN_ID + 100, true, &last_canid_mask, &last_canid_mask_en);
+
+  eol_protocol::RETURN_TYPE_Typedef_t ret;
+  quint8 error_cnt = 0;
+  EOL_TASK_LIST_Typedef_t *param = (EOL_TASK_LIST_Typedef_t *)param_;
+  /* 清空 */
+  eol_protocol_clear();
+
+  qDebug() << "step1 rw device cmd " << param->command << "reg " << param->reg;
+  do
+  {
+    ret = protocol_stack_create_task(param->command, param->reg, param->buf, param->len);
+    if(RETURN_OK != ret)
+    {
+      error_cnt++;
+      if(RETRY_NUM_MAX > error_cnt)
+      {
+        continue;
+      }
+      goto __set_device_err;
+    }
+    break;
+  }while(run_state);
+
+  qDebug() << "rw_device_task exit ok";
+
+  /* 恢复数据接收显示 */
+  can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
+
+  return true;
+__set_device_err:
+  /* 恢复数据接收显示 */
+  can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
+
+  qDebug() << "signal_protocol_rw_err";
+  emit signal_protocol_rw_err(param->reg, (quint8)param->command);
+  return false;
+}
+
 bool eol_protocol::set_device_mode_task(void *param_)
 {
   /* 暂停其他数据接收显示 */
@@ -899,7 +958,7 @@ bool eol_protocol::set_device_mode_task(void *param_)
   send_table_data.buf[index++] = (quint8)utility::get_data_sum(send_table_data.buf, 7);
 
   /* 发送安全请求 */
-  qDebug() << "step1 device safe check ";
+  qDebug() << "step1 device safe check";
   do
   {
     ret = protocol_stack_create_task(EOL_META_CMD, EOL_META_DATA_CHECK_REG, param->buf, 8);
@@ -929,7 +988,7 @@ bool eol_protocol::set_device_mode_task(void *param_)
   param->buf[index++] = 0xAF;
   param->buf[7] = (quint8)utility::get_data_sum(param->buf, 7);
   /* 发送安全确认 */
-  qDebug() << "step2 device safe ok ";
+  qDebug() << "step2 device safe ok";
   do
   {
     ret = protocol_stack_create_task(EOL_META_CMD, EOL_META_DATA_CHECK_OK_REG, param->buf, 8);
@@ -956,7 +1015,7 @@ bool eol_protocol::set_device_mode_task(void *param_)
 
   memset(param->buf + 4, 0, 4);
 
-  qDebug() << "step3 device mode set ";
+  qDebug() << "step3 device mode set";
   do
   {
     ret = protocol_stack_create_task(EOL_META_CMD, EOL_META_DATA_SET_MODE_REG, param->buf, 8);
@@ -996,6 +1055,7 @@ __set_device_mode_err:
   return false;
 }
 
+/* 发送表数据任务 */
 bool eol_protocol::send_eol_table_data_task(void *param_)
 {
   /* 暂停其他数据接收显示 */
@@ -1020,25 +1080,22 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   frame_num = 0;
   data_buf[index++] = frame_num;// 第0包表头信息
   data_buf[index++] = (quint8)(frame_num >> 8);
-  data_buf[index++] = (quint8)param->head_data.Table_Type;
-  data_buf[index] = param->head_data.Version_MINOR;
-  data_buf[index] <<= 4;
-  data_buf[index++] |= param->head_data.Version_MAJOR;
-  data_buf[index++] = param->head_data.Version_REVISION;
-  data_buf[index++] = param->head_data.Data_Type;
-  data_buf[index++] = param->head_data.Data_Size;
-  data_buf[index++] = (quint8)(param->head_data.Data_Size >> 8);
-  quint32 crc = utility::get_crc32_with_tab(param->data, param->head_data.Data_Size);
-  data_buf[index++] = (quint8)crc;
-  data_buf[index++] = (quint8)(crc >> 8);
-  data_buf[index++] = (quint8)(crc >> 16);
-  data_buf[index++] = (quint8)(crc >> 24);
-  data_buf[index++] = param->head_data.Channel_Num;
-  data_buf[index++] = param->head_data.Start_Angle;
-  data_buf[index++] = param->head_data.End_Angle;
-  data_buf[index++] = (quint8)param->head_data.Points;
-  data_buf[index++] = (quint8)(param->head_data.Points >> 8);
-//  qDebug("crc 0x%08X size %u", crc, param->head_data.Data_Size);
+
+  quint32 crc = utility::get_crc32_with_tab(param->data, param->head_data.Common_Info.Data_Size);
+  if(param->head_data.Common_Info.Crc_Val != crc)
+  {
+    qDebug() << "err crc expectance " << crc << "?" << param->head_data.Common_Info.Crc_Val;
+    goto __send_eol_table_data_err;
+  }
+
+  param->head_data.Common_Info.Crc_Val = crc;
+  quint8 check_sum = utility::get_data_sum((const quint8 *)param->head_data.private_header, param->head_data.Common_Info.Header_Size);
+  param->head_data.Common_Info.Headr_Check_Sum = check_sum;
+
+  memcpy(&data_buf[index], &param->head_data, sizeof(param->head_data.Common_Info) + param->head_data.Common_Info.Header_Size);
+  index += sizeof(param->head_data.Common_Info) + param->head_data.Common_Info.Header_Size;
+
+  qDebug("check pass crc 0x%08X size %u", crc, param->head_data.Common_Info.Data_Size);
   /* 发送表头信息 */
   qDebug() << "step1 send table head ";
   do
@@ -1061,23 +1118,23 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   {
     goto __send_eol_table_data_err;
   }
-  utility::debug_print(param->data, param->head_data.Data_Size);
+
   /* 清空错误统计 */
   error_cnt = 0;
   qDebug() << "step2 send table data ";
   /* 发送表数据，每包256Bytes，不足0填充 */
-  for(quint32 i = 0; i < param->head_data.Data_Size;)
+  for(quint32 i = 0; i < param->head_data.Common_Info.Data_Size;)
   {
     frame_num++;
     index = 0;
     data_buf[index++] = frame_num;
     data_buf[index++] = (quint8)(frame_num >> 8);
 
-    if((i + 256) > param->head_data.Data_Size)
+    if((i + 256) > param->head_data.Common_Info.Data_Size)
     {
       memset(&data_buf[index], 0, 256);
-      memcpy(&data_buf[index], param->data + i, param->head_data.Data_Size - i);
-      index += (param->head_data.Data_Size - i);
+      memcpy(&data_buf[index], param->data + i, param->head_data.Common_Info.Data_Size - i);
+      index += (param->head_data.Common_Info.Data_Size - i);
     }
     else
     {
@@ -1113,7 +1170,7 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
     /* 累积已发送数据 */
     i += (index - 2);
     qDebug() << "signal_send_progress";
-    emit signal_send_progress(i, param->head_data.Data_Size);
+    emit signal_send_progress(i, param->head_data.Common_Info.Data_Size);
   }
 
   error_cnt = 0;
@@ -1188,13 +1245,13 @@ bool eol_protocol::eol_master_set_device_mode(DEVICE_MODE_Typedef_t mode)
   return true;
 }
 
-bool eol_protocol::eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_info, const quint8 *data)
+bool eol_protocol::eol_master_send_table_data(COMMON_TABLE_HEADER_Typedef_t &table_info, const quint8 *data)
 {
   /* 查重 */
   for(qint32 i = 0; i < eol_task_list.size(); i++)
   {
     if(eol_task_list.value(i).task == &eol_protocol::send_eol_table_data_task && \
-       send_table_data.head_data.Table_Type == table_info.Table_Type)
+       send_table_data.head_data.Common_Info.Table_Type == table_info.Common_Info.Table_Type)
     {
       return true;
     }
@@ -1204,7 +1261,8 @@ bool eol_protocol::eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_
   can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
   current_send_can_id = EOL_PROTOCOL_MASTER_CAN_ID;
 
-  memcpy(&send_table_data.head_data, &table_info, sizeof(DOA_TABLE_HEADER_Typedef_t));
+  /* 公共 + 私有表头 */
+  memcpy(&send_table_data.head_data, &table_info, sizeof(table_info.Common_Info) + table_info.Common_Info.Header_Size);
   send_table_data.data = data;
 
   EOL_TASK_LIST_Typedef_t task;
@@ -1215,13 +1273,13 @@ bool eol_protocol::eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_
   return true;
 }
 
-bool eol_protocol::eol_master_get_table_data(DOA_TABLE_Typedef_t table_type)
+bool eol_protocol::eol_master_get_table_data(TABLE_Typedef_t table_type)
 {
   /* 查重 */
   for(qint32 i = 0; i < eol_task_list.size(); i++)
   {
     if(eol_task_list.value(i).task == &eol_protocol::get_eol_table_data_task && \
-       send_table_data.head_data.Table_Type == table_type)
+       send_table_data.head_data.Common_Info.Table_Type == table_type)
     {
       return true;
     }
@@ -1231,7 +1289,7 @@ bool eol_protocol::eol_master_get_table_data(DOA_TABLE_Typedef_t table_type)
   can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
   current_send_can_id = EOL_PROTOCOL_MASTER_CAN_ID;
 
-  send_table_data.head_data.Table_Type = table_type;
+  send_table_data.head_data.Common_Info.Table_Type = table_type;
 
   EOL_TASK_LIST_Typedef_t task;
   task.run_state = true;
@@ -1243,4 +1301,26 @@ bool eol_protocol::eol_master_get_table_data(DOA_TABLE_Typedef_t table_type)
   memset(&data_record, 0, sizeof(data_record));
   return true;
 }
+
+bool eol_protocol::eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task)
+{
+  /* 查重 */
+  for(qint32 i = 0; i < eol_task_list.size(); i++)
+  {
+    if(eol_task_list.value(i).reg == task.reg && eol_task_list.value(i).command == task.command)
+    {
+      return true;
+    }
+  }
+
+  /* 设置消息过滤器 */
+  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
+  current_send_can_id = EOL_PROTOCOL_MASTER_CAN_ID;
+
+  task.task = &eol_protocol::common_rw_device_task;
+  eol_task_list.append(task);
+
+  return true;
+}
+
 /******************************** End of file *********************************/

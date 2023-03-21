@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QDateTime>
 
-more_window::more_window(QString titile, QWidget *parent) :
+more_window::more_window(QString title, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::more_window)
 {
@@ -19,7 +19,7 @@ more_window::more_window(QString titile, QWidget *parent) :
   }
 
   /* 设置标题 */
-  this->setWindowTitle(titile);
+  this->setWindowTitle(title);
 
   /* 初始化定时器 */
   timer_init();
@@ -177,6 +177,11 @@ void more_window::slot_timeout()
   show_message = show_message_list.takeFirst();
   ui->receive_data_textBrowser_2->append(show_message);
   ui->receive_data_textBrowser_2->moveCursor(QTextCursor::End);
+
+  if(rx_frame_cnt >= 100000)
+  {
+    on_clear_pushButton_2_clicked();
+  }
 }
 
 void more_window::slot_show_message_rx_bytes(quint8 bytes)

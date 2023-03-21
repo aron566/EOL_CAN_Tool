@@ -178,7 +178,7 @@ bool can_driver::open()
   device_opened_ = true;
 
   /* 发送can打开状态 */
-  emit signal_can_is_opened(true);
+  emit signal_can_is_opened();
   show_message(tr(" open device ok "));
   return true;
 }
@@ -438,6 +438,9 @@ bool can_driver::reset()
 {
   /* 复位对应通道号 */
   bool ret = false;
+
+  start_ = false;
+
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     if(false == channel_state_list.value(i).channel_en)
@@ -447,8 +450,7 @@ bool can_driver::reset()
     ret = reset(channel_state_list.value(i));
   }
 
-  start_ = false;
-
+  emit signal_can_driver_reset();
   return ret;
 }
 
@@ -468,6 +470,8 @@ void can_driver::close(const CHANNEL_STATE_Typedef_t &channel_state)
 
 void can_driver::close()
 {
+  start_ = false;
+
   /* 关闭对应通道号 */
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
@@ -479,12 +483,8 @@ void can_driver::close()
     close(channel_state_list.value(i));
   }
 
-  start_ = false;
-
   /* 发送can关闭状态 */
-  emit signal_can_is_opened(false);
-
-  emit signal_can_is_closed(true);
+  emit signal_can_is_closed();
 
   device_opened_ = false;
 }

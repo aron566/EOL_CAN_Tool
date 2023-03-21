@@ -20,6 +20,8 @@
     "xhash": "cpp",
     "xiosbase": "cpp",
     "algorithm": "cpp",
-    "sstream": "cpp"
+    "sstream": "cpp",
+    "xlocale": "cpp",
+    "initializer_list": "cpp"
   }
 }

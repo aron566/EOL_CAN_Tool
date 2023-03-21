@@ -263,23 +263,87 @@ void utility::delay_ms(int ms)
   loop.exec();
 }
 
+quint32 utility::num_type_to_bytes(utility::NUM_TYPE_Typedef_t Type)
+{
+  quint32 unit_bytes = 0;
+  switch(Type)
+  {
+    case CALTERAH_CFX_28BIT_DATA_TYPE:
+    case INT32_DATA_TYPE:
+    {
+      unit_bytes = sizeof(qint32);
+      break;
+    }
+    case COMPLEX_FLOAT_DATA_TYPE:
+    {
+      unit_bytes = sizeof(Complex_t);
+      break;
+    }
+    case COMPLEX_INT16_DATA_TYPE:
+    {
+      unit_bytes = sizeof(Complex_I16_t);
+      break;
+    }
+    case FLOAT32_DATA_TYPE:
+    {
+      unit_bytes = sizeof(float);
+      break;
+    }
+    case INT16_DAYA_TYPE:
+    {
+      unit_bytes = sizeof(qint16);
+      break;
+    }
+    case INT8_DATA_TYPE:
+    {
+      unit_bytes = sizeof(qint8);
+      break;
+    }
+    case UINT32_DATA_TYPE:
+    case FLOAT32_BIN_DATA_TYPE:
+    {
+      unit_bytes = sizeof(quint32);
+      break;
+    }
+    case UINT16_DAYA_TYPE:
+    {
+      unit_bytes = sizeof(quint16);
+      break;
+    }
+    case UINT8_DATA_TYPE:
+    {
+      unit_bytes = sizeof(quint8);
+      break;
+    }
+    default:
+      unit_bytes = 0;
+      break;
+  }
+  return unit_bytes;
+}
+
 quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NUM_TYPE_Typedef_t Type, quint8 *unit_bytes)
 {
   if(num_str_list.isEmpty())
   {
     return 0;
   }
+  bool ok = false;
   quint32 num_size = 0;
   for(qint32 i = 0; i < num_str_list.size();)
   {
     switch(Type)
     {
-      case CALTERAH_CFX_28BIT_DATA_TYPE:
       case INT32_DATA_TYPE:
       {
         qint32 *ptr = (qint32 *)buf;
-        ptr[num_size] = num_str_list.value(i).toInt();
+        ptr[num_size] = (qint32)num_str_list.value(i).toInt(&ok);
         i += 1;
+        if(false == ok)
+        {
+          continue;
+        }
+
         num_size += 1;
         *unit_bytes = sizeof(qint32);
         break;
@@ -290,12 +354,14 @@ quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NU
         bool ok;
         ptr[num_size].real = num_str_list.value(i).toFloat(&ok);
         ptr[num_size].image = num_str_list.value(i + 1).toFloat(&ok);
+        i += 2;
         if(ok == false)
         {
           ptr[i / 2].real = 0.0;
           ptr[i / 2].image = 0.0;
+          continue;
         }
-        i += 2;
+
         num_size += 1;
         *unit_bytes = sizeof(Complex_t);
         break;
@@ -303,9 +369,14 @@ quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NU
       case COMPLEX_INT16_DATA_TYPE:
       {
         Complex_I16_t *ptr = (Complex_I16_t *)buf;
-        ptr[num_size].real = num_str_list.value(i).toShort();
-        ptr[num_size].image = num_str_list.value(i + 1).toShort();
+        ptr[num_size].real = num_str_list.value(i).toShort(&ok);
+        ptr[num_size].image = num_str_list.value(i + 1).toShort(&ok);
         i += 2;
+        if(false == ok)
+        {
+          continue;
+        }
+
         num_size += 1;
         *unit_bytes = sizeof(Complex_I16_t);
         break;
@@ -313,13 +384,14 @@ quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NU
       case FLOAT32_DATA_TYPE:
       {
         float *ptr = (float *)buf;
-        bool ok;
         ptr[num_size] = num_str_list.value(i).toFloat(&ok);
+        i += 1;
         if(ok == false)
         {
           ptr[i] = 0.0;
+          continue;
         }
-        i += 1;
+
         num_size += 1;
         *unit_bytes = sizeof(float);
         break;
@@ -327,8 +399,13 @@ quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NU
       case INT16_DAYA_TYPE:
       {
         qint16 *ptr = (qint16 *)buf;
-        ptr[num_size] = num_str_list.value(i).toShort();
+        ptr[num_size] = num_str_list.value(i).toShort(&ok);
         i += 1;
+        if(false == ok)
+        {
+          continue;
+        }
+
         num_size += 1;
         *unit_bytes = sizeof(qint16);
         break;
@@ -336,17 +413,29 @@ quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NU
       case INT8_DATA_TYPE:
       {
         qint8 *ptr = (qint8 *)buf;
-        ptr[num_size] = (qint8)num_str_list.value(i).toShort();
+        ptr[num_size] = (qint8)num_str_list.value(i).toShort(&ok);
         i += 1;
+        if(false == ok)
+        {
+          continue;
+        }
+
         num_size += 1;
         *unit_bytes = sizeof(qint8);
         break;
       }
+      case CALTERAH_CFX_28BIT_DATA_TYPE:
       case UINT32_DATA_TYPE:
+      case FLOAT32_BIN_DATA_TYPE:
       {
         quint32 *ptr = (quint32 *)buf;
-        ptr[num_size] = num_str_list.value(i).toUInt();
+        ptr[num_size] = (quint32)num_str_list.value(i).toUInt(&ok);
         i += 1;
+        if(false == ok)
+        {
+          continue;
+        }
+
         num_size += 1;
         *unit_bytes = sizeof(quint32);
         break;
@@ -354,8 +443,13 @@ quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NU
       case UINT16_DAYA_TYPE:
       {
         quint16 *ptr = (quint16 *)buf;
-        ptr[num_size] = num_str_list.value(i).toUShort();
+        ptr[num_size] = num_str_list.value(i).toUShort(&ok);
         i += 1;
+        if(false == ok)
+        {
+          continue;
+        }
+
         num_size += 1;
         *unit_bytes = sizeof(quint16);
         break;
@@ -363,8 +457,13 @@ quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NU
       case UINT8_DATA_TYPE:
       {
         quint8 *ptr = (quint8 *)buf;
-        ptr[num_size] = (quint8)num_str_list.value(i).toUShort();
+        ptr[num_size] = (quint8)num_str_list.value(i).toUShort(&ok);
         i += 1;
+        if(false == ok)
+        {
+          continue;
+        }
+
         num_size += 1;
         *unit_bytes = sizeof(quint8);
         break;

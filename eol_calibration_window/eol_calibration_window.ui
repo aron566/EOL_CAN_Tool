@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>eol_calibration_window</class>
+ <widget class="QWidget" name="eol_calibration_window">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_9">
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="rcs_groupBox">
+     <property name="title">
+      <string>RCS标定</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_8">
+      <item row="0" column="0" colspan="4">
+       <widget class="QGroupBox" name="threshold_groupBox">
+        <property name="title">
+         <string>阈值及标准设置</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0" colspan="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="distance_label">
+             <property name="text">
+              <string>距离：</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="distance_comboBox">
+             <item>
+              <property name="text">
+               <string>20</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>50</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="distance_unit_label">
+             <property name="text">
+              <string>m</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="add_pushButton">
+             <property name="text">
+              <string>添加</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="reset_pushButton">
+             <property name="text">
+              <string>重置</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <item>
+              <widget class="QLabel" name="mag_threshold_min_label">
+               <property name="text">
+                <string>MAG阈值设置不能小于dB：</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="snr_threshold_min_label">
+               <property name="text">
+                <string>SNR阈值设置不能小于dB： </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>RTS不同距离标准dBsm：</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <item>
+              <widget class="QLineEdit" name="mag_threshold_min_lineEdit"/>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="snr_threshold_min_lineEdit"/>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="rts_lineEdit"/>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <item>
+              <widget class="QLabel" name="mag_threshold_max_label">
+               <property name="text">
+                <string>MAG阈值设置不能大于dB：</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="snr_threshold_max_label">
+               <property name="text">
+                <string>SNR阈值设置不能大于dB：  </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_2">
+             <item>
+              <widget class="QLineEdit" name="mag_threshold_max_lineEdit"/>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="snr_threshold_max_lineEdit"/>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QGroupBox" name="threshold_list_groupBox">
+           <property name="title">
+            <string>阈值列表</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="0">
+             <widget class="QLabel" name="threshold_list_label">
+              <property name="text">
+               <string>20m,mag:&gt;90 &lt;105,snr:&gt;45 &lt;70,rts:20 40m,mag:&gt;70 &lt;85,snr:&gt;30 &lt;50,rts:20</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="4">
+       <widget class="QGroupBox" name="mag_snr_data_view_groupBox">
+        <property name="title">
+         <string>数据视口</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="0" column="0">
+          <widget class="QPlainTextEdit" name="plainTextEdit">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="plainText">
+            <string>目标距离:20m,目标ID:0 - 64,配置ID:0 - N,MAG:-204.8 - 204.6,RCS:-204.8 - 204.6,SNR:-204.8 - 204.6,俯仰偏移:-163.84 - 163.83</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QTableWidget" name="tableWidget">
+           <column>
+            <property name="text">
+             <string>目标距离</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>目标ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>配置ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>MAGdB</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>RCSdB</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>SNRdB</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>俯仰偏移deg</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="rcs_label">
+        <property name="text">
+         <string>RCS标定结果：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QPushButton" name="test_start_pushButton">
+        <property name="text">
+         <string>启动标定</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="rcs_rsl_label">
+        <property name="text">
+         <string>标准偏差：20m 3dBsm,50m 1dBsm,平均：2dBsm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="rcs_rsl_state_label">
+        <property name="text">
+         <string>标定结果：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="rcs_rsl_state_show_label">
+        <property name="text">
+         <string>ok</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="2" column="1" colspan="2">
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

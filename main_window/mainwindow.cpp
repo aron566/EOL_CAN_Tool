@@ -33,11 +33,8 @@ MainWindow::MainWindow(QWidget *parent)
   /* can驱动初始化 */
   can_driver_init();
 
-  /* eol协议栈初始化 */
-  eol_protocol_init();
-
   /* 子窗口初始化 */
-  eol_window_init(tr("EOL CAN Tool - EOL调试"));
+  eol_window_init(tr("EOL CAN Tool - EOL"));
 
   /* 子窗口初始化 */
   more_window_init(tr("EOL CAN Tool - More"));
@@ -84,23 +81,15 @@ void MainWindow::eol_window_init(QString titile)
 {
   eol_window_obj = new eol_window(titile);
   connect(eol_window_obj, &eol_window::signal_eol_window_closed, this, &MainWindow::slot_show_this_window);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_error_occur, eol_window_obj, &eol_window::slot_protocol_error_occur);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_no_response, eol_window_obj, &eol_window::slot_protocol_no_response);
-  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, eol_window_obj, &eol_window::slot_recv_eol_table_data, Qt::BlockingQueuedConnection);
-  connect(eol_protocol_obj, &eol_protocol::signal_send_progress, eol_window_obj, &eol_window::slot_send_progress);
-  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_data_complete, eol_window_obj, &eol_window::slot_recv_eol_data_complete);
-  connect(eol_protocol_obj, &eol_protocol::signal_send_eol_data_complete, eol_window_obj, &eol_window::slot_send_eol_data_complete);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_timeout, eol_window_obj, &eol_window::slot_protocol_timeout);
-  connect(eol_protocol_obj, &eol_protocol::signal_device_mode, eol_window_obj, &eol_window::slot_device_mode);
-  connect(eol_protocol_obj, &eol_protocol::signal_send_rec_one_frame, eol_window_obj, &eol_window::slot_send_rec_one_frame);
-  /* 设置线程池 */
+
+  /* 设置线程池 first */
   eol_window_obj->set_thread_pool(g_thread_pool);
 
   /* 禁止线程完成后执行析构对象 */
   eol_window_obj->setAutoDelete(false);
 
-  /* 设置协议栈 */
-  eol_window_obj->set_eol_protocol(eol_protocol_obj);
+  /* 设置can驱动 after */
+  eol_window_obj->set_can_driver_obj(can_driver_obj);
 }
 
 void MainWindow::can_driver_init()
@@ -136,18 +125,6 @@ void MainWindow::can_driver_init()
   connect(can_driver_obj, &can_driver::signal_get_dev_auto_send_list_can_use, this, &MainWindow::slot_get_dev_auto_send_list_can_use);
 }
 
-void MainWindow::eol_protocol_init()
-{
-  /* eol协议栈初始化 */
-  eol_protocol_obj = new eol_protocol(can_driver_obj);
-
-  /* 禁止线程完成后执行析构对象 */
-  eol_protocol_obj->setAutoDelete(false);
-
-  /* 设置can驱动接口 */
-  eol_protocol_obj->set_can_driver_obj(can_driver_obj);
-}
-
 void MainWindow::para_restore_init()
 {
   /* 设置默认值 */
@@ -161,19 +138,24 @@ void MainWindow::slot_show_this_window()
   this->show();
 }
 
-void MainWindow::slot_can_is_opened(bool opened)
+void MainWindow::slot_can_is_opened(void)
 {
   /* can设备打开状态，则置为不可选择状态 */
-  ui->device_index_comboBox->setEnabled(!opened);
-  ui->device_list_comboBox->setEnabled(!opened);
-  ui->channel_num_comboBox->setEnabled(!opened);
+  ui->device_index_comboBox->setEnabled(false);
+  ui->device_list_comboBox->setEnabled(false);
+  ui->channel_num_comboBox->setEnabled(false);
+  ui->start_can_pushButton->setEnabled(true);
+  ui->init_can_pushButton->setEnabled(true);
 }
 
-void MainWindow::slot_can_is_closed(bool closed)
+void MainWindow::slot_can_is_closed(void)
 {
   /* 关闭设备状态时，启动与初始化为可用状态 */
-  ui->start_can_pushButton->setEnabled(closed);
-  ui->init_can_pushButton->setEnabled(closed);
+  ui->device_index_comboBox->setEnabled(true);
+  ui->device_list_comboBox->setEnabled(true);
+  ui->channel_num_comboBox->setEnabled(true);
+  ui->start_can_pushButton->setEnabled(true);
+  ui->init_can_pushButton->setEnabled(true);
 }
 
 void MainWindow::slot_work_mode_can_use(bool can_use)
@@ -325,7 +307,6 @@ void MainWindow::on_start_can_pushButton_clicked()
 void MainWindow::on_reset_device_pushButton_clicked()
 {
   /* 复位设备 */
-  eol_protocol_obj->stop();
   if(false == can_driver_obj->reset())
   {
     return;
@@ -337,7 +318,6 @@ void MainWindow::on_reset_device_pushButton_clicked()
 void MainWindow::on_close_device_pushButton_clicked()
 {
   /* 关闭设备 */
-  eol_protocol_obj->stop();
   can_driver_obj->close();
   /* 禁用打开设备按钮 */
   ui->open_device_pushButton->setEnabled(true);

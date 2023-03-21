@@ -45,8 +45,6 @@ private:
 
 private:
   can_driver *can_driver_obj = nullptr;
-
-  eol_protocol *eol_protocol_obj = nullptr;
 private:
   void more_window_init(QString titile);
   void eol_window_init(QString titile);
@@ -56,11 +54,6 @@ private:
    *
    */
   void can_driver_init();
-
-  /**
-   * @brief eol协议栈初始化
-   */
-  void eol_protocol_init();
 
   /**
    * @brief 恢复参数
@@ -75,17 +68,13 @@ private slots:
 
   /**
    * @brief can已经打开
-   *
-   * @param opened true打开
    */
-  void slot_can_is_opened(bool opened);
+  void slot_can_is_opened(void);
 
   /**
    * @brief can已经关闭
-   *
-   * @param closed true已关闭
    */
-  void slot_can_is_closed(bool closed);
+  void slot_can_is_closed(void);
 
   /**
    * @brief 相关控件是否可用

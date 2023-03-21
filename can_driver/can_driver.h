@@ -73,7 +73,7 @@ public:
       receice_data();
       QThread::msleep(1);
     }
-    qDebug() << "[thread]" << QThread::currentThreadId() << " listen end";
+    qDebug() << "[thread]" << QThread::currentThreadId() << "can driver listen end";
     thread_run_state = false;
   }
 
@@ -103,17 +103,18 @@ public:
 signals:
   /**
    * @brief 发送信号can开启还是关闭状态
-   *
-   * @param opened 为true是开启
    */
-  void signal_can_is_opened(bool opened);
+  void signal_can_is_opened();
 
   /**
    * @brief 发送信号can是否是关闭状态
-   *
-   * @param closed true关闭状态
    */
-  void signal_can_is_closed(bool closed);
+  void signal_can_is_closed();
+
+  /**
+   * @brief 发送信号can重置状态
+   */
+  void signal_can_driver_reset();
 
   /**
    * @brief 发送信号工作模式是否可选

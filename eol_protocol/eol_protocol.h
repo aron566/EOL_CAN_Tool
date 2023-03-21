@@ -26,6 +26,7 @@
 #include <QCoreApplication>
 #include <QTimer>
 #include <QThread>
+#include <QThreadPool>
 #include <QRunnable>
 #include "circularqueue.h"
 #include "can_driver.h"
@@ -37,6 +38,23 @@
 /** Exported constants -------------------------------------------------------*/
 
 /** Exported macros-----------------------------------------------------------*/
+/* 寄存器表 */
+#define EOL_META_DATA_CHECK_REG        0x00U  /**< 安全认证请求 */
+#define EOL_META_DATA_CHECK_OK_REG     0x01U  /**< 安全认证确认 */
+#define EOL_META_DATA_SET_MODE_REG     0x02U  /**< 模式选择 */
+
+#define EOL_RW_VERSION_REG             0x03U  /**< 读取软硬件版本 */
+#define EOL_R_VCAN_TEST_REG            0x04U  /**< VCAN测试 */
+#define EOL_RW_SN_REG                  0x05U  /**< SN读写 */
+#define EOL_R_PIN7_8_REG               0x06U  /**< 读取PIN7 8引脚状态-未使用 */
+
+/* 读写表 */
+#define EOL_RW_TABLE_DATA_REG          0x07U
+#define EOL_W_TABLE_SEL_REG            0x08U
+#define EOL_W_TABLE_DATA_SEL_REG       0x09U
+
+#define EOL_W_DEVICE_REBOOT_REG        0x0AU /**< 设置设备重启 */
+
 /** Exported variables -------------------------------------------------------*/
 /** Exported functions prototypes --------------------------------------------*/
 
@@ -48,7 +66,7 @@ public:
 
   ~eol_protocol()
   {
-    stop();
+    stop_task();
 
     /* 等待线程结束 */
     while(thread_run_state)
@@ -58,6 +76,7 @@ public:
 
     /* 删除cq */
     delete cq_obj;
+    qDebug() << "eol delete";
   }
 
   /* 设备工作模式 */
@@ -68,67 +87,132 @@ public:
     PRODUCE_MODE_CALIBRATION = 2        /**< 雷达一直发送目标的2D-FFT数据给上位机 */
   }DEVICE_MODE_Typedef_t;
 
+
   /* 操作返回值 */
   typedef enum
   {
-    DOA_TABLE_OPT_OK = 0,                 /**< 无错误 */
-    DOA_TABLE_OPT_CRC_ERR,                /**< CRC校验错误 */
-    DOA_TABLE_OPT_R_HEADER_ERR,           /**< 读表头部错误 */
-    DOA_TABLE_OPT_R_DATA_ERR,             /**< 读数据错误 */
-    DOA_TABLE_OPT_W_HEADER_ERR,           /**< 写表头部错误 */
-    DOA_TABLE_OPT_W_DATA_ERR,             /**< 写数据错误 */
-    DOA_TABLE_OPT_RESEV0_ERR,             /**< 未使用错误 */
-    DOA_TABLE_OPT_RESEV1_ERR,             /**< 未使用错误 */
-    DOA_TABLE_OPT_ERASE_ERR,              /**< 擦除错误 */
-    DOA_UNKNOW_TAB_ERR,                   /**< 表类型错误 */
-    DOA_TABLE_OVER_SIZE,                  /**< 数据过大溢出 */
-    DOA_UNKNOW_CMD_ERR,                   /**< 未知命令类型错误 */
-  }DOA_TABLE_OPT_STATUS_Typedef_t;
+    EOL_OPT_OK = 0,                     /**< 无错误 */
+    EOL_OPT_CRC_ERR,                    /**< CRC校验错误 */
+    EOL_OPT_R_HEADER_ERR,               /**< 读表头部错误 */
+    EOL_OPT_R_DATA_ERR,                 /**< 读数据错误 */
+    EOL_OPT_W_HEADER_ERR,               /**< 写表头部错误 */
+    EOL_OPT_W_DATA_ERR,                 /**< 写数据错误 */
+    EOL_OPT_HEADER_CRC_ERR,             /**< 头部CRC校验错误 */
+    EOL_OPT_RW_ERR,                       /**< 读写错误 */
+    EOL_OPT_ERASE_ERR,                  /**< 擦除错误 */
+    UNKNOW_TAB_ERR,                       /**< 表类型错误 */
+    EOL_OVER_SIZE,                      /**< 数据过大溢出 */
+    UNKNOW_CMD_ERR,                       /**< 未知命令类型错误 */
+  }EOL_OPT_STATUS_Typedef_t;
 
   /* 数据格式 */
   typedef enum
   {
-    DOA_CALTERAH_CFX_28BIT_DATA_TYPE = 0, /**< 加特兰CFX 28位数据格式 */
-    DOA_COMPLEX_FLOAT_DATA_TYPE,          /**< 浮点类型 */
-    DOA_COMPLEX_INT16_DATA_TYPE,          /**< 16位整型复数 @ref Complex_I16_t */
-    DOA_FLOAT32_DATA_TYPE,                /**< 32位浮点类型 */
-    DOA_INT32_DATA_TYPE,                  /**< 整型32位 */
-    DOA_INT16_DAYA_TYPE,                  /**< 整型16位 */
-    DOA_INT8_DATA_TYPE,                   /**< 整型8位 */
-    DOA_UINT32_DATA_TYPE,                 /**< 无符号整型32位 */
-    DOA_UINT16_DAYA_TYPE,                 /**< 无符号整型16位 */
-    DOA_UINT8_DATA_TYPE,                  /**< 无符号整型8位 */
-    DOA_UNKNOW_DATA_TYPE = 0xFF,          /**< 未知数据类型 */
-  }DOA_DATA_Typedef_t;
+    CALTERAH_CFX_28BIT_DATA_TYPE = 0,     /**< 加特兰CFX 28位数据格式 */
+    COMPLEX_FLOAT_DATA_TYPE,              /**< 浮点类型 */
+    COMPLEX_INT16_DATA_TYPE,              /**< 16位整型复数 @ref Complex_I16_t */
+    FLOAT32_DATA_TYPE,                    /**< 32位浮点类型 */
+    INT32_DATA_TYPE,                      /**< 整型32位 */
+    INT16_DAYA_TYPE,                      /**< 整型16位 */
+    INT8_DATA_TYPE,                       /**< 整型8位 */
+    UINT32_DATA_TYPE,                     /**< 无符号整型32位 */
+    UINT16_DAYA_TYPE,                     /**< 无符号整型16位 */
+    UINT8_DATA_TYPE,                      /**< 无符号整型8位 */
+    FLOAT32_BIN_DATA_TYPE,                /**< 32位浮点数二进制类型 */
+    UNKNOW_DATA_TYPE = 0xFF,              /**< 未知数据类型 */
+  }DATA_Typedef_t;
+
+  /* 单位 */
+  typedef enum
+  {
+    METER_UNIT = 0,                       /**< 单位：m */
+    DB_UNIT,                              /**< 单位：dB */
+    UNIT_MAX = 0xFF                       /**< 单位：未知 */
+  }UNIT_Typedef_t;
 
   /* 表类型 */
   typedef enum
   {
-    DOA_SV_AZIMUTH_TABLE = 0, /**< 方位导向矢量表 */
-    DOA_SV_ELEVATION_TABLE,   /**< 俯仰导向矢量表 */
-    DAA_ANT_POS_TABLE,        /**< 天线间距坐标信息表 */
-    DOA_PHASE_COMPS_TABLE,    /**< 天线初相信息表 */
-    DOA_ANT_BOTH_TABLE,       /**< 天线间距坐标与初相信息表，双表合并 */
-    DOA_UNKNOW_TABLE = 0xFF,  /**< 未知表类型 */
-  }DOA_TABLE_Typedef_t;
+    SV_AZIMUTH_TABLE = 0,                 /**< 方位导向矢量表 */
+    SV_ELEVATION_TABLE,                   /**< 俯仰导向矢量表 */
+    ANT_POS_TABLE,                        /**< 天线间距坐标信息表 */
+    PHASE_COMPS_TABLE,                    /**< 天线初相信息表 */
+    ANT_BOTH_TABLE,                       /**< 天线间距坐标与初相信息表，双表合并 */
+    PATTERN_TABLE,                        /**< 方向图表 */
+    UNKNOW_TABLE = 0xFF,                  /**< 未知表类型 */
+  }TABLE_Typedef_t;
 
-  /* 表头信息 */
+  /* 公共表头信息 */
   typedef struct
   {
-    uint16_t Class_ID_Num;          /**< 类ID标识 DOA_CLASS_ID_NUM */
-    uint16_t Version_MAJOR      :4; /**< 主版本号 v0 - 15 */
-    uint16_t Version_MINOR      :4; /**< 副版本号 0 - 15 */
-    uint16_t Version_REVISION   :8; /**< 修订版本号 0 - 255 */
-    DOA_DATA_Typedef_t Data_Type;   /**< 存储在flash中的数据类型 @ref DOA_DATA_Typedef_t */
-    DOA_TABLE_Typedef_t Table_Type; /**< 表类型 @ref DOA_TABLE_Typedef_t */
-    uint32_t Data_Size;             /**< 表数据字节数，也是校验CRC部分大小 */
-    int8_t Start_Angle;             /**< 起始角度 */
-    int8_t End_Angle;               /**< 结束角度 */
-    uint16_t Points;                /**< 点数 */
-    uint8_t Channel_Num;            /**< 通道数量 */
-    uint32_t Crc_Val;               /**< 表数据CRC */
+    uint8_t Class_ID_Num;                 /**< 公共头部字段 */
+    uint8_t Headr_Check_Sum;              /**< 私有头部数据校验和 */
+    uint8_t Header_Size;                  /**< 私有头部数据大小长度 */
+    uint8_t Version_MAJOR;                /**< 主版本号 v0 - 255 */
+    uint8_t Version_MINOR;                /**< 副版本号 0 - 255 */
+    uint8_t Version_REVISION;             /**< 修订版本号 0 - 255 */
+    uint8_t Table_Type;                   /**< 表类型 @ref TABLE_Typedef_t */
+    uint8_t Data_Type;                    /**< 存储在flash中的数据类型 @ref DATA_Typedef_t */
+    uint32_t Data_Size;                   /**< 表数据字节数，也是校验CRC部分大小 */
+    uint32_t Crc_Val;                     /**< 表数据CRC */
+  }TABLE_HEADER_Typedef_t;
+
+  /* DoA相关表头信息 */
+  typedef struct
+  {
+    TABLE_HEADER_Typedef_t Common_Info;   /**< 公共头部信息 */
+    float Start_Angle;                    /**< 起始角度 */
+    float End_Angle;                      /**< 结束角度 */
+    uint16_t Points;                      /**< 点数 */
+    uint8_t Channel_Num;                  /**< 通道数量 */
+    float Azi_Ele_Angle;                  /**< 水平导向矢量对应俯仰角，俯仰导向矢量对应水平角 */
   }DOA_TABLE_HEADER_Typedef_t;
 
+  /* DoA天线补偿表头信息 */
+  typedef struct
+  {
+    TABLE_HEADER_Typedef_t Common_Info;   /**< 公共头部信息 */
+    uint16_t Points;                      /**< 点数 */
+    uint8_t Channel_Num;                  /**< 通道数量 */
+  }ANT_TABLE_HEADER_Typedef_t;
+
+  /* 方向图即角度能量图表头信息 */
+  typedef struct
+  {
+    TABLE_HEADER_Typedef_t Common_Info;   /**< 公共头部信息 */
+    float Start_Angle;                    /**< 起始角度 */
+    float End_Angle;                      /**< 结束角度 */
+    uint16_t Points;                      /**< 点数 */
+    uint8_t Channel_Num;                  /**< 通道数量 */
+    uint8_t Unit;                         /**< 单位 @ref UNIT_Typedef_t */
+  }SYS_PATTERN_TABLE_HEADER_Typedef_t;
+
+  /* 传输表头信息 */
+  typedef struct
+  {
+    TABLE_HEADER_Typedef_t Common_Info;   /**< 公共头部信息 */
+    quint8 private_header[64];            /**< 私有头部信息 */
+  }COMMON_TABLE_HEADER_Typedef_t;
+
+  /* 功能码 */
+  typedef enum
+  {
+    EOL_WRITE_CMD = 0x00,
+    EOL_READ_CMD  = 0x01,
+
+    EOL_META_CMD  = 0xFF,
+  }EOL_CMD_Typedef_t;
+
+  typedef struct EOL_TASK_LIST_
+  {
+    void *param;/**< 传输表数据，使用 */
+    quint8 reg;
+    EOL_CMD_Typedef_t command;
+    quint16 len;
+    quint8 buf[256];
+    bool run_state;
+    bool (eol_protocol::*task)(void *param);
+  }EOL_TASK_LIST_Typedef_t;
 private:
   /* 等待回复结果 */
   typedef enum
@@ -142,15 +226,6 @@ private:
     RETURN_ERROR,
     RETURN_LOST_FRAME,            /**< 丢帧 */
   }RETURN_TYPE_Typedef_t;
-
-  /* 功能码 */
-  typedef enum
-  {
-    EOL_WRITE_CMD = 0x00,
-    EOL_READ_CMD  = 0x01,
-
-    EOL_META_CMD  = 0xFF,
-  }EOL_CMD_Typedef_t;
 
   /* 响应队列 */
   typedef struct
@@ -182,36 +257,54 @@ private:
   /* 发送表数据任务参数 */
   typedef struct
   {
-    DOA_TABLE_HEADER_Typedef_t head_data;
+    COMMON_TABLE_HEADER_Typedef_t head_data;
     const quint8 *data;
+    quint8 reg;
+    EOL_CMD_Typedef_t command;
+    quint16 len;
     quint8 buf[256];
   }EOL_SEND_DATA_Typedef_t;
 
-  typedef struct EOL_TASK_LIST_
-  {
-    void *param;
-    DOA_DATA_Typedef_t data_type;
-    bool run_state;
-    bool (eol_protocol::*task)(void *param);
-  }EOL_TASK_LIST_Typedef_t;
 public:
   /**
    * @brief eol协议线程
    */
   virtual void run() override
   {
+    qDebug() << "eol wait to run";
+    emit signal_eol_protol_is_start();
     run_state = true;
     thread_run_state = true;
     run_eol_task();
     thread_run_state = false;
+    run_state = false;
     qDebug() << "[thread]" << QThread::currentThreadId() << "eol protocol end";
   }
 
-  void stop()
+  void stop_task()
   {
-    eol_protocol_clear();
     run_state = false;
     qDebug() << "eol wait to stop";
+  }
+
+  void start_task()
+  {
+    if(thread_run_state)
+    {
+      qDebug() << "eol protocol is running";
+      return;
+    }
+    eol_protocol_clear();
+    g_thread_pool->start(this);
+  }
+
+  /**
+   * @brief 设置线程池
+   * @param g_thread_pool_
+   */
+  void set_thread_pool(QThreadPool *g_thread_pool_)
+  {
+    g_thread_pool = g_thread_pool_;
   }
 
   /**
@@ -233,16 +326,28 @@ public:
    * @param data 表数据
    * @return true正确
    */
-  bool eol_master_send_table_data(DOA_TABLE_HEADER_Typedef_t &table_info, const quint8 *data);
+  bool eol_master_send_table_data(COMMON_TABLE_HEADER_Typedef_t &table_info, const quint8 *data);
 
   /**
    * @brief 获取表数据
    * @param table_type 表类型
    * @return true正确
    */
-  bool eol_master_get_table_data(DOA_TABLE_Typedef_t table_type);
+  bool eol_master_get_table_data(TABLE_Typedef_t table_type);
+
+  /**
+   * @brief 读写设备
+   * @param task 任务
+   * @return true正常
+   */
+  bool eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task);
 
 signals:
+  /**
+   * @brief 协议栈启动信号
+   */
+  void signal_eol_protol_is_start();
+
   /**
    * @brief 协议栈无回复超时
    * @param sec 秒
@@ -255,6 +360,21 @@ signals:
   void signal_protocol_no_response();
 
   void signal_protocol_error_occur(quint8 error_msg);
+
+  /**
+   * @brief 从机读写无反应信号
+   * @param reg 读写寄存器地址
+   * @param command 读写标识
+   */
+  void signal_protocol_rw_err(quint8 reg, quint8 command);
+
+  /**
+   * @brief 读写设备正常
+   * @param reg 寄存器
+   * @param data 读出的数据，为nullptr代表写设备成功
+   * @param data_len 代表数据长度，为0时代表写设备成功
+   */
+  void signal_rw_device_ok(quint8 reg, const quint8 *data = nullptr, quint16 data_len = 0);
 
   /**
    * @brief 表数据
@@ -333,7 +453,7 @@ private:
    * @param data 帧数据
    * @return 应答消息
    */
-  DOA_TABLE_OPT_STATUS_Typedef_t decode_ack_frame(const quint8 *data);
+  EOL_OPT_STATUS_Typedef_t decode_ack_frame(const quint8 *data);
 
   /**
    * @brief 解析接收数据
@@ -347,7 +467,7 @@ private:
   /**
    * @brief 回复超时检测
    * @param wait 队列
-   * @return
+   * @return true代表超时
    */
   bool response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait);
 
@@ -361,24 +481,30 @@ private:
   /**
    * @brief 线程任务--获取表数据
    * @param param 参数
-   * @return
+   * @return true任务成功
    */
   bool get_eol_table_data_task(void *param_);
 
   /**
    * @brief 线程任务--发送表数据
    * @param param_ 参数
-   * @return
+   * @return true任务成功
    */
   bool send_eol_table_data_task(void *param_);
 
   /**
    * @brief 线程任务--设置设备模式
    * @param param_ 参数
-   * @return
+   * @return true任务成功
    */
   bool set_device_mode_task(void *param_);
 
+  /**
+   * @brief 线程任务--通用读写设备
+   * @param param_ 参数
+   * @return true任务成功
+   */
+  bool common_rw_device_task(void *param_);
 private:
   /* 定时器 */
   QTimer *protocol_Timer = nullptr;
@@ -403,6 +529,7 @@ private slots:
 private:
   bool run_state = false;
   bool thread_run_state = false;
+  QThreadPool *g_thread_pool = nullptr;
   CircularQueue *cq_obj = nullptr;
   can_driver *can_driver_obj = nullptr;
 

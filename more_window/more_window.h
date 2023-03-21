@@ -15,7 +15,7 @@ class more_window : public QWidget
     Q_OBJECT
 
 public:
-  explicit more_window(QString titile, QWidget *parent = nullptr);
+  explicit more_window(QString title, QWidget *parent = nullptr);
   ~more_window();
 
   /**
