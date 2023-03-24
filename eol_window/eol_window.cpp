@@ -217,7 +217,7 @@ bool eol_window::csv_data_analysis(QByteArray &data, quint64 line_num, int table
     return false;
   }
 
-  switch((eol_protocol::TABLE_Typedef_t)table_type_index)
+  switch((eol_protocol::TABLE_CLASS_Typedef_t)table_type_index)
   {
     /* 方位导向矢量表数据传输 */
     case eol_protocol::SV_AZIMUTH_TABLE:
@@ -293,37 +293,40 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
   }
 
   common_table_info.Common_Info.Class_ID_Num = 0x66;
-  common_table_info.Common_Info.Table_Type = (eol_protocol::TABLE_Typedef_t)num_str_list.value(0).toUShort();
+  // common_table_info.Common_Info.Table_Type = (eol_protocol::TABLE_CLASS_Typedef_t)num_str_list.value(0).toUShort();
   common_table_info.Common_Info.Version_MAJOR = (quint8)(num_str_list.value(1).toUInt() & 0xFF);
   common_table_info.Common_Info.Version_MINOR = (quint8)((num_str_list.value(1).toUInt() >> 8) & 0xFF);
   common_table_info.Common_Info.Version_REVISION = (quint8)(num_str_list.value(1).toUInt() >> 16) & 0xFF;
   common_table_info.Common_Info.Data_Type = (eol_protocol::DATA_Typedef_t)num_str_list.value(2).toUShort();
-  common_table_info.Common_Info.Data_Size = 0;//num_str_list.value(3).toUShort();
+  common_table_info.Common_Info.Data_Size = 0;
   common_table_info.Common_Info.Crc_Val = num_str_list.value(4).toUInt();
-
-  switch((eol_protocol::TABLE_Typedef_t)table_type_index)
+  quint8 profile_id = 0;
+  switch((eol_protocol::TABLE_CLASS_Typedef_t)table_type_index)
   {
     /* 方位导向矢量表 */
-    case eol_protocol::SV_AZIMUTH_TABLE:
     /* 俯仰导向矢量表 */
+    case eol_protocol::SV_AZIMUTH_TABLE:
     case eol_protocol::SV_ELEVATION_TABLE:
+    case eol_protocol::SV_ELEVATION_AZI_N45_TABLE:
+    case eol_protocol::SV_ELEVATION_AZI_P45_TABLE:
     {
-      /* table type,	version,	data type,	data size,	data crc,	points, channel num,	start angle*10,	end angle*10,	ele angle*10,	check sum */
-      qDebug() << num_str_list.mid(0, 11);
-      if(num_str_list.size() < 11)
+      /*table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, ele angle*10, tx_order, profile_id, check sum*/
+      qDebug() << num_str_list.mid(0, 13);
+      if(num_str_list.size() < 13)
       {
         return eol_protocol::UNKNOW_TABLE;
       }
 
       /* 校验表头信息 */
       qint64 check_sum = 0;
-      for(quint8 i = 0; i < 10; i++)
+      quint8 i = 0;
+      for(;i < 12; i++)
       {
         check_sum += num_str_list.value(i).toLongLong();
       }
-      if((check_sum & 0xFF) != num_str_list.value(10).toInt())
+      if(check_sum != num_str_list.value(i).toLongLong())
       {
-        qDebug() << "check_sum err expectance " << (check_sum & 0xFF) << " ? " << num_str_list.value(10).toInt();
+        qDebug() << "check_sum err expectance " << check_sum << " ? " << num_str_list.value(i).toLongLong();
         return eol_protocol::UNKNOW_TABLE;
       }
 
@@ -333,13 +336,21 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       table_info.Start_Angle = (float)num_str_list.value(7).toShort() / 10;
       table_info.End_Angle = (float)num_str_list.value(8).toShort() / 10;
       table_info.Azi_Ele_Angle = (float)num_str_list.value(9).toShort() / 10;
+      quint32 tx_order = num_str_list.value(10).toUInt();
+      table_info.Tx2Clibration_Channel[0] = (quint8)tx_order;
+      table_info.Tx2Clibration_Channel[1] = (quint8)(tx_order >> 8);
+      table_info.Tx2Clibration_Channel[2] = (quint8)(tx_order >> 16);
+      table_info.Tx2Clibration_Channel[3] = (quint8)(tx_order >> 24);
+      profile_id = table_info.Profile_ID = (quint8)num_str_list.value(11).toUShort();
 
       /* 私有头大小 */
       common_table_info.Common_Info.Header_Size = sizeof(table_info.Start_Angle) + \
           sizeof(table_info.End_Angle) + \
           sizeof(table_info.Channel_Num) + \
           sizeof(table_info.Points) + \
-          sizeof(table_info.Azi_Ele_Angle);
+          sizeof(table_info.Azi_Ele_Angle) + \
+          sizeof(table_info.Tx2Clibration_Channel) + \
+          sizeof(table_info.Profile_ID);
       quint32 index = 0;
       memcpy(common_table_info.private_header + index, &table_info.Start_Angle, sizeof(table_info.Start_Angle));
       index += sizeof(table_info.Start_Angle);
@@ -350,67 +361,83 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       memcpy(common_table_info.private_header + index, &table_info.Channel_Num, sizeof(table_info.Channel_Num));
       index += sizeof(table_info.Channel_Num);
       memcpy(common_table_info.private_header + index, &table_info.Azi_Ele_Angle, sizeof(table_info.Azi_Ele_Angle));
-//      index += sizeof(table_info.Azi_Ele_Angle);
+      index += sizeof(table_info.Azi_Ele_Angle);
+      memcpy(common_table_info.private_header + index, &table_info.Tx2Clibration_Channel, sizeof(table_info.Tx2Clibration_Channel));
+      index += sizeof(table_info.Tx2Clibration_Channel);
+      memcpy(common_table_info.private_header + index, &table_info.Profile_ID, sizeof(table_info.Profile_ID));
+//      index += sizeof(table_info.Profile_ID);
       break;
     }
 
     /* 天线信息表 */
     case eol_protocol::ANT_BOTH_TABLE:
     {
-      /* table type,	version,	data type,	data size,	data crc,	points, channel num,	check sum */
-      qDebug() << num_str_list.mid(0, 8);
-      if(num_str_list.size() < 8)
+      /* table class, version, data type, data size, data crc, points, channel num, tx_order, profile_id, check sum */
+      qDebug() << num_str_list.mid(0, 10);
+      if(num_str_list.size() < 10)
       {
-        qDebug() << "num_str_list.size()" << num_str_list.size() << "< 8";
+        qDebug() << "num_str_list.size()" << num_str_list.size() << "< 10";
         return eol_protocol::UNKNOW_TABLE;
       }
 
       /* 校验表头信息 */
       qint64 check_sum = 0;
-      for(quint8 i = 0; i < 7; i++)
+      quint8 i = 0;
+      for(; i < 9; i++)
       {
         check_sum += num_str_list.value(i).toLongLong();
       }
-      if((check_sum & 0xFF) != num_str_list.value(7).toInt())
+      if(check_sum != num_str_list.value(i).toLongLong())
       {
-        qDebug() << "check_sum err expectance " << (check_sum & 0xFF) << " ? " << num_str_list.value(7).toInt();
+        qDebug() << "check_sum err expectance " << check_sum << " ? " << num_str_list.value(i).toLongLong();
         return eol_protocol::UNKNOW_TABLE;
       }
 
       /* 私有头 */
       ant_table_info.Points = num_str_list.value(5).toShort();
       ant_table_info.Channel_Num = (quint8)num_str_list.value(6).toUShort();
+      quint32 tx_order = num_str_list.value(7).toUInt();
+      table_info.Tx2Clibration_Channel[0] = (quint8)tx_order;
+      table_info.Tx2Clibration_Channel[1] = (quint8)(tx_order >> 8);
+      table_info.Tx2Clibration_Channel[2] = (quint8)(tx_order >> 16);
+      table_info.Tx2Clibration_Channel[3] = (quint8)(tx_order >> 24);
+      profile_id = table_info.Profile_ID = (quint8)num_str_list.value(8).toUShort();
 
       /* 私有头大小 */
       common_table_info.Common_Info.Header_Size = sizeof(ant_table_info.Channel_Num) + \
           sizeof(ant_table_info.Points);
       quint32 index = 0;
       memcpy(common_table_info.private_header + index, &ant_table_info.Points, sizeof(ant_table_info.Points));
-      index += sizeof(table_info.Points);
+      index += sizeof(ant_table_info.Points);
       memcpy(common_table_info.private_header + index, &ant_table_info.Channel_Num, sizeof(ant_table_info.Channel_Num));
-//      index += sizeof(table_info.Channel_Num);
+      index += sizeof(ant_table_info.Channel_Num);
+      memcpy(common_table_info.private_header + index, &ant_table_info.Tx2Clibration_Channel, sizeof(ant_table_info.Tx2Clibration_Channel));
+      index += sizeof(ant_table_info.Tx2Clibration_Channel);
+      memcpy(common_table_info.private_header + index, &ant_table_info.Profile_ID, sizeof(ant_table_info.Profile_ID));
+//      index += sizeof(ant_table_info.Profile_ID);
       break;
     }
 
     /* 方向表 */
     case eol_protocol::PATTERN_TABLE:
     {
-      /* table type,	version,	data type,	data size,	data crc,	points,	channel num,	start angle*10,	end angle*10,	unit,	check sum */
-      qDebug() << num_str_list.mid(0, 11);
-      if(num_str_list.size() < 11)
-      {  
+      /* table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, unit, tx_order, profile_id, check sum */
+      qDebug() << num_str_list.mid(0, 13);
+      if(num_str_list.size() < 13)
+      {
         return eol_protocol::UNKNOW_TABLE;
       }
 
       /* 校验表头信息 */
       qint64 check_sum = 0;
-      for(quint8 i = 0; i < 10; i++)
+      quint8 i = 0;
+      for(; i < 12; i++)
       {
         check_sum += num_str_list.value(i).toLongLong();
       }
-      if((check_sum & 0xFF) != num_str_list.value(10).toInt())
+      if(check_sum != num_str_list.value(i).toLongLong())
       {
-        qDebug() << "check_sum err expectance " << (check_sum & 0xFF) << " ? " << num_str_list.value(10).toInt();
+        qDebug() << "check_sum err expectance " << check_sum << " ? " << num_str_list.value(i).toLongLong();
         return eol_protocol::UNKNOW_TABLE;
       }
 
@@ -420,13 +447,21 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       pattern_table_info.Start_Angle = (float)num_str_list.value(7).toShort() / 10;
       pattern_table_info.End_Angle = (float)num_str_list.value(8).toShort() / 10;
       pattern_table_info.Unit = (quint8)num_str_list.value(9).toShort();
+      quint32 tx_order = num_str_list.value(10).toUInt();
+      table_info.Tx2Clibration_Channel[0] = (quint8)tx_order;
+      table_info.Tx2Clibration_Channel[1] = (quint8)(tx_order >> 8);
+      table_info.Tx2Clibration_Channel[2] = (quint8)(tx_order >> 16);
+      table_info.Tx2Clibration_Channel[3] = (quint8)(tx_order >> 24);
+      profile_id = table_info.Profile_ID = (quint8)num_str_list.value(11).toUShort();
 
       /* 私有头大小 */
       common_table_info.Common_Info.Header_Size = sizeof(pattern_table_info.Start_Angle) + \
           sizeof(pattern_table_info.End_Angle) + \
           sizeof(pattern_table_info.Channel_Num) + \
           sizeof(pattern_table_info.Points) + \
-          sizeof(pattern_table_info.Unit);
+          sizeof(pattern_table_info.Unit) + \
+          sizeof(pattern_table_info.Tx2Clibration_Channel) + \
+          sizeof(pattern_table_info.Profile_ID);
       quint32 index = 0;
       memcpy(common_table_info.private_header + index, &pattern_table_info.Start_Angle, sizeof(pattern_table_info.Start_Angle));
       index += sizeof(pattern_table_info.Start_Angle);
@@ -437,12 +472,17 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       memcpy(common_table_info.private_header + index, &pattern_table_info.Channel_Num, sizeof(pattern_table_info.Channel_Num));
       index += sizeof(pattern_table_info.Channel_Num);
       memcpy(common_table_info.private_header + index, &pattern_table_info.Unit, sizeof(pattern_table_info.Unit));
-//      index += sizeof(pattern_table_info.Unit);
+      index += sizeof(pattern_table_info.Unit);
+      memcpy(common_table_info.private_header + index, &pattern_table_info.Tx2Clibration_Channel, sizeof(pattern_table_info.Tx2Clibration_Channel));
+      index += sizeof(pattern_table_info.Tx2Clibration_Channel);
+      memcpy(common_table_info.private_header + index, &pattern_table_info.Profile_ID, sizeof(pattern_table_info.Profile_ID));
+//      index += sizeof(pattern_table_info.Profile_ID);
       break;
     }
     default:
       break;
   }
+  common_table_info.Common_Info.Table_Type = eol_protocol::get_table_type(profile_id, (eol_protocol::TABLE_CLASS_Typedef_t)table_type_index);
   return (eol_protocol::TABLE_Typedef_t)table_type_index;
 }
 
@@ -500,7 +540,7 @@ bool eol_window::csv_analysis(QString &file_path, CSV_INFO_Typedef_t &csv, int c
           /* 清空记录表 */
           memset(&common_table_info, 0, sizeof(common_table_info));
           memset(num_buf, 0, sizeof(num_buf));
-          if(true == QString(line_data).split(",").value(0).contains("table type"))
+          if(true == QString(line_data).split(",").value(0).contains("table "))
           {
             qDebug() << "find header :" << QString(line_data);
             csv_decode_step = CSV_HEADER_DATA_DECODE;
@@ -547,6 +587,29 @@ bool eol_window::csv_analysis(QString &file_path, CSV_INFO_Typedef_t &csv, int c
           if(false == csv_data_analysis(line_data, line_num, table_type_index, common_table_info.Common_Info.Data_Type))
           {
             csv_decode_step = CSV_HEADER_COMMENT_DECODE;
+
+            QString str;
+            TABLE_LIST_Typedef_t table;
+            /* 找到当前发送的表 */
+            int i = 0;
+            for(; i < csv.table_list.size(); i++)
+            {
+              table = csv.table_list.value(i);
+              if(table.table_type == table_type_index)
+              {
+                break;
+              }
+            }
+
+            /* 更新为error状态 */
+            str = table.show_info.replace("\r\n", " -- [check err]\r\n");
+            table.show_info = str;
+            csv.table_list.replace(i, table);
+            csv_list.replace(csv_file_index, csv);
+
+            /* 更新显示列表 */
+            emit signal_update_show_table_list();
+
             continue;
           }
           qDebug() << "read table data start send task";
@@ -633,6 +696,8 @@ void eol_window::run_eol_window_file_decode_task()
       /* 移除上一次的状态 */
       str = table.show_info.replace(" -- [ok]", "");
       str = table.show_info.replace(" -- [err]", "");
+      str = table.show_info.replace(" -- [check err]", "");
+
       table.show_info = str;
       csv.table_list.replace(y, table);
       csv_list.replace(i, csv);
@@ -650,6 +715,10 @@ void eol_window::run_eol_window_file_decode_task()
 
   /* 任务结束 */
   run_state = false;
+
+  /* 本按钮可用 */
+  ui->update_pushButton->setEnabled(true);
+  ui->add_list_pushButton->setEnabled(true);
 }
 
 void eol_window::on_file_sel_pushButton_clicked()
@@ -771,6 +840,7 @@ void eol_window::on_add_list_pushButton_clicked()
 {
   if(current_file_path.isEmpty())
   {
+    qDebug() << "file path is empty";
     return;
   }
 
@@ -780,6 +850,7 @@ void eol_window::on_add_list_pushButton_clicked()
   {
     if(current_file_path == csv_list.value(i).file_path)
     {
+      qDebug() << "file path is existed in list";
       return;
     }
   }
@@ -908,6 +979,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 
     /* 组织表头信息 */
     ui->transfer_progressBar->setMaximum(common_table_info.Common_Info.Data_Size);
+    eol_protocol::TABLE_CLASS_Typedef_t table_class = eol_protocol::get_table_class((eol_protocol::TABLE_Typedef_t)common_table_info.Common_Info.Table_Type);
     quint32 version = common_table_info.Common_Info.Version_REVISION;
     version <<= 8;
     version |= common_table_info.Common_Info.Version_MINOR;
@@ -920,7 +992,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 
     qDebug() << "data size " << common_table_info.Common_Info.Data_Size << " crc " << common_table_info.Common_Info.Crc_Val;
     qint64 check_sum = 0;
-    check_sum += common_table_info.Common_Info.Table_Type + \
+    check_sum += (qint64)table_class + \
               version + \
               common_table_info.Common_Info.Data_Type + \
               data_num + \
@@ -932,7 +1004,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
                             "%u,"
                             "%u,"
                             "%u",
-                            common_table_info.Common_Info.Table_Type, \
+                            table_class, \
                             version, \
                             common_table_info.Common_Info.Data_Type, \
                             data_num, \
@@ -942,7 +1014,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
                        "<font size='5' color='orange'><div align='legt'> Ver: </div> <div align='right'> %2.%3.%4 </div> </font>\n"
                        "<font size='5' color='blue'><div align='legt'> Data Type: </div> <div align='right'> %5 </div> </font>\n"
                        "<font size='5' color='red'><div align='legt'> Data Size: </div> <div align='right'> %6 </div> </font>\n")
-                        .arg(common_table_info.Common_Info.Data_Type)
+                        .arg(table_class)
                         .arg(common_table_info.Common_Info.Version_MAJOR)
                         .arg(common_table_info.Common_Info.Version_MINOR)
                         .arg(common_table_info.Common_Info.Version_REVISION)
@@ -951,10 +1023,14 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 
     /* 私有表头解析 */
     quint32 Index = sizeof(common_table_info.Common_Info);
-    switch(common_table_info.Common_Info.Table_Type)
+    switch(table_class)
     {
+      /* 方位导向矢量表 */
+      /* 俯仰导向矢量表 */
       case eol_protocol::SV_AZIMUTH_TABLE:
       case eol_protocol::SV_ELEVATION_TABLE:
+      case eol_protocol::SV_ELEVATION_AZI_N45_TABLE:
+      case eol_protocol::SV_ELEVATION_AZI_P45_TABLE:
       {
         memcpy(&table_info.Common_Info, &common_table_info.Common_Info, Index);
         memcpy(&table_info.Start_Angle, data + Index, sizeof(table_info.Start_Angle));
@@ -966,57 +1042,83 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
         memcpy(&table_info.Channel_Num, data + Index, sizeof(table_info.Channel_Num));
         Index += sizeof(table_info.Channel_Num);
         memcpy(&table_info.Azi_Ele_Angle, data + Index, sizeof(table_info.Azi_Ele_Angle));
-    //    Index += sizeof(table_info.Azi_Ele_Angle);
+        Index += sizeof(table_info.Azi_Ele_Angle);
+        quint32 tx_order = 0;
+        memcpy(&tx_order, data + Index, sizeof(tx_order));
+        Index += sizeof(tx_order);
+        memcpy(&table_info.Profile_ID, data + Index, sizeof(table_info.Profile_ID));
+//        Index += sizeof(table_info.Profile_ID);
 
         qint32 Start_Angle = (qint32)(table_info.Start_Angle * 10.f);
         qint32 End_Angle = (qint32)(table_info.End_Angle * 10.f);
         qint32 Azi_Ele_Angle = (qint32)(table_info.Azi_Ele_Angle * 10.f);
-        check_sum += Start_Angle + End_Angle + Azi_Ele_Angle + table_info.Points + table_info.Channel_Num;
-        csv_header = tr("table type,	version,	data type,	data size,	data crc,	points, channel num,	start angle*10,	end angle*10,	ele angle*10,	check sum\r\n");
-        str += QString::asprintf(",%u,%u,%d,%d,%d,"
+        check_sum += Start_Angle + End_Angle + Azi_Ele_Angle + table_info.Points + table_info.Channel_Num + tx_order + table_info.Profile_ID;
+        csv_header = tr("table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, ele angle*10, tx_order, profile_id, check sum\r\n");
+        str += QString::asprintf(",%u,%u,%d,%d,%d,%u,%u,"
                                  "%d\r\n", \
                                  table_info.Points, \
                                  table_info.Channel_Num, \
                                  Start_Angle, \
                                  End_Angle, \
                                  Azi_Ele_Angle, \
-                                 (qint8)check_sum&0xFF);
+                                 tx_order, \
+                                 table_info.Profile_ID, \
+                                 check_sum);
 
         tips_str += QString("<font size='5' color='black'><div align='legt'> Channel Num: </div> <div align='right'> %1 </div> </font>\n"
                             "<font size='5' color='pink'><div align='legt'> Point Num: </div> <div align='right'> %2 </div> </font>\n"
                             "<font size='5' color='blue'><div align='legt'> Start Angle: </div> <div align='right'> %3 </div> </font>\n"
                             "<font size='5' color='blue'><div align='legt'> End Angle: </div> <div align='right'> %4 </div> </font>\n"
-                            "<font size='5' color='blue'><div align='legt'> Azi_Ele_Angle: </div> <div align='right'> %5 </div> </font>\n")
+                            "<font size='5' color='blue'><div align='legt'> Azi_Ele_Angle: </div> <div align='right'> %5 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Tx Order: </div> <div align='right'> %6 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Profile_ID: </div> <div align='right'> %7 </div> </font>\n")
                             .arg(table_info.Channel_Num)
                             .arg(table_info.Points)
                             .arg(table_info.Start_Angle)
                             .arg(table_info.End_Angle)
-                            .arg(table_info.Azi_Ele_Angle);
+                            .arg(table_info.Azi_Ele_Angle)
+                            .arg(tx_order)
+                            .arg(table_info.Profile_ID);
         break;
       }
+
+      /* 天线信息表 */
       case eol_protocol::ANT_BOTH_TABLE:
       {
         memcpy(&ant_table_info.Common_Info, &common_table_info.Common_Info, Index);
         memcpy(&ant_table_info.Points, data + Index, sizeof(ant_table_info.Points));
         Index += sizeof(ant_table_info.Points);
         memcpy(&ant_table_info.Channel_Num, data + Index, sizeof(ant_table_info.Channel_Num));
-//        Index += sizeof(ant_table_info.Channel_Num);
+        Index += sizeof(ant_table_info.Channel_Num);
+        quint32 tx_order = 0;
+        memcpy(&tx_order, data + Index, sizeof(tx_order));
+        Index += sizeof(tx_order);
+        memcpy(&ant_table_info.Profile_ID, data + Index, sizeof(ant_table_info.Profile_ID));
+//        Index += sizeof(ant_table_info.Profile_ID);
 
-        check_sum += ant_table_info.Points + ant_table_info.Channel_Num;
+        check_sum += ant_table_info.Points + ant_table_info.Channel_Num + tx_order + ant_table_info.Profile_ID;
 
-        csv_header = tr("table type,version,data type,data size,data crc,	points,channel num,check sum\r\n");
-        str += QString::asprintf(",%u,%u,"
+        csv_header = tr("table class, version, data type, data size, data crc, points, channel num, tx_order, profile_id, check sum\r\n");
+        str += QString::asprintf(",%u,%u,%u,%u,"
                                  "%d\r\n", \
                                  ant_table_info.Points, \
                                  ant_table_info.Channel_Num, \
-                                 (qint8)check_sum&0xFF);
+                                 tx_order, \
+                                 ant_table_info.Profile_ID, \
+                                 check_sum);
 
         tips_str += QString("<font size='5' color='black'><div align='legt'> Channel Num: </div> <div align='right'> %1 </div> </font>\n"
-                            "<font size='5' color='pink'><div align='legt'> Point Num: </div> <div align='right'> %2 </div> </font>\n")
+                            "<font size='5' color='pink'><div align='legt'> Point Num: </div> <div align='right'> %2 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Tx Order: </div> <div align='right'> %3 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Profile_ID: </div> <div align='right'> %4 </div> </font>\n")
                             .arg(ant_table_info.Channel_Num)
-                            .arg(ant_table_info.Points);
+                            .arg(ant_table_info.Points)
+                            .arg(tx_order)
+                            .arg(ant_table_info.Profile_ID);
         break;
       }
+
+      /* 方向表 */
       case eol_protocol::PATTERN_TABLE:
       {
         memcpy(&pattern_table_info.Common_Info, &common_table_info.Common_Info, Index);
@@ -1029,31 +1131,42 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
         memcpy(&pattern_table_info.Channel_Num, data + Index, sizeof(pattern_table_info.Channel_Num));
         Index += sizeof(pattern_table_info.Channel_Num);
         memcpy(&pattern_table_info.Unit, data + Index, sizeof(pattern_table_info.Unit));
-//        Index += sizeof(pattern_table_info.Unit);
+        Index += sizeof(pattern_table_info.Unit);
+        quint32 tx_order = 0;
+        memcpy(&tx_order, data + Index, sizeof(tx_order));
+        Index += sizeof(tx_order);
+        memcpy(&pattern_table_info.Profile_ID, data + Index, sizeof(pattern_table_info.Profile_ID));
+//        Index += sizeof(pattern_table_info.Profile_ID);
 
         qint32 Start_Angle = (qint32)(pattern_table_info.Start_Angle * 10.f);
         qint32 End_Angle = (qint32)(pattern_table_info.End_Angle * 10.f);
-        check_sum += Start_Angle + End_Angle + pattern_table_info.Points + pattern_table_info.Channel_Num + pattern_table_info.Unit;
-        csv_header = tr("table type,version,data type,data size,data crc,points,channel num,start angle*10,end angle*10,unit,check sum\r\n");
-        str += QString::asprintf(",%u,%u,%d,%d,%u,"
+        check_sum += Start_Angle + End_Angle + pattern_table_info.Points + pattern_table_info.Channel_Num + pattern_table_info.Unit + tx_order + pattern_table_info.Profile_ID;
+        csv_header = tr("table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, unit, tx_order, profile_id, check sum\r\n");
+        str += QString::asprintf(",%u,%u,%d,%d,%u,%u,%u,"
                                  "%d\r\n", \
                                  pattern_table_info.Points, \
                                  pattern_table_info.Channel_Num, \
                                  Start_Angle, \
                                  End_Angle, \
                                  pattern_table_info.Unit, \
-                                 (qint8)check_sum&0xFF);
+                                 tx_order, \
+                                 pattern_table_info.Profile_ID, \
+                                 check_sum);
 
         tips_str += QString("<font size='5' color='black'><div align='legt'> Channel Num: </div> <div align='right'> %1 </div> </font>\n"
                             "<font size='5' color='pink'><div align='legt'> Point Num: </div> <div align='right'> %2 </div> </font>\n"
                             "<font size='5' color='blue'><div align='legt'> Start Angle: </div> <div align='right'> %3 </div> </font>\n"
                             "<font size='5' color='blue'><div align='legt'> End Angle: </div> <div align='right'> %4 </div> </font>\n"
-                            "<font size='5' color='purple'><div align='legt'> Unit: </div> <div align='right'> %5 </div> </font>\n")
+                            "<font size='5' color='purple'><div align='legt'> Unit: </div> <div align='right'> %5 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Tx Order: </div> <div align='right'> %6 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Profile_ID: </div> <div align='right'> %7 </div> </font>\n")
                             .arg(pattern_table_info.Channel_Num)
                             .arg(pattern_table_info.Points)
                             .arg(pattern_table_info.Start_Angle)
                             .arg(pattern_table_info.End_Angle)
-                            .arg(pattern_table_info.Unit);
+                            .arg(pattern_table_info.Unit)
+                            .arg(tx_order)
+                            .arg(pattern_table_info.Profile_ID);
         break;
       }
       default:
@@ -1145,10 +1258,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
   }
 
   /* 表检测 */
-  if(common_table_info.Common_Info.Table_Type != eol_protocol::SV_AZIMUTH_TABLE &&
-     common_table_info.Common_Info.Table_Type != eol_protocol::SV_ELEVATION_TABLE &&
-     common_table_info.Common_Info.Table_Type != eol_protocol::ANT_BOTH_TABLE &&
-     common_table_info.Common_Info.Table_Type != eol_protocol::PATTERN_TABLE)
+  if(eol_protocol::UNKNOW_TABLE == common_table_info.Common_Info.Table_Type)
   {
     return;
   }
@@ -1293,6 +1403,7 @@ void eol_window::on_entry_produce_mode_pushButton_clicked()
   /* 是否时正在执行任务 */
   if(TASK_RUNNING == current_task_complete_state)
   {
+    qDebug() << "TASK_RUNNING";
     return;
   }
   bool ret = false;
@@ -1332,7 +1443,7 @@ void eol_window::slot_device_mode(const void *pass_data)
 {
   const quint8 *data_ptr = (const quint8 *)pass_data;
   eol_protocol::DEVICE_MODE_Typedef_t mode = (eol_protocol::DEVICE_MODE_Typedef_t)data_ptr[0];
-
+  qDebug() << "mode " << mode;
   /* 生产-普通模式 */
   if(ui->produce_noral_radioButton->isChecked() && eol_protocol::PRODUCE_MODE_NORMAL == mode)
   {
@@ -1423,6 +1534,13 @@ void eol_window::slot_protocol_rw_err(quint8 reg, quint8 command)
     case EOL_W_DEVICE_REBOOT_REG:
       tips = tr("reboot err");
       break;
+    case EOL_R_ACCESS_CODE_REG:
+    case EOL_W_RUN_MODE_REG:
+    case EOL_R_PROFILE_NUM_CH_NUM:
+      tips = tr("set mode err");
+      /* 设置错误状态 */
+      current_task_complete_state = TASK_ERROR;
+      break;
     default:
       return;
   }
@@ -1445,6 +1563,12 @@ void eol_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 data_
   {
     case EOL_W_DEVICE_REBOOT_REG:
       tips = tr("reboot ok");
+      break;
+    case EOL_R_ACCESS_CODE_REG:
+    case EOL_W_RUN_MODE_REG:
+    case EOL_R_PROFILE_NUM_CH_NUM:
+      tips = tr("rw ok");
+      current_task_complete_state = TASK_COMPLETE;
       break;
     default:
       return;

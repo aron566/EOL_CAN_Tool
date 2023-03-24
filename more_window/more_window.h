@@ -29,7 +29,6 @@ public:
     connect(can_driver_obj, &can_driver::signal_show_message, this, &more_window::slot_show_message);
     /* 线程同步 */
     connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message, Qt::BlockingQueuedConnection);
-//    connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message);
   }
 
   /**

@@ -56,7 +56,9 @@ FORMS += \
 INCLUDEPATH += \
     main_window \
     more_window \
-    eol_window
+    eol_window \
+    eol_sub_window \
+    eol_calibration_window
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

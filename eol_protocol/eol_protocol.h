@@ -43,6 +43,11 @@
 #define EOL_META_DATA_CHECK_OK_REG     0x01U  /**< 安全认证确认 */
 #define EOL_META_DATA_SET_MODE_REG     0x02U  /**< 模式选择 */
 
+/* 握手 */
+#define EOL_R_ACCESS_CODE_REG          0x00U  /**< 读访问码 */
+#define EOL_W_RUN_MODE_REG             0x01U  /**< 写运行模式 */
+
+#define EOL_R_PROFILE_NUM_CH_NUM       0x02U  /**< 读配置数和通道数 */
 #define EOL_RW_VERSION_REG             0x03U  /**< 读取软硬件版本 */
 #define EOL_R_VCAN_TEST_REG            0x04U  /**< VCAN测试 */
 #define EOL_RW_SN_REG                  0x05U  /**< SN读写 */
@@ -130,15 +135,51 @@ public:
     UNIT_MAX = 0xFF                       /**< 单位：未知 */
   }UNIT_Typedef_t;
 
+  /* 表分类 */
+  typedef enum
+  {
+    SV_AZIMUTH_TABLE = 0,                 /**< 方位导向矢量表@ELE+0deg */
+    SV_ELEVATION_TABLE,                   /**< 俯仰导向矢量表@AZI+0deg */
+    ANT_BOTH_TABLE,                       /**< 天线间距坐标与初相信息表，双表合并 */
+    PATTERN_TABLE,                        /**< 方向图表 */
+    SV_ELEVATION_AZI_N45_TABLE,           /**< 俯仰导向矢量表@AZI-45deg */
+    SV_ELEVATION_AZI_P45_TABLE,           /**< 俯仰导向矢量表@AZI+45deg */
+    UNKNOW_CLASS_TABLE = 0xFF,            /**< 未知表类 */
+  }TABLE_CLASS_Typedef_t;
+
+
   /* 表类型 */
   typedef enum
   {
-    SV_AZIMUTH_TABLE = 0,                 /**< 方位导向矢量表 */
-    SV_ELEVATION_TABLE,                   /**< 俯仰导向矢量表 */
-    ANT_POS_TABLE,                        /**< 天线间距坐标信息表 */
-    PHASE_COMPS_TABLE,                    /**< 天线初相信息表 */
-    ANT_BOTH_TABLE,                       /**< 天线间距坐标与初相信息表，双表合并 */
-    PATTERN_TABLE,                        /**< 方向图表 */
+    PROFILE_0_SV_AZIMUTH_TABLE = 0,       /**< 方位导向矢量表@ELE+0deg */
+    PROFILE_1_SV_AZIMUTH_TABLE,           /**< 方位导向矢量表@ELE+0deg */
+    PROFILE_2_SV_AZIMUTH_TABLE,           /**< 方位导向矢量表@ELE+0deg */
+    PROFILE_3_SV_AZIMUTH_TABLE,           /**< 方位导向矢量表@ELE+0deg */
+
+    PROFILE_0_SV_ELEVATION_TABLE,         /**< 俯仰导向矢量表@AZI+0deg */
+    PROFILE_1_SV_ELEVATION_TABLE,         /**< 俯仰导向矢量表@AZI+0deg */
+    PROFILE_2_SV_ELEVATION_TABLE,         /**< 俯仰导向矢量表@AZI+0deg */
+    PROFILE_3_SV_ELEVATION_TABLE,         /**< 俯仰导向矢量表@AZI+0deg */
+
+    PROFILE_0_ANT_BOTH_TABLE,             /**< 天线间距坐标与初相信息表，双表合并 */
+    PROFILE_1_ANT_BOTH_TABLE,             /**< 天线间距坐标与初相信息表，双表合并 */
+    PROFILE_2_ANT_BOTH_TABLE,             /**< 天线间距坐标与初相信息表，双表合并 */
+    PROFILE_3_ANT_BOTH_TABLE,             /**< 天线间距坐标与初相信息表，双表合并 */
+
+    PROFILE_0_PATTERN_TABLE,              /**< 方向图表 */
+    PROFILE_1_PATTERN_TABLE,              /**< 方向图表 */
+    PROFILE_2_PATTERN_TABLE,              /**< 方向图表 */
+    PROFILE_3_PATTERN_TABLE,              /**< 方向图表 */
+
+    PROFILE_0_SV_ELEVATION_AZI_N45_TABLE, /**< 俯仰导向矢量表@AZI-45deg */
+    PROFILE_1_SV_ELEVATION_AZI_N45_TABLE, /**< 俯仰导向矢量表@AZI-45deg */
+    PROFILE_2_SV_ELEVATION_AZI_N45_TABLE, /**< 俯仰导向矢量表@AZI-45deg */
+    PROFILE_3_SV_ELEVATION_AZI_N45_TABLE, /**< 俯仰导向矢量表@AZI-45deg */
+
+    PROFILE_0_SV_ELEVATION_AZI_P45_TABLE, /**< 俯仰导向矢量表@AZI+45deg */
+    PROFILE_1_SV_ELEVATION_AZI_P45_TABLE, /**< 俯仰导向矢量表@AZI+45deg */
+    PROFILE_2_SV_ELEVATION_AZI_P45_TABLE, /**< 俯仰导向矢量表@AZI+45deg */
+    PROFILE_3_SV_ELEVATION_AZI_P45_TABLE, /**< 俯仰导向矢量表@AZI+45deg */
     UNKNOW_TABLE = 0xFF,                  /**< 未知表类型 */
   }TABLE_Typedef_t;
 
@@ -157,7 +198,7 @@ public:
     uint32_t Crc_Val;                     /**< 表数据CRC */
   }TABLE_HEADER_Typedef_t;
 
-  /* DoA相关表头信息 */
+  /* DoA导向矢量表头信息 */
   typedef struct
   {
     TABLE_HEADER_Typedef_t Common_Info;   /**< 公共头部信息 */
@@ -165,7 +206,9 @@ public:
     float End_Angle;                      /**< 结束角度 */
     uint16_t Points;                      /**< 点数 */
     uint8_t Channel_Num;                  /**< 通道数量 */
-    float Azi_Ele_Angle;                  /**< 水平导向矢量对应俯仰角，俯仰导向矢量对应水平角 */
+    float Azi_Ele_Angle;                  /**< 水平导向矢量@俯仰角，俯仰导向矢量@水平角 */
+    uint8_t Tx2Clibration_Channel[4];     /**< TX在校准时的RX通道 */
+    uint8_t Profile_ID;                   /**< 当前配置属于哪个校准Profile */
   }DOA_TABLE_HEADER_Typedef_t;
 
   /* DoA天线补偿表头信息 */
@@ -174,6 +217,8 @@ public:
     TABLE_HEADER_Typedef_t Common_Info;   /**< 公共头部信息 */
     uint16_t Points;                      /**< 点数 */
     uint8_t Channel_Num;                  /**< 通道数量 */
+    uint8_t Tx2Clibration_Channel[4];     /**< TX在校准时的RX通道 */
+    uint8_t Profile_ID;                   /**< 当前配置属于哪个校准Profile */
   }ANT_TABLE_HEADER_Typedef_t;
 
   /* 方向图即角度能量图表头信息 */
@@ -185,6 +230,8 @@ public:
     uint16_t Points;                      /**< 点数 */
     uint8_t Channel_Num;                  /**< 通道数量 */
     uint8_t Unit;                         /**< 单位 @ref UNIT_Typedef_t */
+    uint8_t Tx2Clibration_Channel[4];     /**< TX在校准时的RX通道 */
+    uint8_t Profile_ID;                   /**< 当前配置属于哪个校准Profile */
   }SYS_PATTERN_TABLE_HEADER_Typedef_t;
 
   /* 传输表头信息 */
@@ -271,7 +318,7 @@ public:
    */
   virtual void run() override
   {
-    qDebug() << "eol wait to run";
+    qDebug() << "eol protocol wait to run";
     emit signal_eol_protol_is_start();
     run_state = true;
     thread_run_state = true;
@@ -284,7 +331,7 @@ public:
   void stop_task()
   {
     run_state = false;
-    qDebug() << "eol wait to stop";
+    qDebug() << "eol protocol wait to stop";
   }
 
   void start_task()
@@ -342,6 +389,20 @@ public:
    */
   bool eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task);
 
+  /**
+   * @brief 获取表类型
+   * @param profile_id 配置ID
+   * @param class_type 类ID
+   * @return 表类型
+   */
+  static TABLE_Typedef_t get_table_type(quint8 profile_id, TABLE_CLASS_Typedef_t class_type);
+
+  /**
+   * @brief 获取表分类
+   * @param table_type 表类型
+   * @return 表类
+   */
+  static TABLE_CLASS_Typedef_t get_table_class(TABLE_Typedef_t table_type);
 signals:
   /**
    * @brief 协议栈启动信号
@@ -385,6 +446,11 @@ signals:
   void signal_recv_eol_table_data(quint16 frame_num, const quint8 *data, quint16
                                    data_len);
 
+  /**
+   * @brief 发送进度信号
+   * @param current_size 当前大小
+   * @param total_size 总大小
+   */
   void signal_send_progress(quint32 current_size, quint32 total_size);
 
   /**
@@ -514,15 +580,13 @@ private:
   /* 错误统计 */
   quint32 acc_error_cnt = 0;
 
-  /* 协议栈运行状态 */
-  bool file_transfer_stack_run_state = true;
-  bool upgrade_frame_stack_run_state = true;
-
+  /* 发射队列 */
   SEND_TASK_LIST_Typedef_t send_task_handle;
 
   /* 响应队列 */
   QList<WAIT_RESPONSE_LIST_Typedef_t>wait_response_list;
 
+  /* 任务队列 */
   QList<EOL_TASK_LIST_Typedef_t>eol_task_list;
 private slots:
     void slot_timer_timeout();
@@ -545,6 +609,9 @@ private:
   DATA_RECORD_Typedef_t data_record;
 
   EOL_SEND_DATA_Typedef_t send_table_data;
+
+  quint32 access_code;
+  quint8 current_run_mode;
 };
 #endif
 /******************************** End of file *********************************/

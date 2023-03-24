@@ -60,7 +60,6 @@ void more_window::closeEvent(QCloseEvent *event)
 void more_window::slot_show_message(const QString &message)
 {
   QString show_message;
-  show_message.clear();
 
   /* 时间戳 */
   if(ui->display_time_stamp_checkBox_2->isChecked())

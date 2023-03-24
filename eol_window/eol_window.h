@@ -10,8 +10,8 @@
 #include <QRunnable>
 #include <QTemporaryFile>
 #include <eol_protocol.h>
-#include "eol_sub_window/eol_sub_window.h"
-#include "eol_calibration_window/eol_calibration_window.h"
+#include "eol_sub_window.h"
+#include "eol_calibration_window.h"
 
 namespace Ui {
 class eol_window;

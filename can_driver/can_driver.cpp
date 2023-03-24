@@ -932,7 +932,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
 
     /* 消息过滤 */
     id_temp = (can_id & can_id_mask_);
-    if((GET_ID(id) == id_temp) || false == can_id_mask_en_)
+    if(can_id == id_temp || false == can_id_mask_en_)
     {
       /* 显示接收到的字节数 */
       show_message_rx_bytes(can.frame.can_dlc);
@@ -986,7 +986,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
 
     /* 消息过滤 */
     id_temp = (can_id & can_id_mask_);
-    if((GET_ID(id) == id_temp) || false == can_id_mask_en_)
+    if(can_id == id_temp || false == can_id_mask_en_)
     {
       /* 显示接收到的字节数 */
       show_message_rx_bytes(canfd.frame.len);

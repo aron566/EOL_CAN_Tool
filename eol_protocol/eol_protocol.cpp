@@ -254,7 +254,7 @@ eol_protocol::SNED_CHECK_STATUS_Typedef_t eol_protocol::check_wait_send_task(boo
   return WAIT_SEND;
 }
 
-
+/*响应超时检测 */
 bool eol_protocol::response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait)
 {
   if((current_time_sec - wait.start_time) >= FRAME_TIME_OUT)
@@ -264,7 +264,7 @@ bool eol_protocol::response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait)
   return false;
 }
 
-
+/* 检测缓冲区是否有数据 */
 uint32_t eol_protocol::check_can_read(CircularQueue::CQ_handleTypeDef *cq)
 {
   /* 判断CAN ID 跳过无效头 */
@@ -279,7 +279,7 @@ uint32_t eol_protocol::check_can_read(CircularQueue::CQ_handleTypeDef *cq)
   return CircularQueue::CQ_getLength(cq);
 }
 
-
+/* 定时器初始化 */
 void eol_protocol::timer_init()
 {
   protocol_Timer = new QTimer(this);
@@ -473,6 +473,20 @@ eol_protocol::EOL_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(const quin
 
   switch(reg_addr)
   {
+    case EOL_W_RUN_MODE_REG:
+    {
+      EOL_TASK_LIST_Typedef_t task;
+      task.run_state = true;
+      task.param = nullptr;
+
+      /* 读配置 */
+      task.reg = EOL_R_PROFILE_NUM_CH_NUM;
+      task.command = EOL_READ_CMD;
+      task.buf[0] = 0;
+      task.len = 0;
+      eol_master_common_rw_device(task);
+      break;
+    }
     case EOL_W_DEVICE_REBOOT_REG:
     case EOL_R_VCAN_TEST_REG:
     case EOL_RW_SN_REG:
@@ -489,6 +503,33 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONS
 {
   switch(wait.reg_addr)
   {
+    /* 访问码 */
+    case EOL_R_ACCESS_CODE_REG:
+    {
+      memcpy(&access_code, data, sizeof(access_code));
+      qDebug("acc code 0x%08X", access_code);
+      EOL_TASK_LIST_Typedef_t task;
+      task.run_state = true;
+      task.param = nullptr;
+
+      /* 设置工作模式 */
+      task.reg = EOL_W_RUN_MODE_REG;
+      task.command = EOL_WRITE_CMD;
+      memcpy(&task.buf, &access_code, sizeof(access_code));
+      task.buf[sizeof(access_code)] = (quint8)current_run_mode;
+      utility::debug_print(task.buf, 5);
+      task.len = 5;
+      eol_master_common_rw_device(task);
+      break;
+    }
+
+    /* 读运行模式，配置数，通道数 */
+    case EOL_R_PROFILE_NUM_CH_NUM:
+    {
+      emit signal_device_mode(data);
+      break;
+    }
+
     case EOL_RW_TABLE_DATA_REG:
     {
       quint16 frame_num;
@@ -542,6 +583,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONS
   return RETURN_OK;
 }
 
+/* 等待回复 */
 eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_start()
 {
   static quint8 temp_buf[FRAME_TEMP_BUF_SIZE];
@@ -699,7 +741,7 @@ __META_CMD_DECDE:
     {
       str += QString::asprintf("%02X ", temp_buf[i]);
     }
-    qDebug() << str;
+
     switch(wait.reg_addr)
     {
       case EOL_META_DATA_CHECK_REG:
@@ -780,7 +822,7 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
   /* 暂停其他数据接收显示 */
   quint32 last_canid_mask = 0;
   bool last_canid_mask_en = false;
-  can_driver_obj->set_msg_canid_mask(EOL_PROTOCOL_REPLY_CAN_ID + 100, true, &last_canid_mask, &last_canid_mask_en);
+  can_driver_obj->set_msg_canid_mask(EOL_PROTOCOL_REPLY_CAN_ID + 0x100, true, &last_canid_mask, &last_canid_mask_en);
 
   qDebug() << "get_eol_table_data_task start";
 
@@ -885,12 +927,13 @@ __get_eol_table_data_err:
   return false;
 }
 
+/* 读写任务 */
 bool eol_protocol::common_rw_device_task(void *param_)
 {
   /* 暂停其他数据接收显示 */
   quint32 last_canid_mask = 0;
   bool last_canid_mask_en = false;
-  can_driver_obj->set_msg_canid_mask(EOL_PROTOCOL_REPLY_CAN_ID + 100, true, &last_canid_mask, &last_canid_mask_en);
+  can_driver_obj->set_msg_canid_mask(EOL_PROTOCOL_REPLY_CAN_ID + 0x100, true, &last_canid_mask, &last_canid_mask_en);
 
   eol_protocol::RETURN_TYPE_Typedef_t ret;
   quint8 error_cnt = 0;
@@ -898,7 +941,8 @@ bool eol_protocol::common_rw_device_task(void *param_)
   /* 清空 */
   eol_protocol_clear();
 
-  qDebug() << "step1 rw device cmd " << param->command << "reg " << param->reg;
+  qDebug() << "step1 rw device cmd " << param->command << "reg " << param->reg << "len " << param->len;
+
   do
   {
     ret = protocol_stack_create_task(param->command, param->reg, param->buf, param->len);
@@ -926,132 +970,6 @@ __set_device_err:
 
   qDebug() << "signal_protocol_rw_err";
   emit signal_protocol_rw_err(param->reg, (quint8)param->command);
-  return false;
-}
-
-bool eol_protocol::set_device_mode_task(void *param_)
-{
-  /* 暂停其他数据接收显示 */
-  quint32 last_canid_mask = 0;
-  bool last_canid_mask_en = false;
-  can_driver_obj->set_msg_canid_mask(0x200 + 100, true, &last_canid_mask, &last_canid_mask_en);
-
-  qDebug() << "set_device_mode_task start";
-
-  /* 清空 */
-  eol_protocol_clear();
-
-  quint8 error_cnt = 0;
-  RETURN_TYPE_Typedef_t ret;
-  EOL_SEND_DATA_Typedef_t *param = (EOL_SEND_DATA_Typedef_t *)param_;
-  DEVICE_MODE_Typedef_t mode = (DEVICE_MODE_Typedef_t)param->buf[8];
-
-  quint32 index = 0;
-  /* 设置安全认证报文 */
-  send_table_data.buf[index++] = 0x0E;
-  send_table_data.buf[index++] = 0x31;
-  send_table_data.buf[index++] = 0x58;
-  send_table_data.buf[index++] = 0xAF;
-  send_table_data.buf[index++] = 0x00;
-  send_table_data.buf[index++] = 0x01;
-  send_table_data.buf[index++] = 0x02;
-  send_table_data.buf[index++] = (quint8)utility::get_data_sum(send_table_data.buf, 7);
-
-  /* 发送安全请求 */
-  qDebug() << "step1 device safe check";
-  do
-  {
-    ret = protocol_stack_create_task(EOL_META_CMD, EOL_META_DATA_CHECK_REG, param->buf, 8);
-    if(RETURN_OK != ret)
-    {
-      error_cnt++;
-      if(RETRY_NUM_MAX > error_cnt)
-      {
-        continue;
-      }
-      goto __set_device_mode_err;
-    }
-    break;
-  }while(run_state);
-
-  /* 再次判断线程运行状态 */
-  if(false == run_state)
-  {
-    goto __set_device_mode_err;
-  }
-
-  /* 设置安全确认报文 */
-  index = 0;
-  param->buf[index++] = 0x0F;
-  param->buf[index++] = 0x31;
-  param->buf[index++] = 0x58;
-  param->buf[index++] = 0xAF;
-  param->buf[7] = (quint8)utility::get_data_sum(param->buf, 7);
-  /* 发送安全确认 */
-  qDebug() << "step2 device safe ok";
-  do
-  {
-    ret = protocol_stack_create_task(EOL_META_CMD, EOL_META_DATA_CHECK_OK_REG, param->buf, 8);
-    if(RETURN_OK != ret)
-    {
-      error_cnt++;
-      if(RETRY_NUM_MAX > error_cnt)
-      {
-        continue;
-      }
-      goto __set_device_mode_err;
-    }
-    break;
-  }while(run_state);
-
-  /* 再次判断线程运行状态 */
-  if(false == run_state)
-  {
-    goto __set_device_mode_err;
-  }
-
-  /* 进入指定模式 */
-  param->buf[0] = (quint8)mode;
-
-  memset(param->buf + 4, 0, 4);
-
-  qDebug() << "step3 device mode set";
-  do
-  {
-    ret = protocol_stack_create_task(EOL_META_CMD, EOL_META_DATA_SET_MODE_REG, param->buf, 8);
-    if(RETURN_OK != ret)
-    {
-      error_cnt++;
-      if(RETRY_NUM_MAX > error_cnt)
-      {
-        continue;
-      }
-      goto __set_device_mode_err;
-    }
-    break;
-  }while(run_state);
-
-  /* 再次判断线程运行状态 */
-  if(false == run_state)
-  {
-    goto __set_device_mode_err;
-  }
-
-  /* 发送切换后的设备模式 */
-  param->buf[0] = (quint8)mode;
-  emit signal_device_mode(param->buf);
-
-  /* 恢复数据接收显示 */
-  can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
-
-  return true;
-
-__set_device_mode_err:
-  /* 恢复数据接收显示 */
-  can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
-
-  qDebug() << "signal_protocol_no_response";
-  emit signal_protocol_no_response();
   return false;
 }
 
@@ -1218,33 +1136,26 @@ __send_eol_table_data_err:
   return false;
 }
 
+/* 设置设备模式 */
 bool eol_protocol::eol_master_set_device_mode(DEVICE_MODE_Typedef_t mode)
 {
-  /* 查重 */
-  for(qint32 i = 0; i < eol_task_list.size(); i++)
-  {
-    if(eol_task_list.value(i).task == &eol_protocol::set_device_mode_task && \
-       send_table_data.buf[8] == (quint8)mode)
-    {
-      return true;
-    }
-  }
-
-  /* 设置消息过滤器 */
-  can_driver_obj->add_msg_filter(0x200, cq_obj);
-  current_send_can_id = 0x100;
-
-  /* 目标设置模式 */
-  send_table_data.buf[8] = (quint8)mode;
+  /* 当前运行模式 */
+  current_run_mode = (quint8)mode;
 
   EOL_TASK_LIST_Typedef_t task;
   task.run_state = true;
-  task.param = &send_table_data;
-  task.task = &eol_protocol::set_device_mode_task;
-  eol_task_list.append(task);
+  task.param = nullptr;
+
+  /* 读安全码 */
+  task.reg = EOL_R_ACCESS_CODE_REG;
+  task.command = EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_master_common_rw_device(task);
   return true;
 }
 
+/* 添加发送表数据任务 */
 bool eol_protocol::eol_master_send_table_data(COMMON_TABLE_HEADER_Typedef_t &table_info, const quint8 *data)
 {
   /* 查重 */
@@ -1273,6 +1184,7 @@ bool eol_protocol::eol_master_send_table_data(COMMON_TABLE_HEADER_Typedef_t &tab
   return true;
 }
 
+/* 添加获取表数据任务 */
 bool eol_protocol::eol_master_get_table_data(TABLE_Typedef_t table_type)
 {
   /* 查重 */
@@ -1302,6 +1214,7 @@ bool eol_protocol::eol_master_get_table_data(TABLE_Typedef_t table_type)
   return true;
 }
 
+/* 添加读写任务 */
 bool eol_protocol::eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task)
 {
   /* 查重 */
@@ -1323,4 +1236,72 @@ bool eol_protocol::eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task)
   return true;
 }
 
+/* 获取表类型 */
+eol_protocol::TABLE_Typedef_t eol_protocol::get_table_type(quint8 profile_id, TABLE_CLASS_Typedef_t class_type)
+{
+  quint8 Table_Type = 0;
+  switch(class_type)
+  {
+    case SV_AZIMUTH_TABLE:
+      Table_Type = (quint8)PROFILE_0_SV_AZIMUTH_TABLE;
+      break;
+    case SV_ELEVATION_TABLE:
+      Table_Type = (quint8)PROFILE_0_SV_ELEVATION_TABLE;
+      break;
+    case ANT_BOTH_TABLE:
+      Table_Type = (quint8)PROFILE_0_ANT_BOTH_TABLE;
+      break;
+    case PATTERN_TABLE:
+      Table_Type = (quint8)PROFILE_0_PATTERN_TABLE;
+      break;
+    case SV_ELEVATION_AZI_N45_TABLE:
+      Table_Type = (quint8)PROFILE_0_SV_ELEVATION_AZI_N45_TABLE;
+      break;
+    case SV_ELEVATION_AZI_P45_TABLE:
+      Table_Type = (quint8)PROFILE_0_SV_ELEVATION_AZI_P45_TABLE;
+      break;
+    default:
+      return UNKNOW_TABLE;
+  }
+  return (TABLE_Typedef_t)(Table_Type + profile_id);
+}
+
+eol_protocol::TABLE_CLASS_Typedef_t eol_protocol::get_table_class(TABLE_Typedef_t table_type)
+{
+  switch(table_type)
+  {
+    case PROFILE_0_SV_AZIMUTH_TABLE:
+    case PROFILE_1_SV_AZIMUTH_TABLE:           /**< 方位导向矢量表@ELE+0deg */
+    case PROFILE_2_SV_AZIMUTH_TABLE:           /**< 方位导向矢量表@ELE+0deg */
+    case PROFILE_3_SV_AZIMUTH_TABLE:           /**< 方位导向矢量表@ELE+0deg */
+      return SV_AZIMUTH_TABLE;
+    case PROFILE_0_SV_ELEVATION_TABLE:         /**< 俯仰导向矢量表@AZI+0deg */
+    case PROFILE_1_SV_ELEVATION_TABLE:         /**< 俯仰导向矢量表@AZI+0deg */
+    case PROFILE_2_SV_ELEVATION_TABLE:         /**< 俯仰导向矢量表@AZI+0deg */
+    case PROFILE_3_SV_ELEVATION_TABLE:         /**< 俯仰导向矢量表@AZI+0deg */
+      return SV_ELEVATION_TABLE;
+    case PROFILE_0_ANT_BOTH_TABLE:             /**< 天线间距坐标与初相信息表，双表合并 */
+    case PROFILE_1_ANT_BOTH_TABLE:             /**< 天线间距坐标与初相信息表，双表合并 */
+    case PROFILE_2_ANT_BOTH_TABLE:             /**< 天线间距坐标与初相信息表，双表合并 */
+    case PROFILE_3_ANT_BOTH_TABLE:             /**< 天线间距坐标与初相信息表，双表合并 */
+      return ANT_BOTH_TABLE;
+    case PROFILE_0_PATTERN_TABLE:              /**< 方向图表 */
+    case PROFILE_1_PATTERN_TABLE:              /**< 方向图表 */
+    case PROFILE_2_PATTERN_TABLE:              /**< 方向图表 */
+    case PROFILE_3_PATTERN_TABLE:              /**< 方向图表 */
+      return PATTERN_TABLE;
+    case PROFILE_0_SV_ELEVATION_AZI_N45_TABLE: /**< 俯仰导向矢量表@AZI-45deg */
+    case PROFILE_1_SV_ELEVATION_AZI_N45_TABLE: /**< 俯仰导向矢量表@AZI-45deg */
+    case PROFILE_2_SV_ELEVATION_AZI_N45_TABLE: /**< 俯仰导向矢量表@AZI-45deg */
+    case PROFILE_3_SV_ELEVATION_AZI_N45_TABLE: /**< 俯仰导向矢量表@AZI-45deg */
+      return SV_ELEVATION_AZI_N45_TABLE;
+    case PROFILE_0_SV_ELEVATION_AZI_P45_TABLE: /**< 俯仰导向矢量表@AZI+45deg */
+    case PROFILE_1_SV_ELEVATION_AZI_P45_TABLE: /**< 俯仰导向矢量表@AZI+45deg */
+    case PROFILE_2_SV_ELEVATION_AZI_P45_TABLE: /**< 俯仰导向矢量表@AZI+45deg */
+    case PROFILE_3_SV_ELEVATION_AZI_P45_TABLE: /**< 俯仰导向矢量表@AZI+45deg */
+      return SV_ELEVATION_AZI_P45_TABLE;
+    default:
+      return eol_protocol::UNKNOW_CLASS_TABLE;
+  }
+}
 /******************************** End of file *********************************/

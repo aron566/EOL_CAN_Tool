@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>700</height>
+    <height>701</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -101,98 +101,130 @@
           </item>
           <item>
            <widget class="QComboBox" name="table_type_comboBox">
-            <item>
-             <property name="text">
-              <string>方位导向矢量表</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>俯仰导向矢量表</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>天线位置表</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>天线相位补偿表</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>天线位置与相位补偿表</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>天线方向表</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="data_type_label">
-            <property name="text">
-             <string>数据格式：</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="data_type_comboBox">
-            <property name="enabled">
-             <bool>false</bool>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
             <item>
              <property name="text">
-              <string>加特兰CFX28位数据格式</string>
+              <string>CFG0方位导向矢量表@ELE-0deg</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>32位浮点类型复数</string>
+              <string>CFG1方位导向矢量表@ELE-0deg</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>16位整型复数</string>
+              <string>CFG2方位导向矢量表@ELE-0deg</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>32位浮点类型</string>
+              <string>CFG3方位导向矢量表@ELE-0deg</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>32位整型</string>
+              <string>CFG0俯仰导向矢量表@AZI-0deg</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>16位整型</string>
+              <string>CFG1俯仰导向矢量表@AZI-0deg</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>8位整型</string>
+              <string>CFG2俯仰导向矢量表@AZI-0deg</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>32位无符号整型</string>
+              <string>CFG3俯仰导向矢量表@AZI-0deg</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>16位无符号整型</string>
+              <string>CFG0天线位置与相位补偿表</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>8位无符号整型</string>
+              <string>CFG1天线位置与相位补偿表</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG2天线位置与相位补偿表</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG3天线位置与相位补偿表</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG0天线方向表</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG1天线方向表</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG2天线方向表</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG3天线方向表</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG0俯仰导向矢量表@AZI-45deg</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG1俯仰导向矢量表@AZI-45deg</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG2俯仰导向矢量表@AZI-45deg</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG3俯仰导向矢量表@AZI-45deg</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG0俯仰导向矢量表@AZI+45deg</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG1俯仰导向矢量表@AZI+45deg</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG2俯仰导向矢量表@AZI+45deg</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CFG3俯仰导向矢量表@AZI+45deg</string>
              </property>
             </item>
            </widget>
