@@ -4,6 +4,9 @@
 #include <QFile>
 #include <QDateTime>
 
+#define USE_TEXT_BROWSER_WIDDGET  0/**< 是否 使用textbrowser控件 */
+#define RX_MSG_SAVE_NUM_MAX       50000U/**< 最大保存消息数 */
+
 more_window::more_window(QString title, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::more_window)
@@ -23,6 +26,22 @@ more_window::more_window(QString title, QWidget *parent) :
 
   /* 初始化定时器 */
   timer_init();
+
+#if USE_TEXT_BROWSER_WIDDGET
+  ui->ch1_receive_data_textBrowser->setVisible(true);
+  ui->ch2_receive_data_textBrowser->setVisible(true);
+  ui->ch1_receive_data_textEdit->setVisible(false);
+  ui->ch2_receive_data_textEdit->setVisible(false);
+  ui->ch1_receive_data_textBrowser->setUndoRedoEnabled(false);
+  ui->ch2_receive_data_textBrowser->setUndoRedoEnabled(false);
+#else
+  ui->ch1_receive_data_textBrowser->setVisible(false);
+  ui->ch2_receive_data_textBrowser->setVisible(false);
+  ui->ch1_receive_data_textEdit->setVisible(true);
+  ui->ch2_receive_data_textEdit->setVisible(true);
+  ui->ch1_receive_data_textEdit->setUndoRedoEnabled(false);
+  ui->ch2_receive_data_textEdit->setUndoRedoEnabled(false);
+#endif
 }
 
 more_window::~more_window()
@@ -36,6 +55,17 @@ void more_window::timer_init()
   timer_obj->setInterval(1);
   connect(timer_obj, &QTimer::timeout, this, &more_window::slot_timeout);
   timer_obj->start();
+}
+
+void more_window::resizeEvent(QResizeEvent *event)
+{
+  /* 切换窗口大小时，缓冲区有数据则清除一次 */
+  if(show_msg_list.isEmpty() == false)
+  {
+    on_clear_pushButton_clicked();
+  }
+
+  QWidget::resizeEvent(event);
 }
 
 void more_window::closeEvent(QCloseEvent *event)
@@ -57,28 +87,118 @@ void more_window::closeEvent(QCloseEvent *event)
 //  can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
 //}
 
-void more_window::slot_show_message(const QString &message)
+void more_window::slot_show_message(const QString &message, quint32 channel_num, \
+  quint8 direct, const quint8 *data, quint32 data_len)
 {
   QString show_message;
 
   /* 时间戳 */
-  if(ui->display_time_stamp_checkBox_2->isChecked())
+  if(ui->display_time_stamp_checkBox->isChecked())
   {
     QDateTime dt = QDateTime::currentDateTime();
     show_message += dt.toString("hh:mm:ss.zzz");
   }
 
-  show_message += message;
-  show_message_list.append(show_message);
-//  ui->receive_data_textBrowser_2->append(show_message);
-//  ui->receive_data_textBrowser_2->moveCursor(QTextCursor::End);
-//  if(show_message.contains("Rx"))
-//  {
-//    rx_frame_cnt++;
-//    ui->frame_num_label_2->setNum((int)rx_frame_cnt);
-//    rx_byte_cnt += 8;
-//    ui->byte_num_label_2->setNum((int)rx_byte_cnt);
-//  }
+  /* 显示字符 */
+  if(ui->display_str_checkBox->isChecked())
+  {
+    if(ui->display_ch_comboBox->currentIndex() == channel_num && can_driver::CAN_RX_DIRECT == direct)
+    {
+      char str_buf[65];
+      size_t size = data_len > 64 ? 64 : data_len;
+      memcpy(str_buf, data, size);
+      if(str_buf[size - 1] != '\0')
+      {
+        str_buf[size] = '\0';
+      }
+      show_message.append(QString("[%1]RX:").arg(channel_num));
+      QString str = QString::asprintf("%s", str_buf);
+      show_message.append(str);
+    }
+    else
+    {
+      show_message.append(message);
+    }
+  }
+  else
+  {
+    show_message.append(message);
+  }
+
+  SHOW_MSG_Typedef_t msg;
+  msg.channel_num = channel_num;
+  msg.str = show_message;
+  show_msg_list.append(msg);
+}
+
+
+void more_window::slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data, quint32 data_len)
+{
+  /* 线程刷新显示 */
+  QString show_message;
+
+  /* 时间戳 */
+  if(ui->display_time_stamp_checkBox->isChecked())
+  {
+    QDateTime dt = QDateTime::currentDateTime();
+    show_message += dt.toString("hh:mm:ss.zzz");
+  }
+
+  /* 显示字符 */
+  if(ui->display_str_checkBox->isChecked())
+  {
+    if(ui->display_ch_comboBox->currentIndex() == channel_num && can_driver::CAN_RX_DIRECT == direct)
+    {
+      char str_buf[65];
+      size_t size = data_len > 64 ? 64 : data_len;
+      memcpy(str_buf, data, size);
+      if(str_buf[size - 1] != '\0')
+      {
+        str_buf[size] = '\0';
+      }
+      show_message.append(QString("[%1]RX:").arg(channel_num));
+      QString str = QString::asprintf("%s", str_buf);
+      show_message.append(str);
+    }
+    else
+    {
+      show_message.append(message);
+    }
+  }
+  else
+  {
+    show_message.append(message);
+  }
+
+#if USE_TEXT_BROWSER_WIDDGET
+  QTextBrowser *browser_widget=  nullptr;
+  if(channel_num == 0)
+  {
+    browser_widget = ui->ch1_receive_data_textBrowser;
+  }
+  else
+  {
+    browser_widget = ui->ch2_receive_data_textBrowser;
+  }
+  browser_widget->append(show_message);
+  browser_widget->moveCursor(QTextCursor::End);
+#else
+  QTextEdit *text_edit_widget=  nullptr;
+  if(channel_num == 0)
+  {
+    text_edit_widget = ui->ch1_receive_data_textEdit;
+  }
+  else
+  {
+    text_edit_widget = ui->ch2_receive_data_textEdit;
+  }
+  text_edit_widget->append(show_message);
+#endif
+
+  if(rx_frame_cnt >= RX_MSG_SAVE_NUM_MAX)
+  {
+    on_clear_pushButton_clicked();
+  }
 }
 
 void more_window::on_frame_type_comboBox_currentIndexChanged(int index)
@@ -126,26 +246,42 @@ void more_window::on_eol_test_pushButton_2_clicked()
 }
 
 
-void more_window::on_clear_pushButton_2_clicked()
+void more_window::on_clear_pushButton_clicked()
 {
   rx_frame_cnt = 0;
-  ui->frame_num_label_2->setNum((int)rx_frame_cnt);
+  ui->rx_frame_num_label->setNum((int)rx_frame_cnt);
   rx_byte_cnt = 0;
-  ui->byte_num_label_2->setNum((int)rx_byte_cnt);
-  ui->receive_data_textBrowser_2->clear();
-  show_message_list.clear();
+  ui->rx_byte_num_label->setNum((int)rx_byte_cnt);
+
+  tx_frame_cnt = 0;
+  ui->tx_frame_num_label->setNum((int)tx_frame_cnt);
+  tx_byte_cnt = 0;
+  ui->tx_byte_num_label->setNum((int)tx_byte_cnt);
+
+#if USE_TEXT_BROWSER_WIDDGET
+  ui->ch1_receive_data_textBrowser->clear();
+  ui->ch2_receive_data_textBrowser->clear();
+#else
+  ui->ch1_receive_data_textEdit->clear();
+  ui->ch2_receive_data_textEdit->clear();
+#endif
+
+  show_msg_list.clear();
 }
 
 void more_window::set_channel_num(quint8 channel_num)
 {
   /* 根据所选设备类型，更新通道数量 */
   ui->channel_num_comboBox->clear();
+  ui->display_ch_comboBox->clear();
   for(quint8 i = 0; i < channel_num; i++)
   {
     ui->channel_num_comboBox->addItem(QString("%1").arg(i));
+    ui->display_ch_comboBox->addItem(QString("%1").arg(i));
   }
   /* 打开全部通道 */
   ui->channel_num_comboBox->addItem("ALL");
+  ui->display_ch_comboBox->addItem("ALL");
 }
 
 void more_window::on_send_pushButton_clicked()
@@ -168,27 +304,64 @@ void more_window::slot_timeout()
   }
 
   /* 定时刷新显示 */
-  if(show_message_list.isEmpty() == true)
+  if(show_msg_list.isEmpty() == true)
   {
     return;
   }
-  QString show_message;
-  show_message = show_message_list.takeFirst();
-  ui->receive_data_textBrowser_2->append(show_message);
-  ui->receive_data_textBrowser_2->moveCursor(QTextCursor::End);
+  SHOW_MSG_Typedef_t show_message;
+  show_message = show_msg_list.takeFirst();
 
-  if(rx_frame_cnt >= 100000)
+#if USE_TEXT_BROWSER_WIDDGET
+  QTextBrowser *browser_widget=  nullptr;
+  if(show_message.channel_num == 0)
   {
-    on_clear_pushButton_2_clicked();
+    browser_widget = ui->ch1_receive_data_textBrowser;
+  }
+  else
+  {
+    browser_widget = ui->ch2_receive_data_textBrowser;
+  }
+  browser_widget->append(show_message.str);
+  browser_widget->moveCursor(QTextCursor::End);
+
+#else
+  QTextEdit *text_edit_widget=  nullptr;
+  if(show_message.channel_num == 0)
+  {
+    text_edit_widget = ui->ch1_receive_data_textEdit;
+  }
+  else
+  {
+    text_edit_widget = ui->ch2_receive_data_textEdit;
+  }
+  text_edit_widget->append(show_message.str);
+#endif
+
+  if(rx_frame_cnt >= RX_MSG_SAVE_NUM_MAX)
+  {
+    on_clear_pushButton_clicked();
   }
 }
 
-void more_window::slot_show_message_rx_bytes(quint8 bytes)
+void more_window::slot_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct)
 {
-  rx_frame_cnt++;
-  ui->frame_num_label_2->setNum((int)rx_frame_cnt);
-  rx_byte_cnt += bytes;
-  ui->byte_num_label_2->setNum((int)rx_byte_cnt);
+  Q_UNUSED(channel_num)
+  if(can_driver::CAN_RX_DIRECT == direct)
+  {
+    rx_frame_cnt++;
+    ui->rx_frame_num_label->setNum((int)rx_frame_cnt);
+    rx_byte_cnt += bytes;
+    ui->rx_byte_num_label->setNum((int)rx_byte_cnt);
+  }
+
+  if(can_driver::CAN_TX_DIRECT == direct)
+  {
+    tx_frame_cnt++;
+    ui->tx_frame_num_label->setNum((int)tx_frame_cnt);
+    tx_byte_cnt += bytes;
+    ui->tx_byte_num_label->setNum((int)tx_byte_cnt);
+  }
+
 }
 
 void more_window::on_display_mask_lineEdit_textChanged(const QString &arg1)

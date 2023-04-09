@@ -98,6 +98,12 @@ public:
     bool channel_en;
   }CHANNEL_STATE_Typedef_t;
 
+  typedef enum
+  {
+    CAN_TX_DIRECT = 0,
+    CAN_RX_DIRECT,
+  }CAN_DIRECT_Typedef_t;
+
   /* 数据缓冲队列 */
   CircularQueue *cq_obj = nullptr;
 signals:
@@ -226,9 +232,9 @@ signals:
    *
    * @param message 消息内容
    */
-  void signal_show_message(const QString &message);
-  void signal_show_thread_message(const QString &message);
-  void signal_show_message_rx_bytes(quint8 bytes);
+  void signal_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
+  void signal_show_thread_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
+  void signal_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
 
   /**
    * @brief 发送信号设置自动发送设备索引可用状态
@@ -725,8 +731,18 @@ private:
    * @param data 消息数据
    * @param thread_mode 当前消息是否来自线程
    */
-  void show_message(const QString &data, bool thread_mode = false);
-  void show_message_rx_bytes(quint8 bytes);
+
+  /**
+   * @brief 显示消息
+   * @param str 消息数据
+   * @param channel_num 消息通道号
+   * @param direct 消息方向，发送 or 接收
+   * @param data 数据
+   * @param data_len 数据长度
+   * @param thread_mode 当前消息是否来自线程
+   */
+  void show_message(const QString &str, quint32 channel_num = 0, CAN_DIRECT_Typedef_t direct = CAN_RX_DIRECT, const quint8 *data = nullptr, quint32 data_len = 0, bool thread_mode = false);
+  void show_message_bytes(quint8 bytes, quint32 channel_num, CAN_DIRECT_Typedef_t direct);
   bool transmit_type_config(const CHANNEL_STATE_Typedef_t &channel_state);
   bool resistance_config(const CHANNEL_STATE_Typedef_t &channel_state);
   bool baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state);

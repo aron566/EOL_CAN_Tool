@@ -172,14 +172,14 @@ bool can_driver::open()
   device_handle_ = ZCAN_OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0);
   if(INVALID_DEVICE_HANDLE == device_handle_)
   {
-    show_message(tr(" open device faild "));
+    show_message(tr("open device faild"));
     return false;
   }
   device_opened_ = true;
 
   /* 发送can打开状态 */
   emit signal_can_is_opened();
-  show_message(tr(" open device ok "));
+  show_message(tr("open device ok"));
   return true;
 }
 
@@ -254,7 +254,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
       qDebug() << "set diy bps";
       if(!custom_baud_rate_config(channel_state))
       {
-        show_message(tr(" set diy baudrate faild "));
+        show_message(tr("set diy baudrate faild "), channel_state.channel_num);
         return false;
       }
     }
@@ -263,7 +263,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
       qDebug() << "set bps";
       if(!canfdDevice && !baud_rate_config(channel_state))
       {
-        show_message(tr(" set baudrate faild "));
+        show_message(tr("set baudrate faild "), channel_state.channel_num);
         return false;
       }
     }
@@ -285,7 +285,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
         qDebug() << "usbcanfd diy bps set ...";
         if(!custom_baud_rate_config(channel_state))
         {
-          show_message(tr(" set diy baudrate faild "));
+          show_message(tr("set diy baudrate faild "), channel_state.channel_num);
           return false;
         }
       }
@@ -294,7 +294,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
         qDebug() << "usbcanfd bps set ...";
         if(!cand_fd_bps_config(channel_state))
         {
-          show_message(tr(" set baudrate faild "));
+          show_message(tr("set baudrate faild "), channel_state.channel_num);
           return false;
         }
       }
@@ -312,7 +312,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
       char value[100] = { 0 };
       if(!cand_fd_bps_config(channel_state))
       {
-        show_message(tr(" set baudrate faild "));
+        show_message(tr("set baudrate faild "), channel_state.channel_num);
         return false;
       }
 
@@ -345,18 +345,18 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
   channel_state.channel_hadle = ZCAN_InitCAN(device_handle_, channel_state.channel_num, &config);
   if(INVALID_CHANNEL_HANDLE == channel_state.channel_hadle)
   {
-    show_message(tr(" can ch %1 init faild ").arg(channel_state.channel_num));
+    show_message(tr("can ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
     return false;
   }
   if(usbcanfd)
   {
     if(resistance_enable_ && !resistance_config(channel_state))
     {
-      show_message(tr(" set resistance faild "));
+      show_message(tr("set resistance faild"), channel_state.channel_num);
       return false;
     }
   }
-  show_message(tr(" can ch %1 intit ok ").arg(channel_state.channel_num));
+  show_message(tr("can ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
   return true;
 }
 
@@ -364,7 +364,7 @@ bool can_driver::init()
 {
   if(false == device_opened_)
   {
-    show_message(tr(" device is not open "));
+    show_message(tr("device is not open "));
     return false;
   }
 
@@ -390,11 +390,11 @@ bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   if(ZCAN_StartCAN(channel_state.channel_hadle) != STATUS_OK)
   {
-    show_message(tr(" start can ch %1 faild ").arg(channel_state.channel_num));
+    show_message(tr("start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
     return false;
   }
 
-  show_message(tr(" start can ch %1 ok ").arg(channel_state.channel_num));
+  show_message(tr("start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
   return true;
 }
 
@@ -402,7 +402,7 @@ bool can_driver::start()
 {
   if(false == device_opened_)
   {
-    show_message(tr(" device is not open "));
+    show_message(tr("device is not open "));
     return false;
   }
 
@@ -426,11 +426,11 @@ bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   if(ZCAN_ResetCAN(channel_state.channel_hadle) != STATUS_OK)
   {
-    show_message(tr(" reset can ch %1 faild ").arg(channel_state.channel_num));
+    show_message(tr("reset can ch %1 faild ").arg(channel_state.channel_num), channel_state.channel_num);
     return false;
   }
 
-  show_message(tr(" reset can ch %1 ok ").arg(channel_state.channel_num));
+  show_message(tr("reset can ch %1 ok ").arg(channel_state.channel_num), channel_state.channel_num);
   return true;
 }
 
@@ -465,7 +465,7 @@ void can_driver::close(const CHANNEL_STATE_Typedef_t &channel_state)
   ZCAN_ResetCAN(channel_state.channel_hadle);
   ZCAN_CloseDevice(device_handle_);
 
-  show_message(tr(" device can ch %1 closed ").arg(channel_state.channel_num));
+  show_message(tr("device can ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
 }
 
 void can_driver::close()
@@ -533,12 +533,12 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8
   csText = QString::asprintf(tr("send num:%d, sucess num:%d").toUtf8().data(), nSendCount, result);
   if(result != nSendCount)
   {
-    show_message(tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText);
+    show_message(tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText, channel_state.channel_num);
     return false;
   }
   else
   {
-    show_message(tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText);
+    show_message(tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText, channel_state.channel_num);
     return true;
   }
 }
@@ -570,7 +570,7 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   if(datas_.isEmpty())
   {
-    show_message(tr("data is empty"));
+    show_message(tr("data is empty"), channel_state.channel_num);
     return;
   }
 
@@ -616,11 +616,11 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
   csText = QString::asprintf(tr("send num:%d, sucess num:%d").toUtf8().data(), nSendCount, result);
   if(result != nSendCount)
   {
-    show_message(tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText);
+    show_message(tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText, channel_state.channel_num);
   }
   else
   {
-    show_message(tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText);
+    show_message(tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText, channel_state.channel_num);
   }
 }
 
@@ -935,8 +935,8 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     if(can_id == id_temp || false == can_id_mask_en_)
     {
       /* 显示接收到的字节数 */
-      show_message_rx_bytes(can.frame.can_dlc);
-      show_message(item, true);
+      show_message_bytes(can.frame.can_dlc, channel_state.channel_num, CAN_RX_DIRECT);
+      show_message(item, channel_state.channel_num, CAN_RX_DIRECT, can.frame.data, can.frame.can_dlc, true);
     }
 
     /* 加入数据到cq */
@@ -989,8 +989,8 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     if(can_id == id_temp || false == can_id_mask_en_)
     {
       /* 显示接收到的字节数 */
-      show_message_rx_bytes(canfd.frame.len);
-      show_message(item, true);
+      show_message_bytes(canfd.frame.len, channel_state.channel_num, CAN_RX_DIRECT);
+      show_message(item, channel_state.channel_num, CAN_RX_DIRECT, canfd.frame.data, canfd.frame.len, true);
     }
 
     /* 加入数据到cq */
@@ -1033,7 +1033,8 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     {
       item += QString::asprintf("%02X ", can.frame.data[i]);
     }
-    show_message(item);
+    show_message_bytes(can.frame.can_dlc, channel_state.channel_num, CAN_TX_DIRECT);
+    show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.can_dlc);
   }
 }
 
@@ -1044,7 +1045,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
   {
     const ZCAN_TransmitFD_Data& can = data[i];
     const canid_t &id = can.frame.can_id;
-    item = QString::asprintf(tr("[%u]Tx CANFD ID:%08X %s %s LEN:%d DATA: ").toUtf8().data(), \
+    item = QString::asprintf(tr("[%u]Tx CANFD ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
                              channel_state.channel_num, \
                              GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
           IS_RTR(id) ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), can.frame.len);
@@ -1052,30 +1053,31 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     {
       item += QString::asprintf("%02X ", can.frame.data[i]);
     }
-    show_message(item);
+    show_message_bytes(can.frame.len, channel_state.channel_num, CAN_TX_DIRECT);
+    show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.len);
   }
 }
 
-void can_driver::show_message(const QString &data, bool thread_mode)
+void can_driver::show_message(const QString &str, quint32 channel_num, CAN_DIRECT_Typedef_t direct, const quint8 *data, quint32 data_len, bool thread_mode)
 {
-  message = data;
+  message = str;
   /* 输出到显示框 */
   if(false == thread_mode)
   {
-    emit signal_show_message(message);
+    emit signal_show_message(message, channel_num, (quint8)direct, data, data_len);
   }
   else
   {
-    emit signal_show_thread_message(message);
+    emit signal_show_thread_message(message, channel_num, (quint8)direct, data, data_len);
     return;
   }
 
   qDebug() << message;
 }
 
-void can_driver::show_message_rx_bytes(quint8 bytes)
+void can_driver::show_message_bytes(quint8 bytes, quint32 channel_num, CAN_DIRECT_Typedef_t direct)
 {
-  emit signal_show_message_rx_bytes(bytes);
+  emit signal_show_message_bytes(bytes, channel_num, (quint8)direct);
 }
 
 bool can_driver::transmit_type_config(const CHANNEL_STATE_Typedef_t &channel_state)
@@ -1137,11 +1139,11 @@ void can_driver::show_tx_queue_available(const CHANNEL_STATE_Typedef_t &channel_
   if (pRet)
   {
     quint32 nSpace = *(int *)pRet;
-    csText = QString((tr(" [%1]queue can use space %2 ")).arg(channel_state.channel_num).arg(nSpace));
+    csText = QString((tr("[%1]queue can use space %2")).arg(channel_state.channel_num).arg(nSpace));
   }
   else
   {
-    csText = tr(" get queue can use space faild ");
+    csText = tr("get queue can use space faild");
   }
   show_message(csText);
 }
@@ -1196,7 +1198,7 @@ bool can_driver::set_send_queue_mode(const CHANNEL_STATE_Typedef_t &channel_stat
   int nRet = ZCAN_SetValue(device_handle_, path, value);
   QString csText, csRet;
   csText = (nDelaySendQueueMode ? tr("[%1]open tx queue mode ").arg(channel_state.channel_num) : tr("[%1]close tx queue mode").arg(channel_state.channel_num));
-  csRet = QString::asprintf((tr(" [%s]").toUtf8().data(), \
+  csRet = QString::asprintf((tr("[%s]").toUtf8().data(), \
           nRet > 0 ? tr(" ok ").toUtf8().data() : tr(" faild ").toUtf8().data()));
   show_message(csText + csRet);
   return nDelaySendQueueMode;
@@ -1422,9 +1424,9 @@ void can_driver::add_auto_can(quint32 nEnable)
   sprintf(path, "%d/auto_send", channel_index_);
   int nRet = ZCAN_SetValue(device_handle_, path, (const char *)&autoObj);
   QString csText;
-  csText = QString::asprintf(tr(" 添加CAN定时发送 索引:%d 启用:%d 周期:%d ms ID:0x%X [%s] ").toUtf8().data(), \
+  csText = QString::asprintf(tr("add CAN timed transmission index:%d enable:%d period:%d ms ID:0x%X [%s] ").toUtf8().data(), \
                              autoObj.index, autoObj.enable, autoObj.interval, autoObj.obj.frame.can_id, \
-                             (nRet ? tr(" 成功 ").toUtf8().data() : tr(" 失败 ").toUtf8().data()));
+                             (nRet ? tr(" ok ").toUtf8().data() : tr(" faild ").toUtf8().data()));
   show_message(csText);
 }
 
@@ -1443,9 +1445,9 @@ void can_driver::add_auto_can_fd(quint32 nEnable)
   sprintf(path, "%d/auto_send_canfd", channel_index_);
   int nRet =  ZCAN_SetValue(device_handle_, path, (const char*)&autoObj);
   QString csText;
-  csText = QString::asprintf(tr(" 添加CANFD定时发送 索引:%d 启用:%d 周期:%d ms ID:0x%X [%s] ").toUtf8().data(), \
+  csText = QString::asprintf(tr("add CANFD timed transmission index:%d enable:%d period:%d ms ID:0x%X [%s] ").toUtf8().data(), \
                              autoObj.index, autoObj.enable, autoObj.interval, autoObj.obj.frame.can_id, \
-                             (nRet ? tr(" 成功 ").toUtf8().data() : tr(" 失败 ").toUtf8().data()));
+                             (nRet ? tr(" ok ").toUtf8().data() : tr(" faild ").toUtf8().data()));
   show_message(csText);
 }
 
@@ -1456,8 +1458,8 @@ void can_driver::auto_send_start()
   char path[50] = {0};
   sprintf(path, "%d/apply_auto_send", channel_index_);
   int nRet = ZCAN_SetValue(device_handle_, path,"0");
-  QString csText = tr(" 开始定时发送 ");
-  QString ret_str = nRet ? tr(" [成功] ") : tr(" [失败] ");
+  QString csText = tr("start timed transmission");
+  QString ret_str = nRet ? tr("[ok]") : tr("[faild]");
   csText += ret_str;
   show_message(csText);
 }
@@ -1469,8 +1471,8 @@ void can_driver::auto_send_stop()
   char path[50] = {0};
   sprintf(path, "%d/clear_auto_send", channel_index_);
   int nRet = ZCAN_SetValue(device_handle_, path, "0");
-  QString csText = tr(" 停止定时发送 ");
-  QString ret_str = nRet ? tr(" [成功] ") : tr(" [失败] ");
+  QString csText = tr("stop timed transmission");
+  QString ret_str = nRet ? tr("[ok]") : tr("[faild]");
   csText += ret_str;
   show_message(csText);
 }
@@ -1522,7 +1524,7 @@ void can_driver::show_dev_auto_send()
   if (pRet)
   {
     nCount = *(int *)pRet;
-    csText = QString(tr(" CAN定时发送数量:%1 ").arg(nCount));
+    csText = QString(tr("CAN timed transmission num:%1").arg(nCount));
     show_message(csText);
     if (nCount > 0)
     {
@@ -1533,14 +1535,14 @@ void can_driver::show_dev_auto_send()
         const ZCAN_AUTO_TRANSMIT_OBJ* pData = (ZCAN_AUTO_TRANSMIT_OBJ*)pRet;
         for (quint32 i = 0; i < nCount; i++)
         {
-          csText = QString::asprintf(tr(" CAN 定时 索引:%d 间隔:%d ms ID:0x%08x ").toUtf8().data(), \
+          csText = QString::asprintf(tr("CAN timer index:%d period:%d ms ID:0x%08X").toUtf8().data(), \
                                      pData[i].index, pData[i].interval, pData[i].obj.frame.can_id);
           show_message(csText);
         }
       }
       else
       {
-        csText = tr(" 获取CAN定时发送数据失败！ ");
+        csText = tr("get CAN timed transmission data faild");
         show_message(csText);
         return;
       }
@@ -1548,7 +1550,7 @@ void can_driver::show_dev_auto_send()
   }
   else
   {
-    csText = tr(" 获取CAN定时发送数量失败！ ");
+    csText = tr("get CAN timed transmission num faild");
     show_message(csText);
     return;
   }
@@ -1560,7 +1562,7 @@ void can_driver::show_dev_auto_send()
   if (pRet)
   {
     nCount = *(int*)pRet;
-    csText = QString(tr(" CANFD定时发送数量:%1 ").arg(nCount));
+    csText = QString(tr("CANFD timed transmission num:%1").arg(nCount));
     show_message(csText);
     if (nCount > 0)
     {
@@ -1571,14 +1573,14 @@ void can_driver::show_dev_auto_send()
         const ZCANFD_AUTO_TRANSMIT_OBJ *pData = (ZCANFD_AUTO_TRANSMIT_OBJ *)pRet;
         for (quint32 i = 0; i < nCount; i++)
         {
-          csText = QString::asprintf(tr(" CANFD 定时 索引:%d 间隔:%d ms ID:0x%08x ").toUtf8().data(), \
+          csText = QString::asprintf(tr("CANFD timer index:%d period:%d ms ID:0x%08X").toUtf8().data(), \
                                      pData[i].index, pData[i].interval, pData[i].obj.frame.can_id);
           show_message(csText);
         }
       }
       else
       {
-        csText = tr(" 获取CANFD定时发送数据失败！ ");
+        csText = tr("get CANFD timed transmission data faild");
         show_message(csText);
         return;
       }
@@ -1586,7 +1588,7 @@ void can_driver::show_dev_auto_send()
   }
   else
   {
-    csText = tr(" 获取CANFD定时发送数量失败！ ");
+    csText = tr("get CANFD timed transmission num faild");
     show_message(csText);
     return;
   }

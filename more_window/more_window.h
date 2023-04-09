@@ -25,10 +25,10 @@ public:
   void set_can_driver_obj(can_driver *can_driver_ = nullptr)
   {
     can_driver_obj = can_driver_;
-    connect(can_driver_obj, &can_driver::signal_show_message_rx_bytes, this, &more_window::slot_show_message_rx_bytes);
+    connect(can_driver_obj, &can_driver::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
     connect(can_driver_obj, &can_driver::signal_show_message, this, &more_window::slot_show_message);
     /* 线程同步 */
-    connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message, Qt::BlockingQueuedConnection);
+    connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::BlockingQueuedConnection);
   }
 
   /**
@@ -44,6 +44,7 @@ protected:
      * @param event
      */
     virtual void closeEvent(QCloseEvent *event);
+    virtual void resizeEvent(QResizeEvent *event);
 //    virtual void showEvent(QShowEvent *event);
   /**
      * @brief 定时器初始化
@@ -65,7 +66,7 @@ private slots:
 
     void on_eol_test_pushButton_2_clicked();
 
-    void on_clear_pushButton_2_clicked();
+    void on_clear_pushButton_clicked();
 
     void on_send_pushButton_clicked();
 
@@ -76,8 +77,9 @@ private slots:
     void on_display_mask_lineEdit_textChanged(const QString &arg1);
 
     void on_mask_en_checkBox_clicked(bool checked);
-    void slot_show_message_rx_bytes(quint8 bytes);
-    void slot_show_message(const QString &message);
+    void slot_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
+    void slot_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
+    void slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
 private:
     Ui::more_window *ui;
 
@@ -85,10 +87,19 @@ private:
     can_driver *can_driver_obj = nullptr;
     QTimer *timer_obj = nullptr;
     quint32 rx_frame_cnt = 0;
+    quint32 tx_frame_cnt = 0;
     quint32 rx_byte_cnt = 0;
+    quint32 tx_byte_cnt = 0;
     quint32 last_canid_mask = 0;
     bool last_canid_mask_en = false;
-    QStringList show_message_list;
+
+    typedef struct
+    {
+      QString str;
+      quint32 channel_num;
+    }SHOW_MSG_Typedef_t;
+
+    QList<SHOW_MSG_Typedef_t>show_msg_list;
 };
 
 #endif // MORE_WINDOW_H
