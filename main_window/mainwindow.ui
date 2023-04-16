@@ -606,6 +606,9 @@
             <property name="text">
              <string>终端电阻使能</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item row="1" column="3">

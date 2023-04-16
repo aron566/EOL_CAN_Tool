@@ -131,6 +131,8 @@ void MainWindow::para_restore_init()
   ui->device_list_comboBox->setCurrentText("ZCAN_USBCANFD_200U");
   ui->arbitration_bps_comboBox->setCurrentIndex(2);
   ui->data_bps_comboBox->setCurrentIndex(2);
+  /* 设置终端电阻启用状态 */
+  can_driver_obj->set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
 }
 
 void MainWindow::slot_show_this_window()
