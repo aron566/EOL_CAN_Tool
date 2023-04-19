@@ -97,9 +97,13 @@ private:
     {
       QString str;
       quint32 channel_num;
+      quint8 direct;
     }SHOW_MSG_Typedef_t;
 
     QList<SHOW_MSG_Typedef_t>show_msg_list;
+
+    quint32 ch1_show_msg_cnt = 0;
+    quint32 ch2_show_msg_cnt = 0;
 };
 
 #endif // MORE_WINDOW_H

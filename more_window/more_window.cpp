@@ -5,7 +5,7 @@
 #include <QDateTime>
 
 #define USE_TEXT_BROWSER_WIDDGET  0/**< 是否 使用textbrowser控件 */
-#define RX_MSG_SAVE_NUM_MAX       50000U/**< 最大保存消息数 */
+#define SHOW_MSG_SAVE_NUM_MAX     10000U/**< 最大保存消息数 */
 
 more_window::more_window(QString title, QWidget *parent) :
     QWidget(parent),
@@ -128,12 +128,15 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
   SHOW_MSG_Typedef_t msg;
   msg.channel_num = channel_num;
   msg.str = show_message;
+  msg.direct = direct;
   show_msg_list.append(msg);
 }
 
 
 void more_window::slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data, quint32 data_len)
 {
+  bool remove_line_flag = false;
+
   /* 线程刷新显示 */
   QString show_message;
 
@@ -187,17 +190,43 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
   if(channel_num == 0)
   {
     text_edit_widget = ui->ch1_receive_data_textEdit;
+    ch1_show_msg_cnt++;
+    if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_cnt)
+    {
+      remove_line_flag = true;
+    }
   }
   else
   {
     text_edit_widget = ui->ch2_receive_data_textEdit;
+    ch2_show_msg_cnt++;
+    if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_cnt)
+    {
+      remove_line_flag = true;
+    }
+  }
+
+  /* 设置颜色 */
+  if(can_driver::CAN_RX_DIRECT == direct)
+  {
+    text_edit_widget->setTextColor(QColor("white"));
+  }
+  else
+  {
+    text_edit_widget->setTextColor(QColor("red"));
   }
   text_edit_widget->append(show_message);
+
 #endif
 
-  if(rx_frame_cnt >= RX_MSG_SAVE_NUM_MAX)
+  if(true == remove_line_flag)
   {
-    on_clear_pushButton_clicked();
+    text_edit_widget->moveCursor(QTextCursor::Start);
+    text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+    text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+//    qDebug() << "sel1 :" << text_edit_widget->textCursor().selectedText();
+    text_edit_widget->textCursor().removeSelectedText();
+    text_edit_widget->moveCursor(QTextCursor::End);
   }
 }
 
@@ -267,6 +296,9 @@ void more_window::on_clear_pushButton_clicked()
 #endif
 
   show_msg_list.clear();
+
+  ch1_show_msg_cnt = 0;
+  ch2_show_msg_cnt = 0;
 }
 
 void more_window::set_channel_num(quint8 channel_num)
@@ -297,6 +329,8 @@ void more_window::on_period_lineEdit_textChanged(const QString &arg1)
 
 void more_window::slot_timeout()
 {
+  bool remove_line_flag = false;
+
   /* 定时发送 */
   if(ui->timer_checkBox->isChecked())
   {
@@ -329,17 +363,43 @@ void more_window::slot_timeout()
   if(show_message.channel_num == 0)
   {
     text_edit_widget = ui->ch1_receive_data_textEdit;
+    ch1_show_msg_cnt++;
+    if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_cnt)
+    {
+      remove_line_flag = true;
+    }
   }
   else
   {
     text_edit_widget = ui->ch2_receive_data_textEdit;
+    ch2_show_msg_cnt++;
+    if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_cnt)
+    {
+      remove_line_flag = true;
+    }
   }
+
+  /* 设置颜色 */
+  if(can_driver::CAN_RX_DIRECT == show_message.direct)
+  {
+    text_edit_widget->setTextColor(QColor("white"));
+  }
+  else
+  {
+    text_edit_widget->setTextColor(QColor("red"));
+  }
+
   text_edit_widget->append(show_message.str);
 #endif
 
-  if(rx_frame_cnt >= RX_MSG_SAVE_NUM_MAX)
+  if(true == remove_line_flag)
   {
-    on_clear_pushButton_clicked();
+    text_edit_widget->moveCursor(QTextCursor::Start);
+    text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+    text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+//    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
+    text_edit_widget->textCursor().removeSelectedText();
+    text_edit_widget->moveCursor(QTextCursor::End);
   }
 }
 
