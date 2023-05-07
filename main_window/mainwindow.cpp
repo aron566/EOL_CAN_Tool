@@ -1,9 +1,52 @@
+/**
+ *  @file mainwindow.cpp
+ *
+ *  @date 2023年05月07日 14:36:17 星期天
+ *
+ *  @author aron566
+ *
+ *  @copyright Copyright (c) 2023 aron566 <aron566@163.com>.
+ *
+ *  @brief 主窗口.
+ *
+ *  @details None.
+ *
+ *  @version v0.0.1 aron566 2023.05.07 14:36 初始版本.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2023-05-07 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2023-05-07 <td>v0.0.2  <td>aron566 <td>eol协议缓冲区增大至4K
+ *  </table>
+ */
+/** Includes -----------------------------------------------------------------*/
+/** Private includes ---------------------------------------------------------*/
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
 #include <QFile>
+/** Use C compiler -----------------------------------------------------------*/
 
-#define PC_SOFTWARE_VERSION "v0.0.1"
+/** Private macros -----------------------------------------------------------*/
+#define PC_SOFTWARE_VERSION "v0.0.2"
+/** Private typedef ----------------------------------------------------------*/
+
+/** Private constants --------------------------------------------------------*/
+/** Public variables ---------------------------------------------------------*/
+/** Private variables --------------------------------------------------------*/
+
+/** Private function prototypes ----------------------------------------------*/
+
+/** Private user code --------------------------------------------------------*/
+
+/** Private application code -------------------------------------------------*/
+/*******************************************************************************
+*
+*       Static code
+*
+********************************************************************************
+*/
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -275,6 +318,14 @@ void MainWindow::slot_get_dev_auto_send_list_can_use(bool can_use)
   Q_UNUSED(can_use)
 }
 
+/** Public application code --------------------------------------------------*/
+/*******************************************************************************
+*
+*       Public code
+*
+********************************************************************************
+*/
+
 void MainWindow::on_open_device_pushButton_clicked()
 {
   /* 打开设备 */
@@ -428,3 +479,4 @@ void MainWindow::on_channel_num_comboBox_currentIndexChanged(int index)
   can_driver_obj->set_channel_index(index);
 }
 
+/******************************** End of file *********************************/

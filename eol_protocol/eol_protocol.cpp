@@ -79,8 +79,8 @@ PS：
 */
 #define ENABLE_SEND_DELAY             1       /**< 为1开启分包发送 */
 #define ENABLE_SEND_DELAY_MS          1U      /**< 分包发送间隔ms >1ms */
-#define ENABLE_SEND_DELAY_LIMIT_SIZE  8U      /**< >8Bytes时开启发送 */
-#define SEND_ONE_PACKET_SIZE_MAX      8U      /**< 每包发送大小 */
+#define ENABLE_SEND_DELAY_LIMIT_SIZE  64U     /**< >64Bytes时开启发送 */
+#define SEND_ONE_PACKET_SIZE_MAX      64U     /**< 每包发送大小 */
 
 #define MASTER_EOL_FRAME_HEADER       0x7AU   /**< 上位机帧头 */
 #define SLAVE_EOL_FRAME_HEADER        0x75U   /**< 下位机帧头 */
@@ -90,14 +90,14 @@ PS：
 #define EOL_DEVICE_COM_ADDR           0x55U   /**< 下位机通讯地址 */
 #define EOL_PROTOCOL_MASTER_CAN_ID    0x157U  /**< 上位机CAN ID */
 #define EOL_PROTOCOL_REPLY_CAN_ID     0x257U  /**< 回复上位机CAN ID */
-#define EOL_TEMP_BUF_SIZE_MAX         64U     /**< 临时缓冲区大小 */
+
 /* 包重复检测 */
 #define PACKAGE_REPEAT_CHECK_SIZE     10U     /**< 10包循环检测 */
 
 /* 最小帧长 7Bytes DATA */
 #define FRAME_MIN_SIZE                (EOL_FRAME_MIN_SIZE)
 
-#define FRAME_TEMP_BUF_SIZE           (1024U) /**< 临时缓冲区大小 */
+#define FRAME_TEMP_BUF_SIZE           (2048U) /**< 临时缓冲区大小 */
 
 #define WAIT_LIST_LEN                 100U
 #define FRAME_TIME_OUT                3U      /**< 1s超时检测 */
@@ -112,14 +112,6 @@ PS：
 /** Private constants --------------------------------------------------------*/
 /** Public variables ---------------------------------------------------------*/
 /** Private variables --------------------------------------------------------*/
-/*
-		  	/-------/-------/-------/-------/-------/
-			/   FF  /  RTR  /  DLC  /   ID  /  DATA /
-		/-------/-------/-------/-------/-------/
-	/ 1 bit / 1 bit / 4 bit / 11 bit/8 Bytes/
-/-------/-------/-------/-------/-------/
-标准帧 数据帧（8 Bytes）
-*/
 
 /** Private function prototypes ----------------------------------------------*/
 
@@ -144,7 +136,7 @@ PS：
 eol_protocol::eol_protocol(QObject *parent)
     : QObject{parent}
 {
-  cq_obj = new CircularQueue(CircularQueue::UINT8_DATA_BUF, CircularQueue::CQ_BUF_1K, this);
+  cq_obj = new CircularQueue(CircularQueue::UINT8_DATA_BUF, CircularQueue::CQ_BUF_4K, this);
   if(nullptr == cq_obj)
   {
     qDebug() << "eol create cq faild";
@@ -233,7 +225,7 @@ eol_protocol::SNED_CHECK_STATUS_Typedef_t eol_protocol::check_wait_send_task(boo
   /* 发送 */
   bool ret = can_driver_obj->send(reinterpret_cast<const quint8 *>(send_task_handle.buf_ptr + send_task_handle.current_send_index), \
                        (quint8)can_send_size, current_send_can_id, can_driver::STD_FRAME_TYPE, \
-                                  can_driver::CAN_PROTOCOL_TYPE);
+                                  can_send_size > 8 ? can_driver::CANFD_PROTOCOL_TYPE : can_driver::CAN_PROTOCOL_TYPE);
   if(false == ret)
   {
     qDebug() << "hw send error " << send_task_handle.hw_send_err_times;
@@ -412,7 +404,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
   /* 发送 */
   bool ok = can_driver_obj->send(reinterpret_cast<const quint8 *>(send_buf), \
                          (quint8)index, current_send_can_id, can_driver::STD_FRAME_TYPE, \
-                                 can_driver::CAN_PROTOCOL_TYPE);
+                                 index > 8 ? can_driver::CANFD_PROTOCOL_TYPE : can_driver::CAN_PROTOCOL_TYPE);
 
   if(EOL_WRITE_CMD == command || EOL_META_CMD == command)
   {
@@ -505,78 +497,82 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONS
   {
     /* 访问码 */
     case EOL_R_ACCESS_CODE_REG:
-    {
-      memcpy(&access_code, data, sizeof(access_code));
-      qDebug("acc code 0x%08X", access_code);
-      EOL_TASK_LIST_Typedef_t task;
-      task.run_state = true;
-      task.param = nullptr;
+      {
+        memcpy(&access_code, data, sizeof(access_code));
+        qDebug("acc code 0x%08X", access_code);
+        EOL_TASK_LIST_Typedef_t task;
+        task.run_state = true;
+        task.param = nullptr;
 
-      /* 设置工作模式 */
-      task.reg = EOL_W_RUN_MODE_REG;
-      task.command = EOL_WRITE_CMD;
-      memcpy(&task.buf, &access_code, sizeof(access_code));
-      task.buf[sizeof(access_code)] = (quint8)current_run_mode;
-      utility::debug_print(task.buf, 5);
-      task.len = 5;
-      eol_master_common_rw_device(task);
-      break;
-    }
+        /* 设置工作模式 */
+        task.reg = EOL_W_RUN_MODE_REG;
+        task.command = EOL_WRITE_CMD;
+        memcpy(&task.buf, &access_code, sizeof(access_code));
+        task.buf[sizeof(access_code)] = (quint8)current_run_mode;
+        utility::debug_print(task.buf, 5);
+        task.len = 5;
+        eol_master_common_rw_device(task);
+        break;
+      }
 
     /* 读运行模式，配置数，通道数 */
     case EOL_R_PROFILE_NUM_CH_NUM:
-    {
-      emit signal_device_mode(data);
-      break;
-    }
+      {
+        emit signal_device_mode(data);
+        break;
+      }
 
     case EOL_RW_TABLE_DATA_REG:
-    {
-      quint16 frame_num;
-      memcpy(&frame_num, data, 2);
-      qDebug() << "signal_recv_eol_table_data";
-      emit signal_recv_eol_table_data(frame_num, data + 2, data_len - 2);
-
-      /* 表信息帧 */
-      if(0 == frame_num)
       {
-        memset(&data_record, 0, sizeof(data_record));
-      }
+        quint16 frame_num;
+        memcpy(&frame_num, data, 2);
+        qDebug() << "signal_recv_eol_table_data";
+        emit signal_recv_eol_table_data(frame_num, data + 2, data_len - 2);
 
-      /* 表数据帧 */
-      else if(0 < frame_num && 0xFFFF > frame_num)
-      {
-        /* 是否否和预期帧号，否则属于丢帧 */
-        if((data_record.frame_num + 1) == frame_num)
+        /* 表信息帧 */
+        if(0 == frame_num)
         {
-          /* 只拷贝数据 帧号[0..1] 数据[2..257] */
-          memcpy(&data_record.data_buf[data_record.frame_num * 256], data + 2, data_len - 2);
-          data_record.frame_num++;
-          data_record.data_size += (data_len - 2);
+          memset(&data_record, 0, sizeof(data_record));
         }
-        /* 丢帧要求重发 */
+
+        /* 表数据帧 */
+        else if(0 < frame_num && 0xFFFF > frame_num)
+        {
+          /* 是否否和预期帧号，否则属于丢帧 */
+          if((data_record.frame_num + 1) == frame_num)
+          {
+            /* 只拷贝数据 帧号[0..1] 数据[2..257] */
+            memcpy(&data_record.data_buf[data_record.frame_num * 256], data + 2, data_len - 2);
+            data_record.frame_num++;
+            data_record.data_size += (data_len - 2);
+          }
+          /* 丢帧要求重发 */
+          else
+          {
+            return RETURN_LOST_FRAME;
+          }
+        }
         else
         {
-          return RETURN_LOST_FRAME;
+          data_record.frame_num = frame_num;
+          qDebug() << "signal_recv_eol_data_complete";
+          emit signal_recv_eol_data_complete();
         }
       }
-      else
-      {
-        data_record.frame_num = frame_num;
-        qDebug() << "signal_recv_eol_data_complete";
-        emit signal_recv_eol_data_complete();
-      }
       break;
-    }
-
     case EOL_RW_VERSION_REG:
     case EOL_RW_SN_REG:
-    case EOL_R_PIN7_8_REG:
-    {
-      /* 发送完成信号 */
-      emit signal_rw_device_ok(wait.reg_addr, data, data_len);
-    }
-
+    case EOL_R_MOUNTID_REG:
+    case EOL_R_OBJ_LIST_REG:
+    case EOL_RW_PROFILE_ID_REG:
+    case EOL_R_2DFFT_DATA_REG:
+    case EOL_RW_RCS_OFFSET_REG:
+    case EOL_RW_CALI_MODE_REG:
+      {
+        /* 发送完成信号 */
+        emit signal_rw_device_ok(wait.reg_addr, data, data_len);
+      }
+      break;
     default:
       break;
   }
@@ -744,70 +740,13 @@ __META_CMD_DECDE:
 
     switch(wait.reg_addr)
     {
-      case EOL_META_DATA_CHECK_REG:
-        if(0 == memcmp(send_table_data.buf, temp_buf, 4))
-        {
-          /* 校验sum */
-          if(true == utility::get_sum_rsl(temp_buf, 7))
-          {
-            /* 拷贝随机数 */
-            memcpy(send_table_data.buf + 4, temp_buf + 4, 3);
-
-           /* 正常移除等待队列 */
-            wait_response_list.removeFirst();
-            CircularQueue::CQ_ManualOffsetInc(cq, meta_len);
-
-            acc_error_cnt = 0;
-            return RETURN_OK;
-          }
-        }
-        break;
-      case EOL_META_DATA_CHECK_OK_REG:
-        if(0 == memcmp(send_table_data.buf, temp_buf, 4))
-        {
-          /* 正常移除等待队列 */
-           wait_response_list.removeFirst();
-           CircularQueue::CQ_ManualOffsetInc(cq, meta_len);
-
-           acc_error_cnt = 0;
-          return RETURN_OK;
-        }
-        break;
-      case EOL_META_DATA_SET_MODE_REG:
-        /* 生产普通 - 01[ok] 31 58 AF 02[配置数量] 08[通道数量] 00 00 */
-        if(0 == memcmp(send_table_data.buf + 1, temp_buf + 1, 3))
-        {
-          if(1 == temp_buf[0])
-          {
-            /* profile */
-            send_table_data.buf[1] = temp_buf[4];
-            /* channel */
-            send_table_data.buf[2] = temp_buf[5];
-          }
-          /* 正常移除等待队列 */
-           wait_response_list.removeFirst();
-           CircularQueue::CQ_ManualOffsetInc(cq, meta_len);
-
-           acc_error_cnt = 0;
-          return RETURN_OK;
-        }
-
-        /* 正常模式 返回全0 */
-        else if(NORMAL_MODE_RUN == (DEVICE_MODE_Typedef_t)send_table_data.buf[8])
-        {
-          memset(send_table_data.buf, 0, 8);
-          if(0 == memcmp(send_table_data.buf, temp_buf, 8))
-          {
-            /* 正常移除等待队列 */
-             wait_response_list.removeFirst();
-             CircularQueue::CQ_ManualOffsetInc(cq, meta_len);
-
-             acc_error_cnt = 0;
-            return RETURN_OK;
-          }
-        }
-        break;
       default:
+        /* 正常移除等待队列 */
+         wait_response_list.removeFirst();
+         CircularQueue::CQ_ManualOffsetInc(cq, meta_len);
+
+         acc_error_cnt = 0;
+        return RETURN_OK;
         break;
     }
     CircularQueue::CQ_ManualOffsetInc(cq, 1);

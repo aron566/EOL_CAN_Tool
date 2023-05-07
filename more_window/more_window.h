@@ -45,11 +45,19 @@ protected:
      */
     virtual void closeEvent(QCloseEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
+    virtual void wheelEvent(QWheelEvent *event);
 //    virtual void showEvent(QShowEvent *event);
   /**
      * @brief 定时器初始化
      */
     void timer_init();
+
+    /**
+     * @brief 待显示是否为空
+     * @return true空
+     */
+    bool ch1_show_msg_is_empty();
+    bool ch2_show_msg_is_empty();
 signals:
     void signal_more_window_closed();
 
@@ -100,10 +108,20 @@ private:
       quint8 direct;
     }SHOW_MSG_Typedef_t;
 
-    QList<SHOW_MSG_Typedef_t>show_msg_list;
+    QList<SHOW_MSG_Typedef_t>ch1_show_msg_list;
+    QList<SHOW_MSG_Typedef_t>ch2_show_msg_list;
 
-    quint32 ch1_show_msg_cnt = 0;
-    quint32 ch2_show_msg_cnt = 0;
+    /* 已显示消息 */
+    quint32 ch1_show_msg_index = 0;
+    quint32 ch2_show_msg_index = 0;
+    /* 已添加消息 */
+    quint32 ch1_add_msg_index = 0;
+    quint32 ch2_add_msg_index = 0;
+
+    /* 滚动计数 */
+    quint32 ch1_scroll_cnt = 0;
+    /* 滚动计数 */
+    quint32 ch2_scroll_cnt = 0;
 };
 
 #endif // MORE_WINDOW_H

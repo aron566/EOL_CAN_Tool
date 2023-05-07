@@ -3,10 +3,12 @@
 #include <QDebug>
 #include <QFile>
 #include <QDateTime>
+#include <QWheelEvent>
 
-#define USE_TEXT_BROWSER_WIDDGET  0/**< 是否 使用textbrowser控件 */
-#define SHOW_MSG_SAVE_NUM_MAX     10000U/**< 最大保存消息数 */
-
+#define USE_TEXT_BROWSER_WIDDGET  0                       /**< 是否 使用textbrowser控件 */
+#define SHOW_MSG_SAVE_NUM_MAX     100U                    /**< 最大显示消息数 */
+#define SHOW_MSG_ONE_SCORLL       (4U)                    /**< 上翻每次刷新列表数 */
+#define SAVE_MSG_BUF_MAX          (1024U*1024U*10U)       /**< 最大缓存消息数 */
 more_window::more_window(QString title, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::more_window)
@@ -59,13 +61,112 @@ void more_window::timer_init()
 
 void more_window::resizeEvent(QResizeEvent *event)
 {
-  /* 切换窗口大小时，缓冲区有数据则清除一次 */
-  if(show_msg_list.isEmpty() == false)
+  QWidget::resizeEvent(event);
+}
+
+void more_window::wheelEvent(QWheelEvent *event)
+{
+  qDebug() << "wheel event angleDelta" << event->angleDelta().y();
+  qDebug() << "wheel event phase" << event->phase();
+  qDebug() << "wheel event inverted" << event->inverted();
+  qDebug() << "wheel event pixelDelta" << event->pixelDelta().y();
+  qDebug() << "wheel event globalPosition " << event->globalPosition().x() << event->globalPosition().y();
+
+#if USE_TEXT_BROWSER_WIDDGET
+  QTextBrowser *browser_widget=  nullptr;
+  if(show_message.channel_num == 0)
   {
-    on_clear_pushButton_clicked();
+    browser_widget = ui->ch1_receive_data_textBrowser;
+  }
+  else
+  {
+    browser_widget = ui->ch2_receive_data_textBrowser;
+  }
+  browser_widget->append(show_message.str);
+  browser_widget->moveCursor(QTextCursor::End);
+
+#else
+  int xp1, yp1, xp2, yp2;
+  quint32 *pchx_scroll_cnt = nullptr;
+  QList<SHOW_MSG_Typedef_t> *pList = nullptr;
+  QTextEdit *text_edit_widget = ui->ch1_receive_data_textEdit;
+  QPoint A = QWidget::mapToGlobal(text_edit_widget->pos());
+  xp1 = A.x();
+  yp1 = A.y();
+  xp2 = text_edit_widget->rect().width() + xp1;
+  yp2 = text_edit_widget->rect().height() + yp1;
+
+  if(event->globalPosition().x() >= (qreal)xp1 && \
+     event->globalPosition().x() <= (qreal)xp2 && \
+     event->globalPosition().y() >= (qreal)yp1 && \
+     event->globalPosition().y() <= (qreal)yp2)
+  {
+    text_edit_widget = ui->ch1_receive_data_textEdit;
+    pchx_scroll_cnt = &ch1_scroll_cnt;
+    pList = &ch1_show_msg_list;
+  }
+  else
+  {
+    text_edit_widget = nullptr;
   }
 
-  QWidget::resizeEvent(event);
+  text_edit_widget = ui->ch2_receive_data_textEdit;
+  A = QWidget::mapToGlobal(text_edit_widget->pos());
+  xp1 = A.x();
+  yp1 = A.y();
+  xp2 = text_edit_widget->rect().width() + xp1;
+  yp2 = text_edit_widget->rect().height() + yp1;
+
+  if(event->globalPosition().x() >= (qreal)xp1 && \
+     event->globalPosition().x() <= (qreal)xp2 && \
+     event->globalPosition().y() >= (qreal)yp1 && \
+     event->globalPosition().y() <= (qreal)yp2)
+  {
+    text_edit_widget = ui->ch2_receive_data_textEdit;
+    pchx_scroll_cnt = &ch2_scroll_cnt;
+    pList = &ch2_show_msg_list;
+  }
+  else
+  {
+    text_edit_widget = nullptr;
+  }
+#endif
+  if(nullptr == text_edit_widget)
+  {
+    return;
+  }
+
+  /* 向下滚动 */
+  if(event->angleDelta().y() < 0)
+  {
+
+  }
+
+  /* 向上滚动 */
+  if(event->angleDelta().y() > 0)
+  {
+
+  }
+#if 0
+  /* 刷新显示 */
+  text_edit_widget->clear();
+  quint32 show_min_num = SHOW_MSG_SAVE_NUM_MAX > (pList->size() - (*pchx_scroll_cnt)) ? \
+        (pList->size() - (*pchx_scroll_cnt)) : SHOW_MSG_SAVE_NUM_MAX;
+  for(quint32 i = *pchx_scroll_cnt; i < show_min_num; i++)
+  {
+    /* 设置颜色 */
+    if(can_driver::CAN_RX_DIRECT == pList->value(i).direct)
+    {
+      text_edit_widget->setTextColor(QColor("white"));
+    }
+    else
+    {
+      text_edit_widget->setTextColor(QColor("red"));
+    }
+    text_edit_widget->append(pList->value(i).str);
+  }
+#endif
+  QWidget::wheelEvent(event);
 }
 
 void more_window::closeEvent(QCloseEvent *event)
@@ -86,6 +187,24 @@ void more_window::closeEvent(QCloseEvent *event)
 //  /* 恢复数据接收显示 */
 //  can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
 //}
+
+bool more_window::ch1_show_msg_is_empty()
+{
+  if(ch1_add_msg_index == ch1_show_msg_index)
+  {
+    return true;
+  }
+  return false;
+}
+
+bool more_window::ch2_show_msg_is_empty()
+{
+  if(ch2_add_msg_index == ch2_show_msg_index)
+  {
+    return true;
+  }
+  return false;
+}
 
 void more_window::slot_show_message(const QString &message, quint32 channel_num, \
   quint8 direct, const quint8 *data, quint32 data_len)
@@ -129,14 +248,36 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
   msg.channel_num = channel_num;
   msg.str = show_message;
   msg.direct = direct;
-  show_msg_list.append(msg);
+
+  /* 限制缓冲区大小 */
+  if(0 == channel_num)
+  {
+    if(ch1_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
+    {
+      ch1_show_msg_list.replace(ch1_add_msg_index % SAVE_MSG_BUF_MAX, msg);
+    }
+    else
+    {
+      ch1_show_msg_list.append(msg);
+    }
+    ch1_add_msg_index++;
+    return;
+  }
+
+  if(ch2_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
+  {
+    ch2_show_msg_list.replace(ch2_add_msg_index % SAVE_MSG_BUF_MAX, msg);
+  }
+  else
+  {
+    ch2_show_msg_list.append(msg);
+  }
+  ch2_add_msg_index++;
 }
 
 
 void more_window::slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data, quint32 data_len)
 {
-  bool remove_line_flag = false;
-
   /* 线程刷新显示 */
   QString show_message;
 
@@ -173,61 +314,35 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
     show_message.append(message);
   }
 
-#if USE_TEXT_BROWSER_WIDDGET
-  QTextBrowser *browser_widget=  nullptr;
-  if(channel_num == 0)
+  SHOW_MSG_Typedef_t msg;
+  msg.channel_num = channel_num;
+  msg.str = show_message;
+  msg.direct = direct;
+
+  /* 限制缓冲区大小 */
+  if(0 == channel_num)
   {
-    browser_widget = ui->ch1_receive_data_textBrowser;
-  }
-  else
-  {
-    browser_widget = ui->ch2_receive_data_textBrowser;
-  }
-  browser_widget->append(show_message);
-  browser_widget->moveCursor(QTextCursor::End);
-#else
-  QTextEdit *text_edit_widget=  nullptr;
-  if(channel_num == 0)
-  {
-    text_edit_widget = ui->ch1_receive_data_textEdit;
-    ch1_show_msg_cnt++;
-    if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_cnt)
+    if(ch1_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
     {
-      remove_line_flag = true;
+      ch1_show_msg_list.replace(ch1_add_msg_index % SAVE_MSG_BUF_MAX, msg);
     }
-  }
-  else
-  {
-    text_edit_widget = ui->ch2_receive_data_textEdit;
-    ch2_show_msg_cnt++;
-    if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_cnt)
+    else
     {
-      remove_line_flag = true;
+      ch1_show_msg_list.append(msg);
     }
+    ch1_add_msg_index++;
+    return;
   }
 
-  /* 设置颜色 */
-  if(can_driver::CAN_RX_DIRECT == direct)
+  if(ch2_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
   {
-    text_edit_widget->setTextColor(QColor("white"));
+    ch2_show_msg_list.replace(ch2_add_msg_index % SAVE_MSG_BUF_MAX, msg);
   }
   else
   {
-    text_edit_widget->setTextColor(QColor("red"));
+    ch2_show_msg_list.append(msg);
   }
-  text_edit_widget->append(show_message);
-
-#endif
-
-  if(true == remove_line_flag)
-  {
-    text_edit_widget->moveCursor(QTextCursor::Start);
-    text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
-    text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-//    qDebug() << "sel1 :" << text_edit_widget->textCursor().selectedText();
-    text_edit_widget->textCursor().removeSelectedText();
-    text_edit_widget->moveCursor(QTextCursor::End);
-  }
+  ch2_add_msg_index++;
 }
 
 void more_window::on_frame_type_comboBox_currentIndexChanged(int index)
@@ -295,10 +410,11 @@ void more_window::on_clear_pushButton_clicked()
   ui->ch2_receive_data_textEdit->clear();
 #endif
 
-  show_msg_list.clear();
+  ch1_show_msg_list.clear();
+  ch2_show_msg_list.clear();
 
-  ch1_show_msg_cnt = 0;
-  ch2_show_msg_cnt = 0;
+  ch1_show_msg_index = 0;
+  ch2_show_msg_index = 0;
 }
 
 void more_window::set_channel_num(quint8 channel_num)
@@ -338,12 +454,21 @@ void more_window::slot_timeout()
   }
 
   /* 定时刷新显示 */
-  if(show_msg_list.isEmpty() == true)
+  if(ch1_show_msg_list.isEmpty() == true &&
+     ch2_show_msg_list.isEmpty() == true)
   {
     return;
   }
+
   SHOW_MSG_Typedef_t show_message;
-  show_message = show_msg_list.takeFirst();
+
+  if(ch1_show_msg_is_empty() == true)
+  {
+    return;
+  }
+  show_message = ch1_show_msg_list.value(ch1_show_msg_index % ch1_show_msg_list.size());
+  ch1_show_msg_index++;
+  ch1_scroll_cnt = ch1_show_msg_index;
 
 #if USE_TEXT_BROWSER_WIDDGET
   QTextBrowser *browser_widget=  nullptr;
@@ -359,12 +484,11 @@ void more_window::slot_timeout()
   browser_widget->moveCursor(QTextCursor::End);
 
 #else
-  QTextEdit *text_edit_widget=  nullptr;
+  QTextEdit *text_edit_widget = nullptr;
   if(show_message.channel_num == 0)
   {
     text_edit_widget = ui->ch1_receive_data_textEdit;
-    ch1_show_msg_cnt++;
-    if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_cnt)
+    if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_index)
     {
       remove_line_flag = true;
     }
@@ -372,8 +496,68 @@ void more_window::slot_timeout()
   else
   {
     text_edit_widget = ui->ch2_receive_data_textEdit;
-    ch2_show_msg_cnt++;
-    if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_cnt)
+    if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_index)
+    {
+      remove_line_flag = true;
+    }
+  }
+
+  /* 设置颜色 */
+  if(can_driver::CAN_RX_DIRECT == show_message.direct)
+  {
+    text_edit_widget->setTextColor(QColor("white"));
+  }
+  else
+  {
+    text_edit_widget->setTextColor(QColor("red"));
+  }
+
+  text_edit_widget->append(show_message.str);
+#endif
+
+  if(true == remove_line_flag)
+  {
+    text_edit_widget->moveCursor(QTextCursor::Start);
+    text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+    text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+//    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
+    text_edit_widget->textCursor().removeSelectedText();
+    text_edit_widget->moveCursor(QTextCursor::End);
+  }
+
+  if(ch2_show_msg_is_empty() == true)
+  {
+    return;
+  }
+  show_message = ch2_show_msg_list.value(ch2_show_msg_index % ch2_show_msg_list.size());
+  ch2_show_msg_index++;
+  ch2_scroll_cnt = ch2_show_msg_index;
+
+#if USE_TEXT_BROWSER_WIDDGET
+  if(show_message.channel_num == 0)
+  {
+    browser_widget = ui->ch1_receive_data_textBrowser;
+  }
+  else
+  {
+    browser_widget = ui->ch2_receive_data_textBrowser;
+  }
+  browser_widget->append(show_message.str);
+  browser_widget->moveCursor(QTextCursor::End);
+
+#else
+  if(show_message.channel_num == 0)
+  {
+    text_edit_widget = ui->ch1_receive_data_textEdit;
+    if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_index)
+    {
+      remove_line_flag = true;
+    }
+  }
+  else
+  {
+    text_edit_widget = ui->ch2_receive_data_textEdit;
+    if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_index)
     {
       remove_line_flag = true;
     }

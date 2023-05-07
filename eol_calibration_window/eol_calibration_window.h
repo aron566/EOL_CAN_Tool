@@ -30,6 +30,19 @@ protected:
      */
     virtual void closeEvent(QCloseEvent *event) override;
 private:
+
+  /**
+   * @brief 定时器初始化
+   */
+  void timer_init();
+
+  /**
+   * @brief 刷新目标列表
+   * @param profile_id 目标所属配置id
+   * @param obj_num 目标数量
+   * @param data 目标信息数据
+   */
+  void refresh_obj_list_info(quint8 profile_id, quint8 obj_num, const quint8 *data);
 signals:
   /**
    * @brief 窗口关闭信号
@@ -42,13 +55,29 @@ private slots:
    * @param data 数据地址
    * @param data_size 数据长度
    */
-  void slot_rec_data(quint8 reg_addr, const quint8 *data, quint16 data_size);
+  void slot_rw_device_ok(quint8 reg_addr, const quint8 *data, quint16 data_size);
+
+  /**
+   * @brief 从机读写无反应信号
+   * @param reg 读写寄存器地址
+   * @param command 读写标识
+   */
+  void slot_protocol_rw_err(quint8 reg, quint8 command);
+
+  /**
+   * @brief 定时器超时
+   */
+  void slot_timeout();
 
   void on_add_pushButton_clicked();
 
   void on_reset_pushButton_clicked();
 
   void on_test_start_pushButton_clicked();
+
+  void on_distance_comboBox_currentTextChanged(const QString &arg1);
+
+  void on_profile_id_comboBox_currentIndexChanged(int index);
 
 private:
   Ui::eol_calibration_window *ui;
@@ -68,6 +97,8 @@ private:
     quint8 rts_dBsm;
   }THRESHOLD_SET_INFO_Typedef_t;
   QList <THRESHOLD_SET_INFO_Typedef_t> threshold_list;/**< 阈值列表 */
+
+  QTimer *timer_obj = nullptr;
 };
 
 #endif // EOL_CALIBRATION_WINDOW_H

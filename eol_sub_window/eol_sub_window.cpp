@@ -41,8 +41,8 @@ void eol_sub_window::set_eol_protocol_obj(eol_protocol *obj)
   }
   eol_protocol_obj = obj;
 
-  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_sub_window::slot_rw_device_ok);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_sub_window::slot_protocol_rw_err);
+  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_sub_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_sub_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
 }
 
 void eol_sub_window::on_test_pushButton_clicked()
@@ -84,6 +84,11 @@ void eol_sub_window::on_test_pushButton_clicked()
   eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* 引脚状态 */
+  task.reg = EOL_R_MOUNTID_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
@@ -113,6 +118,7 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
     /* 读结果 */
     switch(reg)
     {
+      /* 版本号 */
       case EOL_RW_VERSION_REG :
         {
           for(quint16 i = 0; i < 4; i++)
@@ -166,9 +172,13 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
         }
 
         break;
+
+      /* VCAN测试 */
       case EOL_R_VCAN_TEST_REG:
         ui->vcan_test_lineEdit->setText(tr("read vcan ok "));
         break;
+
+      /* SN测试 */
       case EOL_RW_SN_REG      :
         {
           str.clear();
@@ -192,8 +202,14 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
         }
 
         break;
-      case EOL_R_PIN7_8_REG   :
 
+      /* MOUNTID测试 */
+      case EOL_R_MOUNTID_REG   :
+        {
+          str.clear();
+          ui->pin7_lineEdit->setText(QString::asprintf("%02X", data[0]));
+          ui->pin8_lineEdit->setText(QString::asprintf("%02X", data[1]));
+        }
         break;
     }
     /* 启动eol线程 */
@@ -214,7 +230,7 @@ void eol_sub_window::slot_protocol_rw_err(quint8 reg, quint8 command)
     case EOL_RW_SN_REG      :
 
       break;
-    case EOL_R_PIN7_8_REG   :
+    case EOL_R_MOUNTID_REG   :
 
       break;
   }

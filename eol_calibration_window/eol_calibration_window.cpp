@@ -19,12 +19,18 @@ eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   /* 设置窗口标题 */
   this->setWindowTitle(title);
 
+  /* 初始化定时器 */
+  timer_init();
+
   /* 设置提示值 */
   ui->mag_threshold_max_lineEdit->setPlaceholderText("20m105 - 50m85");
   ui->mag_threshold_min_lineEdit->setPlaceholderText("20m90 - 50m70");
   ui->snr_threshold_max_lineEdit->setPlaceholderText("20m70 - 50m50");
   ui->snr_threshold_min_lineEdit->setPlaceholderText("20m45 - 50m30");
   ui->rts_lineEdit->setPlaceholderText("15 - 25 - 35");
+
+  /* 设置表格 */
+
 }
 
 eol_calibration_window::~eol_calibration_window()
@@ -45,6 +51,16 @@ void eol_calibration_window::closeEvent(QCloseEvent *event)
 }
 
 /**
+ * @brief 定时器初始化
+ */
+void eol_calibration_window::timer_init()
+{
+  timer_obj = new QTimer(this);
+  timer_obj->setInterval(25);
+  connect(timer_obj, &QTimer::timeout, this, &eol_calibration_window::slot_timeout);
+}
+
+/**
  * @brief 设置eol协议栈对象
  * @param obj
  */
@@ -56,6 +72,65 @@ void eol_calibration_window::set_eol_protocol_obj(eol_protocol *obj)
   }
   eol_protocol_obj = obj;
   /* 数据接收 */
+//  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_calibration_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);
+}
+
+/**
+ * @brief 刷新目标数据
+ */
+void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint8 obj_num, const quint8 *data)
+{
+  qDebug() << "profile " << profile_id << "obj_num " << obj_num;
+  /* 获取当前表格行数 */
+  ui->tableWidget->clearContents();
+  ui->tableWidget->setRowCount(obj_num);
+
+  /* 刷新数据 */
+  quint16 index = 0;
+  qint16 speed;
+  qint16 azi_angle;
+  quint32 distance;
+  qint16 mag;
+  qint16 rcs;
+  qint16 snr;
+  qint16 ele_angle;
+
+  for(quint8 i = 0; i < obj_num; i++)
+  {
+//    ui->tableWidget->insertRow(i);
+    memcpy(&speed, data + index, sizeof(speed));
+    index += sizeof(speed);
+
+    memcpy(&azi_angle, data + index, sizeof(azi_angle));
+    index += sizeof(azi_angle);
+
+    memcpy(&distance, data + index, sizeof(distance));
+    index += sizeof(distance);
+
+    memcpy(&mag, data + index, sizeof(mag));
+    index += sizeof(mag);
+
+    memcpy(&rcs, data + index, sizeof(rcs));
+    index += sizeof(rcs);
+
+    memcpy(&snr, data + index, sizeof(snr));
+    index += sizeof(snr);
+
+    memcpy(&ele_angle, data + index, sizeof(ele_angle));
+    index += sizeof(ele_angle);
+
+    /* 目标序号 配置ID 速度 方位角 距离 mag rcs snr 俯仰角 */
+    ui->tableWidget->setItem(i, 0, new QTableWidgetItem(QString::number(profile_id)));
+    ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number((double)speed/100)));
+    ui->tableWidget->setItem(i, 2, new QTableWidgetItem(QString::number((double)azi_angle/100)));
+    ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number((double)distance/100)));
+    ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number((double)mag/10)));
+    ui->tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number((double)rcs/10)));
+    ui->tableWidget->setItem(i, 6, new QTableWidgetItem(QString::number((double)snr/10)));
+    ui->tableWidget->setItem(i, 7, new QTableWidgetItem(QString::number((double)ele_angle/100)));
+  }
 }
 
 /**
@@ -108,12 +183,166 @@ void eol_calibration_window::on_test_start_pushButton_clicked()
     return;
   }
 
-  /* 启动mag snr rcs 数值监测任务，及校准任务 */
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.run_state = true;
+  task.param = nullptr;
 
+  /* 读取目标 */
+  task.reg = EOL_R_OBJ_LIST_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 启动->停止 */
+  if(true == timer_obj->isActive())
+  {
+    timer_obj->stop();
+    ui->test_start_pushButton->setText(tr("start"));
+    return;
+  }
+
+  /* 启动mag snr rcs 数值监测任务，及校准任务 */
+  /* 停止->启动，目标获取 */
+  timer_obj->start();
+  ui->test_start_pushButton->setText(tr("stop"));
 }
 
+/**
+ * @brief 数据接收
+ */
+void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *data, quint16 data_size)
+{
+  switch(reg_addr)
+  {
+    case EOL_W_SAVE_PAR_REG:
+      break;
+    /* rcs校准，目标测试 */
+    case EOL_R_OBJ_LIST_REG:
+      {  
+        quint8 profile_id = data[0];
+        quint8 obj_num = data[1];
+        refresh_obj_list_info(profile_id, obj_num, data + 2);
 
-void eol_calibration_window::slot_rec_data(quint8 reg_addr, const quint8 *data, quint16 data_size)
+        if(false == timer_obj->isActive())
+        {
+          return;
+        }
+        /* 再次更新 */
+        eol_protocol::EOL_TASK_LIST_Typedef_t task;
+        task.run_state = true;
+        task.param = nullptr;
+
+        /* 读取目标 */
+        task.reg = EOL_R_OBJ_LIST_REG;
+        task.command = eol_protocol::EOL_READ_CMD;
+        task.buf[0] = 0;
+        task.len = 0;
+        eol_protocol_obj->eol_master_common_rw_device(task);
+      }
+      break;
+    case EOL_RW_PROFILE_ID_REG:
+      break;
+
+    /* 角度校准 */
+    case EOL_W_2DFFT_CONDITION_REG:
+    case EOL_R_2DFFT_DATA_REG:
+      break;
+    case EOL_RW_RCS_OFFSET_REG:
+    case EOL_W_PAR_RESET_REG:
+    case EOL_RW_CALI_MODE_REG:
+      break;
+  }
+}
+
+/**
+ * @brief 从机读写无反应信号
+ */
+void eol_calibration_window::slot_protocol_rw_err(quint8 reg, quint8 command)
+{
+  switch(reg)
+  {
+    case EOL_W_SAVE_PAR_REG:
+      break;
+    /* rcs校准，目标测试 */
+    case EOL_R_OBJ_LIST_REG:
+      {
+        if(false == timer_obj->isActive())
+        {
+          return;
+        }
+        eol_protocol::EOL_TASK_LIST_Typedef_t task;
+        task.run_state = true;
+        task.param = nullptr;
+
+        /* 读取目标 */
+        task.reg = EOL_R_OBJ_LIST_REG;
+        task.command = eol_protocol::EOL_READ_CMD;
+        task.buf[0] = 0;
+        task.len = 0;
+        eol_protocol_obj->eol_master_common_rw_device(task);
+      }
+      break;
+
+    case EOL_RW_PROFILE_ID_REG:
+
+    /* 角度校准 */
+    case EOL_W_2DFFT_CONDITION_REG:
+    case EOL_R_2DFFT_DATA_REG:
+
+    case EOL_RW_RCS_OFFSET_REG:
+    case EOL_W_PAR_RESET_REG:
+    case EOL_RW_CALI_MODE_REG:
+      break;
+  }
+}
+
+/**
+ * @brief 目标距离更新
+ */
+void eol_calibration_window::on_distance_comboBox_currentTextChanged(const QString &arg1)
 {
 
 }
+
+/**
+ * @brief 定时器
+ */
+void eol_calibration_window::slot_timeout()
+{
+  if(nullptr == eol_protocol_obj)
+  {
+    return;
+  }
+
+  /* 检测是否刷新 */
+  if(true == eol_protocol_obj->task_is_runing())
+  {
+    return;
+  }
+
+  /* 启动eol线程 */
+  eol_protocol_obj->start_task();
+}
+
+/**
+ * @brief 配置id选择
+ * @param index
+ */
+void eol_calibration_window::on_profile_id_comboBox_currentIndexChanged(int index)
+{
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.run_state = true;
+  task.param = nullptr;
+
+  /* 软硬件版本号 */
+  task.reg = EOL_RW_PROFILE_ID_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = quint8(index);
+  task.len = 1;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 启动eol线程 */
+  eol_protocol_obj->start_task();
+}
+

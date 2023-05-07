@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>700</height>
+    <height>740</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -68,6 +68,37 @@
              <property name="text">
               <string>重置</string>
              </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="profile_id_label">
+             <property name="text">
+              <string>配置ID</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="profile_id_comboBox">
+             <item>
+              <property name="text">
+               <string>0</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>3</string>
+              </property>
+             </item>
             </widget>
            </item>
            <item>
@@ -211,36 +242,25 @@
         </property>
         <layout class="QGridLayout" name="gridLayout_6">
          <item row="0" column="0">
-          <widget class="QPlainTextEdit" name="plainTextEdit">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="plainText">
-            <string>目标距离:20m,目标ID:0 - 64,配置ID:0 - N,MAG:-204.8 - 204.6,RCS:-204.8 - 204.6,SNR:-204.8 - 204.6,俯仰偏移:-163.84 - 163.83</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
           <widget class="QTableWidget" name="tableWidget">
            <column>
             <property name="text">
-             <string>目标距离</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>目标ID</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
              <string>配置ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>目标速度</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>方位角deg</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>目标距离</string>
             </property>
            </column>
            <column>
@@ -260,7 +280,7 @@
            </column>
            <column>
             <property name="text">
-             <string>俯仰偏移deg</string>
+             <string>俯仰角deg</string>
             </property>
            </column>
           </widget>
@@ -278,7 +298,7 @@
       <item row="2" column="3">
        <widget class="QPushButton" name="test_start_pushButton">
         <property name="text">
-         <string>启动标定</string>
+         <string>start</string>
         </property>
        </widget>
       </item>

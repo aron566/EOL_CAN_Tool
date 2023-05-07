@@ -39,26 +39,40 @@
 
 /** Exported macros-----------------------------------------------------------*/
 /* 寄存器表 */
-#define EOL_META_DATA_CHECK_REG        0x00U  /**< 安全认证请求 */
-#define EOL_META_DATA_CHECK_OK_REG     0x01U  /**< 安全认证确认 */
-#define EOL_META_DATA_SET_MODE_REG     0x02U  /**< 模式选择 */
 
 /* 握手 */
 #define EOL_R_ACCESS_CODE_REG          0x00U  /**< 读访问码 */
 #define EOL_W_RUN_MODE_REG             0x01U  /**< 写运行模式 */
 
-#define EOL_R_PROFILE_NUM_CH_NUM       0x02U  /**< 读配置数和通道数 */
+/* 常规测试 */
+#define EOL_R_PROFILE_NUM_CH_NUM       0x02U  /**< 读EOL下配置数和通道数 */
 #define EOL_RW_VERSION_REG             0x03U  /**< 读取软硬件版本 */
 #define EOL_R_VCAN_TEST_REG            0x04U  /**< VCAN测试 */
 #define EOL_RW_SN_REG                  0x05U  /**< SN读写 */
-#define EOL_R_PIN7_8_REG               0x06U  /**< 读取PIN7 8引脚状态-未使用 */
+#define EOL_R_MOUNTID_REG              0x06U  /**< 读取moundID */
 
 /* 读写表 */
-#define EOL_RW_TABLE_DATA_REG          0x07U
-#define EOL_W_TABLE_SEL_REG            0x08U
-#define EOL_W_TABLE_DATA_SEL_REG       0x09U
+#define EOL_RW_TABLE_DATA_REG          0x07U  /**< 读写表数据，帧计数为0时传输表信息，其他为数据帧 */
+#define EOL_W_TABLE_SEL_REG            0x08U  /**< 设置需要读取的表 */
+#define EOL_W_TABLE_DATA_SEL_REG       0x09U  /**< 设置需要特定帧的表数据（用于丢帧重传） */
 
-#define EOL_W_DEVICE_REBOOT_REG        0x0AU /**< 设置设备重启 */
+#define EOL_W_DEVICE_REBOOT_REG        0x0AU  /**< 设置设备重启 */
+
+#define EOL_W_SAVE_PAR_REG             0x0BU  /**< 保存参数到flash */
+
+/* rcs校准，目标测试 */
+#define EOL_R_OBJ_LIST_REG             0x0CU  /**< 读取目标信息 */
+#define EOL_RW_PROFILE_ID_REG          0x0DU  /**< 读写配置ID */
+
+/* 角度校准 */
+#define EOL_W_2DFFT_CONDITION_REG      0x0EU  /**< 设置获取2DFFT数据条件 */
+#define EOL_R_2DFFT_DATA_REG           0x0FU  /**< 获取2DFFT数据 */
+
+#define EOL_RW_RCS_OFFSET_REG          0x10U  /**< 读写RCS值 */
+#define EOL_W_PAR_RESET_REG            0x11U  /**< 重置所有参数 */
+#define EOL_RW_CALI_MODE_REG           0x12U  /**< 读写校准模式 */
+
+#define EOL_W_TEST_PAR_REG             0x13U  /**< 退出或者进入设置测试模式参数 */
 
 /** Exported variables -------------------------------------------------------*/
 /** Exported functions prototypes --------------------------------------------*/
@@ -346,6 +360,15 @@ public:
   }
 
   /**
+   * @brief 任务是否在运行
+   * @return true正在运行
+   */
+  bool task_is_runing()
+  {
+    return thread_run_state;
+  }
+
+  /**
    * @brief 设置线程池
    * @param g_thread_pool_
    */
@@ -416,10 +439,14 @@ signals:
   void signal_protocol_timeout(quint32 sec);
 
   /**
-   * @brief 从机无应答信号
+   * @brief 从机无应答信号-表操作
    */
   void signal_protocol_no_response();
 
+  /**
+   * @brief 从机返回错误消息
+   * @param error_msg 错误消息
+   */
   void signal_protocol_error_occur(quint8 error_msg);
 
   /**
@@ -459,7 +486,7 @@ signals:
   void signal_send_eol_data_complete();
 
   /**
-   * @brief 接收数据完成
+   * @brief 接收数据完成-表传输
    */
   void signal_recv_eol_data_complete();
 

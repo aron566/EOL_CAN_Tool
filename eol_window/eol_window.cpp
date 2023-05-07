@@ -46,9 +46,9 @@ eol_window::eol_window(QString title, QWidget *parent) :
   /* 设备信息读写窗口初始化 */
   eol_sub_window_init(tr("EOL CAN Tool - Device Info RW"));
 
-  /* 天线校准初始化 */
+  /* 天线校准初始化-2DFFT */
 
-  /* rcs校准初始化 */
+  /* rcs校准初始化-目标列表 */
   eol_rcs_calibration_window_init(tr("EOL CAN Tool - RCS Calibration"));
 
   /* 设置临时文件模板名称 */
@@ -111,9 +111,6 @@ void eol_window::eol_sub_window_init(QString title)
 void eol_window::eol_rcs_calibration_window_init(QString title)
 {
   eol_calibration_window_obj = new eol_calibration_window(title);
-
-  /* 设置eol协议栈 */
-  eol_calibration_window_obj->set_eol_protocol_obj(eol_protocol_obj);
   connect(eol_calibration_window_obj, &eol_calibration_window::signal_window_closed, this, &eol_window::slot_show_this_window);
 }
 
@@ -135,18 +132,18 @@ void eol_window::eol_protocol_init(can_driver *can_driver_obj)
   /* eol协议栈初始化 */
   eol_protocol_obj = new eol_protocol(this);
 
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_error_occur, this, &eol_window::slot_protocol_error_occur);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_no_response, this, &eol_window::slot_protocol_no_response);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_error_occur, this, &eol_window::slot_protocol_error_occur, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_no_response, this, &eol_window::slot_protocol_no_response, Qt::BlockingQueuedConnection);
 //  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, this, &eol_window::slot_recv_eol_table_data);
   connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, this, &eol_window::slot_recv_eol_table_data, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_send_progress, this, &eol_window::slot_send_progress);
-  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_data_complete, this, &eol_window::slot_recv_eol_data_complete);
-  connect(eol_protocol_obj, &eol_protocol::signal_send_eol_data_complete, this, &eol_window::slot_send_eol_data_complete);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_timeout, this, &eol_window::slot_protocol_timeout);
-  connect(eol_protocol_obj, &eol_protocol::signal_device_mode, this, &eol_window::slot_device_mode);
-  connect(eol_protocol_obj, &eol_protocol::signal_send_rec_one_frame, this, &eol_window::slot_send_rec_one_frame);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_window::slot_protocol_rw_err);
-  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_window::slot_rw_device_ok);
+  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_data_complete, this, &eol_window::slot_recv_eol_data_complete, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_send_eol_data_complete, this, &eol_window::slot_send_eol_data_complete, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_timeout, this, &eol_window::slot_protocol_timeout, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_device_mode, this, &eol_window::slot_device_mode, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_send_rec_one_frame, this, &eol_window::slot_send_rec_one_frame, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_eol_protol_is_start, this, &eol_window::slot_eol_protol_is_start, Qt::BlockingQueuedConnection);
 
   /* 设置线程池 */
@@ -160,6 +157,9 @@ void eol_window::eol_protocol_init(can_driver *can_driver_obj)
 
   /* 设置eol协议栈 */
   eol_sub_window_obj->set_eol_protocol_obj(eol_protocol_obj);
+
+  /* 设置eol协议栈 */
+  eol_calibration_window_obj->set_eol_protocol_obj(eol_protocol_obj);
 }
 
 void eol_window::timer_init()
@@ -293,7 +293,6 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
   }
 
   common_table_info.Common_Info.Class_ID_Num = 0x66;
-  // common_table_info.Common_Info.Table_Type = (eol_protocol::TABLE_CLASS_Typedef_t)num_str_list.value(0).toUShort();
   common_table_info.Common_Info.Version_MAJOR = (quint8)(num_str_list.value(1).toUInt() & 0xFF);
   common_table_info.Common_Info.Version_MINOR = (quint8)((num_str_list.value(1).toUInt() >> 8) & 0xFF);
   common_table_info.Common_Info.Version_REVISION = (quint8)(num_str_list.value(1).toUInt() >> 16) & 0xFF;
@@ -310,7 +309,7 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
     case eol_protocol::SV_ELEVATION_AZI_N45_TABLE:
     case eol_protocol::SV_ELEVATION_AZI_P45_TABLE:
     {
-      /*table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, ele angle*10, tx_order, profile_id, check sum*/
+      /* table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, ele angle*10, tx_order, profile_id, check sum*/
       qDebug() << num_str_list.mid(0, 13);
       if(num_str_list.size() < 13)
       {
@@ -1400,12 +1399,16 @@ void eol_window::slot_recv_eol_data_complete()
 
 void eol_window::on_entry_produce_mode_pushButton_clicked()
 {
-  /* 是否时正在执行任务 */
+  /* 是否正在执行任务 */
   if(TASK_RUNNING == current_task_complete_state)
   {
     qDebug() << "TASK_RUNNING";
-    return;
+    if(true == eol_protocol_obj->task_is_runing())
+    {
+      return;
+    }
   }
+
   bool ret = false;
   if(ui->entry_produce_mode_pushButton->text() == "entry produce mode")
   {
@@ -1459,7 +1462,8 @@ void eol_window::slot_device_mode(const void *pass_data)
       ui->update_pushButton->setEnabled(false);
     }
     ui->eol_device_rw_func_pushButton->setEnabled(true);
-    ui->rcs_calibration_func_pushButton->setEnabled(true);
+    ui->ant_calibration_func_pushButton->setEnabled(false);
+    ui->rcs_calibration_func_pushButton->setEnabled(false);
     ui->entry_produce_mode_pushButton->setText(tr("exit produce mode"));
   }
 
@@ -1471,6 +1475,7 @@ void eol_window::slot_device_mode(const void *pass_data)
     ui->update_pushButton->setEnabled(false);
     ui->reboot_pushButton->setEnabled(false);
     ui->ant_calibration_func_pushButton->setEnabled(true);
+    ui->rcs_calibration_func_pushButton->setEnabled(true);
     ui->entry_produce_mode_pushButton->setText(tr("exit produce mode"));
   }
 
@@ -1488,9 +1493,16 @@ void eol_window::slot_device_mode(const void *pass_data)
   }
   current_task_complete_state = TASK_COMPLETE;
   /* 显示设备信息 */
-  QMessageBox message(QMessageBox::Information, "device info", \
-                      tr("<font size='10' color='green'>profile amount:%1</font>\r\n").arg(data_ptr[1]) +
-                      tr("<font size='10' color='green'>channel amount:%1</font>\r\n").arg(data_ptr[2]), \
+  QString msg;
+
+  msg += QString("<font size='10' color='green'><div align='legt'>profile num:</div> <div align='right'>%1</div> </font>\r\n").arg(data_ptr[1]);
+
+  for(quint8 i = 0; i < data_ptr[1]; i++)
+  {
+    msg += QString("<font size='10' color='green'><div align='legt'>profile id:</div> <div align='right'>%1</div> </font>\r\n").arg(data_ptr[2 + 2 * i]);
+    msg += QString("<font size='10' color='green'><div align='legt'>channel num:</div> <div align='right'>%1</div> </font>\r\n").arg(data_ptr[2 + 2 * i + 1]);
+  }
+  QMessageBox message(QMessageBox::Information, tr("device info"), msg, \
                       QMessageBox::Yes, nullptr);
   message.exec();
 }
