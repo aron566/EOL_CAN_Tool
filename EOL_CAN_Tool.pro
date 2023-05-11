@@ -31,6 +31,7 @@ include(utilities/utilities.pri)
 include(can_driver/can_driver.pri)
 
 SOURCES += \
+    eol_angle_calibration_window/eol_angle_calibration_window.cpp \
     eol_calibration_window/eol_calibration_window.cpp \
     eol_sub_window/eol_sub_window.cpp \
     eol_window/eol_window.cpp \
@@ -39,6 +40,7 @@ SOURCES += \
     more_window/more_window.cpp
 
 HEADERS += \
+  eol_angle_calibration_window/eol_angle_calibration_window.h \
   eol_calibration_window/eol_calibration_window.h \
   eol_sub_window/eol_sub_window.h \
   eol_window/eol_window.h \
@@ -46,6 +48,7 @@ HEADERS += \
   more_window/more_window.h
 
 FORMS += \
+    eol_angle_calibration_window/eol_angle_calibration_window.ui \
     eol_calibration_window/eol_calibration_window.ui \
     eol_sub_window/eol_sub_window.ui \
     eol_window/eol_window.ui \

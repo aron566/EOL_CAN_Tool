@@ -58,6 +58,19 @@ protected:
      */
     bool ch1_show_msg_is_empty();
     bool ch2_show_msg_is_empty();
+
+    /**
+     * @brief show_txt
+     */
+    void show_txt();
+
+    /**
+     * @brief 获取显示的索引
+     * @param current_show_index
+     * @param totaol_size
+     * @return 显示索引
+     */
+    quint32 get_show_index(quint32 current_show_index, quint32 totaol_size);
 signals:
     void signal_more_window_closed();
 

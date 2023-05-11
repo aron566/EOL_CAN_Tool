@@ -1,6 +1,7 @@
 #include "eol_calibration_window.h"
 #include "ui_eol_calibration_window.h"
 #include <QFile>
+#include <QDateTime>
 
 eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   QWidget(parent),
@@ -56,7 +57,7 @@ void eol_calibration_window::closeEvent(QCloseEvent *event)
 void eol_calibration_window::timer_init()
 {
   timer_obj = new QTimer(this);
-  timer_obj->setInterval(25);
+  timer_obj->setInterval(ui->refresh_time_lineEdit->text().toInt());
   connect(timer_obj, &QTimer::timeout, this, &eol_calibration_window::slot_timeout);
 }
 
@@ -73,16 +74,24 @@ void eol_calibration_window::set_eol_protocol_obj(eol_protocol *obj)
   eol_protocol_obj = obj;
   /* 数据接收 */
 //  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_calibration_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_calibration_window::slot_protocol_rw_err);
   connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);
 }
 
 /**
  * @brief 刷新目标数据
  */
-void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint8 obj_num, const quint8 *data)
+void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 obj_num, const quint8 *data)
 {
+  if(obj_num == 0xFFFF && profile_id == 0xFF)
+  {
+    return;
+  }
+
+  frame_cnt++;
+
   qDebug() << "profile " << profile_id << "obj_num " << obj_num;
+
   /* 获取当前表格行数 */
   ui->tableWidget->clearContents();
   ui->tableWidget->setRowCount(obj_num);
@@ -97,9 +106,8 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint8 obj
   qint16 snr;
   qint16 ele_angle;
 
-  for(quint8 i = 0; i < obj_num; i++)
+  for(quint16 i = 0; i < obj_num; i++)
   {
-//    ui->tableWidget->insertRow(i);
     memcpy(&speed, data + index, sizeof(speed));
     index += sizeof(speed);
 
@@ -171,6 +179,11 @@ void eol_calibration_window::on_reset_pushButton_clicked()
   /* 清空传输列表 */
   threshold_list.clear();
   ui->threshold_list_label->clear();
+  timer_obj->stop();
+  time_ms = 0;
+  time_s = 0;
+  frame_cnt = 0;
+  fps = 0;
 }
 
 /**
@@ -197,7 +210,11 @@ void eol_calibration_window::on_test_start_pushButton_clicked()
   /* 启动->停止 */
   if(true == timer_obj->isActive())
   {
+    time_ms = 0;
+    time_s = 0;
+    frame_cnt = 0;
     timer_obj->stop();
+    eol_protocol_obj->stop_task();
     ui->test_start_pushButton->setText(tr("start"));
     return;
   }
@@ -206,6 +223,9 @@ void eol_calibration_window::on_test_start_pushButton_clicked()
   /* 停止->启动，目标获取 */
   timer_obj->start();
   ui->test_start_pushButton->setText(tr("stop"));
+
+  /* 启动eol线程 */
+  eol_protocol_obj->start_task();
 }
 
 /**
@@ -221,13 +241,11 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
     case EOL_R_OBJ_LIST_REG:
       {  
         quint8 profile_id = data[0];
-        quint8 obj_num = data[1];
-        refresh_obj_list_info(profile_id, obj_num, data + 2);
+        quint16 obj_num = 0;
+        memcpy(&obj_num, data + 1, sizeof(obj_num));
+        refresh_obj_list_info(profile_id, obj_num, data + 3);
+        err_cnt = 0;
 
-        if(false == timer_obj->isActive())
-        {
-          return;
-        }
         /* 再次更新 */
         eol_protocol::EOL_TASK_LIST_Typedef_t task;
         task.run_state = true;
@@ -238,7 +256,7 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
         task.command = eol_protocol::EOL_READ_CMD;
         task.buf[0] = 0;
         task.len = 0;
-        eol_protocol_obj->eol_master_common_rw_device(task);
+        eol_protocol_obj->eol_master_common_rw_device(task, false);
       }
       break;
     case EOL_RW_PROFILE_ID_REG:
@@ -269,18 +287,18 @@ void eol_calibration_window::slot_protocol_rw_err(quint8 reg, quint8 command)
       {
         if(false == timer_obj->isActive())
         {
+          err_cnt = 0;
           return;
         }
-        eol_protocol::EOL_TASK_LIST_Typedef_t task;
-        task.run_state = true;
-        task.param = nullptr;
-
-        /* 读取目标 */
-        task.reg = EOL_R_OBJ_LIST_REG;
-        task.command = eol_protocol::EOL_READ_CMD;
-        task.buf[0] = 0;
-        task.len = 0;
-        eol_protocol_obj->eol_master_common_rw_device(task);
+        err_cnt++;
+        if(err_cnt > 10)
+        {
+          time_ms = 0;
+          time_s = 0;
+          frame_cnt = 0;
+          timer_obj->stop();
+          ui->test_start_pushButton->setText(tr("start"));
+        }
       }
       break;
 
@@ -315,11 +333,36 @@ void eol_calibration_window::slot_timeout()
     return;
   }
 
+  time_ms += (quint32)timer_obj->interval();
+  if(time_ms >= 1000)
+  {
+    time_s++;
+    time_ms = 0;
+  }
+
+  if(time_s != 0)
+  {
+    fps = (double)frame_cnt / (double)time_s;
+    ui->fps_lineEdit->setText(QString::number(fps));
+  }
+
   /* 检测是否刷新 */
   if(true == eol_protocol_obj->task_is_runing())
   {
     return;
   }
+
+  /* 再次更新 */
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.run_state = true;
+  task.param = nullptr;
+
+  /* 读取目标 */
+  task.reg = EOL_R_OBJ_LIST_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task, false);
 
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
@@ -340,9 +383,21 @@ void eol_calibration_window::on_profile_id_comboBox_currentIndexChanged(int inde
   task.command = eol_protocol::EOL_WRITE_CMD;
   task.buf[0] = quint8(index);
   task.len = 1;
-  eol_protocol_obj->eol_master_common_rw_device(task);
+  eol_protocol_obj->eol_master_common_rw_device(task, false);
 
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
+}
+
+/**
+ * @brief 刷新周期更新
+ */
+void eol_calibration_window::on_refresh_time_lineEdit_editingFinished()
+{
+  timer_obj->setInterval(ui->refresh_time_lineEdit->text().toInt());
+  time_ms = 0;
+  time_s = 0;
+  frame_cnt = 0;
+  eol_protocol_obj->stop_task();
 }
 

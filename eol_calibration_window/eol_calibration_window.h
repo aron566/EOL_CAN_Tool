@@ -42,7 +42,7 @@ private:
    * @param obj_num 目标数量
    * @param data 目标信息数据
    */
-  void refresh_obj_list_info(quint8 profile_id, quint8 obj_num, const quint8 *data);
+  void refresh_obj_list_info(quint8 profile_id, quint16 obj_num, const quint8 *data);
 signals:
   /**
    * @brief 窗口关闭信号
@@ -79,6 +79,8 @@ private slots:
 
   void on_profile_id_comboBox_currentIndexChanged(int index);
 
+  void on_refresh_time_lineEdit_editingFinished();
+
 private:
   Ui::eol_calibration_window *ui;
 
@@ -99,6 +101,15 @@ private:
   QList <THRESHOLD_SET_INFO_Typedef_t> threshold_list;/**< 阈值列表 */
 
   QTimer *timer_obj = nullptr;
+
+  /* 错误计数 */
+  uint8_t err_cnt = 0;
+
+  /* 帧计数 */
+  quint32 frame_cnt = 0;
+  quint32 time_s = 0;
+  quint32 time_ms = 0;
+  double fps = 0;
 };
 
 #endif // EOL_CALIBRATION_WINDOW_H

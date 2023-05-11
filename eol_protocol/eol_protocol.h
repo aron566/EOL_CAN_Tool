@@ -103,7 +103,7 @@ public:
   {
     NORMAL_MODE_RUN = 0,
     PRODUCE_MODE_NORMAL = 1,            /**< 雷达一直发送目标列表给上位机 */
-    PRODUCE_MODE_CALIBRATION = 2        /**< 雷达一直发送目标的2D-FFT数据给上位机 */
+    PRODUCE_MODE_DEBUG = 2              /**< 雷达一直发送目标的2D-FFT数据给上位机 */
   }DEVICE_MODE_Typedef_t;
 
 
@@ -117,11 +117,11 @@ public:
     EOL_OPT_W_HEADER_ERR,               /**< 写表头部错误 */
     EOL_OPT_W_DATA_ERR,                 /**< 写数据错误 */
     EOL_OPT_HEADER_CRC_ERR,             /**< 头部CRC校验错误 */
-    EOL_OPT_RW_ERR,                       /**< 读写错误 */
+    EOL_OPT_RW_ERR,                     /**< 读写错误 */
     EOL_OPT_ERASE_ERR,                  /**< 擦除错误 */
-    UNKNOW_TAB_ERR,                       /**< 表类型错误 */
+    UNKNOW_TAB_ERR,                     /**< 表类型错误 */
     EOL_OVER_SIZE,                      /**< 数据过大溢出 */
-    UNKNOW_CMD_ERR,                       /**< 未知命令类型错误 */
+    UNKNOW_CMD_ERR,                     /**< 未知命令类型错误 */
   }EOL_OPT_STATUS_Typedef_t;
 
   /* 数据格式 */
@@ -408,9 +408,10 @@ public:
   /**
    * @brief 读写设备
    * @param task 任务
+   * @param check_repeat true任务查重
    * @return true正常
    */
-  bool eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task);
+  bool eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task, bool check_repeat = true);
 
   /**
    * @brief 获取表类型

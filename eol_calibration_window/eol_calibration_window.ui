@@ -20,7 +20,28 @@
       <string>RCS标定</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_8">
-      <item row="0" column="0" colspan="4">
+      <item row="2" column="0">
+       <widget class="QLabel" name="rcs_label">
+        <property name="text">
+         <string>RCS标定结果：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="refresh_time_label">
+        <property name="text">
+         <string>请求周期ms：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="7">
+       <widget class="QPushButton" name="test_start_pushButton">
+        <property name="text">
+         <string>start</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="8">
        <widget class="QGroupBox" name="threshold_groupBox">
         <property name="title">
          <string>阈值及标准设置</string>
@@ -235,7 +256,7 @@
         </layout>
        </widget>
       </item>
-      <item row="1" column="0" colspan="4">
+      <item row="1" column="0" colspan="8">
        <widget class="QGroupBox" name="mag_snr_data_view_groupBox">
         <property name="title">
          <string>数据视口</string>
@@ -288,17 +309,30 @@
         </layout>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="rcs_label">
+      <item row="3" column="6">
+       <widget class="QLabel" name="rcs_rsl_state_show_label">
         <property name="text">
-         <string>RCS标定结果：</string>
+         <string>ok</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="3">
-       <widget class="QPushButton" name="test_start_pushButton">
-        <property name="text">
-         <string>start</string>
+      <item row="2" column="5" colspan="2">
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="2" column="4">
+       <widget class="QLineEdit" name="fps_lineEdit">
+        <property name="enabled">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -309,21 +343,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="rcs_rsl_state_label">
-        <property name="text">
-         <string>标定结果：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLabel" name="rcs_rsl_state_show_label">
-        <property name="text">
-         <string>ok</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
+      <item row="3" column="7">
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -336,18 +356,26 @@
         </property>
        </spacer>
       </item>
-      <item row="2" column="1" colspan="2">
-       <spacer name="horizontalSpacer_3">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+      <item row="2" column="3">
+       <widget class="QLabel" name="fps_label">
+        <property name="text">
+         <string>帧率fps：</string>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
+       </widget>
+      </item>
+      <item row="3" column="5">
+       <widget class="QLabel" name="rcs_rsl_state_label">
+        <property name="text">
+         <string>标定结果：</string>
         </property>
-       </spacer>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="refresh_time_lineEdit">
+        <property name="text">
+         <string>50</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

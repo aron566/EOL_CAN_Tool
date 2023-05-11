@@ -18,6 +18,7 @@
 #include "eol_protocol.h"
 #include <QDebug>
 #include <QFile>
+#include <QDateTime>
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
@@ -181,17 +182,14 @@ void eol_protocol::run_eol_task()
     task_ = eol_task_list.takeFirst();
 
     /* 执行任务 */
-//    while(task_.run_state && run_state)
-//    {
-      if(nullptr == task_.param)
-      {
-        (this->*(task_.task))(&task_);
-      }
-      else
-      {
-        (this->*(task_.task))(task_.param);
-      }
-//    }
+    if(nullptr == task_.param)
+    {
+      (this->*(task_.task))(&task_);
+    }
+    else
+    {
+      (this->*(task_.task))(task_.param);
+    }
   }
   eol_task_list.clear();
   qDebug() << "eol_task end";
@@ -382,7 +380,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
     }
 
     /* 解析 */
-    RETURN_TYPE_Typedef_t ret = RETURN_OK;
+    RETURN_TYPE_Typedef_t ret = RETURN_ERROR;
     if(EOL_WRITE_CMD == command || EOL_READ_CMD == command ||
        EOL_META_CMD == command)
     {
@@ -399,7 +397,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
     return ret;
   }
 #endif
-  qDebug() << "------direct send-------";
+  qDebug() << "------direct send-------" << QDateTime::currentMSecsSinceEpoch();
 
   /* 发送 */
   bool ok = can_driver_obj->send(reinterpret_cast<const quint8 *>(send_buf), \
@@ -420,7 +418,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
   }
 
   /* 解析 */
-  RETURN_TYPE_Typedef_t ret = RETURN_OK;
+  RETURN_TYPE_Typedef_t ret = RETURN_ERROR;
   if(EOL_WRITE_CMD == command || EOL_READ_CMD == command ||
      EOL_META_CMD == command)
   {
@@ -1154,14 +1152,17 @@ bool eol_protocol::eol_master_get_table_data(TABLE_Typedef_t table_type)
 }
 
 /* 添加读写任务 */
-bool eol_protocol::eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task)
+bool eol_protocol::eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task, bool check_repeat)
 {
   /* 查重 */
-  for(qint32 i = 0; i < eol_task_list.size(); i++)
+  if(true == check_repeat)
   {
-    if(eol_task_list.value(i).reg == task.reg && eol_task_list.value(i).command == task.command)
+    for(qint32 i = 0; i < eol_task_list.size(); i++)
     {
-      return true;
+      if(eol_task_list.value(i).reg == task.reg && eol_task_list.value(i).command == task.command)
+      {
+        return true;
+      }
     }
   }
 

@@ -550,9 +550,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="produce_calibratio_radioButton">
+         <widget class="QRadioButton" name="produce_debug_radioButton">
           <property name="text">
-           <string>生产-校准</string>
+           <string>生产-调试</string>
           </property>
          </widget>
         </item>
@@ -563,7 +563,7 @@
         <item>
          <widget class="QPushButton" name="entry_produce_mode_pushButton">
           <property name="text">
-           <string>entry produce mode</string>
+           <string>entry mode</string>
           </property>
          </widget>
         </item>

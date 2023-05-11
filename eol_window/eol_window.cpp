@@ -137,13 +137,13 @@ void eol_window::eol_protocol_init(can_driver *can_driver_obj)
 //  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, this, &eol_window::slot_recv_eol_table_data);
   connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, this, &eol_window::slot_recv_eol_table_data, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_send_progress, this, &eol_window::slot_send_progress);
-  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_data_complete, this, &eol_window::slot_recv_eol_data_complete, Qt::BlockingQueuedConnection);
-  connect(eol_protocol_obj, &eol_protocol::signal_send_eol_data_complete, this, &eol_window::slot_send_eol_data_complete, Qt::BlockingQueuedConnection);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_timeout, this, &eol_window::slot_protocol_timeout, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_data_complete, this, &eol_window::slot_recv_eol_data_complete);
+  connect(eol_protocol_obj, &eol_protocol::signal_send_eol_data_complete, this, &eol_window::slot_send_eol_data_complete);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_timeout, this, &eol_window::slot_protocol_timeout);
   connect(eol_protocol_obj, &eol_protocol::signal_device_mode, this, &eol_window::slot_device_mode, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_send_rec_one_frame, this, &eol_window::slot_send_rec_one_frame, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
-  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_window::slot_rw_device_ok);
   connect(eol_protocol_obj, &eol_protocol::signal_eol_protol_is_start, this, &eol_window::slot_eol_protol_is_start, Qt::BlockingQueuedConnection);
 
   /* 设置线程池 */
@@ -1410,7 +1410,7 @@ void eol_window::on_entry_produce_mode_pushButton_clicked()
   }
 
   bool ret = false;
-  if(ui->entry_produce_mode_pushButton->text() == "entry produce mode")
+  if(ui->entry_produce_mode_pushButton->text() == "entry mode")
   {
     if(ui->produce_noral_radioButton->isChecked())
     {
@@ -1418,11 +1418,11 @@ void eol_window::on_entry_produce_mode_pushButton_clicked()
     }
     else
     {
-      ret = eol_protocol_obj->eol_master_set_device_mode(eol_protocol::PRODUCE_MODE_CALIBRATION);
+      ret = eol_protocol_obj->eol_master_set_device_mode(eol_protocol::PRODUCE_MODE_DEBUG);
     }
     goto __TASK_STATE_CHANGE;
   }
-  if(ui->entry_produce_mode_pushButton->text() == "exit produce mode")
+  if(ui->entry_produce_mode_pushButton->text() == "exit mode")
   {
     ret = eol_protocol_obj->eol_master_set_device_mode(eol_protocol::NORMAL_MODE_RUN);
     goto __TASK_STATE_CHANGE;
@@ -1452,7 +1452,6 @@ void eol_window::slot_device_mode(const void *pass_data)
   {
     ui->add_list_pushButton->setEnabled(true);
     ui->upload_pushButton->setEnabled(true);
-    ui->reboot_pushButton->setEnabled(true);
     if(csv_list.size() > 0)
     {
       ui->update_pushButton->setEnabled(true);
@@ -1461,22 +1460,31 @@ void eol_window::slot_device_mode(const void *pass_data)
     {
       ui->update_pushButton->setEnabled(false);
     }
+    ui->reboot_pushButton->setEnabled(true);
     ui->eol_device_rw_func_pushButton->setEnabled(true);
-    ui->ant_calibration_func_pushButton->setEnabled(false);
-    ui->rcs_calibration_func_pushButton->setEnabled(false);
-    ui->entry_produce_mode_pushButton->setText(tr("exit produce mode"));
-  }
-
-  /* 生产-校准模式 */
-  else if(ui->produce_calibratio_radioButton->isChecked() && eol_protocol::PRODUCE_MODE_CALIBRATION == mode)
-  {
-    ui->add_list_pushButton->setEnabled(false);
-    ui->upload_pushButton->setEnabled(false);
-    ui->update_pushButton->setEnabled(false);
-    ui->reboot_pushButton->setEnabled(false);
     ui->ant_calibration_func_pushButton->setEnabled(true);
     ui->rcs_calibration_func_pushButton->setEnabled(true);
-    ui->entry_produce_mode_pushButton->setText(tr("exit produce mode"));
+    ui->entry_produce_mode_pushButton->setText(tr("exit mode"));
+  }
+
+  /* 生产-调试模式 */
+  else if(ui->produce_debug_radioButton->isChecked() && eol_protocol::PRODUCE_MODE_DEBUG == mode)
+  {
+    ui->add_list_pushButton->setEnabled(true);
+    ui->upload_pushButton->setEnabled(true);
+    if(csv_list.size() > 0)
+    {
+      ui->update_pushButton->setEnabled(true);
+    }
+    else
+    {
+      ui->update_pushButton->setEnabled(false);
+    }
+    ui->reboot_pushButton->setEnabled(true);
+    ui->eol_device_rw_func_pushButton->setEnabled(true);
+    ui->ant_calibration_func_pushButton->setEnabled(true);
+    ui->rcs_calibration_func_pushButton->setEnabled(true);
+    ui->entry_produce_mode_pushButton->setText(tr("exit mode"));
   }
 
   /* 正常-运行模式 */
@@ -1489,7 +1497,7 @@ void eol_window::slot_device_mode(const void *pass_data)
     ui->eol_device_rw_func_pushButton->setEnabled(false);
     ui->ant_calibration_func_pushButton->setEnabled(false);
     ui->rcs_calibration_func_pushButton->setEnabled(false);
-    ui->entry_produce_mode_pushButton->setText(tr("entry produce mode"));
+    ui->entry_produce_mode_pushButton->setText(tr("entry mode"));
   }
   current_task_complete_state = TASK_COMPLETE;
   /* 显示设备信息 */

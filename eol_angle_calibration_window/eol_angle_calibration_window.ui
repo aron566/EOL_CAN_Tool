@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>eol_angle_calibration_window</class>
+ <widget class="QWidget" name="eol_angle_calibration_window">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>740</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_3">
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="angle_calibration_groupBox">
+     <property name="title">
+      <string>角度校准</string>
+     </property>
+     <widget class="QGroupBox" name="calibration_par_groupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>761</width>
+        <height>273</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>校准参数设置</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>方位组</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_2">
+                <item>
+                 <widget class="QLabel" name="angle_step_set_label">
+                  <property name="text">
+                   <string>转台角度步进</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="angle_start_set_label">
+                  <property name="text">
+                   <string>转台角度起始</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="angle_end_set_label">
+                  <property name="text">
+                   <string>转台角度终止</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="angle_ele_at_set_label">
+                  <property name="text">
+                   <string>@俯仰角度</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                 <widget class="QLineEdit" name="angle_step_set_lineEdit">
+                  <property name="text">
+                   <string>1</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="angle_start_set_lineEdit">
+                  <property name="text">
+                   <string>-80</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="angle_end_set_lineEdit">
+                  <property name="text">
+                   <string>80</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="angle_ele_at_set_lineEdit">
+                  <property name="text">
+                   <string>0</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_3">
+              <item>
+               <widget class="QLabel" name="angle_step_unit_label">
+                <property name="text">
+                 <string>°</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="angle_start_unit_label">
+                <property name="text">
+                 <string>°</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="angle_end_unit_label">
+                <property name="text">
+                 <string>°</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="angle_ele_at_unit_label">
+                <property name="text">
+                 <string>°</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>俯仰组</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_7">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_4">
+                <item>
+                 <widget class="QLabel" name="angle_step_ele_set_label">
+                  <property name="text">
+                   <string>转台角度步进</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="angle_start_ele_set_label">
+                  <property name="text">
+                   <string>转台角度起始</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="angle_end_ele_set_label">
+                  <property name="text">
+                   <string>转台角度终止</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="angle_azi_at_set_label">
+                  <property name="text">
+                   <string>@方位角度</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_5">
+                <item>
+                 <widget class="QLineEdit" name="angle_step_ele_set_lineEdit">
+                  <property name="text">
+                   <string>1</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="angle_start_ele_set_lineEdit">
+                  <property name="text">
+                   <string>-12</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="angle_end_ele_set_lineEdit">
+                  <property name="text">
+                   <string>12</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="angle_azi_at_set_lineEdit">
+                  <property name="text">
+                   <string>0</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_6">
+              <item>
+               <widget class="QLabel" name="angle_step_ele_unit_label">
+                <property name="text">
+                 <string>°</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="angle_start_ele_unit_label">
+                <property name="text">
+                 <string>°</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="angle_end_ele_unit_label">
+                <property name="text">
+                 <string>°</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="angle_azi_at_unit_label">
+                <property name="text">
+                 <string>°</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QPushButton" name="add_config_pushButton">
+           <property name="text">
+            <string>添加配置</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="clear_config_pushButton">
+           <property name="text">
+            <string>清除配置</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="start_pushButton">
+           <property name="text">
+            <string>start</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QTableView" name="result_tableView">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>320</y>
+        <width>761</width>
+        <height>391</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

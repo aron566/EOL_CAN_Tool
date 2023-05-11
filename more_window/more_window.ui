@@ -245,16 +245,10 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QTextBrowser" name="ch1_receive_data_textBrowser"/>
-          </item>
-          <item>
            <widget class="QTextEdit" name="ch1_receive_data_textEdit"/>
           </item>
           <item>
            <widget class="QTextEdit" name="ch2_receive_data_textEdit"/>
-          </item>
-          <item>
-           <widget class="QTextBrowser" name="ch2_receive_data_textBrowser"/>
           </item>
          </layout>
         </item>
