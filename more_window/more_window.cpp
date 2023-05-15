@@ -5,9 +5,10 @@
 #include <QDateTime>
 #include <QWheelEvent>
 
-#define SHOW_MSG_SAVE_NUM_MAX     100//100U                    /**< 最大显示消息数 */
-#define SHOW_MSG_ONE_SCORLL       (4U)                    /**< 上翻每次刷新列表数 */
-#define SAVE_MSG_BUF_MAX          200//(1024U*1024U*10U)       /**< 最大缓存消息数 */
+#define SHOW_MSG_SAVE_NUM_MAX     100U                    /**< 最大显示消息数 */
+#define SHOW_MSG_ONE_SCORLL       (5U)                    /**< 上翻每次刷新列表数 */
+#define SAVE_MSG_BUF_MAX          (1024U*1024U*10U)       /**< 最大缓存消息数 */
+
 more_window::more_window(QString title, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::more_window)
@@ -54,56 +55,51 @@ void more_window::resizeEvent(QResizeEvent *event)
 
 void more_window::wheelEvent(QWheelEvent *event)
 {
-#if 0
-  qDebug() << "wheel event angleDelta" << event->angleDelta().y();
-  qDebug() << "wheel event phase" << event->phase();
-  qDebug() << "wheel event inverted" << event->inverted();
-  qDebug() << "wheel event pixelDelta" << event->pixelDelta().y();
-  qDebug() << "wheel event globalPosition " << event->globalPosition().x() << event->globalPosition().y();
+#if 1
+//  qDebug() << "wheel event angleDelta" << event->angleDelta().y();
+//  qDebug() << "wheel event phase" << event->phase();
+//  qDebug() << "wheel event inverted" << event->inverted();
+//  qDebug() << "wheel event pixelDelta" << event->pixelDelta().y();
+//  qDebug() << "wheel event globalPosition " << event->globalPosition().x() << event->globalPosition().y();
 
   int xp1, yp1, xp2, yp2;
   quint32 *pchx_scroll_cnt = nullptr;
   QList<SHOW_MSG_Typedef_t> *pList = nullptr;
-  QTextEdit *text_edit_widget = ui->ch1_receive_data_textEdit;
-  QPoint A = QWidget::mapToGlobal(text_edit_widget->pos());
+  QTextEdit *text_edit_widget = nullptr;
+  QTextEdit *text_edit_widget_temp = ui->ch1_receive_data_textEdit;
+  QPoint A = QWidget::mapToGlobal(text_edit_widget_temp->pos());
   xp1 = A.x();
   yp1 = A.y();
-  xp2 = text_edit_widget->rect().width() + xp1;
-  yp2 = text_edit_widget->rect().height() + yp1;
+  xp2 = text_edit_widget_temp->rect().width() + xp1;
+  yp2 = text_edit_widget_temp->rect().height() + yp1;
 
   if(event->globalPosition().x() >= (qreal)xp1 && \
      event->globalPosition().x() <= (qreal)xp2 && \
      event->globalPosition().y() >= (qreal)yp1 && \
      event->globalPosition().y() <= (qreal)yp2)
   {
+//    qDebug() << "ch1";
     text_edit_widget = ui->ch1_receive_data_textEdit;
     pchx_scroll_cnt = &ch1_scroll_cnt;
     pList = &ch1_show_msg_list;
   }
-  else
-  {
-    text_edit_widget = nullptr;
-  }
 
-  text_edit_widget = ui->ch2_receive_data_textEdit;
-  A = QWidget::mapToGlobal(text_edit_widget->pos());
+  text_edit_widget_temp = ui->ch2_receive_data_textEdit;
+  A = QWidget::mapToGlobal(text_edit_widget_temp->pos());
   xp1 = A.x();
   yp1 = A.y();
-  xp2 = text_edit_widget->rect().width() + xp1;
-  yp2 = text_edit_widget->rect().height() + yp1;
+  xp2 = text_edit_widget_temp->rect().width() + xp1;
+  yp2 = text_edit_widget_temp->rect().height() + yp1;
 
   if(event->globalPosition().x() >= (qreal)xp1 && \
      event->globalPosition().x() <= (qreal)xp2 && \
      event->globalPosition().y() >= (qreal)yp1 && \
      event->globalPosition().y() <= (qreal)yp2)
   {
+//    qDebug() << "ch2";
     text_edit_widget = ui->ch2_receive_data_textEdit;
     pchx_scroll_cnt = &ch2_scroll_cnt;
     pList = &ch2_show_msg_list;
-  }
-  else
-  {
-    text_edit_widget = nullptr;
   }
 
   if(nullptr == text_edit_widget)
@@ -111,47 +107,56 @@ void more_window::wheelEvent(QWheelEvent *event)
     return;
   }
 
-  quint32 s_index = 0, e_index = 0;
-
-  /* 向下滚动 */
-  if(event->angleDelta().y() < 0)
+  for(quint32 i = 0; i < SHOW_MSG_ONE_SCORLL; i++)
   {
-    /* 是否能下翻 */
-//    quint32 max = *pchx_scroll_cnt;
-//    if(max >= (pList->size() - 1) && max < SHOW_MSG_SAVE_NUM_MAX)
-//    {
-//      return;
-//    }
-//    quint32 remain = pList->size() - max;
-//    remain = remain > SHOW_MSG_ONE_SCORLL ? SHOW_MSG_ONE_SCORLL : remain;
-
-//    s_index = max - SHOW_MSG_SAVE_NUM_MAX + remain;
-//    e_index = s_index + SHOW_MSG_ONE_SCORLL;
-//    *pchx_scroll_cnt = e_index;
-  }
-
-  /* 向上滚动 */
-  if(event->angleDelta().y() > 0)
-  {
-
-  }
-
-  /* 刷新显示 */
-  text_edit_widget->clear();
-
-  for(quint32 i = s_index; i < e_index; i++)
-  {
-    /* 设置颜色 */
-    if(can_driver::CAN_RX_DIRECT == pList->value(i).direct)
+    /* 向下滚动 */
+    if(event->angleDelta().y() < 0)
     {
-      text_edit_widget->setTextColor(QColor("white"));
+      /* 是否能下翻 */
+      if((*pchx_scroll_cnt) + 1 > (quint32)pList->size())
+      {
+//        qDebug() << " down " << (*pchx_scroll_cnt) << pList->size();
+        return;
+      }
+      *pchx_scroll_cnt = (*pchx_scroll_cnt) + 1;
+      quint32 bottom_index = (*pchx_scroll_cnt) - 1;
+
+      /* 刷新当前消息到尾部 */
+      update_show_msg(text_edit_widget, pList, bottom_index, true);
     }
-    else
+
+    /* 向上滚动 */
+    if(event->angleDelta().y() > 0)
     {
-      text_edit_widget->setTextColor(QColor("red"));
+      quint32 top_index = 0;
+      /* 找到顶部索引 */
+      if((*pchx_scroll_cnt) >= SHOW_MSG_SAVE_NUM_MAX)
+      {
+        top_index = (*pchx_scroll_cnt) - SHOW_MSG_SAVE_NUM_MAX;
+      }
+      else
+      {
+//        qDebug() << " up " << (*pchx_scroll_cnt) << SHOW_MSG_SAVE_NUM_MAX;
+        return;
+      }
+
+      /* 是否能上翻 */
+      if(top_index > 0)
+      {
+        top_index--;
+        *pchx_scroll_cnt = (*pchx_scroll_cnt) - 1;
+      }
+      else
+      {
+//        qDebug() << " up top_index" << top_index;
+        return;
+      }
+
+      /* 刷新当前消息到尾部 */
+      update_show_msg(text_edit_widget, pList, top_index, false);
     }
-    text_edit_widget->append(pList->value(i).str);
   }
+
 #endif
   QWidget::wheelEvent(event);
 }
@@ -196,10 +201,10 @@ bool more_window::ch2_show_msg_is_empty()
 quint32 more_window::get_show_index(quint32 current_show_index, quint32 totaol_size)
 {
   quint32 index = 0;
-  quint32 remain = totaol_size - current_show_index  - 1;
+  quint32 remain = totaol_size - current_show_index;
   if(SAVE_MSG_BUF_MAX <= current_show_index)
   {
-    index = SAVE_MSG_BUF_MAX - remain - 1;
+    index = SAVE_MSG_BUF_MAX - remain;
     return index;
   }
   index = current_show_index % SAVE_MSG_BUF_MAX;
@@ -218,7 +223,7 @@ void more_window::show_txt()
     quint32 show_index = get_show_index(ch1_show_msg_index, ch1_add_msg_index);
     show_messagex = ch1_show_msg_list.value(show_index);
     ch1_show_msg_index++;
-    ch1_scroll_cnt = ch1_show_msg_index;
+    ch1_scroll_cnt = show_index + 1;
 
     if(show_messagex.channel_num == 0)
     {
@@ -265,7 +270,7 @@ void more_window::show_txt()
     quint32 show_index = get_show_index(ch2_show_msg_index, ch2_add_msg_index);
     show_messagex = ch2_show_msg_list.value(show_index);
     ch2_show_msg_index++;
-    ch2_scroll_cnt = ch2_show_msg_index;
+    ch2_scroll_cnt = show_index + 1;
 
 
     if(show_messagex.channel_num == 0)
@@ -308,6 +313,46 @@ void more_window::show_txt()
     }
   }
 }
+
+void more_window::update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag)
+{
+  SHOW_MSG_Typedef_t show_messagex = pList->value(show_index);
+
+  /* 设置颜色 */
+  if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
+  {
+    text_edit_widget->setTextColor(QColor("white"));
+  }
+  else
+  {
+    text_edit_widget->setTextColor(QColor("red"));
+  }
+
+  /* 下翻 */
+  if(downward_flag)
+  {
+    text_edit_widget->append(show_messagex.str);
+    text_edit_widget->moveCursor(QTextCursor::Start);
+    text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+    text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+//    qDebug() << "sel1 :" << text_edit_widget->textCursor().selectedText();
+    text_edit_widget->textCursor().removeSelectedText();
+    text_edit_widget->moveCursor(QTextCursor::End);
+  }
+  /* 上翻 */
+  else
+  {
+    text_edit_widget->moveCursor(QTextCursor::Start);
+    text_edit_widget->insertPlainText(show_messagex.str + '\n');
+    text_edit_widget->moveCursor(QTextCursor::End);
+    text_edit_widget->moveCursor(QTextCursor::PreviousBlock, QTextCursor::KeepAnchor);
+    text_edit_widget->moveCursor(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+//    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
+    text_edit_widget->textCursor().removeSelectedText();
+    text_edit_widget->moveCursor(QTextCursor::Start);
+  }
+}
+
 void more_window::slot_show_message(const QString &message, quint32 channel_num, \
   quint8 direct, const quint8 *data, quint32 data_len)
 {
@@ -360,6 +405,7 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
     }
     ch1_show_msg_list.append(msg);
     ch1_add_msg_index++;
+
     goto __show_msg;
   }
 
@@ -429,6 +475,7 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
     }
     ch1_show_msg_list.append(msg);
     ch1_add_msg_index++;
+
     goto __show_msg;
   }
 
@@ -608,4 +655,3 @@ void more_window::on_mask_en_checkBox_clicked(bool checked)
     can_driver_obj->set_msg_canid_mask(0xFFFF, checked);
   }
 }
-

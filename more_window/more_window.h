@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QTimer>
+#include <QTextEdit>
+
 #include "eol_window.h"
 #include "can_driver.h"
 
@@ -71,6 +73,7 @@ protected:
      * @return 显示索引
      */
     quint32 get_show_index(quint32 current_show_index, quint32 totaol_size);
+
 signals:
     void signal_more_window_closed();
 
@@ -93,8 +96,10 @@ private slots:
 
     void on_period_lineEdit_textChanged(const QString &arg1);
 
+
 private slots:
     void slot_timeout();
+
     void on_display_mask_lineEdit_textChanged(const QString &arg1);
 
     void on_mask_en_checkBox_clicked(bool checked);
@@ -124,6 +129,18 @@ private:
     QList<SHOW_MSG_Typedef_t>ch1_show_msg_list;
     QList<SHOW_MSG_Typedef_t>ch2_show_msg_list;
 
+private:
+    /**
+     * @brief update_show_msg 显示指定索引消息
+     * @param text_edit_widget 控件
+     * @param pList 消息链表
+     * @param show_index 索引
+     * @param downward_flag true 下翻标识 false 上翻标识
+     */
+    void update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag);
+
+
+private:
     /* 已显示消息 */
     quint32 ch1_show_msg_index = 0;
     quint32 ch2_show_msg_index = 0;

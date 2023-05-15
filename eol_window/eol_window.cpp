@@ -309,7 +309,8 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
     case eol_protocol::SV_ELEVATION_AZI_N45_TABLE:
     case eol_protocol::SV_ELEVATION_AZI_P45_TABLE:
     {
-      /* table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, ele angle*10, tx_order, profile_id, check sum*/
+      /* table class, version, data type, data size, data crc, points, channel num,
+         start angle*10, end angle*10, ele angle*10, tx_order, profile_id, check sum */
       qDebug() << num_str_list.mid(0, 13);
       if(num_str_list.size() < 13)
       {
@@ -330,7 +331,7 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       }
 
       /* 私有头 */
-      table_info.Points = num_str_list.value(5).toShort();
+      table_info.Points = num_str_list.value(5).toUShort();
       table_info.Channel_Num = (quint8)num_str_list.value(6).toUShort();
       table_info.Start_Angle = (float)num_str_list.value(7).toShort() / 10;
       table_info.End_Angle = (float)num_str_list.value(8).toShort() / 10;
@@ -393,7 +394,7 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       }
 
       /* 私有头 */
-      ant_table_info.Points = num_str_list.value(5).toShort();
+      ant_table_info.Points = num_str_list.value(5).toUShort();
       ant_table_info.Channel_Num = (quint8)num_str_list.value(6).toUShort();
       quint32 tx_order = num_str_list.value(7).toUInt();
       table_info.Tx2Clibration_Channel[0] = (quint8)tx_order;
@@ -441,11 +442,11 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       }
 
       /* 私有头 */
-      pattern_table_info.Points = num_str_list.value(5).toShort();
+      pattern_table_info.Points = num_str_list.value(5).toUShort();
       pattern_table_info.Channel_Num = (quint8)num_str_list.value(6).toUShort();
       pattern_table_info.Start_Angle = (float)num_str_list.value(7).toShort() / 10;
       pattern_table_info.End_Angle = (float)num_str_list.value(8).toShort() / 10;
-      pattern_table_info.Unit = (quint8)num_str_list.value(9).toShort();
+      pattern_table_info.Unit = (quint8)num_str_list.value(9).toUShort();
       quint32 tx_order = num_str_list.value(10).toUInt();
       table_info.Tx2Clibration_Channel[0] = (quint8)tx_order;
       table_info.Tx2Clibration_Channel[1] = (quint8)(tx_order >> 8);
