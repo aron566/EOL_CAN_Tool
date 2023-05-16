@@ -225,21 +225,10 @@ void more_window::show_txt()
     ch1_show_msg_index++;
     ch1_scroll_cnt = show_index + 1;
 
-    if(show_messagex.channel_num == 0)
+    text_edit_widget = ui->ch1_receive_data_textEdit;
+    if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_index)
     {
-      text_edit_widget = ui->ch1_receive_data_textEdit;
-      if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_index)
-      {
-        remove_line_flag = true;
-      }
-    }
-    else
-    {
-      text_edit_widget = ui->ch2_receive_data_textEdit;
-      if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_index)
-      {
-        remove_line_flag = true;
-      }
+      remove_line_flag = true;
     }
 
     /* 设置颜色 */
@@ -272,22 +261,10 @@ void more_window::show_txt()
     ch2_show_msg_index++;
     ch2_scroll_cnt = show_index + 1;
 
-
-    if(show_messagex.channel_num == 0)
+    text_edit_widget = ui->ch2_receive_data_textEdit;
+    if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_index)
     {
-      text_edit_widget = ui->ch1_receive_data_textEdit;
-      if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_index)
-      {
-        remove_line_flag = true;
-      }
-    }
-    else
-    {
-      text_edit_widget = ui->ch2_receive_data_textEdit;
-      if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_index)
-      {
-        remove_line_flag = true;
-      }
+      remove_line_flag = true;
     }
 
     /* 设置颜色 */
