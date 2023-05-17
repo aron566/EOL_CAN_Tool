@@ -221,7 +221,7 @@ public:
     uint16_t Points;                      /**< 点数 */
     uint8_t Channel_Num;                  /**< 通道数量 */
     float Azi_Ele_Angle;                  /**< 水平导向矢量@俯仰角，俯仰导向矢量@水平角 */
-    uint8_t Tx2Clibration_Channel[4];     /**< TX在校准时的RX通道 */
+    uint8_t Clibration_Tx_Order[4];       /**< TX在校准时的发射配置 */
     uint8_t Profile_ID;                   /**< 当前配置属于哪个校准Profile */
   }DOA_TABLE_HEADER_Typedef_t;
 
@@ -231,7 +231,7 @@ public:
     TABLE_HEADER_Typedef_t Common_Info;   /**< 公共头部信息 */
     uint16_t Points;                      /**< 点数 */
     uint8_t Channel_Num;                  /**< 通道数量 */
-    uint8_t Tx2Clibration_Channel[4];     /**< TX在校准时的RX通道 */
+    uint8_t Clibration_Tx_Order[4];       /**< TX在校准时的发射配置 */
     uint8_t Profile_ID;                   /**< 当前配置属于哪个校准Profile */
   }ANT_TABLE_HEADER_Typedef_t;
 
@@ -244,7 +244,7 @@ public:
     uint16_t Points;                      /**< 点数 */
     uint8_t Channel_Num;                  /**< 通道数量 */
     uint8_t Unit;                         /**< 单位 @ref UNIT_Typedef_t */
-    uint8_t Tx2Clibration_Channel[4];     /**< TX在校准时的RX通道 */
+    uint8_t Clibration_Tx_Order[4];       /**< TX在校准时的发射配置 */
     uint8_t Profile_ID;                   /**< 当前配置属于哪个校准Profile */
   }SYS_PATTERN_TABLE_HEADER_Typedef_t;
 

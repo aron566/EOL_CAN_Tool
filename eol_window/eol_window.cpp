@@ -337,10 +337,10 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       table_info.End_Angle = (float)num_str_list.value(8).toShort() / 10;
       table_info.Azi_Ele_Angle = (float)num_str_list.value(9).toShort() / 10;
       quint32 tx_order = num_str_list.value(10).toUInt();
-      table_info.Tx2Clibration_Channel[0] = (quint8)tx_order;
-      table_info.Tx2Clibration_Channel[1] = (quint8)(tx_order >> 8);
-      table_info.Tx2Clibration_Channel[2] = (quint8)(tx_order >> 16);
-      table_info.Tx2Clibration_Channel[3] = (quint8)(tx_order >> 24);
+      table_info.Clibration_Tx_Order[0] = (quint8)tx_order;
+      table_info.Clibration_Tx_Order[1] = (quint8)(tx_order >> 8);
+      table_info.Clibration_Tx_Order[2] = (quint8)(tx_order >> 16);
+      table_info.Clibration_Tx_Order[3] = (quint8)(tx_order >> 24);
       profile_id = table_info.Profile_ID = (quint8)num_str_list.value(11).toUShort();
 
       /* 私有头大小 */
@@ -349,7 +349,7 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
           sizeof(table_info.Channel_Num) + \
           sizeof(table_info.Points) + \
           sizeof(table_info.Azi_Ele_Angle) + \
-          sizeof(table_info.Tx2Clibration_Channel) + \
+          sizeof(table_info.Clibration_Tx_Order) + \
           sizeof(table_info.Profile_ID);
       quint32 index = 0;
       memcpy(common_table_info.private_header + index, &table_info.Start_Angle, sizeof(table_info.Start_Angle));
@@ -362,8 +362,8 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       index += sizeof(table_info.Channel_Num);
       memcpy(common_table_info.private_header + index, &table_info.Azi_Ele_Angle, sizeof(table_info.Azi_Ele_Angle));
       index += sizeof(table_info.Azi_Ele_Angle);
-      memcpy(common_table_info.private_header + index, &table_info.Tx2Clibration_Channel, sizeof(table_info.Tx2Clibration_Channel));
-      index += sizeof(table_info.Tx2Clibration_Channel);
+      memcpy(common_table_info.private_header + index, &table_info.Clibration_Tx_Order, sizeof(table_info.Clibration_Tx_Order));
+      index += sizeof(table_info.Clibration_Tx_Order);
       memcpy(common_table_info.private_header + index, &table_info.Profile_ID, sizeof(table_info.Profile_ID));
 //      index += sizeof(table_info.Profile_ID);
       break;
@@ -397,10 +397,10 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       ant_table_info.Points = num_str_list.value(5).toUShort();
       ant_table_info.Channel_Num = (quint8)num_str_list.value(6).toUShort();
       quint32 tx_order = num_str_list.value(7).toUInt();
-      table_info.Tx2Clibration_Channel[0] = (quint8)tx_order;
-      table_info.Tx2Clibration_Channel[1] = (quint8)(tx_order >> 8);
-      table_info.Tx2Clibration_Channel[2] = (quint8)(tx_order >> 16);
-      table_info.Tx2Clibration_Channel[3] = (quint8)(tx_order >> 24);
+      table_info.Clibration_Tx_Order[0] = (quint8)tx_order;
+      table_info.Clibration_Tx_Order[1] = (quint8)(tx_order >> 8);
+      table_info.Clibration_Tx_Order[2] = (quint8)(tx_order >> 16);
+      table_info.Clibration_Tx_Order[3] = (quint8)(tx_order >> 24);
       profile_id = table_info.Profile_ID = (quint8)num_str_list.value(8).toUShort();
 
       /* 私有头大小 */
@@ -411,8 +411,8 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       index += sizeof(ant_table_info.Points);
       memcpy(common_table_info.private_header + index, &ant_table_info.Channel_Num, sizeof(ant_table_info.Channel_Num));
       index += sizeof(ant_table_info.Channel_Num);
-      memcpy(common_table_info.private_header + index, &ant_table_info.Tx2Clibration_Channel, sizeof(ant_table_info.Tx2Clibration_Channel));
-      index += sizeof(ant_table_info.Tx2Clibration_Channel);
+      memcpy(common_table_info.private_header + index, &ant_table_info.Clibration_Tx_Order, sizeof(ant_table_info.Clibration_Tx_Order));
+      index += sizeof(ant_table_info.Clibration_Tx_Order);
       memcpy(common_table_info.private_header + index, &ant_table_info.Profile_ID, sizeof(ant_table_info.Profile_ID));
 //      index += sizeof(ant_table_info.Profile_ID);
       break;
@@ -448,10 +448,10 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       pattern_table_info.End_Angle = (float)num_str_list.value(8).toShort() / 10;
       pattern_table_info.Unit = (quint8)num_str_list.value(9).toUShort();
       quint32 tx_order = num_str_list.value(10).toUInt();
-      table_info.Tx2Clibration_Channel[0] = (quint8)tx_order;
-      table_info.Tx2Clibration_Channel[1] = (quint8)(tx_order >> 8);
-      table_info.Tx2Clibration_Channel[2] = (quint8)(tx_order >> 16);
-      table_info.Tx2Clibration_Channel[3] = (quint8)(tx_order >> 24);
+      table_info.Clibration_Tx_Order[0] = (quint8)tx_order;
+      table_info.Clibration_Tx_Order[1] = (quint8)(tx_order >> 8);
+      table_info.Clibration_Tx_Order[2] = (quint8)(tx_order >> 16);
+      table_info.Clibration_Tx_Order[3] = (quint8)(tx_order >> 24);
       profile_id = table_info.Profile_ID = (quint8)num_str_list.value(11).toUShort();
 
       /* 私有头大小 */
@@ -460,7 +460,7 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
           sizeof(pattern_table_info.Channel_Num) + \
           sizeof(pattern_table_info.Points) + \
           sizeof(pattern_table_info.Unit) + \
-          sizeof(pattern_table_info.Tx2Clibration_Channel) + \
+          sizeof(pattern_table_info.Clibration_Tx_Order) + \
           sizeof(pattern_table_info.Profile_ID);
       quint32 index = 0;
       memcpy(common_table_info.private_header + index, &pattern_table_info.Start_Angle, sizeof(pattern_table_info.Start_Angle));
@@ -473,8 +473,8 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       index += sizeof(pattern_table_info.Channel_Num);
       memcpy(common_table_info.private_header + index, &pattern_table_info.Unit, sizeof(pattern_table_info.Unit));
       index += sizeof(pattern_table_info.Unit);
-      memcpy(common_table_info.private_header + index, &pattern_table_info.Tx2Clibration_Channel, sizeof(pattern_table_info.Tx2Clibration_Channel));
-      index += sizeof(pattern_table_info.Tx2Clibration_Channel);
+      memcpy(common_table_info.private_header + index, &pattern_table_info.Clibration_Tx_Order, sizeof(pattern_table_info.Clibration_Tx_Order));
+      index += sizeof(pattern_table_info.Clibration_Tx_Order);
       memcpy(common_table_info.private_header + index, &pattern_table_info.Profile_ID, sizeof(pattern_table_info.Profile_ID));
 //      index += sizeof(pattern_table_info.Profile_ID);
       break;
