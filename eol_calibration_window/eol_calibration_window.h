@@ -23,6 +23,25 @@ public:
    * @param obj 协议栈对象
    */
   void set_eol_protocol_obj(eol_protocol *obj = nullptr);
+
+public slots:
+  /**
+   * @brief 添加配置文件信息到链表
+   * @param info
+   */
+  void slot_profile_info_update(eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t &info)
+  {
+    calibration_profile_info_list.append(info);
+  }
+
+  /**
+   * @brief 清除配置信息
+   */
+  void slot_clear_profile_info()
+  {
+    calibration_profile_info_list.clear();
+  }
+
 protected:
     /**
      * @brief closeEvent
@@ -110,6 +129,9 @@ private:
   quint32 time_s = 0;
   quint32 time_ms = 0;
   double fps = 0;
+
+  /* 校准配置信息 */
+  QList<eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t>calibration_profile_info_list;
 };
 
 #endif // EOL_CALIBRATION_WINDOW_H

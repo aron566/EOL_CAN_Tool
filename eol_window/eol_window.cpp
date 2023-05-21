@@ -47,6 +47,7 @@ eol_window::eol_window(QString title, QWidget *parent) :
   eol_sub_window_init(tr("EOL CAN Tool - Device Info RW"));
 
   /* 天线校准初始化-2DFFT */
+  eol_2dfft_calibration_window_init(tr("EOL CAN Tool - 2DFFT Calibration"));
 
   /* rcs校准初始化-目标列表 */
   eol_rcs_calibration_window_init(tr("EOL CAN Tool - RCS Calibration"));
@@ -77,6 +78,10 @@ eol_window::~eol_window()
 
   /* 删除子窗口 */
   delete eol_sub_window_obj;
+
+  delete eol_calibration_window_obj;
+
+  delete eol_2dfft_calibration_window_obj;
 
   delete ui;
   qDebug() << "eol window is end";
@@ -111,8 +116,26 @@ void eol_window::eol_sub_window_init(QString title)
 void eol_window::eol_rcs_calibration_window_init(QString title)
 {
   eol_calibration_window_obj = new eol_calibration_window(title);
-  connect(eol_calibration_window_obj, &eol_calibration_window::signal_window_closed, this, &eol_window::slot_show_this_window);
+  connect(eol_calibration_window_obj, &eol_calibration_window::signal_window_closed, this, &eol_window::slot_show_this_window); 
+
+  /* 校准配置更新 */
+  connect(this, &eol_window::signal_clear_profile_info, eol_calibration_window_obj, &eol_calibration_window::slot_clear_profile_info);
+  connect(this, &eol_window::signal_profile_info_update, eol_calibration_window_obj, &eol_calibration_window::slot_profile_info_update);
 }
+
+/**
+ * @brief 2dfft校准子窗口
+ */
+void eol_window::eol_2dfft_calibration_window_init(QString title)
+{
+  eol_2dfft_calibration_window_obj = new eol_angle_calibration_window(title);
+  connect(eol_2dfft_calibration_window_obj, &eol_angle_calibration_window::signal_window_closed, this, &eol_window::slot_show_this_window);
+
+  /* 校准配置更新 */
+  connect(this, &eol_window::signal_clear_profile_info, eol_2dfft_calibration_window_obj, &eol_angle_calibration_window::slot_clear_profile_info);
+  connect(this, &eol_window::signal_profile_info_update, eol_2dfft_calibration_window_obj, &eol_angle_calibration_window::slot_profile_info_update);
+}
+
 
 void eol_window::set_can_driver_obj(can_driver *can_driver_obj)
 {
@@ -160,6 +183,9 @@ void eol_window::eol_protocol_init(can_driver *can_driver_obj)
 
   /* 设置eol协议栈 */
   eol_calibration_window_obj->set_eol_protocol_obj(eol_protocol_obj);
+
+  /* 设置eol协议栈 */
+  eol_2dfft_calibration_window_obj->set_eol_protocol_obj(eol_protocol_obj);
 }
 
 void eol_window::timer_init()
@@ -1502,6 +1528,7 @@ void eol_window::slot_device_mode(const void *pass_data)
   }
   current_task_complete_state = TASK_COMPLETE;
   /* 显示设备信息 */
+  emit signal_clear_profile_info();
   QString msg;
 
   msg += QString("<font size='10' color='green'><div align='legt'>profile num:</div> <div align='right'>%1</div> </font>\r\n").arg(data_ptr[1]);
@@ -1510,6 +1537,10 @@ void eol_window::slot_device_mode(const void *pass_data)
   {
     msg += QString("<font size='10' color='green'><div align='legt'>profile id:</div> <div align='right'>%1</div> </font>\r\n").arg(data_ptr[2 + 2 * i]);
     msg += QString("<font size='10' color='green'><div align='legt'>channel num:</div> <div align='right'>%1</div> </font>\r\n").arg(data_ptr[2 + 2 * i + 1]);
+    eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t info;
+    info.profile_id = data_ptr[2 + 2 * i];
+    info.channel_num = data_ptr[2 + 2 * i + 1];
+    emit signal_profile_info_update(info);
   }
   QMessageBox message(QMessageBox::Information, tr("device info"), msg, \
                       QMessageBox::Yes, nullptr);
@@ -1610,7 +1641,7 @@ void eol_window::slot_eol_protol_is_start()
 
 void eol_window::on_ant_calibration_func_pushButton_clicked()
 {
-
+  eol_2dfft_calibration_window_obj->show();
 }
 
 

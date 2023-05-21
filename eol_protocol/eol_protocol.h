@@ -106,6 +106,12 @@ public:
     PRODUCE_MODE_DEBUG = 2              /**< 雷达一直发送目标的2D-FFT数据给上位机 */
   }DEVICE_MODE_Typedef_t;
 
+  /* 校准配置信息 */
+  typedef struct
+  {
+    quint8 profile_id;                  /**< 配置ID */
+    quint8 channel_num;                 /**< 通道数 */
+  }CALIBRATION_PROFILE_INFO_Typedef_t;
 
   /* 操作返回值 */
   typedef enum

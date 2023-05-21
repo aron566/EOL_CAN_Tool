@@ -13,34 +13,26 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3">
-   <item row="0" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout_10">
+   <item>
     <widget class="QGroupBox" name="angle_calibration_groupBox">
      <property name="title">
       <string>角度校准</string>
      </property>
-     <widget class="QGroupBox" name="calibration_par_groupBox">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>30</y>
-        <width>761</width>
-        <height>273</height>
-       </rect>
-      </property>
-      <property name="title">
-       <string>校准参数设置</string>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>方位组</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <item row="0" column="0">
+       <widget class="QGroupBox" name="calibration_par_groupBox">
+        <property name="title">
+         <string>校准参数设置</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="1">
+          <widget class="QGroupBox" name="groupBox">
+           <property name="title">
+            <string>方位组</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="0" column="0">
              <layout class="QHBoxLayout" name="horizontalLayout">
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -106,114 +98,33 @@
                 </item>
                </layout>
               </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_3">
               <item>
-               <widget class="QLabel" name="angle_step_unit_label">
-                <property name="text">
-                 <string>°</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="angle_start_unit_label">
-                <property name="text">
-                 <string>°</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="angle_end_unit_label">
-                <property name="text">
-                 <string>°</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="angle_ele_at_unit_label">
-                <property name="text">
-                 <string>°</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QGroupBox" name="groupBox_2">
-         <property name="title">
-          <string>俯仰组</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout">
-          <item row="0" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_4">
+               <layout class="QVBoxLayout" name="verticalLayout_8">
                 <item>
-                 <widget class="QLabel" name="angle_step_ele_set_label">
+                 <widget class="QLabel" name="angle_step_unit_label">
                   <property name="text">
-                   <string>转台角度步进</string>
+                   <string>°</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="angle_start_ele_set_label">
+                 <widget class="QLabel" name="angle_start_unit_label">
                   <property name="text">
-                   <string>转台角度起始</string>
+                   <string>°</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="angle_end_ele_set_label">
+                 <widget class="QLabel" name="angle_end_unit_label">
                   <property name="text">
-                   <string>转台角度终止</string>
+                   <string>°</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="angle_azi_at_set_label">
+                 <widget class="QLabel" name="angle_ele_at_unit_label">
                   <property name="text">
-                   <string>@方位角度</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_5">
-                <item>
-                 <widget class="QLineEdit" name="angle_step_ele_set_lineEdit">
-                  <property name="text">
-                   <string>1</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="angle_start_ele_set_lineEdit">
-                  <property name="text">
-                   <string>-12</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="angle_end_ele_set_lineEdit">
-                  <property name="text">
-                   <string>12</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="angle_azi_at_set_lineEdit">
-                  <property name="text">
-                   <string>0</string>
+                   <string>°</string>
                   </property>
                  </widget>
                 </item>
@@ -221,80 +132,349 @@
               </item>
              </layout>
             </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_6">
+           </layout>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="groupBox_3">
+           <property name="title">
+            <string>RTS</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="0">
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
               <item>
-               <widget class="QLabel" name="angle_step_ele_unit_label">
-                <property name="text">
-                 <string>°</string>
-                </property>
-               </widget>
+               <layout class="QHBoxLayout" name="horizontalLayout_2">
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_7">
+                  <item>
+                   <widget class="QLabel" name="azi_rts_range_label">
+                    <property name="text">
+                     <string>RTS距离</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="rts_velocity_label">
+                    <property name="text">
+                     <string>RTS速度</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="rts_rcs_label">
+                    <property name="text">
+                     <string>RTSrcs</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="rts_frequency_label">
+                    <property name="text">
+                     <string>RTSsfq</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="rts_bandwidth_label">
+                    <property name="text">
+                     <string>RTSbw</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_3">
+                  <item>
+                   <widget class="QLineEdit" name="azi_rts_rang_lineEdit">
+                    <property name="text">
+                     <string>20</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="rts_velocity_lineEdit">
+                    <property name="text">
+                     <string>0</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="rts_rcs_lineEdit">
+                    <property name="text">
+                     <string>20</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="rts_start_frequency_lineEdit">
+                    <property name="text">
+                     <string>76.05</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="rts_bandwidth_lineEdit">
+                    <property name="text">
+                     <string>686.6455</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QLabel" name="angle_start_ele_unit_label">
-                <property name="text">
-                 <string>°</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="angle_end_ele_unit_label">
-                <property name="text">
-                 <string>°</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="angle_azi_at_unit_label">
-                <property name="text">
-                 <string>°</string>
-                </property>
-               </widget>
+               <layout class="QVBoxLayout" name="verticalLayout_9">
+                <item>
+                 <widget class="QLabel" name="rts_range_unit_label">
+                  <property name="text">
+                   <string>m</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="rts_velocity_unit_label">
+                  <property name="text">
+                   <string>m/s</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="rts_rcs_unit_label">
+                  <property name="text">
+                   <string>dBsm</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="rts_frequency_unit_label">
+                  <property name="text">
+                   <string>GHz</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="rts_bandwidth_unit_label">
+                  <property name="text">
+                   <string>MHz</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>
            </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout_8">
-         <item>
-          <widget class="QPushButton" name="add_config_pushButton">
-           <property name="text">
-            <string>添加配置</string>
-           </property>
           </widget>
          </item>
-         <item>
-          <widget class="QPushButton" name="clear_config_pushButton">
-           <property name="text">
-            <string>清除配置</string>
-           </property>
-          </widget>
+         <item row="1" column="0" colspan="4">
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <item>
+            <widget class="QPushButton" name="add_config_pushButton">
+             <property name="text">
+              <string>添加配置</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="clear_config_pushButton">
+             <property name="text">
+              <string>清除配置</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="start_pushButton">
+             <property name="text">
+              <string>start</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="auto_export_csv_checkBox">
+             <property name="text">
+              <string>自动导出csv</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
-         <item>
-          <widget class="QPushButton" name="start_pushButton">
-           <property name="text">
-            <string>start</string>
+         <item row="0" column="2">
+          <widget class="QGroupBox" name="groupBox_2">
+           <property name="title">
+            <string>俯仰组</string>
            </property>
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="0" column="0">
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_7">
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_4">
+                  <item>
+                   <widget class="QLabel" name="angle_step_ele_set_label">
+                    <property name="text">
+                     <string>转台角度步进</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="angle_start_ele_set_label">
+                    <property name="text">
+                     <string>转台角度起始</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="angle_end_ele_set_label">
+                    <property name="text">
+                     <string>转台角度终止</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="angle_azi_at_set_label">
+                    <property name="text">
+                     <string>@方位角度</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_5">
+                  <item>
+                   <widget class="QLineEdit" name="angle_step_ele_set_lineEdit">
+                    <property name="text">
+                     <string>1</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="angle_start_ele_set_lineEdit">
+                    <property name="text">
+                     <string>-12</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="angle_end_ele_set_lineEdit">
+                    <property name="text">
+                     <string>12</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="angle_azi_at_set_lineEdit">
+                    <property name="text">
+                     <string>0</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_6">
+                <item>
+                 <widget class="QLabel" name="angle_step_ele_unit_label">
+                  <property name="text">
+                   <string>°</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="angle_start_ele_unit_label">
+                  <property name="text">
+                   <string>°</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="angle_end_ele_unit_label">
+                  <property name="text">
+                   <string>°</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="angle_azi_at_unit_label">
+                  <property name="text">
+                   <string>°</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QTableView" name="result_tableView">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>320</y>
-        <width>761</width>
-        <height>391</height>
-       </rect>
-      </property>
-     </widget>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QTableWidget" name="tableWidget">
+        <column>
+         <property name="text">
+          <string>维度</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>TX配置</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>配置ID列表</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>配置ID下通道数</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>辅助角度</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>RTS距离m</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>RTS速度m/s</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>角度</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>获取2DFFT是否成功</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>各配置下所有通道2DFFT数据</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>

@@ -12,6 +12,7 @@
 #include <eol_protocol.h>
 #include "eol_sub_window.h"
 #include "eol_calibration_window.h"
+#include "eol_angle_calibration_window/eol_angle_calibration_window.h"
 
 namespace Ui {
 class eol_window;
@@ -176,6 +177,7 @@ private:
   eol_protocol *eol_protocol_obj = nullptr;
   eol_sub_window *eol_sub_window_obj = nullptr;
   eol_calibration_window *eol_calibration_window_obj = nullptr;
+  eol_angle_calibration_window *eol_2dfft_calibration_window_obj = nullptr;
 
   bool thread_run_state = false;
 
@@ -231,6 +233,12 @@ private:
    * @param title 窗口标题
    */
   void eol_rcs_calibration_window_init(QString title);
+
+  /**
+   * @brief 2dfft校准窗口初始化
+   * @param title 窗口标题
+   */
+  void eol_2dfft_calibration_window_init(QString title);
 
   /**
    * @brief eol协议栈初始化
@@ -292,6 +300,17 @@ signals:
    * @brief 更新列表
    */
   void signal_update_show_table_list();
+
+  /**
+   * @brief 更新校准配置信息
+   * @param info 信息
+   */
+  void signal_profile_info_update(eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t &info);
+
+  /**
+   * @brief 清除配置信息
+   */
+  void signal_clear_profile_info();
 private slots:
   void slot_show_this_window();
   void slot_timeout();

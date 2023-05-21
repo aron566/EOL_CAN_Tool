@@ -3,8 +3,10 @@
 
 #include <QWidget>
 #include <QList>
-#include "eol_protocol.h"
 #include <QTimer>
+#include <QFile>
+#include "eol_protocol.h"
+
 namespace Ui {
 class eol_angle_calibration_window;
 }
@@ -22,6 +24,24 @@ public:
    * @param obj 协议栈对象
    */
   void set_eol_protocol_obj(eol_protocol *obj = nullptr);
+
+public slots:
+  /**
+   * @brief 添加配置文件信息到链表
+   * @param info
+   */
+  void slot_profile_info_update(eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t &info)
+  {
+    calibration_profile_info_list.append(info);
+  }
+
+  /**
+   * @brief 清除配置信息
+   */
+  void slot_clear_profile_info()
+  {
+    calibration_profile_info_list.clear();
+  }
 protected:
     /**
      * @brief closeEvent
@@ -36,6 +56,24 @@ private:
    */
   void timer_init();
 
+  /**
+   * @brief 更新2DFFT数据
+   * @param data 数据
+   * @param size 数据长度
+   */
+  bool update_2dfft_result(const quint8 *data, quint16 size);
+
+  /**
+   * @brief 导出2dfft csv文件
+   */
+  void export_2dfft_csv_file();
+
+  /**
+   * @brief 获取特定配置下的通道数
+   * @param profile_id 配置ID
+   * @return 通道数
+   */
+  quint8 get_profile_channel_num(quint8 profile_id);
 signals:
   /**
    * @brief 窗口关闭信号
@@ -74,6 +112,69 @@ private:
 private:
   QTimer *timer_obj = nullptr;
   eol_protocol *eol_protocol_obj = nullptr;
+
+private:
+  typedef enum
+  {
+    AZI_DIRECTION = 0,  /**< 方位方向 */
+    ELE_DIRECTION,      /**< 俯仰方向 */
+  }DIRECTION_Typedef_t;
+
+  typedef struct
+  {
+    qint32 real;          /**< 实部*1024 */
+    qint32 image;         /**< 虚部*1024 */
+  }COMPLEX_INT32_Typedef_t;
+
+  /* 转台信息 */
+  typedef struct
+  {
+    quint8 profile_id[4]; /**< 使用的配置ID列表 */
+    quint8 channel_num[4];/**< 配置列表下通道数，配置列表下：代表下标不代表profile id号 */
+    quint8 profile_num;   /**< 配置数目 */
+    quint8 direction;     /**< @ref FFT_REQUEST_CONDITION_Typedef_t */
+    float s_angle;        /**< 起始角度 */
+    float e_angle;        /**< 结束角度 */
+    float step_angle;     /**< 步进角度 */
+    float current_angle;  /**< 当前角度 */
+    float azi_ele_angle;  /**< 当前辅助角度 */
+    float rts_range;      /**< 当前rts距离设定m */
+    float rts_velocity;   /**< 当前rts速度设定m/s */
+
+    /* fft结果 */
+    quint32 bit_tx_order[4];                /**< 配置列表下tx发波次序 */
+    COMPLEX_INT32_Typedef_t fft_data[4][16];/**< 配置列表下各通道2dfft数据 */
+  }FFT_REQUEST_CONDITION_Typedef_t;
+
+  QList<FFT_REQUEST_CONDITION_Typedef_t> fft_request_list;
+  /* rts */
+  float rts_range = 0;
+  float rts_velocity = 0;
+  float rts_rcs = 0;
+  float rts_start_frequency = 0;
+  float rts_bandwidth = 0;
+
+  /* 水平转动 */
+  float azi_left_angle_start = 0;
+  float azi_right_angle_end = 0;
+  float azi_direction_ele_angle = 0;
+  float azi_step_angle = 0;
+
+  /* 俯仰转动 */
+  float ele_up_angle_end = 0;
+  float ele_down_angle_start = 0;
+  float ele_direction_azi_angle = 0;
+  float ele_step_angle = 0;
+
+  /* 转台条件位置记录 */
+  qint32 angle_position_index = 0;
+
+  /* 校准配置信息 */
+  QList<eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t>calibration_profile_info_list;
+
+  /* csv文件 */
+  QFile fft_csv_file;
+  QFile fft_csv_file_origin;
 };
 
 #endif // EOL_ANGLE_CALIBRATION_WINDOW_H
