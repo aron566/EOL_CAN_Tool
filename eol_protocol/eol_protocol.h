@@ -164,6 +164,7 @@ public:
     PATTERN_TABLE,                        /**< 方向图表 */
     SV_ELEVATION_AZI_N45_TABLE,           /**< 俯仰导向矢量表@AZI-45deg */
     SV_ELEVATION_AZI_P45_TABLE,           /**< 俯仰导向矢量表@AZI+45deg */
+    BACKGROUND_NOISE_TABLE,               /**< 通道底噪表 */
     UNKNOW_CLASS_TABLE = 0xFF,            /**< 未知表类 */
   }TABLE_CLASS_Typedef_t;
 
@@ -200,6 +201,9 @@ public:
     PROFILE_1_SV_ELEVATION_AZI_P45_TABLE, /**< 俯仰导向矢量表@AZI+45deg */
     PROFILE_2_SV_ELEVATION_AZI_P45_TABLE, /**< 俯仰导向矢量表@AZI+45deg */
     PROFILE_3_SV_ELEVATION_AZI_P45_TABLE, /**< 俯仰导向矢量表@AZI+45deg */
+
+    PROFILE_ALL_BACKGROUND_NOISE_TABLE,   /**< 所有配置下通道底噪表 */
+
     UNKNOW_TABLE = 0xFF,                  /**< 未知表类型 */
   }TABLE_Typedef_t;
 
@@ -240,6 +244,15 @@ public:
     uint8_t Clibration_Tx_Order[4];       /**< TX在校准时的发射配置 */
     uint8_t Profile_ID;                   /**< 当前配置属于哪个校准Profile */
   }ANT_TABLE_HEADER_Typedef_t;
+
+  /* 通道底噪表头信息 */
+  typedef struct
+  {
+    TABLE_HEADER_Typedef_t Common_Info;   /**< 公共头部信息 */
+    uint8_t Channel_Num[4];               /**< Profile下通道数量 */
+    uint8_t Unit;                         /**< 单位 @ref UNIT_Typedef_t */
+    uint8_t Clibration_Tx_Order[4][4];    /**< Profile下TX在校准时的发射配置 */
+  }SYS_NOISE_TABLE_HEADER_Typedef_t;
 
   /* 方向图即角度能量图表头信息 */
   typedef struct

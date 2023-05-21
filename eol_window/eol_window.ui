@@ -227,6 +227,11 @@
               <string>CFG3俯仰导向矢量表@AZI+45deg</string>
              </property>
             </item>
+            <item>
+             <property name="text">
+              <string>CFGALL通道底噪表</string>
+             </property>
+            </item>
            </widget>
           </item>
           <item>

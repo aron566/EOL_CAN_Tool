@@ -290,6 +290,16 @@ bool eol_window::csv_data_analysis(QByteArray &data, quint64 line_num, int table
       break;
     }
 
+    /* 通道底噪 */
+    case eol_protocol::BACKGROUND_NOISE_TABLE:
+    {
+      quint8 unit_byets;
+      quint32 num = utility::str2num(&num_buf[common_table_info.Common_Info.Data_Size], num_str_list, (utility::NUM_TYPE_Typedef_t)data_type, &unit_byets);
+      common_table_info.Common_Info.Data_Size += (num * unit_byets);
+      qDebug() << "BACKGROUND_NOISE_TABLE Data_Size " << common_table_info.Common_Info.Data_Size << "num" << num;
+      break;
+    }
+
     default:
       qDebug() << "unknow table type";
       return false;
@@ -447,7 +457,9 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
     /* 方向表 */
     case eol_protocol::PATTERN_TABLE:
     {
-      /* table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, unit, tx_order, profile_id, check sum */
+      /* table class, version, data type, data size, data crc,
+       * points, channel num, start angle*10, end angle*10, unit,
+       * tx_order, profile_id, check sum */
       qDebug() << num_str_list.mid(0, 13);
       if(num_str_list.size() < 13)
       {
@@ -505,6 +517,76 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
 //      index += sizeof(pattern_table_info.Profile_ID);
       break;
     }
+
+    /* 底噪表 */
+    case eol_protocol::BACKGROUND_NOISE_TABLE:
+    {
+      /* table class, version, data type, data size, data crc,
+       * channel num0, channel num1, channel num2, channel num3,
+       * unit, tx_order0, tx_order1, tx_order2, tx_order3, check sum */
+      qDebug() << num_str_list.mid(0, 15);
+      if(num_str_list.size() < 15)
+      {
+        return eol_protocol::UNKNOW_TABLE;
+      }
+
+      /* 校验表头信息 */
+      qint64 check_sum = 0;
+      quint8 i = 0;
+      for(; i < 12; i++)
+      {
+        check_sum += num_str_list.value(i).toLongLong();
+      }
+      if(check_sum != num_str_list.value(i).toLongLong())
+      {
+        qDebug() << "check_sum err expectance " << check_sum << " ? " << num_str_list.value(i).toLongLong();
+        return eol_protocol::UNKNOW_TABLE;
+      }
+
+      /* 私有头 */
+      noise_table_info.Channel_Num[0] = (quint8)num_str_list.value(5).toUShort();
+      noise_table_info.Channel_Num[1] = (quint8)num_str_list.value(6).toUShort();
+      noise_table_info.Channel_Num[2] = (quint8)num_str_list.value(7).toUShort();
+      noise_table_info.Channel_Num[3] = (quint8)num_str_list.value(8).toUShort();
+      noise_table_info.Unit = (quint8)num_str_list.value(9).toUShort();
+
+      quint32 tx_order = num_str_list.value(10).toUInt();
+      noise_table_info.Clibration_Tx_Order[0][0] = (quint8)tx_order;
+      noise_table_info.Clibration_Tx_Order[0][1] = (quint8)(tx_order >> 8);
+      noise_table_info.Clibration_Tx_Order[0][2] = (quint8)(tx_order >> 16);
+      noise_table_info.Clibration_Tx_Order[0][3] = (quint8)(tx_order >> 24);
+      tx_order = num_str_list.value(11).toUInt();
+      noise_table_info.Clibration_Tx_Order[1][0] = (quint8)tx_order;
+      noise_table_info.Clibration_Tx_Order[1][1] = (quint8)(tx_order >> 8);
+      noise_table_info.Clibration_Tx_Order[1][2] = (quint8)(tx_order >> 16);
+      noise_table_info.Clibration_Tx_Order[1][3] = (quint8)(tx_order >> 24);
+      tx_order = num_str_list.value(12).toUInt();
+      noise_table_info.Clibration_Tx_Order[2][0] = (quint8)tx_order;
+      noise_table_info.Clibration_Tx_Order[2][1] = (quint8)(tx_order >> 8);
+      noise_table_info.Clibration_Tx_Order[2][2] = (quint8)(tx_order >> 16);
+      noise_table_info.Clibration_Tx_Order[2][3] = (quint8)(tx_order >> 24);
+      tx_order = num_str_list.value(13).toUInt();
+      noise_table_info.Clibration_Tx_Order[3][0] = (quint8)tx_order;
+      noise_table_info.Clibration_Tx_Order[3][1] = (quint8)(tx_order >> 8);
+      noise_table_info.Clibration_Tx_Order[3][2] = (quint8)(tx_order >> 16);
+      noise_table_info.Clibration_Tx_Order[3][3] = (quint8)(tx_order >> 24);
+
+      /* 私有头大小 */
+      common_table_info.Common_Info.Header_Size = sizeof(noise_table_info.Channel_Num) + \
+          sizeof(noise_table_info.Channel_Num) + \
+          sizeof(noise_table_info.Unit) + \
+          sizeof(noise_table_info.Clibration_Tx_Order);
+
+      quint32 index = 0;
+      memcpy(common_table_info.private_header + index, &noise_table_info.Channel_Num[0], sizeof(noise_table_info.Channel_Num));
+      index += sizeof(noise_table_info.Channel_Num);
+      memcpy(common_table_info.private_header + index, &noise_table_info.Unit, sizeof(noise_table_info.Unit));
+      index += sizeof(noise_table_info.Unit);
+      memcpy(common_table_info.private_header + index, &noise_table_info.Clibration_Tx_Order[0][0], sizeof(noise_table_info.Clibration_Tx_Order));
+//      index += sizeof(noise_table_info.Clibration_Tx_Order);
+      break;
+    }
+
     default:
       break;
   }
@@ -1193,8 +1275,70 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
                             .arg(pattern_table_info.Unit)
                             .arg(tx_order)
                             .arg(pattern_table_info.Profile_ID);
-        break;
       }
+      break;
+
+      /* 底噪表 */
+      case eol_protocol::BACKGROUND_NOISE_TABLE:
+      {
+        memcpy(&noise_table_info.Channel_Num[0], data + Index, sizeof(noise_table_info.Channel_Num));
+        Index += sizeof(noise_table_info.Channel_Num);
+        memcpy(&noise_table_info.Unit, data + Index, sizeof(noise_table_info.Unit));
+        Index += sizeof(noise_table_info.Unit);
+        quint32 tx_order[4] = {0};
+        memcpy(&tx_order[0], data + Index, sizeof(tx_order));
+        memcpy(&noise_table_info.Clibration_Tx_Order[0][0], data + Index, sizeof(noise_table_info.Clibration_Tx_Order));
+//        Index += sizeof(noise_table_info.Clibration_Tx_Order);
+
+        check_sum += noise_table_info.Channel_Num[0] + \
+                     noise_table_info.Channel_Num[1] + \
+                     noise_table_info.Channel_Num[2] + \
+                     noise_table_info.Channel_Num[3] + \
+                     noise_table_info.Unit + \
+                     tx_order[0] + \
+                     tx_order[1] + \
+                     tx_order[2] + \
+                     tx_order[3];
+        /* table class, version, data type, data size, data crc,
+         * channel num0, channel num1, channel num2, channel num3,
+         * unit, tx_order0, tx_order1, tx_order2, tx_order3, check sum */
+        csv_header = tr("table class, version, data type, data size, data crc, "
+                        "channel num0, channel num1, channel num2, channel num3, "
+                        "unit, tx_order0, tx_order1, tx_order2, tx_order3, check sum\r\n");
+        str += QString::asprintf(",%u,%u,%u,%u,%u,%u,%u,"
+                                 "%u,%u,%d\r\n", \
+                                 noise_table_info.Channel_Num[0], \
+                                 noise_table_info.Channel_Num[1], \
+                                 noise_table_info.Channel_Num[2], \
+                                 noise_table_info.Channel_Num[3], \
+                                 noise_table_info.Unit, \
+                                 tx_order[0], \
+                                 tx_order[1], \
+                                 tx_order[2], \
+                                 tx_order[3], \
+                                 check_sum);
+
+        tips_str += QString("<font size='5' color='black'><div align='legt'> Channel Num0: </div> <div align='right'> %1 </div> </font>\n"
+                            "<font size='5' color='black'><div align='legt'> Channel Num1: </div> <div align='right'> %2 </div> </font>\n"
+                            "<font size='5' color='black'><div align='legt'> Channel Num2: </div> <div align='right'> %3 </div> </font>\n"
+                            "<font size='5' color='black'><div align='legt'> Channel Num3: </div> <div align='right'> %4 </div> </font>\n"
+                            "<font size='5' color='purple'><div align='legt'> Unit: </div> <div align='right'> %5 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Tx Order0: </div> <div align='right'> %6 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Tx Order1: </div> <div align='right'> %7 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Tx Order2: </div> <div align='right'> %8 </div> </font>\n"
+                            "<font size='5' color='blue'><div align='legt'> Tx Order3: </div> <div align='right'> %9 </div> </font>\n")
+                            .arg(noise_table_info.Channel_Num[0])
+                            .arg(noise_table_info.Channel_Num[1])
+                            .arg(noise_table_info.Channel_Num[2])
+                            .arg(noise_table_info.Channel_Num[3])
+                            .arg(noise_table_info.Unit)
+                            .arg(tx_order[0])
+                            .arg(tx_order[1])
+                            .arg(tx_order[2])
+                            .arg(tx_order[3]);
+      }
+      break;
+
       default:
         return;
     }
@@ -1335,6 +1479,23 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
             memcpy(&originVal, data + i, 4);
             origin_data_list.append(QString("%1").arg(originVal));
             i += 4;
+          }
+          break;
+
+        case eol_protocol::INT16_DAYA_TYPE:
+          {
+            switch (common_table_info.Common_Info.Table_Type)
+            {
+              default:
+                {
+                  qint16 Val = 0;
+                  memcpy(&Val, data + i, 2);
+                  data_list.append(QString("%1").arg(Val));
+                  origin_data_list.append(QString("%1").arg(Val));
+                  i += sizeof(Val);
+                }
+                break;
+            }
           }
           break;
 

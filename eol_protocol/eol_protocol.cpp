@@ -1200,6 +1200,9 @@ eol_protocol::TABLE_Typedef_t eol_protocol::get_table_type(quint8 profile_id, TA
     case SV_ELEVATION_AZI_P45_TABLE:
       Table_Type = (quint8)PROFILE_0_SV_ELEVATION_AZI_P45_TABLE;
       break;
+    case BACKGROUND_NOISE_TABLE:
+      Table_Type = (quint8)PROFILE_ALL_BACKGROUND_NOISE_TABLE;
+      return (TABLE_Typedef_t)(Table_Type);
     default:
       return UNKNOW_TABLE;
   }
@@ -1240,6 +1243,8 @@ eol_protocol::TABLE_CLASS_Typedef_t eol_protocol::get_table_class(TABLE_Typedef_
     case PROFILE_2_SV_ELEVATION_AZI_P45_TABLE: /**< 俯仰导向矢量表@AZI+45deg */
     case PROFILE_3_SV_ELEVATION_AZI_P45_TABLE: /**< 俯仰导向矢量表@AZI+45deg */
       return SV_ELEVATION_AZI_P45_TABLE;
+    case PROFILE_ALL_BACKGROUND_NOISE_TABLE: /**< 配置下通道底噪表 */
+      return BACKGROUND_NOISE_TABLE;
     default:
       return eol_protocol::UNKNOW_CLASS_TABLE;
   }

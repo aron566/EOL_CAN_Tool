@@ -204,6 +204,7 @@ private:
 
   eol_protocol::DOA_TABLE_HEADER_Typedef_t table_info;
   eol_protocol::SYS_PATTERN_TABLE_HEADER_Typedef_t pattern_table_info;
+  eol_protocol::SYS_NOISE_TABLE_HEADER_Typedef_t noise_table_info;
   eol_protocol::ANT_TABLE_HEADER_Typedef_t ant_table_info;
   eol_protocol::COMMON_TABLE_HEADER_Typedef_t common_table_info;
 
