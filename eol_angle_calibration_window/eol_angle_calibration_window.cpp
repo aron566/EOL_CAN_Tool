@@ -385,7 +385,6 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
       index += sizeof(real);
       profile_fft_list.append(QString::number(real));
 
-
       memcpy(&image, data + index, sizeof(real));
       index += sizeof(image);
       profile_fft_list.append(QString::number(image));
@@ -480,7 +479,11 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
   /* 表头说明写入 */
   QString str;
 
+  /* 转台维度 */
   quint8 last_direction = 0xFF;
+
+  /* 转台维度 */
+  float last_azi_ele_angle = 361.f;
 
   /* 轮询列表 */
   FFT_REQUEST_CONDITION_Typedef_t condition;
@@ -488,7 +491,7 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
   {
     condition = fft_request_list.value(index);
     /* 新的维度建立新的csv表 */
-    if(last_direction != condition.direction)
+    if(last_direction != condition.direction || last_azi_ele_angle != condition.azi_ele_angle)
     {
       /* 表标题写入文件 */
       fft_csv_file.write(csv_header.toUtf8());
@@ -514,6 +517,7 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
                     condition.bit_tx_order[3]);
       fft_csv_file.write(str.toUtf8());
       last_direction = condition.direction;
+      last_azi_ele_angle = condition.azi_ele_angle;
     }
     /* 写入csv表数据 */
     else
