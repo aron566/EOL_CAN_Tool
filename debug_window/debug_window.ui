@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>debug_window</class>
+ <widget class="QWidget" name="debug_window">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>740</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QGroupBox" name="debug_par_groupBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>90</y>
+     <width>750</width>
+     <height>561</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>调试参数设置</string>
+   </property>
+   <widget class="QGroupBox" name="azi_groupBox">
+    <property name="geometry">
+     <rect>
+      <x>257</x>
+      <y>36</y>
+      <width>231</width>
+      <height>219</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>方位组</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QLabel" name="angle_step_set_label">
+           <property name="text">
+            <string>转台角度步进</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="angle_start_set_label">
+           <property name="text">
+            <string>转台角度起始</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="angle_end_set_label">
+           <property name="text">
+            <string>转台角度终止</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="angle_ele_at_set_label">
+           <property name="text">
+            <string>@俯仰角度</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QLineEdit" name="angle_step_set_lineEdit">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="angle_start_set_lineEdit">
+           <property name="text">
+            <string>-80</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="angle_end_set_lineEdit">
+           <property name="text">
+            <string>80</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="angle_ele_at_set_lineEdit">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <widget class="QLabel" name="angle_step_unit_label">
+           <property name="text">
+            <string>°</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="angle_start_unit_label">
+           <property name="text">
+            <string>°</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="angle_end_unit_label">
+           <property name="text">
+            <string>°</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="angle_ele_at_unit_label">
+           <property name="text">
+            <string>°</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QGroupBox" name="rts_par_groupBox">
+    <property name="geometry">
+     <rect>
+      <x>14</x>
+      <y>36</y>
+      <width>236</width>
+      <height>219</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>RTS</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_4">
+     <item row="0" column="0">
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <item>
+            <widget class="QLabel" name="azi_rts_range_label">
+             <property name="text">
+              <string>RTS距离</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="rts_velocity_label">
+             <property name="text">
+              <string>RTS速度</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="rts_rcs_label">
+             <property name="text">
+              <string>RTSrcs</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="rts_frequency_label">
+             <property name="text">
+              <string>RTSsfq</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="rts_bandwidth_label">
+             <property name="text">
+              <string>RTSbw</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="QLineEdit" name="azi_rts_rang_lineEdit">
+             <property name="text">
+              <string>20</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="rts_velocity_lineEdit">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="rts_rcs_lineEdit">
+             <property name="text">
+              <string>20</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="rts_start_frequency_lineEdit">
+             <property name="text">
+              <string>76.05</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="rts_bandwidth_lineEdit">
+             <property name="text">
+              <string>686.6455</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_9">
+         <item>
+          <widget class="QLabel" name="rts_range_unit_label">
+           <property name="text">
+            <string>m</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="rts_velocity_unit_label">
+           <property name="text">
+            <string>m/s</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="rts_rcs_unit_label">
+           <property name="text">
+            <string>dBsm</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="rts_frequency_unit_label">
+           <property name="text">
+            <string>GHz</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="rts_bandwidth_unit_label">
+           <property name="text">
+            <string>MHz</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QGroupBox" name="ele_groupBox">
+    <property name="geometry">
+     <rect>
+      <x>495</x>
+      <y>36</y>
+      <width>234</width>
+      <height>219</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>俯仰组</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <widget class="QLabel" name="angle_step_ele_set_label">
+             <property name="text">
+              <string>转台角度步进</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="angle_start_ele_set_label">
+             <property name="text">
+              <string>转台角度起始</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="angle_end_ele_set_label">
+             <property name="text">
+              <string>转台角度终止</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="angle_azi_at_set_label">
+             <property name="text">
+              <string>@方位角度</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <item>
+            <widget class="QLineEdit" name="angle_step_ele_set_lineEdit">
+             <property name="text">
+              <string>1</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="angle_start_ele_set_lineEdit">
+             <property name="text">
+              <string>-12</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="angle_end_ele_set_lineEdit">
+             <property name="text">
+              <string>12</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="angle_azi_at_set_lineEdit">
+             <property name="text">
+              <string>0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <widget class="QLabel" name="angle_step_ele_unit_label">
+           <property name="text">
+            <string>°</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="angle_start_ele_unit_label">
+           <property name="text">
+            <string>°</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="angle_end_ele_unit_label">
+           <property name="text">
+            <string>°</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="angle_azi_at_unit_label">
+           <property name="text">
+            <string>°</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QGroupBox" name="radar_groupBox">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>270</y>
+      <width>701</width>
+      <height>191</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>雷达参数</string>
+    </property>
+    <widget class="QGroupBox" name="tx_order_groupBox">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>40</y>
+       <width>221</width>
+       <height>141</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Tx配置</string>
+     </property>
+    </widget>
+    <widget class="QGroupBox" name="rx_order_groupBox">
+     <property name="geometry">
+      <rect>
+       <x>480</x>
+       <y>40</y>
+       <width>211</width>
+       <height>141</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Rx配置</string>
+     </property>
+    </widget>
+    <widget class="QGroupBox" name="radio_groupBox">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>39</y>
+       <width>221</width>
+       <height>141</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>射频配置</string>
+     </property>
+     <widget class="QLabel" name="chirp_rampup_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>101</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>chirp上升时间</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="chirp_down_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>101</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>chirp下降时间</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="chirp_period_label">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>90</y>
+        <width>69</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>chirp周期</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>520</y>
+      <width>375</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
+     <item>
+      <widget class="QPushButton" name="add_config_pushButton">
+       <property name="text">
+        <string>添加配置</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="clear_config_pushButton">
+       <property name="text">
+        <string>清除配置</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="start_pushButton">
+       <property name="text">
+        <string>start</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="auto_export_csv_checkBox">
+       <property name="text">
+        <string>自动导出csv</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
