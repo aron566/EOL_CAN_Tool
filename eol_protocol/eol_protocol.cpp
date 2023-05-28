@@ -244,7 +244,7 @@ eol_protocol::SNED_CHECK_STATUS_Typedef_t eol_protocol::check_wait_send_task(boo
   return WAIT_SEND;
 }
 
-/*响应超时检测 */
+/* 响应超时检测 */
 bool eol_protocol::response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait)
 {
   if((current_time_sec - wait.start_time) >= FRAME_TIME_OUT)

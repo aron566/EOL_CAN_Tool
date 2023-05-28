@@ -728,12 +728,6 @@ private:
 
   /**
    * @brief 显示消息
-   * @param data 消息数据
-   * @param thread_mode 当前消息是否来自线程
-   */
-
-  /**
-   * @brief 显示消息
    * @param str 消息数据
    * @param channel_num 消息通道号
    * @param direct 消息方向，发送 or 接收

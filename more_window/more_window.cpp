@@ -295,20 +295,25 @@ void more_window::update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Ty
 {
   SHOW_MSG_Typedef_t show_messagex = pList->value(show_index);
 
-  /* 设置颜色 */
-  if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
-  {
-    text_edit_widget->setTextColor(QColor("white"));
-  }
-  else
-  {
-    text_edit_widget->setTextColor(QColor("red"));
-  }
-
   /* 下翻 */
   if(downward_flag)
-  {
-    text_edit_widget->append(show_messagex.str);
+  { 
+    text_edit_widget->moveCursor(QTextCursor::End);
+    QTextCursor cursor = text_edit_widget->textCursor();
+    QTextCharFormat format;
+    /* 设置颜色 */
+    if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
+    {
+      format.setForeground(Qt::white);
+    }
+    else
+    {
+      format.setForeground(Qt::red);
+    }
+    cursor.setCharFormat(format);
+    cursor.insertText(show_messagex.str + '\n');
+    text_edit_widget->setTextCursor(cursor);
+
     text_edit_widget->moveCursor(QTextCursor::Start);
     text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
     text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
@@ -319,14 +324,27 @@ void more_window::update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Ty
   /* 上翻 */
   else
   {
-    text_edit_widget->moveCursor(QTextCursor::Start);
-    text_edit_widget->insertPlainText(show_messagex.str + '\n');
     text_edit_widget->moveCursor(QTextCursor::End);
     text_edit_widget->moveCursor(QTextCursor::PreviousBlock, QTextCursor::KeepAnchor);
     text_edit_widget->moveCursor(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 //    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
     text_edit_widget->textCursor().removeSelectedText();
+
     text_edit_widget->moveCursor(QTextCursor::Start);
+    QTextCursor cursor = text_edit_widget->textCursor();
+    QTextCharFormat format;
+    /* 设置颜色 */
+    if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
+    {
+      format.setForeground(Qt::white);
+    }
+    else
+    {
+      format.setForeground(Qt::red);
+    }
+    cursor.setCharFormat(format);
+    cursor.insertText(show_messagex.str + '\n');
+    text_edit_widget->setTextCursor(cursor);
   }
 }
 
