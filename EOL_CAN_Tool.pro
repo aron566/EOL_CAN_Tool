@@ -36,6 +36,7 @@ SOURCES += \
     eol_calibration_window/eol_calibration_window.cpp \
     eol_sub_window/eol_sub_window.cpp \
     eol_window/eol_window.cpp \
+    frame_diagnosis_window/frame_diagnosis.cpp \
     main.cpp \
     main_window/mainwindow.cpp \
     more_window/more_window.cpp
@@ -46,6 +47,7 @@ HEADERS += \
   eol_calibration_window/eol_calibration_window.h \
   eol_sub_window/eol_sub_window.h \
   eol_window/eol_window.h \
+  frame_diagnosis_window/frame_diagnosis.h \
   main_window/mainwindow.h \
   more_window/more_window.h
 
@@ -55,6 +57,7 @@ FORMS += \
     eol_calibration_window/eol_calibration_window.ui \
     eol_sub_window/eol_sub_window.ui \
     eol_window/eol_window.ui \
+    frame_diagnosis_window/frame_diagnosis.ui \
     main_window/mainwindow.ui \
     more_window/more_window.ui
 

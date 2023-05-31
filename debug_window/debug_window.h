@@ -12,7 +12,7 @@ class debug_window : public QWidget
   Q_OBJECT
 
 public:
-  explicit debug_window(QWidget *parent = nullptr);
+  explicit debug_window(QString title, QWidget *parent = nullptr);
   ~debug_window();
 
 private:

@@ -26,6 +26,9 @@ more_window::more_window(QString title, QWidget *parent) :
   /* 设置标题 */
   this->setWindowTitle(title);
 
+  /* 帧诊断调试窗口初始化 */
+  frame_diagnosis_window_init(tr("EOL CAN Tool - Frame Diagnosis"));
+
   /* 初始化定时器 */
   timer_init();
 
@@ -37,6 +40,8 @@ more_window::more_window(QString title, QWidget *parent) :
 
 more_window::~more_window()
 {
+  delete frame_diagnosis_obj;
+
   delete ui;
 }
 
@@ -165,20 +170,9 @@ void more_window::closeEvent(QCloseEvent *event)
 {
   Q_UNUSED(event)
 
-  /* 暂停其他数据接收显示 */
-//  can_driver_obj->set_msg_canid_mask(0x0000, true, &last_canid_mask, &last_canid_mask_en);
-
   this->hide();
   emit signal_more_window_closed();
 }
-
-//void more_window::showEvent(QShowEvent *event)
-//{
-//  Q_UNUSED(event)
-
-//  /* 恢复数据接收显示 */
-//  can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
-//}
 
 bool more_window::ch1_show_msg_is_empty()
 {
@@ -346,6 +340,11 @@ void more_window::update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Ty
     cursor.insertText(show_messagex.str + '\n');
     text_edit_widget->setTextCursor(cursor);
   }
+}
+
+void more_window::frame_diagnosis_window_init(QString title)
+{
+  frame_diagnosis_obj = new frame_diagnosis(title);
 }
 
 void more_window::slot_show_message(const QString &message, quint32 channel_num, \
@@ -650,3 +649,9 @@ void more_window::on_mask_en_checkBox_clicked(bool checked)
     can_driver_obj->set_msg_canid_mask(0xFFFF, checked);
   }
 }
+
+void more_window::on_frame_diagnosis_pushButton_clicked()
+{
+  frame_diagnosis_obj->show();
+}
+

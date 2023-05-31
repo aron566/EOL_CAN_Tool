@@ -109,8 +109,10 @@ public:
   /* 校准配置信息 */
   typedef struct
   {
+    quint32 time_sec;                   /**< 时间戳 */
     quint8 profile_id;                  /**< 配置ID */
     quint8 channel_num;                 /**< 通道数 */
+    quint8 tx_order[4];                 /**< 校准配置信息 */
   }CALIBRATION_PROFILE_INFO_Typedef_t;
 
   /* 操作返回值 */

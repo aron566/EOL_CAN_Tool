@@ -7,6 +7,7 @@
 
 #include "eol_window.h"
 #include "can_driver.h"
+#include "frame_diagnosis_window/frame_diagnosis.h"
 
 namespace Ui {
 class more_window;
@@ -106,11 +107,14 @@ private slots:
     void slot_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
     void slot_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
     void slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
+    void on_frame_diagnosis_pushButton_clicked();
+
 private:
     Ui::more_window *ui;
 
 private:
     can_driver *can_driver_obj = nullptr;
+    frame_diagnosis *frame_diagnosis_obj = nullptr;
     QTimer *timer_obj = nullptr;
     quint32 rx_frame_cnt = 0;
     quint32 tx_frame_cnt = 0;
@@ -139,6 +143,11 @@ private:
      */
     void update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag);
 
+    /**
+     * @brief 帧诊断窗口初始化
+     * @param title 窗口标题
+     */
+    void frame_diagnosis_window_init(QString title);
 
 private:
     /* 已显示消息 */

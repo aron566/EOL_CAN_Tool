@@ -594,7 +594,7 @@ namespace mINI
         {
           auto const& section = it->first;
           auto const& collection = it->second;
-          str.sprintf("[%s]", section.data());
+          str.asprintf("[%s]", section.data());
           fileWrite.write(str.toUtf8());
           if (collection.size())
           {
@@ -607,7 +607,7 @@ namespace mINI
               auto value = it2->second;
               INIStringUtil::trim(value);
 
-              str.sprintf("%s%s%s", key.data(), ((prettyPrint) ? " = " : "="), value.data());
+              str.asprintf("%s%s%s", key.data(), ((prettyPrint) ? " = " : "="), value.data());
               fileWrite.write(str.toUtf8());
               if (++it2 == collection.end())
               {

@@ -1633,7 +1633,17 @@ __TASK_STATE_CHANGE:
 void eol_window::slot_device_mode(const void *pass_data)
 {
   const quint8 *data_ptr = (const quint8 *)pass_data;
-  eol_protocol::DEVICE_MODE_Typedef_t mode = (eol_protocol::DEVICE_MODE_Typedef_t)data_ptr[0];
+
+  quint16 index = 0;
+  eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t info;
+  memcpy(&info.time_sec, data_ptr + index, sizeof(info.time_sec));
+  index += sizeof(info.time_sec);
+  eol_protocol::DEVICE_MODE_Typedef_t mode = (eol_protocol::DEVICE_MODE_Typedef_t)data_ptr[index];
+  index++;
+
+  quint8 profile_num = data_ptr[index];
+  index++;
+
   qDebug() << "mode " << mode;
   /* 生产-普通模式 */
   if(ui->produce_noral_radioButton->isChecked() && eol_protocol::PRODUCE_MODE_NORMAL == mode)
@@ -1690,17 +1700,26 @@ void eol_window::slot_device_mode(const void *pass_data)
   current_task_complete_state = TASK_COMPLETE;
   /* 显示设备信息 */
   emit signal_clear_profile_info();
+
   QString msg;
+  msg += QString("<font size='10' color='green'><div align='legt'>profile num:</div> <div align='right'>%1</div> </font>\r\n").arg(profile_num);
 
-  msg += QString("<font size='10' color='green'><div align='legt'>profile num:</div> <div align='right'>%1</div> </font>\r\n").arg(data_ptr[1]);
-
-  for(quint8 i = 0; i < data_ptr[1]; i++)
+  for(quint8 i = 0; i < profile_num; i++)
   {
-    msg += QString("<font size='10' color='green'><div align='legt'>profile id:</div> <div align='right'>%1</div> </font>\r\n").arg(data_ptr[2 + 2 * i]);
-    msg += QString("<font size='10' color='green'><div align='legt'>channel num:</div> <div align='right'>%1</div> </font>\r\n").arg(data_ptr[2 + 2 * i + 1]);
-    eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t info;
-    info.profile_id = data_ptr[2 + 2 * i];
-    info.channel_num = data_ptr[2 + 2 * i + 1];
+    info.profile_id = data_ptr[index];
+    index++;
+    info.channel_num = data_ptr[index];
+    index++;
+    memcpy(info.tx_order, data_ptr + index, sizeof(info.tx_order));
+    index += sizeof(info.tx_order);
+
+    msg += QString("<font size='10' color='green'><div align='legt'>profile id:</div> <div align='right'>%1</div> </font>\r\n").arg(info.profile_id);
+    msg += QString("<font size='10' color='green'><div align='legt'>channel num:</div> <div align='right'>%1</div> </font>\r\n").arg(info.channel_num);
+    for(quint8 t = 0; t < sizeof(info.tx_order); t++)
+    {
+      msg += QString("<font size='10' color='green'><div align='legt'>tx order[%1]:</div> <div align='right'>%1</div> </font>\r\n").arg(t).arg(info.tx_order[t]);
+    }
+
     emit signal_profile_info_update(info);
   }
   QMessageBox message(QMessageBox::Information, tr("device info"), msg, \
