@@ -285,6 +285,14 @@ public:
     EOL_META_CMD  = 0xFF,
   }EOL_CMD_Typedef_t;
 
+  /* 通讯硬件选择 */
+  typedef enum
+  {
+    EOL_CAN_HW = 0,       /**< can发送数据 */
+    EOL_SERIAL_HW,        /**< 串口发送数据 */
+    EOL_ETH_HW,           /**< 网络发送数据 */
+  }EOL_SEND_HW_Typedef_t;
+
   typedef struct EOL_TASK_LIST_
   {
     void *param;/**< 传输表数据，使用 */
@@ -292,7 +300,8 @@ public:
     EOL_CMD_Typedef_t command;
     quint16 len;
     quint8 buf[256];
-    bool run_state;
+    EOL_SEND_HW_Typedef_t com_hw;
+    QString channel_num;
     bool (eol_protocol::*task)(void *param);
   }EOL_TASK_LIST_Typedef_t;
 private:
@@ -314,7 +323,9 @@ private:
   {
     uint16_t reg_addr;      /**< 等待响应的寄存器地址 */
     uint32_t start_time;    /**< 等待相应的起始时间 */
-    uint8_t command;        /**< 等待的命令类型 0x03 0x04 */
+    uint8_t command;        /**< 等待的命令类型 */
+    EOL_SEND_HW_Typedef_t com_hw; /**< 通讯硬件选择 */
+    QString channel_num;          /**< 通讯硬件端口 */
   }WAIT_RESPONSE_LIST_Typedef_t;
 
   /* 分包分送句柄 */
@@ -326,6 +337,8 @@ private:
     uint32_t current_send_index;
     uint32_t data_total_size;
     uint8_t *buf_ptr;
+    EOL_SEND_HW_Typedef_t com_hw; /**< 通讯硬件选择 */
+    QString channel_num;          /**< 通讯硬件端口 */
   }SEND_TASK_LIST_Typedef_t;
 
   /* 发送检测状态 */
@@ -540,6 +553,17 @@ private:
   void run_eol_task();
 
   /**
+   * @brief eol发送消息接口
+   * @param data 数据
+   * @param data_len 数据长度
+   * @param com_hw 通讯硬件选择
+   * @param channel_num 通讯端口选择
+   * @return true发送成功 false发送失败
+   */
+  bool eol_send_data_port(const uint8_t *data, uint16_t data_len, \
+    EOL_SEND_HW_Typedef_t com_hw, QString &channel_num);
+
+  /**
    * @brief 待回复任务检测
    * @param force 强制发送
    * @return 状态
@@ -552,10 +576,13 @@ private:
    * @param reg_addr 寄存器地址
    * @param data 数据
    * @param data_len 数据长度
+   * @param com_hw 硬件通讯选择
+   * @param channel_num 通讯端口
    * @return 报文状态
    */
-  RETURN_TYPE_Typedef_t protocol_stack_create_task(EOL_CMD_Typedef_t command, uint8_t reg_addr,
-                                            const uint8_t *data, uint16_t data_len);
+  RETURN_TYPE_Typedef_t protocol_stack_create_task(EOL_CMD_Typedef_t command, \
+      uint8_t reg_addr, const uint8_t *data, uint16_t data_len, \
+      EOL_SEND_HW_Typedef_t com_hw = EOL_CAN_HW, QString channel_num = "0");
 
   /**
    * @brief 等待回复数据

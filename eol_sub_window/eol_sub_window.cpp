@@ -59,7 +59,6 @@ void eol_sub_window::on_test_pushButton_clicked()
   ui->usd_boot_ver_lineEdit->clear();
 
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
-  task.run_state = true;
   task.param = nullptr;
 
   /* 软硬件版本号 */
@@ -161,7 +160,6 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
 
           /* 回写 */
           eol_protocol::EOL_TASK_LIST_Typedef_t task;
-          task.run_state = true;
           task.param = nullptr;
 
           task.reg = reg;
@@ -191,7 +189,6 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
 
           /* 回写 */
           eol_protocol::EOL_TASK_LIST_Typedef_t task;
-          task.run_state = true;
           task.param = nullptr;
 
           task.reg = reg;
@@ -228,7 +225,10 @@ void eol_sub_window::slot_protocol_rw_err(quint8 reg, quint8 command)
 
       break;
     case EOL_RW_SN_REG      :
+      if(command)
+      {
 
+      }
       break;
     case EOL_R_MOUNTID_REG   :
 

@@ -30,6 +30,7 @@ public:
     can_driver_obj = can_driver_;
     connect(can_driver_obj, &can_driver::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
     connect(can_driver_obj, &can_driver::signal_show_message, this, &more_window::slot_show_message);
+    connect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
     /* 线程同步 */
     connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::BlockingQueuedConnection);
   }
@@ -104,6 +105,19 @@ private slots:
     void on_display_mask_lineEdit_textChanged(const QString &arg1);
 
     void on_mask_en_checkBox_clicked(bool checked);
+
+    /**
+     * @brief 发送信号显示当前的can消息
+     * @param can_id id
+     * @param data 数据
+     * @param len 数据长度
+     * @param direct 方向
+     * @param channel_num 通道号
+     * @param protocol_type 协议类型 0 can 1 canfd
+     */
+    void slot_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, \
+      quint8 direct, quint32 channel_num, quint8 protocol_type);
+
     void slot_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
     void slot_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
     void slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);

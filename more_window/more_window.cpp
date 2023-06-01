@@ -347,6 +347,12 @@ void more_window::frame_diagnosis_window_init(QString title)
   frame_diagnosis_obj = new frame_diagnosis(title);
 }
 
+void more_window::slot_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, \
+  quint8 direct, quint32 channel_num, quint8 protocol_type)
+{
+  frame_diagnosis_obj->add_msg_to_table(can_id, data, len, direct, channel_num, protocol_type);
+}
+
 void more_window::slot_show_message(const QString &message, quint32 channel_num, \
   quint8 direct, const quint8 *data, quint32 data_len)
 {
@@ -552,6 +558,7 @@ void more_window::on_clear_pushButton_clicked()
   ch1_add_msg_index = ch1_show_msg_index = 0;
   ch2_add_msg_index = ch2_show_msg_index = 0;
 
+  frame_diagnosis_obj->clear();
 }
 
 void more_window::set_channel_num(quint8 channel_num)

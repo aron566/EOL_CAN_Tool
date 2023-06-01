@@ -945,6 +945,9 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
       memcpy(temp_buf, &can_id, sizeof(quint16));
       memcpy(temp_buf + sizeof(quint16), can.frame.data, can.frame.can_dlc);
       CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, can.frame.can_dlc + sizeof(quint16));
+
+      /* 发送接收数据信号 */
+      emit signal_can_driver_msg(can_id, can.frame.data, can.frame.can_dlc, (quint8)CAN_RX_DIRECT, channel_state.channel_num, 0);
     }
 
     /* 消息过滤分发 */
@@ -999,6 +1002,9 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
       memcpy(temp_buf, &can_id, sizeof(quint16));
       memcpy(temp_buf + sizeof(quint16), canfd.frame.data, canfd.frame.len);
       CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, canfd.frame.len + sizeof(quint16));
+
+      /* 发送接收数据信号 */
+      emit signal_can_driver_msg(can_id, canfd.frame.data, canfd.frame.len, (quint8)CAN_RX_DIRECT, channel_state.channel_num, 1);
     }
 
     /* 消息过滤分发 */
@@ -1021,13 +1027,15 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
 void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Transmit_Data *data, quint32 len)
 {
   QString item;
+  quint16 can_id = 0;
   for(quint32 i = 0; i < len; ++i)
   {
     const ZCAN_Transmit_Data& can = data[i];
     const canid_t &id = can.frame.can_id;
+    can_id = GET_ID(id);
     item = QString::asprintf(tr("[%u]Tx CAN ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
                              channel_state.channel_num, \
-                             GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+                             can_id, IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
           IS_RTR(id) ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), can.frame.can_dlc);
     for(quint32 i = 0; i < can.frame.can_dlc; ++i)
     {
@@ -1035,19 +1043,24 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     }
     show_message_bytes(can.frame.can_dlc, channel_state.channel_num, CAN_TX_DIRECT);
     show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.can_dlc);
+
+    /* 发送接收数据信号 */
+    emit signal_can_driver_msg(can_id, can.frame.data, can.frame.can_dlc, (quint8)CAN_TX_DIRECT, channel_state.channel_num, 0);
   }
 }
 
 void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_TransmitFD_Data *data, quint32 len)
 {
   QString item;
+  quint16 can_id = 0;
   for(quint32 i = 0; i < len; ++i)
   {
     const ZCAN_TransmitFD_Data& can = data[i];
     const canid_t &id = can.frame.can_id;
+    can_id = GET_ID(id);
     item = QString::asprintf(tr("[%u]Tx CANFD ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
                              channel_state.channel_num, \
-                             GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+                             can_id, IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
           IS_RTR(id) ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), can.frame.len);
     for(quint32 i = 0; i < can.frame.len; ++i)
     {
@@ -1055,6 +1068,9 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     }
     show_message_bytes(can.frame.len, channel_state.channel_num, CAN_TX_DIRECT);
     show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.len);
+
+    /* 发送接收数据信号 */
+    emit signal_can_driver_msg(can_id, can.frame.data, can.frame.len, (quint8)CAN_TX_DIRECT, channel_state.channel_num, 1);
   }
 }
 

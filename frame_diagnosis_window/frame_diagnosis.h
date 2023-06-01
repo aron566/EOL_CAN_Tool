@@ -2,6 +2,7 @@
 #define FRAME_DIAGNOSIS_H
 
 #include <QWidget>
+#include <QList>
 
 namespace Ui {
 class frame_diagnosis;
@@ -30,8 +31,12 @@ public:
    * @param id can id
    * @param data 数据
    * @param len 数据长度
+   * @param direct 0发送 1接收
+   * @param channel_num 通道号
+   * @param protocol_type 协议类型 0can 1canfd
    */
-  void add_msg_to_table(uint16_t id, const quint8 *data, quint32 len);
+  void add_msg_to_table(uint16_t id, const quint8 *data, quint32 len, \
+    quint8 direct, quint32 channel_num, quint8 protocol_type);
 
   /**
    * @brief 清除统计信息
@@ -47,7 +52,18 @@ private:
   Ui::frame_diagnosis *ui;
 
 private:
+  typedef struct
+  {
+    quint16 id;
+    quint8 channel_num;
+    quint8 direct;
+    quint8 protocol_type;
+    quint8 data[64];
+    quint32 cnt;
+    quint32 repeat_cnt;
+  }CAN_MSG_LIST_Typedef_t;
 
+  QList <CAN_MSG_LIST_Typedef_t> can_msg_list;
 };
 
 #endif // FRAME_DIAGNOSIS_H

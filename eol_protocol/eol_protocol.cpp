@@ -182,19 +182,39 @@ void eol_protocol::run_eol_task()
     task_ = eol_task_list.takeFirst();
 
     /* 执行任务 */
-    if(nullptr == task_.param)
-    {
-      (this->*(task_.task))(&task_);
-    }
-    else
-    {
-      (this->*(task_.task))(task_.param);
-    }
+    (this->*(task_.task))(&task_);
   }
   eol_task_list.clear();
   qDebug() << "eol_task end";
 }
 
+
+bool eol_protocol::eol_send_data_port(const uint8_t *data, uint16_t data_len, \
+  EOL_SEND_HW_Typedef_t com_hw, QString &channel_num)
+{
+  switch(com_hw)
+  {
+    case EOL_CAN_HW:            /**< can发送数据 */
+      {
+        /* 发送 */
+        bool ret = can_driver_obj->send(data, (quint8)data_len, \
+                                        EOL_PROTOCOL_MASTER_CAN_ID, \
+                                        can_driver::STD_FRAME_TYPE, \
+                                        data_len > 8 ? \
+                                        can_driver::CANFD_PROTOCOL_TYPE : \
+                                        can_driver::CAN_PROTOCOL_TYPE, \
+                                        (quint8)channel_num.toUInt());
+        return ret;
+      }
+      break;
+    case EOL_SERIAL_HW:        /**< 串口发送数据 */
+      break;
+    case EOL_ETH_HW:           /**< 网络发送数据 */
+      break;
+  }
+
+  return false;
+}
 
 /**
   * @brief   待回复任务检测
@@ -221,9 +241,8 @@ eol_protocol::SNED_CHECK_STATUS_Typedef_t eol_protocol::check_wait_send_task(boo
         SEND_ONE_PACKET_SIZE_MAX : (send_task_handle.data_total_size - send_task_handle.current_send_index);
 
   /* 发送 */
-  bool ret = can_driver_obj->send(reinterpret_cast<const quint8 *>(send_task_handle.buf_ptr + send_task_handle.current_send_index), \
-                       (quint8)can_send_size, current_send_can_id, can_driver::STD_FRAME_TYPE, \
-                                  can_send_size > 8 ? can_driver::CANFD_PROTOCOL_TYPE : can_driver::CAN_PROTOCOL_TYPE);
+  bool ret = eol_send_data_port(reinterpret_cast<const quint8 *>(send_task_handle.buf_ptr + send_task_handle.current_send_index), \
+                       (quint8)can_send_size, send_task_handle.com_hw, send_task_handle.channel_num);
   if(false == ret)
   {
     qDebug() << "hw send error " << send_task_handle.hw_send_err_times;
@@ -293,9 +312,10 @@ void eol_protocol::slot_timer_timeout()
   check_wait_send_task();
 }
 
-/* 打包报文进行发送并等待回复 */
-eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL_CMD_Typedef_t command, uint8_t reg_addr,
-                                          const uint8_t *data, uint16_t data_len)
+eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
+      EOL_CMD_Typedef_t command, uint8_t reg_addr,
+      const uint8_t *data, uint16_t data_len, \
+      EOL_SEND_HW_Typedef_t com_hw, QString channel_num)
 {
   static uint8_t send_buf[FRAME_TEMP_BUF_SIZE];
   /* 帧头 */
@@ -310,6 +330,8 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
   wait.reg_addr = reg_addr;
   wait.start_time = static_cast<uint32_t>(current_time_sec);
   wait.command = (quint8)command;
+  wait.channel_num = channel_num;
+  wait.com_hw = com_hw;
   wait_response_list.append(wait);
 
   uint16_t index = 2;
@@ -365,6 +387,8 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
     send_task_handle.wait_send_size = index;
     send_task_handle.buf_ptr = send_buf;
     send_task_handle.last_send_time_ms = current_time_ms;
+    send_task_handle.com_hw = com_hw;
+    send_task_handle.channel_num = channel_num;
     SNED_CHECK_STATUS_Typedef_t state = check_wait_send_task(false);// 不立即发
 
     if(EOL_WRITE_CMD == command || EOL_META_CMD == command)
@@ -400,9 +424,8 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task(EOL
   qDebug() << "------direct send-------" << QDateTime::currentMSecsSinceEpoch();
 
   /* 发送 */
-  bool ok = can_driver_obj->send(reinterpret_cast<const quint8 *>(send_buf), \
-                         (quint8)index, current_send_can_id, can_driver::STD_FRAME_TYPE, \
-                                 index > 8 ? can_driver::CANFD_PROTOCOL_TYPE : can_driver::CAN_PROTOCOL_TYPE);
+  bool ok = eol_send_data_port(reinterpret_cast<const quint8 *>(send_buf), \
+                         (quint8)index, com_hw, channel_num);
 
   if(EOL_WRITE_CMD == command || EOL_META_CMD == command)
   {
@@ -466,7 +489,6 @@ eol_protocol::EOL_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(const quin
     case EOL_W_RUN_MODE_REG:
     {
       EOL_TASK_LIST_Typedef_t task;
-      task.run_state = true;
       task.param = nullptr;
 
       /* 读配置 */
@@ -499,7 +521,6 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONS
         memcpy(&access_code, data, sizeof(access_code));
         qDebug("acc code 0x%08X", access_code);
         EOL_TASK_LIST_Typedef_t task;
-        task.run_state = true;
         task.param = nullptr;
 
         /* 设置工作模式 */
@@ -762,8 +783,8 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
   can_driver_obj->set_msg_canid_mask(EOL_PROTOCOL_REPLY_CAN_ID + 0x100, true, &last_canid_mask, &last_canid_mask_en);
 
   qDebug() << "get_eol_table_data_task start";
-
-  DOA_TABLE_HEADER_Typedef_t *param = (DOA_TABLE_HEADER_Typedef_t *)param_;
+  EOL_TASK_LIST_Typedef_t *paramx = (EOL_TASK_LIST_Typedef_t *)param_;
+  DOA_TABLE_HEADER_Typedef_t *param = (DOA_TABLE_HEADER_Typedef_t *)paramx->param;
   /* 清空 */
   eol_protocol_clear();
 
@@ -925,7 +946,8 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   quint8 error_cnt = 0;
   RETURN_TYPE_Typedef_t ret;
 
-  EOL_SEND_DATA_Typedef_t *param = (EOL_SEND_DATA_Typedef_t *)param_;
+  EOL_TASK_LIST_Typedef_t *paramx = (EOL_TASK_LIST_Typedef_t *)param_;
+  EOL_SEND_DATA_Typedef_t *param = (EOL_SEND_DATA_Typedef_t *)paramx->param;
 
   /* 清空 */
   eol_protocol_clear();
@@ -1080,7 +1102,6 @@ bool eol_protocol::eol_master_set_device_mode(DEVICE_MODE_Typedef_t mode)
   current_run_mode = (quint8)mode;
 
   EOL_TASK_LIST_Typedef_t task;
-  task.run_state = true;
   task.param = nullptr;
 
   /* 读安全码 */
@@ -1107,14 +1128,12 @@ bool eol_protocol::eol_master_send_table_data(COMMON_TABLE_HEADER_Typedef_t &tab
 
   /* 设置消息过滤器 */
   can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
-  current_send_can_id = EOL_PROTOCOL_MASTER_CAN_ID;
 
   /* 公共 + 私有表头 */
   memcpy(&send_table_data.head_data, &table_info, sizeof(table_info.Common_Info) + table_info.Common_Info.Header_Size);
   send_table_data.data = data;
 
   EOL_TASK_LIST_Typedef_t task;
-  task.run_state = true;
   task.param = &send_table_data;
   task.task = &eol_protocol::send_eol_table_data_task;
   eol_task_list.append(task);
@@ -1136,12 +1155,10 @@ bool eol_protocol::eol_master_get_table_data(TABLE_Typedef_t table_type)
 
   /* 设置消息过滤器 */
   can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
-  current_send_can_id = EOL_PROTOCOL_MASTER_CAN_ID;
 
   send_table_data.head_data.Common_Info.Table_Type = table_type;
 
   EOL_TASK_LIST_Typedef_t task;
-  task.run_state = true;
   task.param = &send_table_data.head_data;
   task.task = &eol_protocol::get_eol_table_data_task;
   eol_task_list.append(task);
@@ -1168,7 +1185,6 @@ bool eol_protocol::eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task, bo
 
   /* 设置消息过滤器 */
   can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
-  current_send_can_id = EOL_PROTOCOL_MASTER_CAN_ID;
 
   task.task = &eol_protocol::common_rw_device_task;
   eol_task_list.append(task);

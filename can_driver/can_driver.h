@@ -237,6 +237,17 @@ signals:
   void signal_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
 
   /**
+   * @brief 发送信号显示当前的can消息
+   * @param can_id id
+   * @param data 数据
+   * @param len 数据长度
+   * @param direct 方向
+   * @param channel_num 通道号
+   * @param protocol_type 协议类型
+   */
+  void signal_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, quint8 direct, quint32 channel_num, quint8 protocol_type);
+
+  /**
    * @brief 发送信号设置自动发送设备索引可用状态
    *
    * @param can_use true可选

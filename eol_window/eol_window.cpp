@@ -1717,7 +1717,7 @@ void eol_window::slot_device_mode(const void *pass_data)
     msg += QString("<font size='10' color='green'><div align='legt'>channel num:</div> <div align='right'>%1</div> </font>\r\n").arg(info.channel_num);
     for(quint8 t = 0; t < sizeof(info.tx_order); t++)
     {
-      msg += QString("<font size='10' color='green'><div align='legt'>tx order[%1]:</div> <div align='right'>%1</div> </font>\r\n").arg(t).arg(info.tx_order[t]);
+      msg += QString("<font size='10' color='green'><div align='legt'>tx order[%1]:</div> <div align='right'>%2</div> </font>\r\n").arg(t).arg(info.tx_order[t]);
     }
 
     emit signal_profile_info_update(info);
@@ -1834,7 +1834,6 @@ void eol_window::on_rcs_calibration_func_pushButton_clicked()
 void eol_window::on_reboot_pushButton_clicked()
 {
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
-  task.run_state = true;
   task.param = nullptr;
   task.reg = EOL_W_DEVICE_REBOOT_REG;
   task.command = eol_protocol::EOL_WRITE_CMD;

@@ -92,7 +92,7 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
 
   qDebug() << "profile " << profile_id << "obj_num " << obj_num;
 
-  /* 获取当前表格行数 */
+  /* 设置当前表格行数 */
   ui->tableWidget->clearContents();
   ui->tableWidget->setRowCount(obj_num);
 
@@ -197,7 +197,6 @@ void eol_calibration_window::on_test_start_pushButton_clicked()
   }
 
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
-  task.run_state = true;
   task.param = nullptr;
 
   /* 读取目标 */
@@ -248,7 +247,6 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
 
         /* 再次更新 */
         eol_protocol::EOL_TASK_LIST_Typedef_t task;
-        task.run_state = true;
         task.param = nullptr;
 
         /* 读取目标 */
@@ -354,7 +352,6 @@ void eol_calibration_window::slot_timeout()
 
   /* 再次更新 */
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
-  task.run_state = true;
   task.param = nullptr;
 
   /* 读取目标 */
@@ -375,7 +372,6 @@ void eol_calibration_window::slot_timeout()
 void eol_calibration_window::on_profile_id_comboBox_currentIndexChanged(int index)
 {
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
-  task.run_state = true;
   task.param = nullptr;
 
   /* 软硬件版本号 */

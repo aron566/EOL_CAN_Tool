@@ -282,7 +282,6 @@ void eol_angle_calibration_window::on_start_pushButton_clicked()
   condition = fft_request_list.value(angle_position_index);
 
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
-  task.run_state = true;
   task.param = nullptr;
 
   /* 设置转台后读取2DFFT */
@@ -661,7 +660,6 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
     case EOL_W_2DFFT_CONDITION_REG:
       {
         eol_protocol::EOL_TASK_LIST_Typedef_t task;
-        task.run_state = true;
         task.param = nullptr;
 
         /* 设置转台后读取2DFFT */
@@ -680,7 +678,6 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
         {
           /* 继续读取 */
           eol_protocol::EOL_TASK_LIST_Typedef_t task;
-          task.run_state = true;
           task.param = nullptr;
 
           /* 设置转台后读取2DFFT */
@@ -709,7 +706,6 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
         condition = fft_request_list.value(angle_position_index);
 
         eol_protocol::EOL_TASK_LIST_Typedef_t task;
-        task.run_state = true;
         task.param = nullptr;
 
         /* 设置转台条件 */
