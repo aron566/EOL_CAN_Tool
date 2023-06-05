@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>eol_rdm_debug_window</class>
+ <widget class="QWidget" name="eol_rdm_debug_window">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QGroupBox" name="rdm_data_groupBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>210</y>
+     <width>761</width>
+     <height>461</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>RDM</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="set_groupBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>60</y>
+     <width>761</width>
+     <height>121</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>设置</string>
+   </property>
+   <widget class="QLabel" name="velocity_start_label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>60</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>设定速度维度起始：</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="range_start_label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>30</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>设定距离维度起始：</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="velocity_end_label">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>60</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>设定速度维度结束：</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="range_end_label">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>30</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>设定距离维度结束：</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="channel_start_label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>90</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>设定速度维度起始：</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="channel_end_label">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>90</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>设定速度维度起始：</string>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

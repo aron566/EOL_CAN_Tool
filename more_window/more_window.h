@@ -28,6 +28,9 @@ public:
   void set_can_driver_obj(can_driver *can_driver_ = nullptr)
   {
     can_driver_obj = can_driver_;
+    /* 设置can驱动 after */
+    eol_window_obj->set_can_driver_obj(can_driver_obj);
+
     connect(can_driver_obj, &can_driver::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
     connect(can_driver_obj, &can_driver::signal_show_message, this, &more_window::slot_show_message);
     connect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
@@ -41,7 +44,7 @@ public:
    */
   void set_channel_num(quint8 channel_num);
 public:
-  eol_window *eol_ui = nullptr;
+
 protected:
     /**
      * @brief closeEvent
@@ -51,6 +54,15 @@ protected:
     virtual void resizeEvent(QResizeEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
 //    virtual void showEvent(QShowEvent *event);
+
+private:
+
+  /**
+   * @brief EOL调试子窗口
+   * @param titile
+   */
+  void eol_window_init(QString titile);
+
   /**
      * @brief 定时器初始化
      */
@@ -113,10 +125,11 @@ private slots:
      * @param len 数据长度
      * @param direct 方向
      * @param channel_num 通道号
-     * @param protocol_type 协议类型 0 can 1 canfd
+     * @param protocol_type 协议类型 0 can 1 canfd'
+     * @param ms 当前时间
      */
     void slot_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, \
-      quint8 direct, quint32 channel_num, quint8 protocol_type);
+      quint8 direct, quint32 channel_num, quint8 protocol_type, quint64 ms);
 
     void slot_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
     void slot_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
@@ -125,7 +138,7 @@ private slots:
 
 private:
     Ui::more_window *ui;
-
+    eol_window *eol_window_obj = nullptr;
 private:
     can_driver *can_driver_obj = nullptr;
     frame_diagnosis *frame_diagnosis_obj = nullptr;

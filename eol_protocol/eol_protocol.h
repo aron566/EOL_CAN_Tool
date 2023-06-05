@@ -95,7 +95,7 @@ public:
 
     /* 删除cq */
     delete cq_obj;
-    qDebug() << "eol delete";
+    qDebug() << "eol protocol delete";
   }
 
   /* 设备工作模式 */
@@ -379,7 +379,7 @@ public:
   void stop_task()
   {
     run_state = false;
-    qDebug() << "eol protocol wait to stop";
+    qDebug() << "eol protocol stop_task";
   }
 
   void start_task()

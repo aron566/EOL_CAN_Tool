@@ -64,9 +64,6 @@ eol_window::eol_window(QString title, QWidget *parent) :
 
 eol_window::~eol_window()
 {
-  /* 停止协议栈 */
-  eol_protocol_obj->stop_task();
-
   run_state = false;
   qDebug() << "eol window wait to end";
 
@@ -78,13 +75,16 @@ eol_window::~eol_window()
 
   /* 删除子窗口 */
   delete eol_sub_window_obj;
+  qDebug() << "del eol_sub_window_obj";
 
   delete eol_calibration_window_obj;
+  qDebug() << "del eol_calibration_window_obj";
 
   delete eol_2dfft_calibration_window_obj;
+  qDebug() << "del eol_2dfft_calibration_window_obj";
 
   delete ui;
-  qDebug() << "eol window is end";
+  qDebug() << "del eol_window";
 }
 
 void eol_window::closeEvent(QCloseEvent *event)
@@ -116,7 +116,7 @@ void eol_window::eol_sub_window_init(QString title)
 void eol_window::eol_rcs_calibration_window_init(QString title)
 {
   eol_calibration_window_obj = new eol_calibration_window(title);
-  connect(eol_calibration_window_obj, &eol_calibration_window::signal_window_closed, this, &eol_window::slot_show_this_window); 
+  connect(eol_calibration_window_obj, &eol_calibration_window::signal_window_closed, this, &eol_window::slot_show_this_window);
 
   /* 校准配置更新 */
   connect(this, &eol_window::signal_clear_profile_info, eol_calibration_window_obj, &eol_calibration_window::slot_clear_profile_info);
@@ -136,7 +136,6 @@ void eol_window::eol_2dfft_calibration_window_init(QString title)
   connect(this, &eol_window::signal_profile_info_update, eol_2dfft_calibration_window_obj, &eol_angle_calibration_window::slot_profile_info_update);
 }
 
-
 void eol_window::set_can_driver_obj(can_driver *can_driver_obj)
 {
   /* 接收can驱动断开信号 */
@@ -146,7 +145,6 @@ void eol_window::set_can_driver_obj(can_driver *can_driver_obj)
   connect(can_driver_obj, &can_driver::signal_can_is_closed, this, [this]{
     this->eol_protocol_obj->stop_task();
   });
-
   eol_protocol_init(can_driver_obj);
 }
 

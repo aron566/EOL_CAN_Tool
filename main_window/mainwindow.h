@@ -41,13 +41,17 @@ private:
   Ui::MainWindow *ui;
 
   more_window *more_window_obj = nullptr;
-  eol_window *eol_window_obj = nullptr;
 
 private:
   can_driver *can_driver_obj = nullptr;
 private:
+
+  /**
+   * @brief 下级窗口初始化
+   * @param titile
+   */
   void more_window_init(QString titile);
-  void eol_window_init(QString titile);
+
 private:
   /**
    * @brief can驱动初始化

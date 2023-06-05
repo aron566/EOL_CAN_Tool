@@ -947,7 +947,8 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
       CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, can.frame.can_dlc + sizeof(quint16));
 
       /* 发送接收数据信号 */
-      emit signal_can_driver_msg(can_id, can.frame.data, can.frame.can_dlc, (quint8)CAN_RX_DIRECT, channel_state.channel_num, 0);
+      QDateTime dt = QDateTime::currentDateTime();
+      emit signal_can_driver_msg(can_id, can.frame.data, can.frame.can_dlc, (quint8)CAN_RX_DIRECT, channel_state.channel_num, 0, dt.toMSecsSinceEpoch());
     }
 
     /* 消息过滤分发 */
@@ -1004,7 +1005,8 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
       CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, canfd.frame.len + sizeof(quint16));
 
       /* 发送接收数据信号 */
-      emit signal_can_driver_msg(can_id, canfd.frame.data, canfd.frame.len, (quint8)CAN_RX_DIRECT, channel_state.channel_num, 1);
+      QDateTime dt = QDateTime::currentDateTime();
+      emit signal_can_driver_msg(can_id, canfd.frame.data, canfd.frame.len, (quint8)CAN_RX_DIRECT, channel_state.channel_num, 1, dt.toMSecsSinceEpoch());
     }
 
     /* 消息过滤分发 */
@@ -1045,7 +1047,8 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.can_dlc);
 
     /* 发送接收数据信号 */
-    emit signal_can_driver_msg(can_id, can.frame.data, can.frame.can_dlc, (quint8)CAN_TX_DIRECT, channel_state.channel_num, 0);
+    QDateTime dt = QDateTime::currentDateTime();
+    emit signal_can_driver_msg(can_id, can.frame.data, can.frame.can_dlc, (quint8)CAN_TX_DIRECT, channel_state.channel_num, 0, dt.toMSecsSinceEpoch());
   }
 }
 
@@ -1070,7 +1073,8 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.len);
 
     /* 发送接收数据信号 */
-    emit signal_can_driver_msg(can_id, can.frame.data, can.frame.len, (quint8)CAN_TX_DIRECT, channel_state.channel_num, 1);
+    QDateTime dt = QDateTime::currentDateTime();
+    emit signal_can_driver_msg(can_id, can.frame.data, can.frame.len, (quint8)CAN_TX_DIRECT, channel_state.channel_num, 1, dt.toMSecsSinceEpoch());
   }
 }
 

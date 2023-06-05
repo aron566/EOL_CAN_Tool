@@ -60,6 +60,7 @@ public:
 
     /* 删除cq */
     delete cq_obj;
+    qDebug() << "del can_driver";
   }
 
   /**
@@ -244,8 +245,9 @@ signals:
    * @param direct 方向
    * @param channel_num 通道号
    * @param protocol_type 协议类型
+   * @param ms 当前时间
    */
-  void signal_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, quint8 direct, quint32 channel_num, quint8 protocol_type);
+  void signal_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, quint8 direct, quint32 channel_num, quint8 protocol_type, quint64 ms);
 
   /**
    * @brief 发送信号设置自动发送设备索引可用状态

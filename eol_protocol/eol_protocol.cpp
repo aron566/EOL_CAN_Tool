@@ -144,7 +144,8 @@ eol_protocol::eol_protocol(QObject *parent)
   }
 
   /* 初始化分包发送句柄 */
-  memset(&send_task_handle, 0, sizeof(SEND_TASK_LIST_Typedef_t));
+  send_task_handle.data_total_size = 0;
+  send_task_handle.wait_send_size = 0;
 
   /* 定时器初始化 */
   timer_init();

@@ -52,6 +52,16 @@
           <string>重复帧数</string>
          </property>
         </column>
+        <column>
+         <property name="text">
+          <string>帧周期ms</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>帧率fps</string>
+         </property>
+        </column>
        </widget>
       </item>
      </layout>

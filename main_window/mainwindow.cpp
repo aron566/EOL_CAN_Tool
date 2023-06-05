@@ -25,6 +25,7 @@
  *  <tr><td>2023-05-21 <td>v0.0.7  <td>aron566 <td>适配新EOL协议v0.0.8增加底噪表传输功能
  *  <tr><td>2023-05-22 <td>v0.0.8  <td>aron566 <td>修复上翻显示色彩异常问题
  *  <tr><td>2023-06-01 <td>v0.0.9  <td>aron566 <td>增加帧诊断窗口，优化eol协议栈发送机制，允许发送多种硬件端口
+ *  <tr><td>2023-06-05 <td>v0.0.10 <td>aron566 <td>修复析构会导致的问题
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -36,7 +37,7 @@
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
-#define PC_SOFTWARE_VERSION "v0.0.9"
+#define PC_SOFTWARE_VERSION "v0.0.10"
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -84,9 +85,6 @@ MainWindow::MainWindow(QWidget *parent)
   can_driver_init();
 
   /* 子窗口初始化 */
-  eol_window_init(tr("EOL CAN Tool - EOL"));
-
-  /* 子窗口初始化 */
   more_window_init(tr("EOL CAN Tool - More"));
 
   /* 恢复参数 */
@@ -97,16 +95,15 @@ MainWindow::~MainWindow()
 {
   delete can_driver_obj;
   qDebug() << "del can_driver_obj";
-  delete eol_window_obj;
-  qDebug() << "del eol_window_obj";
+
+  delete more_window_obj;
+  qDebug() << "del more_window_obj";
 
   g_thread_pool->waitForDone();
   g_thread_pool->clear();
 
-  delete more_window_obj;
-  qDebug() << "del more_window_obj";
   delete ui;
-  qDebug() << "del ui";
+  qDebug() << "del mainwindow";
 }
 
 /**
@@ -117,29 +114,8 @@ void MainWindow::more_window_init(QString titile)
   more_window_obj = new more_window(titile);
   connect(more_window_obj, &more_window::signal_more_window_closed, this, &MainWindow::slot_show_this_window);
 
-  /* 提供子级窗口操作接口 */
-  more_window_obj->eol_ui = eol_window_obj;
-
   /* 设置can驱动接口 */
   more_window_obj->set_can_driver_obj(can_driver_obj);
-}
-
-/**
- * @brief EOL调试子窗口
- */
-void MainWindow::eol_window_init(QString titile)
-{
-  eol_window_obj = new eol_window(titile);
-  connect(eol_window_obj, &eol_window::signal_eol_window_closed, this, &MainWindow::slot_show_this_window);
-
-  /* 设置线程池 first */
-  eol_window_obj->set_thread_pool(g_thread_pool);
-
-  /* 禁止线程完成后执行析构对象 */
-  eol_window_obj->setAutoDelete(false);
-
-  /* 设置can驱动 after */
-  eol_window_obj->set_can_driver_obj(can_driver_obj);
 }
 
 void MainWindow::can_driver_init()

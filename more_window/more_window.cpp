@@ -26,6 +26,9 @@ more_window::more_window(QString title, QWidget *parent) :
   /* 设置标题 */
   this->setWindowTitle(title);
 
+  /* EOL窗口初始化 */
+  eol_window_init(tr("EOL CAN Tool - EOL"));
+
   /* 帧诊断调试窗口初始化 */
   frame_diagnosis_window_init(tr("EOL CAN Tool - Frame Diagnosis"));
 
@@ -41,8 +44,25 @@ more_window::more_window(QString title, QWidget *parent) :
 more_window::~more_window()
 {
   delete frame_diagnosis_obj;
+  qDebug() << "del frame_diagnosis_obj";
+
+  delete eol_window_obj;
+  qDebug() << "del eol_window_obj";
 
   delete ui;
+  qDebug() << "del more_window";
+}
+
+/* EOL调试子窗口 */
+void more_window::eol_window_init(QString titile)
+{
+  eol_window_obj = new eol_window(titile);
+
+  /* 设置线程池 first */
+  eol_window_obj->set_thread_pool(QThreadPool::globalInstance());
+
+  /* 禁止线程完成后执行析构对象 */
+  eol_window_obj->setAutoDelete(false);
 }
 
 void more_window::timer_init()
@@ -348,9 +368,9 @@ void more_window::frame_diagnosis_window_init(QString title)
 }
 
 void more_window::slot_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, \
-  quint8 direct, quint32 channel_num, quint8 protocol_type)
+  quint8 direct, quint32 channel_num, quint8 protocol_type, quint64 ms)
 {
-  frame_diagnosis_obj->add_msg_to_table(can_id, data, len, direct, channel_num, protocol_type);
+  frame_diagnosis_obj->add_msg_to_table(can_id, data, len, direct, channel_num, protocol_type, ms);
 }
 
 void more_window::slot_show_message(const QString &message, quint32 channel_num, \
@@ -533,7 +553,7 @@ void more_window::on_data_lineEdit_textChanged(const QString &arg1)
 
 void more_window::on_eol_test_pushButton_2_clicked()
 {
-  eol_ui->show();
+  eol_window_obj->show();
 }
 
 
