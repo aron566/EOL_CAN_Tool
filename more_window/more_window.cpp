@@ -2,6 +2,7 @@
 #include "ui_more_window.h"
 #include <QDebug>
 #include <QFile>
+#include <QFileDialog>
 #include <QDateTime>
 #include <QWheelEvent>
 
@@ -680,5 +681,62 @@ void more_window::on_mask_en_checkBox_clicked(bool checked)
 void more_window::on_frame_diagnosis_pushButton_clicked()
 {
   frame_diagnosis_obj->show();
+}
+
+
+void more_window::on_export_txt_pushButton_clicked()
+{
+  /* 导出 */
+
+  /* 设置导出路径 */
+  /* 选择文件存储区域 */
+  /* 参数：父对象，标题，默认路径，格式 */
+  QString path = QFileDialog::getSaveFileName(this, tr("Save  "), "../", tr("TXT (*.txt)"));
+  if(path.isEmpty() == true)
+  {
+    return;
+  }
+
+  QFile export_txt_file;
+  /* 先关闭 */
+  if(export_txt_file.isOpen() == true)
+  {
+    export_txt_file.close();
+  }
+
+  /* 关联文件名 */
+  export_txt_file.setFileName(path);
+
+  /* 打开文件，只写方式 */
+  if(export_txt_file.open(QIODevice::WriteOnly) == false)
+  {
+    return;
+  }
+
+  QString txt;
+  SHOW_MSG_Typedef_t msg;
+  QList<SHOW_MSG_Typedef_t> *pmsg_list;
+
+  /* 轮询显示通道 */
+  for(int i = 0; i < ui->channel_num_comboBox->count() - 1; i++)
+  {
+    if(0 == i)
+    {
+      pmsg_list = &ch1_show_msg_list;
+    }
+    else
+    {
+      pmsg_list = &ch2_show_msg_list;
+    }
+    txt.clear();
+    txt.append(QString::asprintf("====CH %d Message====\r\n", i));
+    export_txt_file.write(txt.toUtf8());
+    for(qint32 line = 0; line < pmsg_list->size(); line++)
+    {
+      export_txt_file.write(pmsg_list->value(line).str.toUtf8() + "\r\n");
+    }
+  }
+
+  export_txt_file.close();
 }
 

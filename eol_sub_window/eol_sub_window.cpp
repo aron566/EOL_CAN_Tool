@@ -69,11 +69,11 @@ void eol_sub_window::on_test_pushButton_clicked()
   eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* VCAN测试 */
-//  task.reg = EOL_RW_VERSION_REG;
-//  task.command = eol_protocol::EOL_READ_CMD;
-//  task.buf[0] = 0;
-//  task.len = 0;
-//  eol_protocol_obj->eol_master_common_rw_device(task);
+  task.reg = EOL_RW_VERSION_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = 1;
+  task.len = 1;
+  eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* SN读写 */
   task.reg = EOL_RW_SN_REG;

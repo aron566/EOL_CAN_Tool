@@ -238,6 +238,13 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QPushButton" name="export_txt_pushButton">
+              <property name="text">
+               <string>导出TXT</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>

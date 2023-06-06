@@ -136,6 +136,8 @@ private slots:
     void slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
     void on_frame_diagnosis_pushButton_clicked();
 
+    void on_export_txt_pushButton_clicked();
+
 private:
     Ui::more_window *ui;
     eol_window *eol_window_obj = nullptr;
