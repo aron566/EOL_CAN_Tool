@@ -100,6 +100,8 @@ private slots:
 
   void on_refresh_time_lineEdit_editingFinished();
 
+  void on_read_rcs_offset_pushButton_clicked();
+
 private:
   Ui::eol_calibration_window *ui;
 

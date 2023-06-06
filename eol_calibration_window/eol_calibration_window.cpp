@@ -2,6 +2,7 @@
 #include "ui_eol_calibration_window.h"
 #include <QFile>
 #include <QDateTime>
+#include <QMessageBox>
 
 eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   QWidget(parent),
@@ -215,6 +216,7 @@ void eol_calibration_window::on_test_start_pushButton_clicked()
     timer_obj->stop();
     eol_protocol_obj->stop_task();
     ui->test_start_pushButton->setText(tr("start"));
+    ui->read_rcs_offset_pushButton->setEnabled(true);
     return;
   }
 
@@ -222,6 +224,7 @@ void eol_calibration_window::on_test_start_pushButton_clicked()
   /* 停止->启动，目标获取 */
   timer_obj->start();
   ui->test_start_pushButton->setText(tr("stop"));
+  ui->read_rcs_offset_pushButton->setEnabled(false);
 
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
@@ -265,6 +268,33 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
     case EOL_R_2DFFT_DATA_REG:
       break;
     case EOL_RW_RCS_OFFSET_REG:
+      {
+        /* 写入 */
+        if(nullptr == data)
+        {
+
+        }
+        /* 读取 */
+        else
+        {
+          quint32 index = 0;
+          quint8 profile_num = data[index++];
+          qint16 rcs_offset = 0;
+          quint8 profile_id = 0;
+          QString tips_str;
+          for(quint8 i = 0; i < profile_num; i++)
+          {
+            profile_id = data[index++];
+            memcpy(&rcs_offset, data + index, sizeof(rcs_offset));
+            index += sizeof(rcs_offset);
+            tips_str += QString("<font size='10' color='green'><div align='legt'>profile id[%1] rcs offset:</div> <div align='right'>%2</div> </font>\r\n").arg(profile_id).arg((float)rcs_offset / 10.f);
+          }
+          /* 显示表信息 */
+          QMessageBox message(QMessageBox::Information, tr("RCS Info"), tr(tips_str.toUtf8()), QMessageBox::Yes, nullptr);
+          message.exec();
+        }
+      }
+      break;
     case EOL_W_PAR_RESET_REG:
     case EOL_RW_CALI_MODE_REG:
       break;
@@ -395,5 +425,24 @@ void eol_calibration_window::on_refresh_time_lineEdit_editingFinished()
   time_s = 0;
   frame_cnt = 0;
   eol_protocol_obj->stop_task();
+}
+
+/**
+ * @brief 读取rcs补偿值
+ */
+void eol_calibration_window::on_read_rcs_offset_pushButton_clicked()
+{
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.param = nullptr;
+
+  /* 软硬件版本号 */
+  task.reg = EOL_RW_RCS_OFFSET_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 启动eol线程 */
+  eol_protocol_obj->start_task();
 }
 
