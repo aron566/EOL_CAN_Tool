@@ -14,27 +14,99 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
-   <item row="4" column="0">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+   <item row="3" column="0" colspan="3">
+    <widget class="QGroupBox" name="pin_check_groupBox">
+     <property name="title">
+      <string>引脚状态检测</string>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>688</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="4" column="1">
-    <widget class="QPushButton" name="test_pushButton">
-     <property name="text">
-      <string>测试</string>
-     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="pin7_label">
+          <property name="text">
+           <string>pin7状态：</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="pin7_lineEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="pin8_label">
+          <property name="text">
+           <string>pin8状态：</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="pin8_lineEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </widget>
    </item>
-   <item row="0" column="0" colspan="2">
+   <item row="2" column="0" colspan="3">
+    <widget class="QGroupBox" name="sn_groupBox">
+     <property name="title">
+      <string>SN读写 二维码</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>SN Number：</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="sn_number_lineEdit"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="sn_write_label">
+          <property name="text">
+           <string>写入状态：</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="sn_write_lineEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="sn_read_label">
+          <property name="text">
+           <string>读取状态：</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="sn_read_lineEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="3">
     <widget class="QGroupBox" name="device_info_groupBox">
      <property name="title">
       <string>设备信息</string>
@@ -156,99 +228,7 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="0" colspan="2">
-    <widget class="QGroupBox" name="pin_check_groupBox">
-     <property name="title">
-      <string>引脚状态检测</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QLabel" name="pin7_label">
-          <property name="text">
-           <string>pin7状态：</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="pin7_lineEdit">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="pin8_label">
-          <property name="text">
-           <string>pin8状态：</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="pin8_lineEdit">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="2">
-    <widget class="QGroupBox" name="sn_groupBox">
-     <property name="title">
-      <string>SN读写</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>SN Number：</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="sn_number_lineEdit"/>
-        </item>
-        <item>
-         <widget class="QLabel" name="sn_write_label">
-          <property name="text">
-           <string>写入状态：</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="sn_write_lineEdit">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="sn_read_label">
-          <property name="text">
-           <string>读取状态：</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="sn_read_lineEdit">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="2">
+   <item row="1" column="0" colspan="3">
     <widget class="QGroupBox" name="vcan_groupBox">
      <property name="title">
       <string>VCAN测试</string>
@@ -273,6 +253,150 @@
        </layout>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>688</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="5" column="0" colspan="3">
+    <widget class="QGroupBox" name="private_sn_groupBox">
+     <property name="title">
+      <string>私有SN</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QLabel" name="chip_sn_label">
+          <property name="text">
+           <string>芯片SN</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="chip_sn_lineEdit"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="pmic_sn_label">
+          <property name="text">
+           <string>PMIC SN</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="pmic_sn_lineEdit"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="3">
+    <widget class="QGroupBox" name="client_info_groupBox">
+     <property name="title">
+      <string>客户信息</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_7">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_9">
+        <item>
+         <widget class="QLabel" name="did_hw_sf_ver_label">
+          <property name="text">
+           <string>DID硬件软件版本</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="did_hw_sf_ver_lineEdit"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="3">
+    <widget class="QGroupBox" name="voltage_groupBox">
+     <property name="title">
+      <string>电压测试</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_6">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <item>
+         <widget class="QLabel" name="voltage_type_label">
+          <property name="text">
+           <string>电压类型</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="voltage_type_comboBox">
+          <item>
+           <property name="text">
+            <string>NULL</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="voltage_label">
+          <property name="text">
+           <string>电压数值</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="voltage_lineEdit">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="7" column="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_10">
+     <item>
+      <widget class="QComboBox" name="wdg_opt_comboBox">
+       <item>
+        <property name="text">
+         <string>开启看门狗喂狗</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>关闭看门狗喂狗</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="test_pushButton">
+       <property name="text">
+        <string>测试</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="7" column="1">
+    <widget class="QLabel" name="wdg_opt_status_label">
+     <property name="text">
+      <string>NULL</string>
+     </property>
     </widget>
    </item>
   </layout>

@@ -74,6 +74,16 @@
 
 #define EOL_W_TEST_PAR_REG             0x13U  /**< 退出或者进入设置测试模式参数 */
 
+#define EOL_R_BG_NOISE_REG             0x14U  /**< 读取通道底噪 */
+
+#define EOL_W_UPDATE_BG_NOISE_REG      0x15U  /**< 更新底噪 */
+#define EOL_RW_VOLTAGE_REG             0x16U  /**< 读写电压 */
+#define EOL_R_CHIP_SN_REG              0x17U  /**< 读取芯片SN */
+#define EOL_R_PMIC_SN_REG              0x18U  /**< 读取pmicSN */
+#define EOL_R_CLIENT_DID_VER_REG       0x19U  /**< 读取客户did版本信息 */
+#define EOL_RW_RDM_DATA_REG            0x1AU  /**< 读写RDM数据 */
+#define EOL_W_WDG_REG                  0x1BU  /**< 设置看门狗 */
+
 /** Exported variables -------------------------------------------------------*/
 /** Exported functions prototypes --------------------------------------------*/
 

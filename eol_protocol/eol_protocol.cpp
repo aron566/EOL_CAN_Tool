@@ -588,12 +588,17 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONS
     case EOL_R_2DFFT_DATA_REG:
     case EOL_RW_RCS_OFFSET_REG:
     case EOL_RW_CALI_MODE_REG:
+    case EOL_R_BG_NOISE_REG:
+    case EOL_RW_VOLTAGE_REG:
+    case EOL_R_CHIP_SN_REG:
+    case EOL_R_PMIC_SN_REG:
+    case EOL_R_CLIENT_DID_VER_REG:
+    case EOL_RW_RDM_DATA_REG:
+    default:
       {
         /* 发送完成信号 */
         emit signal_rw_device_ok(wait.reg_addr, data, data_len);
       }
-      break;
-    default:
       break;
   }
   return RETURN_OK;
@@ -900,7 +905,7 @@ bool eol_protocol::common_rw_device_task(void *param_)
   /* 清空 */
   eol_protocol_clear();
 
-  qDebug() << "step1 rw device cmd " << param->command << "reg " << param->reg << "len " << param->len;
+  qDebug("step1 rw device cmd %u reg 0x%02X len %u", param->command, param->reg, param->len);
 
   do
   {

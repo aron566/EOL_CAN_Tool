@@ -89,6 +89,50 @@ void eol_sub_window::on_test_pushButton_clicked()
   task.len = 0;
   eol_protocol_obj->eol_master_common_rw_device(task);
 
+  /* 设置需要获取的电压类型 */
+  if(ui->voltage_type_comboBox->currentText() != "NULL")
+  {
+    task.reg = EOL_RW_VOLTAGE_REG;
+    task.command = eol_protocol::EOL_WRITE_CMD;
+    task.buf[0] = (quint8)ui->voltage_type_comboBox->currentText().toUShort();
+    task.len = 1;
+    eol_protocol_obj->eol_master_common_rw_device(task);
+  }
+  /* 电压 */
+  task.reg = EOL_RW_VOLTAGE_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 芯片SN */
+  task.reg = EOL_R_CHIP_SN_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* PMIC SN */
+  task.reg = EOL_R_PMIC_SN_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* client did */
+  task.reg = EOL_R_CLIENT_DID_VER_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 看门狗测试 */
+  task.reg = EOL_W_WDG_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = (quint8)ui->wdg_opt_comboBox->currentIndex();
+  task.len = 1;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
 }
@@ -104,9 +148,15 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
       case EOL_RW_VERSION_REG :
         ui->ver_test_lineEdit->setText(ui->ver_test_lineEdit->text() + tr("write version ok"));
         break;
+
       case EOL_RW_SN_REG      :
         ui->sn_write_lineEdit->setText(ui->sn_write_lineEdit->text() + tr("write sn ok"));
         break;
+
+      case EOL_W_WDG_REG      :
+        ui->wdg_opt_status_label->setText(ui->wdg_opt_comboBox->currentText() + tr(" ok"));
+        break;
+
       default                 :
         break;
     }
@@ -208,7 +258,58 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
           ui->pin8_lineEdit->setText(QString::asprintf("%02X", data[1]));
         }
         break;
+
+      /* 读写电压 */
+      case EOL_RW_VOLTAGE_REG:
+        {
+          quint16 voltage = 0;
+          memcpy(&voltage, data, sizeof(voltage));
+          qDebug() << "voltage                   " << voltage;
+          ui->voltage_lineEdit->setText(QString::asprintf("%fv", (float)voltage / 10.f));
+        }
+        break;
+
+      /* 读取芯片SN */
+      case EOL_R_CHIP_SN_REG:
+        {
+          quint8 Bytes = data[0];
+          str.clear();
+          for(quint16 i = 0; i < Bytes; i++)
+          {
+            str += QString::asprintf("%02X", data[i + 1]);
+          }
+          qDebug() << "chip sn                   " << Bytes;
+          ui->chip_sn_lineEdit->setText(str);
+        }
+        break;
+
+      /* 读取pmicSN */
+      case EOL_R_PMIC_SN_REG:
+        {
+          quint8 Bytes = data[0];
+          str.clear();
+          for(quint16 i = 0; i < Bytes; i++)
+          {
+            str += QString::asprintf("%02X", data[i + 1]);
+          }
+          ui->pmic_sn_lineEdit->setText(str);
+        }
+        break;
+
+      /* 读取客户did版本信息，硬件 软件 */
+      case EOL_R_CLIENT_DID_VER_REG:
+        {
+          quint8 Bytes = data[0];
+          str.clear();
+          for(quint16 i = 0; i < Bytes; i++)
+          {
+            str += QString::asprintf("%02X", data[i + 1]);
+          }
+          ui->did_hw_sf_ver_lineEdit->setText(str);
+        }
+        break;
     }
+
     /* 启动eol线程 */
     eol_protocol_obj->start_task();
   }
@@ -231,7 +332,23 @@ void eol_sub_window::slot_protocol_rw_err(quint8 reg, quint8 command)
       }
       break;
     case EOL_R_MOUNTID_REG   :
+      qDebug() << "EOL_R_MOUNTID_REG err";
+      break;
 
+    case EOL_RW_VOLTAGE_REG   :
+      qDebug() << "EOL_RW_VOLTAGE_REG err";
+      break;
+
+    case EOL_R_CHIP_SN_REG   :
+      qDebug() << "EOL_R_CHIP_SN_REG err";
+      break;
+
+    case EOL_R_PMIC_SN_REG   :
+      qDebug() << "EOL_R_PMIC_SN_REG err";
+      break;
+
+    case EOL_R_CLIENT_DID_VER_REG   :
+      qDebug() << "EOL_R_CLIENT_DID_VER_REG err";
       break;
   }
 }
