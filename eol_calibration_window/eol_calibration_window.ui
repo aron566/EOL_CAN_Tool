@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>836</width>
+    <width>941</width>
     <height>740</height>
    </rect>
   </property>
@@ -20,67 +20,21 @@
       <string>RCS标定</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_8">
-      <item row="1" column="0" colspan="9">
-       <widget class="QGroupBox" name="mag_snr_data_view_groupBox">
-        <property name="title">
-         <string>数据视口</string>
+      <item row="2" column="4">
+       <widget class="QLineEdit" name="fps_lineEdit">
+        <property name="enabled">
+         <bool>false</bool>
         </property>
-        <layout class="QGridLayout" name="gridLayout_6">
-         <item row="0" column="0">
-          <widget class="QTableWidget" name="tableWidget">
-           <column>
-            <property name="text">
-             <string>配置ID</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>目标速度</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>方位角deg</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>目标距离</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>MAGdB</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>RCSdB</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>SNRdB</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>俯仰角deg</string>
-            </property>
-           </column>
-          </widget>
-         </item>
-        </layout>
        </widget>
       </item>
-      <item row="3" column="6">
-       <widget class="QLabel" name="rcs_rsl_state_show_label">
+      <item row="3" column="5">
+       <widget class="QLabel" name="rcs_rsl_state_label">
         <property name="text">
-         <string>ok</string>
+         <string>标定结果：</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="9">
+      <item row="0" column="0" colspan="10">
        <widget class="QGroupBox" name="threshold_groupBox">
         <property name="title">
          <string>阈值及标准设置</string>
@@ -157,6 +111,27 @@
              <item>
               <property name="text">
                <string>3</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="calimode_label">
+             <property name="text">
+              <string>校准模式</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="cali_mode_comboBox">
+             <item>
+              <property name="text">
+               <string>一度一校准测角</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>曲线拟合测角</string>
               </property>
              </item>
             </widget>
@@ -295,17 +270,31 @@
         </layout>
        </widget>
       </item>
-      <item row="2" column="4">
-       <widget class="QLineEdit" name="fps_lineEdit">
-        <property name="enabled">
-         <bool>false</bool>
+      <item row="2" column="0">
+       <widget class="QLabel" name="rcs_label">
+        <property name="text">
+         <string>RCS标定结果：</string>
         </property>
        </widget>
       </item>
       <item row="2" column="8">
-       <widget class="QPushButton" name="test_start_pushButton">
+       <widget class="QPushButton" name="read_rcs_offset_pushButton">
         <property name="text">
-         <string>start</string>
+         <string>读取RCS补偿</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="rcs_rsl_label">
+        <property name="text">
+         <string>标准偏差：20m 3dBsm,50m 1dBsm,平均：2dBsm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="refresh_time_label">
+        <property name="text">
+         <string>请求周期ms：</string>
         </property>
        </widget>
       </item>
@@ -322,11 +311,57 @@
         </property>
        </spacer>
       </item>
-      <item row="3" column="5">
-       <widget class="QLabel" name="rcs_rsl_state_label">
-        <property name="text">
-         <string>标定结果：</string>
+      <item row="1" column="0" colspan="10">
+       <widget class="QGroupBox" name="mag_snr_data_view_groupBox">
+        <property name="title">
+         <string>数据视口</string>
         </property>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="0" column="0">
+          <widget class="QTableWidget" name="tableWidget">
+           <column>
+            <property name="text">
+             <string>配置ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>目标速度</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>方位角deg</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>目标距离</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>MAGdB</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>RCSdB</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>SNRdB</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>俯仰角deg</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item row="2" column="3">
@@ -336,35 +371,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="refresh_time_label">
-        <property name="text">
-         <string>请求周期ms：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="rcs_rsl_label">
-        <property name="text">
-         <string>标准偏差：20m 3dBsm,50m 1dBsm,平均：2dBsm</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="refresh_time_lineEdit">
-        <property name="text">
-         <string>50</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="rcs_label">
-        <property name="text">
-         <string>RCS标定结果：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="8">
+      <item row="3" column="9">
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -377,10 +384,31 @@
         </property>
        </spacer>
       </item>
-      <item row="2" column="7">
-       <widget class="QPushButton" name="read_rcs_offset_pushButton">
+      <item row="2" column="9">
+       <widget class="QPushButton" name="test_start_pushButton">
         <property name="text">
-         <string>读取RCS补偿</string>
+         <string>start</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="refresh_time_lineEdit">
+        <property name="text">
+         <string>50</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="6">
+       <widget class="QLabel" name="rcs_rsl_state_show_label">
+        <property name="text">
+         <string>ok</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="7">
+       <widget class="QPushButton" name="set_cali_mode_pushButton">
+        <property name="text">
+         <string>手动设置校准模式</string>
         </property>
        </widget>
       </item>

@@ -1161,7 +1161,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
         check_sum += Start_Angle + End_Angle + Azi_Ele_Angle + table_info.Points + table_info.Channel_Num + tx_order + table_info.Profile_ID;
         csv_header = tr("table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, ele angle*10, tx_order, profile_id, check sum\r\n");
         str += QString::asprintf(",%u,%u,%d,%d,%d,%u,%u,"
-                                 "%d\r\n", \
+                                 "%lld\r\n", \
                                  table_info.Points, \
                                  table_info.Channel_Num, \
                                  Start_Angle, \
@@ -1206,7 +1206,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 
         csv_header = tr("table class, version, data type, data size, data crc, points, channel num, tx_order, profile_id, check sum\r\n");
         str += QString::asprintf(",%u,%u,%u,%u,"
-                                 "%d\r\n", \
+                                 "%lld\r\n", \
                                  ant_table_info.Points, \
                                  ant_table_info.Channel_Num, \
                                  tx_order, \
@@ -1249,7 +1249,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
         check_sum += Start_Angle + End_Angle + pattern_table_info.Points + pattern_table_info.Channel_Num + pattern_table_info.Unit + tx_order + pattern_table_info.Profile_ID;
         csv_header = tr("table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, unit, tx_order, profile_id, check sum\r\n");
         str += QString::asprintf(",%u,%u,%d,%d,%u,%u,%u,"
-                                 "%d\r\n", \
+                                 "%lld\r\n", \
                                  pattern_table_info.Points, \
                                  pattern_table_info.Channel_Num, \
                                  Start_Angle, \
@@ -1304,7 +1304,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
                         "channel num0, channel num1, channel num2, channel num3, "
                         "unit, tx_order0, tx_order1, tx_order2, tx_order3, check sum\r\n");
         str += QString::asprintf(",%u,%u,%u,%u,%u,%u,%u,"
-                                 "%u,%u,%d\r\n", \
+                                 "%u,%u,%lld\r\n", \
                                  noise_table_info.Channel_Num[0], \
                                  noise_table_info.Channel_Num[1], \
                                  noise_table_info.Channel_Num[2], \

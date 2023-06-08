@@ -53,6 +53,28 @@ void eol_calibration_window::closeEvent(QCloseEvent *event)
 }
 
 /**
+ * @brief 窗口显示事件
+ * @param event
+ */
+void eol_calibration_window::showEvent(QShowEvent *event)
+{
+  Q_UNUSED(event)
+
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.param = nullptr;
+
+  /* 读取校准模式 */
+  task.reg = EOL_RW_CALI_MODE_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 启动eol线程 */
+  eol_protocol_obj->start_task();
+}
+
+/**
  * @brief 定时器初始化
  */
 void eol_calibration_window::timer_init()
@@ -289,14 +311,41 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
             index += sizeof(rcs_offset);
             tips_str += QString("<font size='10' color='green'><div align='legt'>profile id[%1] rcs offset:</div> <div align='right'>%2</div> </font>\r\n").arg(profile_id).arg((float)rcs_offset / 10.f);
           }
-          /* 显示表信息 */
+          /* 显示rcs offset信息 */
           QMessageBox message(QMessageBox::Information, tr("RCS Info"), tr(tips_str.toUtf8()), QMessageBox::Yes, nullptr);
           message.exec();
         }
       }
       break;
     case EOL_W_PAR_RESET_REG:
+      break;
     case EOL_RW_CALI_MODE_REG:
+      {
+        /* 写入 */
+        if(nullptr == data)
+        {
+          ui->rcs_rsl_state_show_label->setText(tr("set ok"));
+        }
+        else
+        {
+          /* 读取 */
+          quint32 index = 0;
+          quint8 profile_num = data[index++];
+          qint8 cali_mode = 0;
+          quint8 profile_id = 0;
+          QString tips_str;
+          for(quint8 i = 0; i < profile_num; i++)
+          {
+            profile_id = data[index++];
+            memcpy(&cali_mode, data + index, sizeof(cali_mode));
+            index += sizeof(cali_mode);
+            tips_str += QString("<font size='10' color='green'><div align='legt'>profile id[%1] cali_mode:</div> <div align='right'>%2</div> </font>\r\n").arg(profile_id).arg(cali_mode);
+          }
+          /* 显示Cali Mode信息 */
+          QMessageBox message(QMessageBox::Information, tr("Cali Mode Info"), tr(tips_str.toUtf8()), QMessageBox::Yes, nullptr);
+          message.exec();
+        }
+      }
       break;
   }
 }
@@ -440,6 +489,32 @@ void eol_calibration_window::on_read_rcs_offset_pushButton_clicked()
   task.command = eol_protocol::EOL_READ_CMD;
   task.buf[0] = 0;
   task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 启动eol线程 */
+  eol_protocol_obj->start_task();
+}
+
+
+void eol_calibration_window::on_set_cali_mode_pushButton_clicked()
+{
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.param = nullptr;
+
+  /* 设置校准模式 */
+  task.reg = EOL_RW_CALI_MODE_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = 1;
+  task.buf[1] = (quint8)ui->profile_id_comboBox->currentIndex();
+  task.buf[2] = (quint8)ui->cali_mode_comboBox->currentIndex();
+  task.len = 3;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 保存 */
+  task.reg = EOL_W_SAVE_PAR_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = 1;
+  task.len = 1;
   eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* 启动eol线程 */

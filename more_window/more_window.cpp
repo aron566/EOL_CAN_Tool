@@ -394,11 +394,15 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
       char str_buf[65];
       size_t size = data_len > 64 ? 64 : data_len;
       memcpy(str_buf, data, size);
-      if(str_buf[size - 1] != '\0')
+      if('\n' == str_buf[size - 1] || '\r' == str_buf[size - 1])
+      {
+        str_buf[size - 1] = '\0';
+      }
+      else
       {
         str_buf[size] = '\0';
       }
-      show_message.append(QString("[%1]RX:").arg(channel_num));
+//      show_message.append(QString("[%1]RX:").arg(channel_num));
       QString str = QString::asprintf("%s", str_buf);
       show_message.append(str);
     }
@@ -464,11 +468,15 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
       char str_buf[65];
       size_t size = data_len > 64 ? 64 : data_len;
       memcpy(str_buf, data, size);
-      if(str_buf[size - 1] != '\0')
+      if('\n' == str_buf[size - 1] || '\r' == str_buf[size - 1])
+      {
+        str_buf[size - 1] = '\0';
+      }
+      else
       {
         str_buf[size] = '\0';
       }
-      show_message.append(QString("[%1]RX:").arg(channel_num));
+//      show_message.append(QString("[%1]RX:").arg(channel_num));
       QString str = QString::asprintf("%s", str_buf);
       show_message.append(str);
     }
@@ -615,17 +623,6 @@ void more_window::slot_timeout()
   {
     can_driver_obj->send(ui->channel_num_comboBox->currentIndex());
   }
-//  static quint32 i = 0;
-//  slot_show_message(QString("message %1").arg(i++), 0, \
-//    0, nullptr, 0);
-//  if(i == 255)
-//  {
-//    timer_obj->stop();
-//  }
-#if 0
-  /* 显示 */
-  show_txt();
-#endif
 }
 
 void more_window::slot_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct)

@@ -48,6 +48,8 @@ protected:
      * @param event
      */
     virtual void closeEvent(QCloseEvent *event) override;
+
+    virtual void showEvent(QShowEvent *event) override;
 private:
 
   /**
@@ -101,6 +103,8 @@ private slots:
   void on_refresh_time_lineEdit_editingFinished();
 
   void on_read_rcs_offset_pushButton_clicked();
+
+  void on_set_cali_mode_pushButton_clicked();
 
 private:
   Ui::eol_calibration_window *ui;
