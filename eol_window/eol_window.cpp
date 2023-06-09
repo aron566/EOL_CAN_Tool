@@ -396,7 +396,7 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       index += sizeof(table_info.Channel_Num);
       memcpy(common_table_info.private_header + index, &table_info.Azi_Ele_Angle, sizeof(table_info.Azi_Ele_Angle));
       index += sizeof(table_info.Azi_Ele_Angle);
-      memcpy(common_table_info.private_header + index, &table_info.Clibration_Tx_Order, sizeof(table_info.Clibration_Tx_Order));
+      memcpy(common_table_info.private_header + index, &table_info.Clibration_Tx_Order[0], sizeof(table_info.Clibration_Tx_Order));
       index += sizeof(table_info.Clibration_Tx_Order);
       memcpy(common_table_info.private_header + index, &table_info.Profile_ID, sizeof(table_info.Profile_ID));
 //      index += sizeof(table_info.Profile_ID);
@@ -445,7 +445,7 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       index += sizeof(ant_table_info.Points);
       memcpy(common_table_info.private_header + index, &ant_table_info.Channel_Num, sizeof(ant_table_info.Channel_Num));
       index += sizeof(ant_table_info.Channel_Num);
-      memcpy(common_table_info.private_header + index, &ant_table_info.Clibration_Tx_Order, sizeof(ant_table_info.Clibration_Tx_Order));
+      memcpy(common_table_info.private_header + index, &ant_table_info.Clibration_Tx_Order[0], sizeof(ant_table_info.Clibration_Tx_Order));
       index += sizeof(ant_table_info.Clibration_Tx_Order);
       memcpy(common_table_info.private_header + index, &ant_table_info.Profile_ID, sizeof(ant_table_info.Profile_ID));
 //      index += sizeof(ant_table_info.Profile_ID);
@@ -509,7 +509,7 @@ eol_protocol::TABLE_Typedef_t eol_window::csv_header_analysis(QByteArray &data, 
       index += sizeof(pattern_table_info.Channel_Num);
       memcpy(common_table_info.private_header + index, &pattern_table_info.Unit, sizeof(pattern_table_info.Unit));
       index += sizeof(pattern_table_info.Unit);
-      memcpy(common_table_info.private_header + index, &pattern_table_info.Clibration_Tx_Order, sizeof(pattern_table_info.Clibration_Tx_Order));
+      memcpy(common_table_info.private_header + index, &pattern_table_info.Clibration_Tx_Order[0], sizeof(pattern_table_info.Clibration_Tx_Order));
       index += sizeof(pattern_table_info.Clibration_Tx_Order);
       memcpy(common_table_info.private_header + index, &pattern_table_info.Profile_ID, sizeof(pattern_table_info.Profile_ID));
 //      index += sizeof(pattern_table_info.Profile_ID);
