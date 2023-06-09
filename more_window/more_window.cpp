@@ -40,6 +40,9 @@ more_window::more_window(QString title, QWidget *parent) :
   ui->ch2_receive_data_textEdit->setVisible(true);
   ui->ch1_receive_data_textEdit->setUndoRedoEnabled(false);
   ui->ch2_receive_data_textEdit->setUndoRedoEnabled(false);
+
+  /* 设置提示值 */
+  ui->data_lineEdit->setPlaceholderText("05 66");
 }
 
 more_window::~more_window()
@@ -735,5 +738,60 @@ void more_window::on_export_txt_pushButton_clicked()
   }
 
   export_txt_file.close();
+}
+
+void more_window::on_crc_pushButton_clicked()
+{
+  if(true == ui->data_lineEdit->text().isEmpty())
+  {
+    return;
+  }
+  if(0 == ui->crc_comboBox->currentIndex())
+  {
+    return;
+  }
+
+  bool ok;
+  quint8 temp_data[2048];
+  QStringList data_list = ui->data_lineEdit->text().split(' ');
+  quint32 len = (quint32)data_list.length() > sizeof(temp_data) ? sizeof(temp_data) : (quint32)data_list.length();
+
+  for(quint32 i = 0; i < len; i++)
+  {
+    temp_data[i] = (quint8)data_list[i].toUShort(&ok, 16);
+  }
+
+  switch(ui->crc_comboBox->currentIndex())
+  {
+    case 1:
+      {
+        quint16 crc = utility::get_modbus_crc16_with_tab(temp_data, len);
+        data_list.append(QString::asprintf("%02X", crc & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 8) & 0xFF));
+        ui->data_lineEdit->setText(data_list.join(" "));
+      }
+      break;
+
+    case 2:
+      {
+        quint32 crc = utility::get_crc32_with_tab(temp_data, len);
+        data_list.append(QString::asprintf("%02X", crc & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 8) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 16) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 24) & 0xFF));
+        ui->data_lineEdit->setText(data_list.join(" "));
+      }
+      break;
+    case 3:
+      {
+        quint8 crc = utility::get_data_sum(temp_data, len);
+        data_list.append(QString::asprintf("%02X", crc & 0xFF));
+        ui->data_lineEdit->setText(data_list.join(" "));
+      }
+      break;
+
+    default:
+      break;
+  }
 }
 

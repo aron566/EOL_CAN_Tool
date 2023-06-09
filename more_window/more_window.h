@@ -138,6 +138,8 @@ private slots:
 
     void on_export_txt_pushButton_clicked();
 
+    void on_crc_pushButton_clicked();
+
 private:
     Ui::more_window *ui;
     eol_window *eol_window_obj = nullptr;
