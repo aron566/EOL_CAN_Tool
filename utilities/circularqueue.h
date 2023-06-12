@@ -95,7 +95,7 @@ public:
   /* modbus 高位在前-低位在后存储 */
   static uint32_t CQ_skipInvaildModbusU16Header(CircularQueue::CQ_handleTypeDef *cb, uint16_t header_data);
   static uint32_t CQ_skipInvaildModbusU32Header(CircularQueue::CQ_handleTypeDef *cb, uint32_t header_data);
-  /*低位在前-高位在后 */
+  /* 低位在前-高位在后 */
   static uint32_t CQ_skipInvaildU32Header(CircularQueue::CQ_handleTypeDef *cb, uint32_t header_data);
   static uint32_t CQ_skipInvaildU16Header(CircularQueue::CQ_handleTypeDef *cb, uint16_t header_data);
   /* 删除一个由cb_xxcreate创建的缓冲区 */
@@ -128,7 +128,7 @@ public:
 
   /* 32bit环形缓冲区初始化 */
   static bool CQ_32_init(CircularQueue::CQ_handleTypeDef *CircularQueue, uint32_t *memAdd, uint32_t len);
-  /*分配一个缓冲区并进行初始化--替代--CQ_32_init */
+  /* 分配一个缓冲区并进行初始化--替代--CQ_32_init */
   static CQ_handleTypeDef *cb_32create(uint32_t buffsize);
   /* 加入32bit类型数据 */
   static uint32_t CQ_32putData(CircularQueue::CQ_handleTypeDef *CircularQueue, const uint32_t * sourceBuf, uint32_t len);

@@ -30,6 +30,9 @@ more_window::more_window(QString title, QWidget *parent) :
   /* EOL窗口初始化 */
   eol_window_init(tr("EOL CAN Tool - EOL"));
 
+  /* 工具窗口初始化 */
+  tool_window_init(tr("EOL CAN Tool - TOOL"));
+
   /* 帧诊断调试窗口初始化 */
   frame_diagnosis_window_init(tr("EOL CAN Tool - Frame Diagnosis"));
 
@@ -43,6 +46,7 @@ more_window::more_window(QString title, QWidget *parent) :
 
   /* 设置提示值 */
   ui->data_lineEdit->setPlaceholderText("05 66");
+  ui->id_lineEdit->setPlaceholderText("157");
 }
 
 more_window::~more_window()
@@ -67,6 +71,12 @@ void more_window::eol_window_init(QString titile)
 
   /* 禁止线程完成后执行析构对象 */
   eol_window_obj->setAutoDelete(false);
+}
+
+/* 工具集子窗口 */
+void more_window::tool_window_init(QString titile)
+{
+  tool_window_obj = new tool_window(titile);
 }
 
 void more_window::timer_init()
@@ -547,10 +557,6 @@ void more_window::on_canfd_pluse_comboBox_currentIndexChanged(int index)
 
 void more_window::on_id_lineEdit_textChanged(const QString &arg1)
 {
-  if(nullptr == can_driver_obj)
-  {
-    return;
-  }
   /* 设置发送的canid */
   can_driver_obj->set_message_id(arg1);
 }
@@ -793,5 +799,11 @@ void more_window::on_crc_pushButton_clicked()
     default:
       break;
   }
+}
+
+
+void more_window::on_tool_pushButton_clicked()
+{
+  tool_window_obj->show();
 }
 

@@ -1,6 +1,13 @@
 QT       += core gui
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += multimedia
+QT       += serialport
+QT       += sql
+QT       += charts
+QT       += svg
+QT       += xml
+QT       += network
+QT       += concurrent
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 CONFIG += c++11
 
@@ -30,6 +37,11 @@ include(utilities/utilities.pri)
 # CAN驱动
 include(can_driver/can_driver.pri)
 
+# 工具集
+## 图形工具
+### 数据曲线
+include(middleware/serial_port_plotter/serial_port_plotter.pri)
+
 SOURCES += \
     debug_window/debug_window.cpp \
     eol_angle_calibration_window/eol_angle_calibration_window.cpp \
@@ -40,7 +52,8 @@ SOURCES += \
     frame_diagnosis_window/frame_diagnosis.cpp \
     main.cpp \
     main_window/mainwindow.cpp \
-    more_window/more_window.cpp
+    more_window/more_window.cpp \
+    tool_window/tool_window.cpp
 
 HEADERS += \
   debug_window/debug_window.h \
@@ -51,7 +64,8 @@ HEADERS += \
   eol_window/eol_window.h \
   frame_diagnosis_window/frame_diagnosis.h \
   main_window/mainwindow.h \
-  more_window/more_window.h
+  more_window/more_window.h \
+  tool_window/tool_window.h
 
 FORMS += \
     debug_window/debug_window.ui \
@@ -62,7 +76,8 @@ FORMS += \
     eol_window/eol_window.ui \
     frame_diagnosis_window/frame_diagnosis.ui \
     main_window/mainwindow.ui \
-    more_window/more_window.ui
+    more_window/more_window.ui \
+    tool_window/tool_window.ui
 
 # 包含路径
 INCLUDEPATH += \
@@ -80,3 +95,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     resource/EOL_CAN_Tool.qrc \
     resource/qdarkstyle/dark/style.qrc
+
+RC_FILE = resource/EOL_CAN_Tool.rc

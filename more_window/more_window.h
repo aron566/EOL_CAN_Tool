@@ -8,6 +8,7 @@
 #include "eol_window.h"
 #include "can_driver.h"
 #include "frame_diagnosis_window/frame_diagnosis.h"
+#include "tool_window/tool_window.h"
 
 namespace Ui {
 class more_window;
@@ -62,6 +63,12 @@ private:
    * @param titile
    */
   void eol_window_init(QString titile);
+
+  /**
+   * @brief 工具子窗口
+   * @param titile
+   */
+  void tool_window_init(QString titile);
 
   /**
      * @brief 定时器初始化
@@ -140,9 +147,13 @@ private slots:
 
     void on_crc_pushButton_clicked();
 
+    void on_tool_pushButton_clicked();
+
 private:
     Ui::more_window *ui;
     eol_window *eol_window_obj = nullptr;
+    tool_window *tool_window_obj = nullptr;
+
 private:
     can_driver *can_driver_obj = nullptr;
     frame_diagnosis *frame_diagnosis_obj = nullptr;

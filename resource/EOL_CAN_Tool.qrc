@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/EOL_CAN_Tool">
+    <qresource prefix="/serial_port_plotter">
         <file>icons/EOL_CAN_Tool_icon.icns</file>
         <file>styles/style.qss</file>
         <file alias="play_dis.png">icons/lynny-2x/Play.png</file>

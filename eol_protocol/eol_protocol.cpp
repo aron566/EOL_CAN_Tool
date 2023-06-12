@@ -951,6 +951,7 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   quint16 frame_num = 0;
   quint8 error_cnt = 0;
   RETURN_TYPE_Typedef_t ret;
+  quint8 check_sum = 0;
 
   EOL_TASK_LIST_Typedef_t *paramx = (EOL_TASK_LIST_Typedef_t *)param_;
   EOL_SEND_DATA_Typedef_t *param = (EOL_SEND_DATA_Typedef_t *)paramx->param;
@@ -972,7 +973,7 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   }
 
   param->head_data.Common_Info.Crc_Val = crc;
-  quint8 check_sum = utility::get_data_sum((const quint8 *)param->head_data.private_header, param->head_data.Common_Info.Header_Size);
+  check_sum = utility::get_data_sum((const quint8 *)param->head_data.private_header, param->head_data.Common_Info.Header_Size);
   param->head_data.Common_Info.Headr_Check_Sum = check_sum;
 
   memcpy(&data_buf[index], &param->head_data, sizeof(param->head_data.Common_Info) + param->head_data.Common_Info.Header_Size);

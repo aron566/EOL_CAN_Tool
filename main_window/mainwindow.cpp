@@ -29,6 +29,7 @@
  *  <tr><td>2023-06-06 <td>v0.0.11 <td>aron566 <td>增加chip pmic sn看门狗测试接口，报文导出txt接口，增加读取rcs补偿值接口
  *  <tr><td>2023-06-08 <td>v0.0.12 <td>aron566 <td>修复导出csv checksum可能不对问题，增加设置校准模式按钮
  *  <tr><td>2023-06-09 <td>v0.0.13 <td>aron566 <td>增加手动输入crc计算功能
+ *  <tr><td>2023-06-12 <td>v0.0.14 <td>aron566 <td>增加数据曲线功能
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -40,7 +41,7 @@
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
-#define PC_SOFTWARE_VERSION "v0.0.13"
+#define PC_SOFTWARE_VERSION "v0.0.14"
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -72,6 +73,9 @@ MainWindow::MainWindow(QWidget *parent)
       this->setStyleSheet(file.readAll());
       file.close();
   }
+
+  /* 图形字体加载 */
+  font_file_load();
 
   /* 设置窗口标题 */
   this->setWindowTitle(tr("EOL CAN Tool ") + tr(PC_SOFTWARE_VERSION));
@@ -107,6 +111,22 @@ MainWindow::~MainWindow()
 
   delete ui;
   qDebug() << "del mainwindow";
+}
+
+/**
+ * @brief MainWindow::font_file_load
+ */
+void MainWindow::font_file_load()
+{
+  if(!fontDb.families().contains("FontAwesome"))
+  {
+    int fontId = fontDb.addApplicationFont(":/ico_ttf/fontawesome-webfont.ttf");
+    QStringList fontName = fontDb.applicationFontFamilies(fontId);
+    if(fontName.count() == 0)
+    {
+        qDebug() << "load fontawesome-webfont.ttf error";
+    }
+  }
 }
 
 /**

@@ -44,7 +44,17 @@ private:
 
 private:
   can_driver *can_driver_obj = nullptr;
+
+  /**
+   * @brief fontDb
+   */
+  QFontDatabase fontDb;
 private:
+
+  /**
+   * @brief 载入字体
+   */
+  void font_file_load();
 
   /**
    * @brief 下级窗口初始化

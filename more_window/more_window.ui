@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>829</width>
-    <height>729</height>
+    <height>731</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,8 +22,8 @@
         <string>菜单</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_5">
-        <item row="1" column="0">
-         <widget class="QPushButton" name="update_pushButton_2">
+        <item row="2" column="0">
+         <widget class="QPushButton" name="frame_diagnosis_pushButton">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -31,7 +31,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>固件升级</string>
+           <string>报文诊断</string>
           </property>
          </widget>
         </item>
@@ -48,8 +48,8 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
-         <widget class="QPushButton" name="frame_diagnosis_pushButton">
+        <item row="1" column="0">
+         <widget class="QPushButton" name="update_pushButton_2">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -57,7 +57,20 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>报文诊断</string>
+           <string>固件升级</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QPushButton" name="tool_pushButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>更多工具</string>
           </property>
          </widget>
         </item>
@@ -315,7 +328,7 @@
            <item>
             <widget class="QLineEdit" name="id_lineEdit">
              <property name="text">
-              <string>157</string>
+              <string/>
              </property>
             </widget>
            </item>
