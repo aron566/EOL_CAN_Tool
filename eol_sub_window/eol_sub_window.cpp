@@ -69,11 +69,13 @@ void eol_sub_window::on_test_pushButton_clicked()
   eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* VCAN测试 */
-  task.reg = EOL_RW_VERSION_REG;
-  task.command = eol_protocol::EOL_WRITE_CMD;
-  task.buf[0] = 1;
-  task.len = 1;
-  eol_protocol_obj->eol_master_common_rw_device(task);
+//  task.reg = EOL_R_VCAN_TEST_REG;
+//  task.command = eol_protocol::EOL_WRITE_CMD;
+//  task.buf[0] = 1;
+//  task.len = 1;
+//  task.channel_num = "0";
+//  task.com_hw = eol_protocol::EOL_CAN_HW;
+//  eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* SN读写 */
   task.reg = EOL_RW_SN_REG;
@@ -170,39 +172,52 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
       /* 版本号 */
       case EOL_RW_VERSION_REG :
         {
+          str.clear();
+          quint16 index = 0;
           for(quint16 i = 0; i < 4; i++)
           {
-            str += QString::asprintf("%02X", data[i]);
+            str += QString::asprintf("%02X", data[index]);
+            index++;
           }
           ui->hw_ver_lineEdit->setText(str);
+
           str.clear();
-          for(quint16 i = 4; i < 8; i++)
+          for(quint16 i = 0; i < 4; i++)
           {
-            str += QString::asprintf("%02X", data[i]);
+            str += QString::asprintf("%02X", data[index]);
+            index++;
           }
           ui->soft_ver_lineEdit->setText(str);
+
           str.clear();
-          for(quint16 i = 8; i < 10; i++)
+          for(quint16 i = 0; i < 2; i++)
           {
-            str += QString::asprintf("%02X", data[i]);
+            str += QString::asprintf("%02X", data[index]);
+            index++;
           }
           ui->calibration_ver_lineEdit->setText(str);
+
           str.clear();
-          for(quint16 i = 10; i < 15; i++)
+          for(quint16 i = 0; i < 5; i++)
           {
-            str += QString::asprintf("%02X", data[i]);
+            str += QString::asprintf("%02X", data[index]);
+            index++;
           }
           ui->usd_hw_ver_lineEdit->setText(str);
+
           str.clear();
-          for(quint16 i = 15; i < 21; i++)
+          for(quint16 i = 0; i < 6; i++)
           {
-            str += QString::asprintf("%02X", data[i]);
+            str += QString::asprintf("%02X", data[index]);
+            index++;
           }
           ui->usd_soft_ver_lineEdit->setText(str);
+
           str.clear();
-          for(quint16 i = 21; i < 28; i++)
+          for(quint16 i = 0; i < 7; i++)
           {
-            str += QString::asprintf("%02X", data[i]);
+            str += QString::asprintf("%02X", data[index]);
+            index++;
           }
           ui->usd_boot_ver_lineEdit->setText(str);
 
@@ -215,10 +230,10 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
           task.reg = reg;
           task.command = eol_protocol::EOL_WRITE_CMD;
           memcpy(task.buf, data, data_len);
+          memcpy(version_info, data, data_len);
           task.len = data_len;
           eol_protocol_obj->eol_master_common_rw_device(task);
         }
-
         break;
 
       /* VCAN测试 */
@@ -352,3 +367,39 @@ void eol_sub_window::slot_protocol_rw_err(quint8 reg, quint8 command)
       break;
   }
 }
+
+void eol_sub_window::on_write_pushButton_clicked()
+{
+  /* 写入测试 */
+  bool write_en_flag = false;
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.param = nullptr;
+
+  if(false == ui->calibration_ver_lineEdit->text().isEmpty())
+  {
+    write_en_flag = true;
+    /* 写入校准版本 */
+    task.reg = EOL_RW_VERSION_REG;
+    task.command = eol_protocol::EOL_WRITE_CMD;
+    bool ok;
+    quint16 ver = ui->calibration_ver_lineEdit->text().toUShort(&ok, 16);
+    memcpy(version_info + 8, &ver, sizeof(ver));
+    memcpy(task.buf, version_info, sizeof(version_info));
+    task.len = sizeof(version_info);
+    eol_protocol_obj->eol_master_common_rw_device(task);
+  }
+
+  if(true == write_en_flag)
+  {
+    /* 保存 */
+    task.reg = EOL_W_SAVE_PAR_REG;
+    task.command = eol_protocol::EOL_WRITE_CMD;
+    task.buf[0] = 1;
+    task.len = 1;
+    eol_protocol_obj->eol_master_common_rw_device(task);
+
+    /* 启动eol线程 */
+    eol_protocol_obj->start_task();
+  }
+}
+

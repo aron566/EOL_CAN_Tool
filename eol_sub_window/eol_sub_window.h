@@ -53,11 +53,16 @@ private slots:
 
   void on_test_pushButton_clicked();
 
+  void on_write_pushButton_clicked();
+
 private:
   Ui::eol_sub_window *ui;
 
 private:
   eol_protocol *eol_protocol_obj = nullptr;
+
+private:
+  quint8 version_info[28];/**< 版本号 */
 };
 
 #endif // EOL_SUB_WINDOW_H

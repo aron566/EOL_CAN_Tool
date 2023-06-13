@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>700</height>
+    <height>728</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -381,6 +381,13 @@
          <string>关闭看门狗喂狗</string>
         </property>
        </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="write_pushButton">
+       <property name="text">
+        <string>写入</string>
+       </property>
       </widget>
      </item>
      <item>

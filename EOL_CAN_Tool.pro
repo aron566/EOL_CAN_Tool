@@ -22,6 +22,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+# 设置目标生成路径
+unix:!macx: DESTDIR = ../../bin
+win32: DESTDIR = "$(USERPROFILE)\\Desktop\\EOL_CAN_Tool"
+
+# 执行打包工具
+QMAKE_PRE_LINK += echo start Build $$TARGET
+
+win32: QMAKE_POST_LINK += $$DESTDIR/qtenvPackage.bat $$DESTDIR $${TARGET}.exe
+
 # 周立功can驱动库
 include(zlg_can_lib/zlg_can_lib.pri)
 
