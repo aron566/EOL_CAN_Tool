@@ -13,6 +13,7 @@
 #include "eol_sub_window.h"
 #include "eol_calibration_window.h"
 #include "eol_angle_calibration_window/eol_angle_calibration_window.h"
+#include "debug_window/debug_window.h"
 
 namespace Ui {
 class eol_window;
@@ -178,6 +179,7 @@ private:
   eol_sub_window *eol_sub_window_obj = nullptr;
   eol_calibration_window *eol_calibration_window_obj = nullptr;
   eol_angle_calibration_window *eol_2dfft_calibration_window_obj = nullptr;
+  debug_window *debug_window_window_obj = nullptr;
 
   bool thread_run_state = false;
 
@@ -240,6 +242,12 @@ private:
    * @param title 窗口标题
    */
   void eol_2dfft_calibration_window_init(QString title);
+
+  /**
+   * @brief 调试窗口初始化
+   * @param title 窗口标题
+   */
+  void eol_debug_window_init(QString title);
 
   /**
    * @brief eol协议栈初始化
@@ -327,6 +335,7 @@ private slots:
   void on_ant_calibration_func_pushButton_clicked();
   void on_rcs_calibration_func_pushButton_clicked();
   void on_reboot_pushButton_clicked();
+  void on_debug_pushButton_clicked();
 };
 
 #endif // EOL_WINDOW_H

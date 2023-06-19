@@ -33,6 +33,7 @@ eol_window::eol_window(QString title, QWidget *parent) :
   ui->upload_pushButton->setEnabled(false);
   ui->update_pushButton->setEnabled(false);
   ui->reboot_pushButton->setEnabled(false);
+  ui->debug_pushButton->setEnabled(false);
   ui->eol_device_rw_func_pushButton->setEnabled(false);
   ui->ant_calibration_func_pushButton->setEnabled(false);
   ui->rcs_calibration_func_pushButton->setEnabled(false);
@@ -51,6 +52,9 @@ eol_window::eol_window(QString title, QWidget *parent) :
 
   /* rcs校准初始化-目标列表 */
   eol_rcs_calibration_window_init(tr("EOL CAN Tool - RCS Calibration"));
+
+  /* 调试参数初始化 */
+  eol_debug_window_init(tr("EOL CAN Tool - Debug Par"));
 
   /* 设置临时文件模板名称 */
   QString strFileName = QDir::tempPath() + QDir::separator() +
@@ -82,6 +86,9 @@ eol_window::~eol_window()
 
   delete eol_2dfft_calibration_window_obj;
   qDebug() << "del eol_2dfft_calibration_window_obj";
+
+  delete debug_window_window_obj;
+  qDebug() << "del debug_window_window_obj";
 
   delete ui;
   qDebug() << "del eol_window";
@@ -134,6 +141,15 @@ void eol_window::eol_2dfft_calibration_window_init(QString title)
   /* 校准配置更新 */
   connect(this, &eol_window::signal_clear_profile_info, eol_2dfft_calibration_window_obj, &eol_angle_calibration_window::slot_clear_profile_info);
   connect(this, &eol_window::signal_profile_info_update, eol_2dfft_calibration_window_obj, &eol_angle_calibration_window::slot_profile_info_update);
+}
+
+/**
+ * @brief 调试窗口初始化
+ */
+void eol_window::eol_debug_window_init(QString title)
+{
+  debug_window_window_obj = new debug_window(title);
+  connect(debug_window_window_obj, &debug_window::signal_window_closed, this, &eol_window::slot_show_this_window);
 }
 
 void eol_window::set_can_driver_obj(can_driver *can_driver_obj)
@@ -1643,7 +1659,6 @@ void eol_window::slot_device_mode(const void *pass_data)
   quint8 profile_num = data_ptr[index];
   index++;
 
-  qDebug() << "mode " << mode;
   /* 生产-普通模式 */
   if(ui->produce_noral_radioButton->isChecked() && eol_protocol::PRODUCE_MODE_NORMAL == mode)
   {
@@ -1661,6 +1676,7 @@ void eol_window::slot_device_mode(const void *pass_data)
     ui->eol_device_rw_func_pushButton->setEnabled(true);
     ui->ant_calibration_func_pushButton->setEnabled(true);
     ui->rcs_calibration_func_pushButton->setEnabled(true);
+    ui->debug_pushButton->setEnabled(false);
     ui->entry_produce_mode_pushButton->setText(tr("exit mode"));
   }
 
@@ -1681,6 +1697,7 @@ void eol_window::slot_device_mode(const void *pass_data)
     ui->eol_device_rw_func_pushButton->setEnabled(true);
     ui->ant_calibration_func_pushButton->setEnabled(true);
     ui->rcs_calibration_func_pushButton->setEnabled(true);
+    ui->debug_pushButton->setEnabled(true);
     ui->entry_produce_mode_pushButton->setText(tr("exit mode"));
   }
 
@@ -1694,6 +1711,7 @@ void eol_window::slot_device_mode(const void *pass_data)
     ui->eol_device_rw_func_pushButton->setEnabled(false);
     ui->ant_calibration_func_pushButton->setEnabled(false);
     ui->rcs_calibration_func_pushButton->setEnabled(false);
+    ui->debug_pushButton->setEnabled(false);
     ui->entry_produce_mode_pushButton->setText(tr("entry mode"));
   }
   current_task_complete_state = TASK_COMPLETE;
@@ -1843,3 +1861,9 @@ void eol_window::on_reboot_pushButton_clicked()
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
 }
+
+void eol_window::on_debug_pushButton_clicked()
+{
+  debug_window_window_obj->show();
+}
+

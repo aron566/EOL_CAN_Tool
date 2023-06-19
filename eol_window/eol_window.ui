@@ -531,6 +531,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QPushButton" name="debug_pushButton">
+          <property name="text">
+           <string>参数调试</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
      </layout>
