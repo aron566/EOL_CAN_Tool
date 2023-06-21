@@ -28,19 +28,13 @@ debug_window::debug_window(QString title, QWidget *parent) :
   ui->case_sensitive_checkBox->setCheckState(Qt::CheckState::Checked);
   ui->shell_textEdit->installEventFilter(this);
   ui->shell_textEdit->setHtml("<body bgcolor=\"#000000\"></body>");
-  minTextCurse = ui->shell_textEdit->textCursor().position();
-
-  QString logo = ("  _____   _   _   _____   __   _   _____   _____   _____   _____   _   _        _____   _       _\r\n"
-    " /  ___| | | | | | ____| |  \\ | | /  ___| |_   _| | ____| /  ___| | | | |      /  ___| | |     | |\r\n"
-    " | |     | |_| | | |__   |   \\| | | |       | |   | |__   | |     | |_| |      | |     | |     | |\r\n"
-    " | |     |  _  | |  __|  | |\\   | | |  _    | |   |  __|  | |     |  _  |      | |     | |     | |\r\n"
-    " | |___  | | | | | |___  | | \\  | | |_| |   | |   | |___  | |___  | | | |      | |___  | |___  | |\r\n"
-    " \\_____| |_| |_| |_____| |_|  \\_| \\_____/   |_|   |_____| \\_____| |_| |_|      \\_____| |_____| |_|");
-
-  ui->shell_textEdit->insertPlainText(logo + "\r\nStart Cmd Tool!\r\n");
+  ui->shell_textEdit->ensureCursorVisible();
 
   /* 恢复配置 */
   read_cfg();
+
+  /* 显示logo */
+  ui->shell_textEdit->append(logo);
 }
 
 debug_window::~debug_window()
@@ -67,6 +61,15 @@ void debug_window::closeEvent(QCloseEvent *event)
   emit signal_window_closed();
 }
 
+/**
+ * @brief 窗口显示事件
+ * @param event
+ */
+void debug_window::showEvent(QShowEvent *event)
+{
+  Q_UNUSED(event)
+  ui->shell_textEdit->setFocus();
+}
 
 bool debug_window::eventFilter(QObject *target, QEvent *event)
 {
@@ -82,12 +85,8 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
     return QWidget::eventFilter(target, event);
   }
 
-  QTextCursor txtcur = ui->shell_textEdit->textCursor();
-
-  if(ui->shell_textEdit->textCursor().position() < minTextCurse)
-  {
-    return true;
-  }
+  QTextEdit *text_edit_widget = ui->shell_textEdit;
+  QTextCursor txtcur = text_edit_widget->textCursor();
 
   QKeyEvent *k = static_cast<QKeyEvent *>(event);
   if(nullptr == k)
@@ -95,28 +94,36 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
     return QWidget::eventFilter(target, event);
   }
 
+  qDebug() << "send key" << k->key() << k->text().toLatin1();
+
+  /* 直接发送按键 */
+//  if(127 < (*k->text().toLatin1().data()))
+//  {
+    emit signal_send_command_char(*k->text().toLatin1().data());
+    return true;
+//  }
+
   switch(k->key())
   {
     case Qt::Key_Return:
     case Qt::Key_Enter:
       {
-        txtcur.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
-        txtcur.setPosition(minTextCurse, QTextCursor::KeepAnchor);
-        QString msg = txtcur.selectedText();
-        qDebug() << "selset " << msg;
+        text_edit_widget->moveCursor(QTextCursor::End);
+        text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+        QString msg = text_edit_widget->textCursor().selectedText();
 
         /* 添加到历史命令列表 */
         if(history_cmd.isEmpty() || QString::compare(msg, history_cmd.back()) != 0)
         {
           history_cmd.append(msg);
         }
-        if(msg.compare("clean") == 0)
+        if(msg.compare("clear") == 0)
         {
-          ui->shell_textEdit->setText("");
-          ui->shell_textEdit->setTextColor(ui->color_list_comboBox->currentText());
-          ui->shell_textEdit->setHtml("<body bgcolor=\"#000000\"></body>");
-          ui->shell_textEdit->append("clean");
-          minTextCurse = ui->shell_textEdit->textCursor().position();
+          text_edit_widget->setText("");
+          text_edit_widget->setTextColor(ui->color_list_comboBox->currentText());
+          text_edit_widget->setHtml("<body bgcolor=\"#000000\"></body>");
+          text_edit_widget->append("clear");
+          minTextCurse = text_edit_widget->textCursor().position();
         }
         else
         {
@@ -124,16 +131,16 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
         }
 
         history_cmd_num = history_cmd.size();
-        ui->shell_textEdit->append("");
+        text_edit_widget->append("");
         txtcur.movePosition(QTextCursor::End,QTextCursor::MoveAnchor);
         ui->shell_textEdit->setTextCursor(txtcur);
-        minTextCurse = ui->shell_textEdit->textCursor().position();
+        minTextCurse = text_edit_widget->textCursor().position();
         return true;
       }
 
     case Qt::Key_Up:
       {
-        QTextCursor tc = ui->shell_textEdit->textCursor();
+        QTextCursor tc = text_edit_widget->textCursor();
 
         if(history_cmd.size() == 0)
         {
@@ -152,14 +159,14 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
           history_cmd_num = 1;
         }
         ui->shell_textEdit->insertPlainText(history_cmd[history_cmd_num - 1]);
-        lastTextCurse = ui->shell_textEdit->textCursor().position();
+        lastTextCurse = text_edit_widget->textCursor().position();
         history_cmd_num--;
         return true;
       }
 
     case Qt::Key_Down:
       {
-        QTextCursor tc = ui->shell_textEdit->textCursor();
+        QTextCursor tc = text_edit_widget->textCursor();
 
         if(history_cmd.size() == 0)
         {
@@ -176,15 +183,15 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
         {
           history_cmd_num = 1;
         }
-        ui->shell_textEdit->insertPlainText(history_cmd[history_cmd_num-1]);
-        lastTextCurse = ui->shell_textEdit->textCursor().position();
+        text_edit_widget->insertPlainText(history_cmd[history_cmd_num-1]);
+        lastTextCurse = text_edit_widget->textCursor().position();
         history_cmd_num++;
         return true;
       }
 
     case Qt::Key_Tab:
       {
-        QTextCursor txtcur = ui->shell_textEdit->textCursor();
+        QTextCursor txtcur = text_edit_widget->textCursor();
         txtcur.movePosition(QTextCursor::StartOfLine, QTextCursor::KeepAnchor);
         QString msg = txtcur.selectedText();
         int index = msg.lastIndexOf(' ');
@@ -200,8 +207,8 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
         const QString insertStr = find_quick_complet_cmd(ins);
         if(insertStr != "")
         {
-          txtcur = ui->shell_textEdit->textCursor();
-          txtcur.movePosition(QTextCursor::Left,QTextCursor::KeepAnchor,ins.length());
+          txtcur = text_edit_widget->textCursor();
+          txtcur.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor, ins.length());
           txtcur.removeSelectedText();
           ui->shell_textEdit->insertPlainText(find_quick_complet_cmd(msg.mid(msg.lastIndexOf(' ') + 1)));
         }
@@ -210,7 +217,7 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
 
     case Qt::Key_Backspace:
       {
-        QTextCursor tc = ui->shell_textEdit->textCursor();
+        QTextCursor tc = text_edit_widget->textCursor();
         if(tc.position() <= minTextCurse)
         {
           return true;
@@ -220,7 +227,7 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
 
     case Qt::Key_Left:
       {
-        if(minTextCurse == ui->shell_textEdit->textCursor().position())
+        if(minTextCurse == text_edit_widget->textCursor().position())
         {
           return true;
         }
@@ -254,8 +261,8 @@ void debug_window::read_cfg()
   {
     /* 添加快捷指令 */
     quick_complets.clear();
-    quick_complets.append("clean");
-    ui->quick_compleat_plainTextEdit->setPlainText(QString("clean\n"));
+    quick_complets.append("clear");
+    ui->quick_compleat_plainTextEdit->setPlainText(QString("clear\n"));
     return;
   }
   QSettings setting("./debug_window_cfg.ini", QSettings::IniFormat);
@@ -335,7 +342,7 @@ void debug_window::send_command_port(QString &text)
   text.append("\r\n");
 
   /* 发送 */
-  emit signal_send_command(text);
+//  emit signal_send_command(text);
 }
 
 void debug_window::on_addquick_compelat_pushButton_clicked()
@@ -412,43 +419,80 @@ void debug_window::on_color_list_comboBox_currentTextChanged(const QString &arg1
   ui->shell_textEdit->setTextColor(arg1);
   QTextCursor tc = ui->shell_textEdit->textCursor();
   tc.movePosition(QTextCursor::End);
-  ui->shell_textEdit->insertPlainText("text color change :" + arg1 + "\n");
+  ui->shell_textEdit->insertPlainText("\n");
   minTextCurse = ui->shell_textEdit->textCursor().position();
 }
 
 void debug_window::slot_time_out(void)
 {
-  if(receiverBuff[0] != '\0')
-  {
-    QTextCursor tc = ui->shell_textEdit->textCursor();
-    tc.movePosition(QTextCursor::End);
-    ui->shell_textEdit->setTextCursor(tc);
-    ui->shell_textEdit->insertPlainText( QString::fromLocal8Bit(receiverBuff));
-    minTextCurse = ui->shell_textEdit->textCursor().position();
-  }
-  else
-  {
-    /* 读取数据 */
-    QString str = QString::fromLocal8Bit("rec");
-    QTextCursor tc = ui->shell_textEdit->textCursor();
-    tc.movePosition(QTextCursor::End);
-    ui->shell_textEdit->setTextCursor(tc);
-    ui->shell_textEdit->insertPlainText(str);
-    minTextCurse = ui->shell_textEdit->textCursor().position();
-  }
-  timer_obj->stop();
+
 }
 
-void debug_window::slot_rec_shell_data(const quint8 *data, quint32 data_len)
+void debug_window::rec_shell_data(const quint8 *data, quint32 data_len)
 {
   Q_UNUSED(data_len)
 
   /* 读取数据 */
-  QString str = QString::fromLocal8Bit((const char *)data);
-  QTextCursor tc = ui->shell_textEdit->textCursor();
-  tc.movePosition(QTextCursor::End);
-  ui->shell_textEdit->setTextCursor(tc);
-  ui->shell_textEdit->insertPlainText(str);
+  char strbuf[512] = {0};
+  memcpy(strbuf, data, data_len);
+
+  /* 检测是否是清屏命令 */
+  QString str = QString::asprintf("%s", strbuf);
+  qDebug() << data_len << str;
+
+  for(quint32 i = 0; i < data_len; i++)
+  {
+    switch(strbuf[i])
+    {
+      /* 检查是否有退格键 */
+      case '\b':
+        {
+          ui->shell_textEdit->moveCursor(QTextCursor::End);
+          ui->shell_textEdit->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+          QString msg = ui->shell_textEdit->textCursor().selectedText();
+          ui->shell_textEdit->textCursor().removeSelectedText();
+          msg = msg.left(msg.length() - 1);
+          ui->shell_textEdit->moveCursor(QTextCursor::End);
+          ui->shell_textEdit->insertPlainText(msg);
+        }
+        break;
+
+      case '\r':
+        {
+
+        }
+        break;
+
+      default:
+        {
+          ui->shell_textEdit->moveCursor(QTextCursor::End);
+          ui->shell_textEdit->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+          QString msg = ui->shell_textEdit->textCursor().selectedText();
+          ui->shell_textEdit->textCursor().removeSelectedText();
+          msg += QString::asprintf("%c", strbuf[i]);
+          ui->shell_textEdit->moveCursor(QTextCursor::End);
+          ui->shell_textEdit->insertPlainText(msg);
+        }
+        break;
+    }
+
+    /* 检查上一行是否是清屏 */
+    ui->shell_textEdit->moveCursor(QTextCursor::End);
+    ui->shell_textEdit->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+    str = ui->shell_textEdit->textCursor().selectedText();
+    if("\u001B[2J\u001B[1H" == str)
+    {
+      ui->shell_textEdit->clear();
+      ui->shell_textEdit->moveCursor(QTextCursor::Start);
+      ui->shell_textEdit->setHtml("<body bgcolor=\"#000000\"></body>");
+      /* 设置颜色 */
+      ui->shell_textEdit->setTextColor(ui->color_list_comboBox->currentText());
+      ui->shell_textEdit->insertPlainText(logo);
+      return;
+    }
+  }
+
+  ui->shell_textEdit->moveCursor(QTextCursor::End);
   minTextCurse = ui->shell_textEdit->textCursor().position();
 }
 

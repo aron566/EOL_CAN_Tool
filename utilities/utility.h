@@ -80,6 +80,13 @@ public:
     qint16 image;
   }Complex_I16_t;
 
+  /* 键值映射 */
+  typedef struct
+  {
+    int key_val;                      /**< 按键键值 */
+    char key_ascii;                   /**< ascii键值 */
+  }KEY_MAP_Typedef_t;
+
   /**
    * @brief 延时ms数，保持事件循环
    * @param ms
@@ -158,6 +165,20 @@ public:
    * @param prefix_str 前缀
    */
   static void debug_print(const uint8_t *msg, uint32_t msg_len, QString prefix_str = "");
+
+  /**
+   * @brief unicode_to_gb2312
+   * @param unicode_str
+   * @return 转换后的字符串
+   */
+  static QString unicode_to_gb2312(const QString &unicode_str);
+
+  /**
+   * @brief gb2312_to_unicode
+   * @param gb2312_str
+   * @return 转换后的字符串
+   */
+  static QString gb2312_to_unicode(const QString &gb2312_str);
 };
 
 #endif // UTILITY_H

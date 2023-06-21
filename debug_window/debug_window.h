@@ -22,7 +22,7 @@ protected:
      * @param event
      */
     virtual void closeEvent(QCloseEvent *event) override;
-
+    virtual void showEvent(QShowEvent *event) override;
 private:
   signals:
     /**
@@ -34,15 +34,16 @@ private:
      * @brief 发送命令信号
      * @param text 命令
      */
-    void signal_send_command(QString &text);
-public slots:
+    void signal_send_command(QString text);
+    void signal_send_command_char(char c);
+public:
 
     /**
      * @brief 接收shell数据
      * @param data 数据
      * @param data_len 数据长度
      */
-    void slot_rec_shell_data(const quint8 *data, quint32 data_len);
+    void rec_shell_data(const quint8 *data, quint32 data_len);
 
 private slots:
     void on_addquick_compelat_pushButton_clicked();
@@ -101,6 +102,16 @@ private slots:
 private:
   const QString emptyStr = "";
 
+  const QString logo = (
+    "   ______  __                          _______               __     \r\n"
+    "  |      ||  |--..-----..-----..-----.|_     _|.-----..----.|  |--. \r\n"
+    "  |   ---||     ||  -__||     ||  _  |  |   |  |  -__||  __||     | \r\n"
+    "  |______||__|__||_____||__|__||___  |  |___|  |_____||____||__|__| \r\n"
+    "                               |_____|\r\n"
+    "Build:       " __DATE__ " " __TIME__ "\r\n"
+    "Version:     v0.0.1\r\n"
+    "Copyright:   (c) 2023 Shenzhen Cheng-Tech Co.,Ltd.\r\n");
+
   QStringList quick_complets;/**< 快捷指令 */
 
   QStringList history_cmd;/**< 历史命令 */
@@ -109,7 +120,6 @@ private:
   int minTextCurse;
   int lastTextCurse;
   QTimer *timer_obj = nullptr;
-  char receiverBuff [256];
 };
 
 #endif // DEBUG_WINDOW_H

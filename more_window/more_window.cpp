@@ -402,7 +402,7 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
   /* 显示字符 */
   if(ui->display_str_checkBox->isChecked())
   {
-    if(ui->display_ch_comboBox->currentIndex() == channel_num && can_driver::CAN_RX_DIRECT == direct)
+    if((quint32)ui->display_ch_comboBox->currentIndex() == channel_num && can_driver::CAN_RX_DIRECT == direct)
     {
       char str_buf[65];
       size_t size = data_len > 64 ? 64 : data_len;
@@ -437,7 +437,7 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
   /* 限制缓冲区大小 */
   if(0 == channel_num)
   {
-    if(ch1_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
+    if((quint32)ch1_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
     {
       ch1_show_msg_list.removeFirst();
     }
@@ -447,7 +447,7 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
     goto __show_msg;
   }
 
-  if(ch2_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
+  if((quint32)ch2_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
   {
     ch2_show_msg_list.removeFirst();
   }
@@ -476,7 +476,7 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
   /* 显示字符 */
   if(ui->display_str_checkBox->isChecked())
   {
-    if(ui->display_ch_comboBox->currentIndex() == channel_num && can_driver::CAN_RX_DIRECT == direct)
+    if((quint32)ui->display_ch_comboBox->currentIndex() == channel_num && can_driver::CAN_RX_DIRECT == direct)
     {
       char str_buf[65];
       size_t size = data_len > 64 ? 64 : data_len;

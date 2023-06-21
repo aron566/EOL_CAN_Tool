@@ -14,6 +14,8 @@
  *  @version v1.0.0 aron566 2023.02.21 17:58 初始版本.
  */
 /** Includes -----------------------------------------------------------------*/
+#include <QTextCodec>
+#include <QByteArray>
 /** Private includes ---------------------------------------------------------*/
 #include "utility.h"
 #include "qdebug.h"
@@ -81,8 +83,7 @@ static const uint8_t auchCRCLo[] = {
   0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42,
   0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 };
-/** Public variables ---------------------------------------------------------*/
-/** Private variables --------------------------------------------------------*/
+
 /* crc32表 */
 #define POLYNOMIAL    0x04c11db7L
 
@@ -152,6 +153,10 @@ static const uint32_t crc32_table[] = {
   0xAFB010B1, 0xAB710D06, 0xA6322BDF, 0xA2F33668,
   0xBCB4666D, 0xB8757BDA, 0xB5365D03, 0xB1F740B4,
 };
+
+/** Public variables ---------------------------------------------------------*/
+/** Private variables --------------------------------------------------------*/
+
 /** Private function prototypes ----------------------------------------------*/
 
 /** Private user code --------------------------------------------------------*/
@@ -251,8 +256,7 @@ quint32 utility::get_crc32_with_tab(const quint8 *data_blk_ptr, quint32 data_blk
 
 static bool get_crc32_rsl_with_tab(const quint8 *data_blk_ptr, quint32 data_blk_size, quint32 crc_accum)
 {
-  uint32_t crc_val = utility::get_crc32_with_tab(data_blk_ptr, data_blk_size);
-  data_blk_ptr[data_blk_size];
+  uint32_t crc_val = utility::get_crc32_with_tab(data_blk_ptr, data_blk_size, crc_accum);
 
   uint32_t crc_val_ = 0;
   crc_val_ = data_blk_ptr[data_blk_size + 3];
@@ -536,7 +540,23 @@ void utility::debug_print(const uint8_t *msg, uint32_t msg_len, QString prefix_s
 //    printf("\n");
 //    fflush(stderr);
 //    fflush(stdout);
+}
 
+QString utility::unicode_to_gb2312(const QString &unicode_str)
+{
+  QTextCodec *gb2312_codec = QTextCodec::codecForName("gb2312");
+  QByteArray byte_gb2312 = gb2312_codec->fromUnicode(unicode_str);
+  QString gb2312_str(byte_gb2312);
+  return gb2312_str;
+}
+
+QString utility::gb2312_to_unicode(const QString &gb2312_str)
+{
+  QTextCodec *gb2312_codec = QTextCodec::codecForName("gb2312");
+  QTextDecoder *gb2312_decoder = gb2312_codec->makeDecoder();
+  QString unicode_str = gb2312_decoder->toUnicode(gb2312_str.toStdString().data(), gb2312_str.toStdString().size());
+  delete gb2312_decoder;
+  return unicode_str;
 }
 
 /******************************** End of file *********************************/

@@ -322,6 +322,9 @@ signals:
   void signal_clear_profile_info();
 private slots:
   void slot_show_this_window();
+  void slot_close_shell_window();
+  void slot_send_command(QString text);
+  void slot_send_command_char(char c);
   void slot_timeout();
   void slot_update_show_table_list();
   void on_file_sel_pushButton_clicked();

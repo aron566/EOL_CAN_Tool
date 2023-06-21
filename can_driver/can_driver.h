@@ -72,7 +72,7 @@ public:
     while(start_)
     {
       receice_data();
-      QThread::msleep(1);
+      QThread::usleep(100);
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << "can driver listen end";
     thread_run_state = false;

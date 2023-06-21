@@ -137,6 +137,9 @@ PS：
 eol_protocol::eol_protocol(QObject *parent)
     : QObject{parent}
 {
+  /* 创建访问资源锁1个 */
+  sem.release(1);
+
   cq_obj = new CircularQueue(CircularQueue::UINT8_DATA_BUF, CircularQueue::CQ_BUF_4K, this);
   if(nullptr == cq_obj)
   {
@@ -177,18 +180,39 @@ void eol_protocol::run_eol_task()
 
   /* 检查是否存在任务 */
   EOL_TASK_LIST_Typedef_t task_;
-  while(eol_task_list.isEmpty() == false && run_state)
+  while(run_state)
   {
     /* 取任务 */
-    task_ = eol_task_list.takeFirst();
+    if(eol_task_list.isEmpty() == false)
+    {
+      sem.tryAcquire();
+      task_ = eol_task_list.takeFirst();
+      sem.release();
 
-    /* 执行任务 */
-    (this->*(task_.task))(&task_);
+     /* 执行任务 */
+     (this->*(task_.task))(&task_);
+    }
+
+    /* 监听任务 */
+    if(true == listen_run_state)
+    {
+      protocol_stack_wait_reply_start(true);
+    }
+
+    /* 非监听下，任务执行完自动退出线程 */
+    if(eol_task_list.isEmpty() == true && false == listen_run_state)
+    {
+      break;
+    }
+
+    /* 执行主线程 */
+    QThread::usleep(100);
   }
+  sem.tryAcquire();
   eol_task_list.clear();
+  sem.release();
   qDebug() << "eol_task end";
 }
-
 
 bool eol_protocol::eol_send_data_port(const uint8_t *data, uint16_t data_len, \
   EOL_SEND_HW_Typedef_t com_hw, QString &channel_num)
@@ -208,8 +232,10 @@ bool eol_protocol::eol_send_data_port(const uint8_t *data, uint16_t data_len, \
         return ret;
       }
       break;
+
     case EOL_SERIAL_HW:        /**< 串口发送数据 */
       break;
+
     case EOL_ETH_HW:           /**< 网络发送数据 */
       break;
   }
@@ -323,7 +349,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
   send_buf[0] = MASTER_EOL_FRAME_HEADER;
   send_buf[1] = EOL_DEVICE_COM_ADDR;
 
-  if(wait_response_list.size() > WAIT_LIST_LEN)
+  if(wait_response_list.size() > (qint32)WAIT_LIST_LEN)
   {
     return RETURN_ERROR;
   }
@@ -378,7 +404,6 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
       return RETURN_ERROR;
   }
 
-
 #if ENABLE_SEND_DELAY
   /* 检测发送大小是否需要分包发送 */
   if(index > ENABLE_SEND_DELAY_LIMIT_SIZE)
@@ -390,9 +415,11 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
     send_task_handle.last_send_time_ms = current_time_ms;
     send_task_handle.com_hw = com_hw;
     send_task_handle.channel_num = channel_num;
-    SNED_CHECK_STATUS_Typedef_t state = check_wait_send_task(false);// 不立即发
+    SNED_CHECK_STATUS_Typedef_t state = check_wait_send_task(false);
 
-    if(EOL_WRITE_CMD == command || EOL_META_CMD == command)
+    if(EOL_WRITE_CMD == command
+       || EOL_READ_CMD == command
+       || EOL_META_CMD == command)
     {
       /* 发送一帧 */
       emit signal_send_rec_one_frame(true);
@@ -406,8 +433,9 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
 
     /* 解析 */
     RETURN_TYPE_Typedef_t ret = RETURN_ERROR;
-    if(EOL_WRITE_CMD == command || EOL_READ_CMD == command ||
-       EOL_META_CMD == command)
+    if(EOL_WRITE_CMD == command
+       || EOL_READ_CMD == command
+       || EOL_META_CMD == command)
     {
       while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state);
     }
@@ -428,7 +456,9 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
   bool ok = eol_send_data_port(reinterpret_cast<const quint8 *>(send_buf), \
                          (quint8)index, com_hw, channel_num);
 
-  if(EOL_WRITE_CMD == command || EOL_META_CMD == command)
+  if(EOL_WRITE_CMD == command
+     || EOL_READ_CMD == command
+     || EOL_META_CMD == command)
   {
     /* 发送一帧 */
     emit signal_send_rec_one_frame(true);
@@ -443,8 +473,9 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
 
   /* 解析 */
   RETURN_TYPE_Typedef_t ret = RETURN_ERROR;
-  if(EOL_WRITE_CMD == command || EOL_READ_CMD == command ||
-     EOL_META_CMD == command)
+  if(EOL_WRITE_CMD == command
+     || EOL_READ_CMD == command
+     || EOL_META_CMD == command)
   {
     while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state);
   }
@@ -460,11 +491,8 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
 }
 
 /* 从机ack应答 */
-eol_protocol::EOL_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(const quint8 *data)
+eol_protocol::EOL_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(quint8 reg_addr, const quint8 *data)
 {
-  quint8 reg_addr = 0;
-  reg_addr = (data[2] >> 1);
-
   quint8 ack_rsl = data[3];
   QString msg_str;
   if(0 == ack_rsl)
@@ -512,9 +540,9 @@ eol_protocol::EOL_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(const quin
 }
 
 /* 读取数据解析 */
-eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONSE_LIST_Typedef_t &wait, const quint8 *data, quint16 data_len)
+eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(quint8 reg_addr, const quint8 *data, quint16 data_len)
 {
-  switch(wait.reg_addr)
+  switch(reg_addr)
   {
     /* 访问码 */
     case EOL_R_ACCESS_CODE_REG:
@@ -597,7 +625,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONS
     default:
       {
         /* 发送完成信号 */
-        emit signal_rw_device_ok(wait.reg_addr, data, data_len);
+        emit signal_rw_device_ok(reg_addr, data, data_len);
       }
       break;
   }
@@ -605,7 +633,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(WAIT_RESPONS
 }
 
 /* 等待回复 */
-eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_start()
+eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_start(bool listen_mode)
 {
   static quint8 temp_buf[FRAME_TEMP_BUF_SIZE];
   uint16_t data_len = 0;
@@ -613,7 +641,10 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
   uint32_t len = 0;
   uint8_t reg = 0;
   uint8_t cmd = 0;
+
+  /* 非线程模式，事件处理循环 */
 //  QCoreApplication::processEvents();
+
   /* 获取句柄是否为空 */
   if(cq_obj == nullptr)
   {
@@ -623,19 +654,23 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
   CircularQueue::CQ_handleTypeDef *cq = cq_obj->get_cq_handle();
 
   /* 检查响应队列 */
-  if(wait_response_list.isEmpty() == true)
+  if(true == wait_response_list.isEmpty() && false == listen_mode)
   {
     CircularQueue::CQ_emptyData(cq);
     return RETURN_OK;
   }
 
   /* 获取等待数据信息 */
-  WAIT_RESPONSE_LIST_Typedef_t wait = wait_response_list.first();
+  WAIT_RESPONSE_LIST_Typedef_t wait;
+  if(false == wait_response_list.isEmpty() && false == listen_mode)
+  {
+    wait = wait_response_list.first();
+  }
 
   while(run_state)
   {
     /* 检测响应帧超时 */
-    if(response_is_timeout(wait) == true)
+    if(response_is_timeout(wait) == true && false == listen_mode)
     {
       /* 移除等待队列-清空缓冲区 */
       wait_response_list.removeFirst();
@@ -654,7 +689,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
 
     /* 元数据报文 */
     uint32_t meta_len = 0;
-    if((quint8)EOL_META_CMD == wait.command)
+    if((quint8)EOL_META_CMD == wait.command && false == listen_mode)
     {
       meta_len = CircularQueue::CQ_getLength(cq);
       if(meta_len > EOL_FRAME_MIN_SIZE)
@@ -679,6 +714,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
     /* 判断帧类型 */
     reg = CircularQueue::CQ_ManualGet_Offset_Data(cq, 2);
     cmd = reg & 0x01;
+    reg >>= 1;
 
     switch((EOL_CMD_Typedef_t)cmd)
     {
@@ -698,12 +734,16 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
           break;
         }
 
-        /* 正常-->移除等待队列 */
-        wait_response_list.removeFirst();
+        /* 移除等待队列 */
+        if(false == wait_response_list.isEmpty() && false == listen_mode)
+        {
+          wait_response_list.removeFirst();
+        }
+
         CircularQueue::CQ_ManualOffsetInc(cq, package_len);
 
         /* 处理ack */
-        EOL_OPT_STATUS_Typedef_t ret = decode_ack_frame(temp_buf);
+        EOL_OPT_STATUS_Typedef_t ret = decode_ack_frame(reg, temp_buf);
         if(EOL_OPT_OK != ret)
         {
           qDebug() << "signal_protocol_error_occur";
@@ -736,10 +776,14 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         }
 
         /* 处理数据 */
-        RETURN_TYPE_Typedef_t ret = decode_data_frame(wait, temp_buf + 5, data_len);
+        RETURN_TYPE_Typedef_t ret = decode_data_frame(reg, temp_buf + 5, data_len);
 
-        /* 正常-->移除等待队列 */
-        wait_response_list.removeFirst();
+        /* 移除等待队列 */
+        if(false == wait_response_list.isEmpty() && false == listen_mode)
+        {
+          wait_response_list.removeFirst();
+        }
+
         CircularQueue::CQ_ManualOffsetInc(cq, package_len);
 
         acc_error_cnt = 0;
@@ -766,13 +810,15 @@ __META_CMD_DECDE:
     switch(wait.reg_addr)
     {
       default:
-        /* 正常移除等待队列 */
-         wait_response_list.removeFirst();
-         CircularQueue::CQ_ManualOffsetInc(cq, meta_len);
+        /* 正常-->移除等待队列 */
+        if(false == wait_response_list.isEmpty() && false == listen_mode)
+        {
+          wait_response_list.removeFirst();
+        }
+        CircularQueue::CQ_ManualOffsetInc(cq, meta_len);
 
-         acc_error_cnt = 0;
+        acc_error_cnt = 0;
         return RETURN_OK;
-        break;
     }
     CircularQueue::CQ_ManualOffsetInc(cq, 1);
     return RETURN_ERROR;
@@ -902,6 +948,7 @@ bool eol_protocol::common_rw_device_task(void *param_)
   eol_protocol::RETURN_TYPE_Typedef_t ret;
   quint8 error_cnt = 0;
   EOL_TASK_LIST_Typedef_t *param = (EOL_TASK_LIST_Typedef_t *)param_;
+
   /* 清空 */
   eol_protocol_clear();
 
@@ -959,10 +1006,10 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   /* 清空 */
   eol_protocol_clear();
 
-  /* 表头数据 */
+  /* 帧计数0，发送表头数据 */
   index = 0;
   frame_num = 0;
-  data_buf[index++] = frame_num;// 第0包表头信息
+  data_buf[index++] = frame_num;
   data_buf[index++] = (quint8)(frame_num >> 8);
 
   quint32 crc = utility::get_crc32_with_tab(param->data, param->head_data.Common_Info.Data_Size);
@@ -1006,7 +1053,7 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   /* 清空错误统计 */
   error_cnt = 0;
   qDebug() << "step2 send table data ";
-  /* 发送表数据，每包256Bytes，不足0填充 */
+  /* 发送表数据，每包256Bytes，不足只发送剩余部分 */
   for(quint32 i = 0; i < param->head_data.Common_Info.Data_Size;)
   {
     frame_num++;
@@ -1143,7 +1190,9 @@ bool eol_protocol::eol_master_send_table_data(COMMON_TABLE_HEADER_Typedef_t &tab
   EOL_TASK_LIST_Typedef_t task;
   task.param = &send_table_data;
   task.task = &eol_protocol::send_eol_table_data_task;
+  sem.tryAcquire();
   eol_task_list.append(task);
+  sem.release();
   return true;
 }
 
@@ -1168,7 +1217,9 @@ bool eol_protocol::eol_master_get_table_data(TABLE_Typedef_t table_type)
   EOL_TASK_LIST_Typedef_t task;
   task.param = &send_table_data.head_data;
   task.task = &eol_protocol::get_eol_table_data_task;
+  sem.tryAcquire();
   eol_task_list.append(task);
+  sem.release();
 
   /* 数据记录清空 */
   memset(&data_record, 0, sizeof(data_record));
@@ -1194,8 +1245,9 @@ bool eol_protocol::eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task, bo
   can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
 
   task.task = &eol_protocol::common_rw_device_task;
+  sem.tryAcquire();
   eol_task_list.append(task);
-
+  sem.release();
   return true;
 }
 

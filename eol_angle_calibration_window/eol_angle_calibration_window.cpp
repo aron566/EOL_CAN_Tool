@@ -65,7 +65,7 @@ void eol_angle_calibration_window::set_eol_protocol_obj(eol_protocol *obj)
   /* 数据接收 */
 //  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_angle_calibration_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
-  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_angle_calibration_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);   
+  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_angle_calibration_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);
 }
 
 /**
@@ -720,8 +720,8 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
         task.len = 4;
         eol_protocol_obj->eol_master_common_rw_device(task);
       }
-
       break;
+
     case EOL_RW_RCS_OFFSET_REG:
     case EOL_W_PAR_RESET_REG:
     case EOL_RW_CALI_MODE_REG:

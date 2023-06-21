@@ -23,7 +23,7 @@
       <item row="0" column="0">
        <widget class="QTabWidget" name="debug_tabWidget">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab_1">
          <attribute name="title">
@@ -45,6 +45,9 @@
             <property name="text">
              <string>区分大小</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item row="0" column="0" colspan="2">
@@ -60,12 +63,12 @@
              <widget class="QComboBox" name="color_list_comboBox">
               <item>
                <property name="text">
-                <string>RED</string>
+                <string>WHITE</string>
                </property>
               </item>
               <item>
                <property name="text">
-                <string>WHITE</string>
+                <string>RED</string>
                </property>
               </item>
               <item>

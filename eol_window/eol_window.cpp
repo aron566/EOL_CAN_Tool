@@ -150,6 +150,10 @@ void eol_window::eol_debug_window_init(QString title)
 {
   debug_window_window_obj = new debug_window(title);
   connect(debug_window_window_obj, &debug_window::signal_window_closed, this, &eol_window::slot_show_this_window);
+  connect(debug_window_window_obj, &debug_window::signal_window_closed, this, &eol_window::slot_close_shell_window);
+
+  connect(debug_window_window_obj, &debug_window::signal_send_command, this, &eol_window::slot_send_command);
+  connect(debug_window_window_obj, &debug_window::signal_send_command_char, this, &eol_window::slot_send_command_char);
 }
 
 void eol_window::set_can_driver_obj(can_driver *can_driver_obj)
@@ -212,6 +216,43 @@ void eol_window::timer_init()
 void eol_window::slot_show_this_window()
 {
   this->show();
+}
+
+void eol_window::slot_close_shell_window()
+{
+  /* shell窗口关闭停止监听停止eol协议 */
+  eol_protocol_obj->stop_task();
+}
+
+void eol_window::slot_send_command(QString text)
+{
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.param = nullptr;
+
+  /* 发送shell命令 */
+  task.reg = EOL_RW_SHELL_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  memcpy(task.buf, text.toStdString().data(), text.toStdString().size());
+  task.len = (quint16)text.toStdString().size();
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  eol_protocol_obj->start_task(true);
+}
+
+void eol_window::slot_send_command_char(char c)
+{
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.param = nullptr;
+
+  /* 发送shell命令 */
+  task.reg = EOL_RW_SHELL_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = c;
+  task.len = 1;
+  eol_protocol_obj->eol_master_common_rw_device(task, false);
+
+  /* 启动eol协议栈并监听 */
+  eol_protocol_obj->start_task(true);
 }
 
 void eol_window::slot_timeout()
@@ -1783,6 +1824,7 @@ void eol_window::slot_protocol_rw_err(quint8 reg, quint8 command)
     case EOL_W_DEVICE_REBOOT_REG:
       tips = tr("reboot err");
       break;
+
     case EOL_R_ACCESS_CODE_REG:
     case EOL_W_RUN_MODE_REG:
     case EOL_R_PROFILE_NUM_CH_NUM:
@@ -1790,6 +1832,7 @@ void eol_window::slot_protocol_rw_err(quint8 reg, quint8 command)
       /* 设置错误状态 */
       current_task_complete_state = TASK_ERROR;
       break;
+
     default:
       return;
   }
@@ -1811,14 +1854,31 @@ void eol_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 data_
   switch(reg)
   {
     case EOL_W_DEVICE_REBOOT_REG:
-      tips = tr("reboot ok");
+      {
+        tips = tr("reboot ok");
+      }
       break;
+
     case EOL_R_ACCESS_CODE_REG:
     case EOL_W_RUN_MODE_REG:
     case EOL_R_PROFILE_NUM_CH_NUM:
-      tips = tr("rw ok");
-      current_task_complete_state = TASK_COMPLETE;
+      {
+        tips = tr("rw ok");
+        current_task_complete_state = TASK_COMPLETE;
+      }
       break;
+
+    case EOL_RW_SHELL_REG:
+      {
+        if(0 == data_len || nullptr == data)
+        {
+          /* 发送命令成功 */
+          return;
+        }
+        debug_window_window_obj->rec_shell_data(data, data_len);
+      }
+      return;
+
     default:
       return;
   }
@@ -1858,6 +1918,7 @@ void eol_window::on_reboot_pushButton_clicked()
   task.len = 1;
 
   eol_protocol_obj->eol_master_common_rw_device(task);
+
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
 }

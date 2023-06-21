@@ -233,6 +233,9 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
           memcpy(version_info, data, data_len);
           task.len = data_len;
           eol_protocol_obj->eol_master_common_rw_device(task);
+
+          /* 启动eol线程 */
+          eol_protocol_obj->start_task();
         }
         break;
 
@@ -261,8 +264,10 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
           memcpy(task.buf, data, data_len);
           task.len = data_len;
           eol_protocol_obj->eol_master_common_rw_device(task);
-        }
 
+          /* 启动eol线程 */
+          eol_protocol_obj->start_task();
+        }
         break;
 
       /* MOUNTID测试 */
@@ -324,9 +329,6 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
         }
         break;
     }
-
-    /* 启动eol线程 */
-    eol_protocol_obj->start_task();
   }
 }
 

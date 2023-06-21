@@ -28,6 +28,7 @@
 #include <QThread>
 #include <QThreadPool>
 #include <QRunnable>
+#include <QSemaphore>
 #include "circularqueue.h"
 #include "can_driver.h"
 #include "utility.h"
@@ -83,6 +84,8 @@
 #define EOL_R_CLIENT_DID_VER_REG       0x19U  /**< 读取客户did版本信息 */
 #define EOL_RW_RDM_DATA_REG            0x1AU  /**< 读写RDM数据 */
 #define EOL_W_WDG_REG                  0x1BU  /**< 设置看门狗 */
+#define EOL_RW_GPIO_REG                0x1CU  /**< 读写GPIO */
+#define EOL_RW_SHELL_REG               0x1DU  /**< 读写shell，当读命令时持续监听eol协议数据 */
 
 /** Exported variables -------------------------------------------------------*/
 /** Exported functions prototypes --------------------------------------------*/
@@ -112,8 +115,8 @@ public:
   typedef enum
   {
     NORMAL_MODE_RUN = 0,
-    PRODUCE_MODE_NORMAL = 1,            /**< 雷达一直发送目标列表给上位机 */
-    PRODUCE_MODE_DEBUG = 2              /**< 雷达一直发送目标的2D-FFT数据给上位机 */
+    PRODUCE_MODE_NORMAL = 1,            /**< 雷达EOL校准模式 */
+    PRODUCE_MODE_DEBUG = 2              /**< 雷达调试模式 */
   }DEVICE_MODE_Typedef_t;
 
   /* 校准配置信息 */
@@ -371,6 +374,7 @@ private:
   }EOL_SEND_DATA_Typedef_t;
 
 public:
+
   /**
    * @brief eol协议线程
    */
@@ -389,11 +393,17 @@ public:
   void stop_task()
   {
     run_state = false;
+    listen_run_state = false;
     qDebug() << "eol protocol stop_task";
   }
 
-  void start_task()
+  /**
+   * @brief start_task
+   * @param listen_cs 设置eol监听使能，true使能 false失能
+   */
+  void start_task(bool listen_cs = false)
   {
+    listen_run_state = listen_cs;
     if(thread_run_state)
     {
       qDebug() << "eol protocol is running";
@@ -596,25 +606,27 @@ private:
 
   /**
    * @brief 等待回复数据
-   * @return 0正常
+   * @param listen_mode 监听模式，监听模式不要求等待列表不为空，即不要求有请求报文
+   * @return RETURN_OK 正常
    */
-  RETURN_TYPE_Typedef_t protocol_stack_wait_reply_start();
+  RETURN_TYPE_Typedef_t protocol_stack_wait_reply_start(bool listen_mode = false);
 
   /**
    * @brief 解析ack应答帧
+   * @param reg_addr 寄存器地址
    * @param data 帧数据
    * @return 应答消息
    */
-  EOL_OPT_STATUS_Typedef_t decode_ack_frame(const quint8 *data);
+  EOL_OPT_STATUS_Typedef_t decode_ack_frame(quint8 reg_addr, const quint8 *data);
 
   /**
    * @brief 解析接收数据
-   * @param wait 等待列表
+   * @param reg_addr 寄存器地址
    * @param data 数据
    * @param data_len 数据长度
    * @return 状态
    */
-  RETURN_TYPE_Typedef_t decode_data_frame(WAIT_RESPONSE_LIST_Typedef_t &wait, const quint8 *data, quint16 data_len);
+  RETURN_TYPE_Typedef_t decode_data_frame(quint8 reg_addr, const quint8 *data, quint16 data_len);
 
   /**
    * @brief 回复超时检测
@@ -666,7 +678,7 @@ private:
   /* 错误统计 */
   quint32 acc_error_cnt = 0;
 
-  /* 发射队列 */
+  /* 发送队列 */
   SEND_TASK_LIST_Typedef_t send_task_handle;
 
   /* 响应队列 */
@@ -674,11 +686,20 @@ private:
 
   /* 任务队列 */
   QList<EOL_TASK_LIST_Typedef_t>eol_task_list;
+
 private slots:
-    void slot_timer_timeout();
+
+  /**
+   * @brief 定时器超时处理
+   */
+  void slot_timer_timeout();
+
 private:
+  QSemaphore sem;
   bool run_state = false;
   bool thread_run_state = false;
+  bool listen_run_state = false;
+
   QThreadPool *g_thread_pool = nullptr;
   CircularQueue *cq_obj = nullptr;
   can_driver *can_driver_obj = nullptr;
