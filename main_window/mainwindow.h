@@ -72,7 +72,13 @@ private:
   /**
    * @brief 恢复参数
    */
-  void para_restore_init();
+  void read_cfg();
+
+  /**
+   * @brief 保存参数
+   */
+  void save_cfg();
+
 private slots:
   /**
    * @brief 显示主窗口
@@ -131,5 +137,7 @@ private slots:
   void on_role_comboBox_currentIndexChanged(int index);
   void on_diy_bps_checkBox_clicked(bool checked);
   void on_channel_num_comboBox_currentIndexChanged(int index);
+  void on_brand_comboBox_currentIndexChanged(int index);
+  void on_device_info_pushButton_clicked();
 };
 #endif // MAINWINDOW_H

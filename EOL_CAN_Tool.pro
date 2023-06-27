@@ -34,6 +34,9 @@ win32: QMAKE_POST_LINK += $$DESTDIR/qtenvPackage.bat $$DESTDIR $${TARGET}.exe
 # 周立功can驱动库
 include(zlg_can_lib/zlg_can_lib.pri)
 
+# 广成can驱动库
+include(gc_can_lib/gc_can_lib.pri)
+
 # ini配置文件解析驱动库
 include(ini_parse/ini_parse.pri)
 

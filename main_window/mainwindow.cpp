@@ -34,6 +34,8 @@
  *  <tr><td>2023-06-14 <td>v0.0.16 <td>aron566 <td>修复csv表传输，某些字段未传输问题
  *  <tr><td>2023-06-19 <td>v0.0.17 <td>aron566 <td>增加命令终端功能
  *  <tr><td>2023-06-20 <td>v0.0.18 <td>aron566 <td>适配EOL协议v0.0.15版本，增加gpio寄存器，shell寄存器
+ *  <tr><td>2023-06-25 <td>v0.0.19 <td>aron566 <td>适配GCcan驱动
+ *  <tr><td>2023-06-26 <td>v0.0.20 <td>aron566 <td>手动发送将自动依据发送的字节数分包发送，增加回环工作模式，为通讯配置增加配置文件
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -45,7 +47,7 @@
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
-#define PC_SOFTWARE_VERSION "v0.0.18"
+#define PC_SOFTWARE_VERSION "v0.0.20"
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -99,11 +101,14 @@ MainWindow::MainWindow(QWidget *parent)
   more_window_init(tr("EOL CAN Tool - More"));
 
   /* 恢复参数 */
-  para_restore_init();
+  read_cfg();
 }
 
 MainWindow::~MainWindow()
 {
+  /* 保存参数 */
+  save_cfg();
+
   delete can_driver_obj;
   qDebug() << "del can_driver_obj";
 
@@ -176,16 +181,47 @@ void MainWindow::can_driver_init()
   connect(can_driver_obj, &can_driver::signal_auto_send_stop_can_use, this, &MainWindow::slot_auto_send_stop_can_use);
   connect(can_driver_obj, &can_driver::signal_auto_send_cancel_once_can_use, this, &MainWindow::slot_auto_send_cancel_once_can_use);
   connect(can_driver_obj, &can_driver::signal_get_dev_auto_send_list_can_use, this, &MainWindow::slot_get_dev_auto_send_list_can_use);
+
+  /* 读取设备信息不可用状态 */
+  ui->device_info_pushButton->setEnabled(false);
 }
 
-void MainWindow::para_restore_init()
+void MainWindow::save_cfg()
 {
-  /* 设置默认值 */
-  ui->device_list_comboBox->setCurrentText("ZCAN_USBCANFD_200U");
-  ui->arbitration_bps_comboBox->setCurrentIndex(2);
-  ui->data_bps_comboBox->setCurrentIndex(2);
+  QSettings setting("./main_window_cfg.ini", QSettings::IniFormat);
+  setting.setValue("com/device_brand", ui->brand_comboBox->currentIndex());
+  setting.setValue("com/device_name", ui->device_list_comboBox->currentText());
+  setting.setValue("com/arbitration_bps", ui->arbitration_bps_comboBox->currentIndex());
+  setting.setValue("com/data_bps", ui->data_bps_comboBox->currentIndex());
+  setting.setValue("com/bps", ui->bps_comboBox->currentIndex());
+  setting.setValue("com/end_resistance_en", (int)ui->end_resistance_checkBox->checkState());
+  setting.sync();
+}
+
+void MainWindow::read_cfg()
+{
+  QFile file("./main_window_cfg.ini");
+  if(false == file.exists())
+  {
+    /* 设置默认值 */
+    ui->brand_comboBox->setCurrentIndex(can_driver::ZLG_CAN_BRAND);
+    ui->device_list_comboBox->setCurrentText("ZCAN_USBCANFD_200U");
+    ui->arbitration_bps_comboBox->setCurrentIndex(2);
+    ui->data_bps_comboBox->setCurrentIndex(2);
+    /* 设置终端电阻启用状态 */
+    can_driver_obj->set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
+    return;
+  }
+  QSettings setting("./main_window_cfg.ini", QSettings::IniFormat);
+  ui->brand_comboBox->setCurrentIndex((can_driver::CAN_BRAND_Typedef_t)setting.value("com/device_brand").toInt());
+  ui->device_list_comboBox->setCurrentText(setting.value("com/device_name").toString());
+  ui->arbitration_bps_comboBox->setCurrentIndex(setting.value("com/arbitration_bps").toInt());
+  ui->data_bps_comboBox->setCurrentIndex(setting.value("com/data_bps").toInt());
+  ui->bps_comboBox->setCurrentIndex(setting.value("com/bps").toInt());
   /* 设置终端电阻启用状态 */
+  ui->end_resistance_checkBox->setCheckState((Qt::CheckState)setting.value("com/end_resistance_en").toInt());
   can_driver_obj->set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
+  setting.sync();
 }
 
 void MainWindow::slot_show_this_window()
@@ -201,6 +237,7 @@ void MainWindow::slot_can_is_opened(void)
   ui->channel_num_comboBox->setEnabled(false);
   ui->start_can_pushButton->setEnabled(true);
   ui->init_can_pushButton->setEnabled(true);
+  ui->device_info_pushButton->setEnabled(true);
 }
 
 void MainWindow::slot_can_is_closed(void)
@@ -211,6 +248,7 @@ void MainWindow::slot_can_is_closed(void)
   ui->channel_num_comboBox->setEnabled(true);
   ui->start_can_pushButton->setEnabled(true);
   ui->init_can_pushButton->setEnabled(true);
+  ui->device_info_pushButton->setEnabled(false);
 }
 
 void MainWindow::slot_work_mode_can_use(bool can_use)
@@ -231,6 +269,7 @@ void MainWindow::slot_bauds_can_use(bool can_use)
 void MainWindow::slot_arbitration_data_bauds_can_use(bool can_use)
 {
   ui->arbitration_bps_comboBox->setEnabled(can_use);
+  ui->data_bps_comboBox->setEnabled(can_use);
 }
 
 void MainWindow::slot_diy_bauds_can_use(bool can_use)
@@ -489,4 +528,19 @@ void MainWindow::on_channel_num_comboBox_currentIndexChanged(int index)
   can_driver_obj->set_channel_index(index);
 }
 
+void MainWindow::on_brand_comboBox_currentIndexChanged(int index)
+{
+  /* 设置品牌 */
+  QStringList device_list = can_driver_obj->set_device_brand((can_driver::CAN_BRAND_Typedef_t)index);
+  ui->device_list_comboBox->clear();
+
+  /* 更新列表 */
+  ui->device_list_comboBox->addItems(device_list);
+}
+
+void MainWindow::on_device_info_pushButton_clicked()
+{
+  /* 读取设备信息 */
+  can_driver_obj->read_info();
+}
 /******************************** End of file *********************************/

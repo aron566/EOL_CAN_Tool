@@ -12,55 +12,62 @@
   *  @details None.
   *
   *  @version v1.0.0 aron566 2023.02.21 14:05 初始版本.
+  *           v1.0.1 aron566 2023.06.25 17:38 增加多品牌驱动兼容.
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QDateTime>
+#include <QMessageBox>
 /** Private includes ---------------------------------------------------------*/
 #include "can_driver.h"
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
-#define TMP_BUFFER_LEN 1000U
+#define USE_HW_CAN_SEND_64_DATA 1/**< 是否开启非CANFD设备发送大于64Bytes的数据，采用分包发送 */
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
 
+/* 设备信息 */
 typedef struct _DeviceInfo
 {
-  const char *device_type_str;
-  quint16 device_type;  //设备类型
-  quint8 channel_count;//设备的通道个数
-}DeviceInfo;
-/*
-  列表数据需要和对话框中设备列表数据一一对应
-*/
-static const DeviceInfo kDeviceType[] = {
-  {"ZCAN_USBCAN1",            ZCAN_USBCAN1,            1},
-  {"ZCAN_USBCAN2",            ZCAN_USBCAN2,            2},
-  {"ZCAN_PCI9820I",           ZCAN_PCI9820I,           2},
-  {"ZCAN_USBCAN_E_U",         ZCAN_USBCAN_E_U,         1},
-  {"ZCAN_USBCAN_2E_U",        ZCAN_USBCAN_2E_U,        2},
-  {"ZCAN_USBCAN_4E_U",        ZCAN_USBCAN_4E_U,        4},
-  {"ZCAN_PCIE_CANFD_100U",    ZCAN_PCIE_CANFD_100U,    1},
-  {"ZCAN_PCIE_CANFD_200U",    ZCAN_PCIE_CANFD_200U,    2},
-  {"ZCAN_PCIE_CANFD_400U_EX", ZCAN_PCIE_CANFD_400U_EX, 4},
-  {"ZCAN_USBCANFD_200U",      ZCAN_USBCANFD_200U,      2},
-  {"ZCAN_USBCANFD_100U",      ZCAN_USBCANFD_100U,      1},
-  {"ZCAN_USBCANFD_MINI",      ZCAN_USBCANFD_MINI,      1},
-  {"ZCAN_CANETTCP",           ZCAN_CANETTCP,           1},
-  {"ZCAN_CANETUDP",           ZCAN_CANETUDP,           1},
-  {"ZCAN_WIFICAN_TCP",        ZCAN_WIFICAN_TCP,        1},
-  {"ZCAN_WIFICAN_UDP",        ZCAN_WIFICAN_UDP,        1},
-  {"ZCAN_CLOUD",              ZCAN_CLOUD,              1},
-  {"ZCAN_CANFDWIFI_TCP",      ZCAN_CANFDWIFI_TCP,      1},
-  {"ZCAN_CANFDWIFI_UDP",      ZCAN_CANFDWIFI_UDP,      1},
-  {"ZCAN_CANFDNET_TCP",       ZCAN_CANFDNET_TCP,       2},
-  {"ZCAN_CANFDNET_UDP",       ZCAN_CANFDNET_UDP,       2},
-  {"ZCAN_CANFDNET_400U_TCP",  ZCAN_CANFDNET_400U_TCP,  4},
-  {"ZCAN_CANFDNET_400U_UDP",  ZCAN_CANFDNET_400U_UDP,  4},
+  const char *device_type_str;            /**< 品牌设备名 */
+  can_driver::CAN_BRAND_Typedef_t brand;  /**< 品牌 */
+  quint16 device_type;                    /**< 设备类型 */
+  quint8 channel_count;                   /**< 设备的通道个数 */
+}DEVICE_INFO_Typedef_t;
+
+/* 列表数据需要和对话框中设备列表数据一一对应 */
+static const DEVICE_INFO_Typedef_t kDeviceType[] = {
+  /* 周立功can */
+  {"ZCAN_USBCAN1",            can_driver::ZLG_CAN_BRAND, ZCAN_USBCAN1,            1},
+  {"ZCAN_USBCAN2",            can_driver::ZLG_CAN_BRAND, ZCAN_USBCAN2,            2},
+  {"ZCAN_PCI9820I",           can_driver::ZLG_CAN_BRAND, ZCAN_PCI9820I,           2},
+  {"ZCAN_USBCAN_E_U",         can_driver::ZLG_CAN_BRAND, ZCAN_USBCAN_E_U,         1},
+  {"ZCAN_USBCAN_2E_U",        can_driver::ZLG_CAN_BRAND, ZCAN_USBCAN_2E_U,        2},
+  {"ZCAN_USBCAN_4E_U",        can_driver::ZLG_CAN_BRAND, ZCAN_USBCAN_4E_U,        4},
+  {"ZCAN_PCIE_CANFD_100U",    can_driver::ZLG_CAN_BRAND, ZCAN_PCIE_CANFD_100U,    1},
+  {"ZCAN_PCIE_CANFD_200U",    can_driver::ZLG_CAN_BRAND, ZCAN_PCIE_CANFD_200U,    2},
+  {"ZCAN_PCIE_CANFD_400U_EX", can_driver::ZLG_CAN_BRAND, ZCAN_PCIE_CANFD_400U_EX, 4},
+  {"ZCAN_USBCANFD_200U",      can_driver::ZLG_CAN_BRAND, ZCAN_USBCANFD_200U,      2},
+  {"ZCAN_USBCANFD_100U",      can_driver::ZLG_CAN_BRAND, ZCAN_USBCANFD_100U,      1},
+  {"ZCAN_USBCANFD_MINI",      can_driver::ZLG_CAN_BRAND, ZCAN_USBCANFD_MINI,      1},
+  {"ZCAN_CANETTCP",           can_driver::ZLG_CAN_BRAND, ZCAN_CANETTCP,           1},
+  {"ZCAN_CANETUDP",           can_driver::ZLG_CAN_BRAND, ZCAN_CANETUDP,           1},
+  {"ZCAN_WIFICAN_TCP",        can_driver::ZLG_CAN_BRAND, ZCAN_WIFICAN_TCP,        1},
+  {"ZCAN_WIFICAN_UDP",        can_driver::ZLG_CAN_BRAND, ZCAN_WIFICAN_UDP,        1},
+  {"ZCAN_CLOUD",              can_driver::ZLG_CAN_BRAND, ZCAN_CLOUD,              1},
+  {"ZCAN_CANFDWIFI_TCP",      can_driver::ZLG_CAN_BRAND, ZCAN_CANFDWIFI_TCP,      1},
+  {"ZCAN_CANFDWIFI_UDP",      can_driver::ZLG_CAN_BRAND, ZCAN_CANFDWIFI_UDP,      1},
+  {"ZCAN_CANFDNET_TCP",       can_driver::ZLG_CAN_BRAND, ZCAN_CANFDNET_TCP,       2},
+  {"ZCAN_CANFDNET_UDP",       can_driver::ZLG_CAN_BRAND, ZCAN_CANFDNET_UDP,       2},
+  {"ZCAN_CANFDNET_400U_TCP",  can_driver::ZLG_CAN_BRAND, ZCAN_CANFDNET_400U_TCP,  4},
+  {"ZCAN_CANFDNET_400U_UDP",  can_driver::ZLG_CAN_BRAND, ZCAN_CANFDNET_400U_UDP,  4},
+
+  /* 广成can */
+  {"GC_USBCAN_II",            can_driver::GC_CAN_BRAND,  GC_USBCAN2,              2},
 };
 
-//USBCANFD
+/* USBCANFD */
 static const quint32 kAbitTimingUSB[] = {
   1000000,//1Mbps
   800000,//800kbps
@@ -77,7 +84,7 @@ static const quint32 kDbitTimingUSB[] = {
   1000000 //1Mbps
 };
 
-//PCIECANFD brp=1
+/* PCIECANFD brp=1 */
 //static const quint32 kAbitTimingPCIE[] = {
 //  1000000, //1M(80%)
 //  800000, //800K(80%)
@@ -121,7 +128,7 @@ static const quint32 kBaudrate[] = {
  *
  *       Static code
  *
- ********************************************************************************
+ *******************************************************************************
  */
 
 /** Public application code --------------------------------------------------*/
@@ -129,7 +136,7 @@ static const quint32 kBaudrate[] = {
  *
  *       Public code
  *
- ********************************************************************************
+ *******************************************************************************
  */
 
 can_driver::can_driver(QObject *parent)
@@ -140,6 +147,23 @@ can_driver::can_driver(QObject *parent)
   {
     qDebug() << "create cq faild";
   }
+}
+
+QStringList can_driver::set_device_brand(CAN_BRAND_Typedef_t brand)
+{
+  QStringList device_list;
+  QString device_name;
+
+  brand_ = brand;
+  for(quint16 i = 0; i < sizeof(kDeviceType) / sizeof(kDeviceType[0]); i++)
+  {
+    device_name = QString(kDeviceType[i].device_type_str);
+    if(brand_ == kDeviceType[i].brand)
+    {
+      device_list.append(device_name);
+    }
+  }
+  return device_list;
 }
 
 quint8 can_driver::set_device_type(const QString &device_type_str)
@@ -169,195 +193,393 @@ bool can_driver::open()
 //    }
 //    device_index_ = dlg.GetDeviceIndex();
 //  }
-  device_handle_ = ZCAN_OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0);
-  if(INVALID_DEVICE_HANDLE == device_handle_)
+  switch(brand_)
   {
-    show_message(tr("open device faild"));
-    return false;
+    case ZLG_CAN_BRAND:
+      {
+        device_handle_ = ZCAN_OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0);
+        if(INVALID_DEVICE_HANDLE == device_handle_)
+        {
+          show_message(tr("open zlg device faild"));
+          return false;
+        }
+        break;
+      }
+
+    case GC_CAN_BRAND:
+      {
+        if(GC_STATUS_OK != OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0))
+        {
+          show_message(tr("open gc device faild"));
+          return false;
+        }
+        break;
+      }
+
+    default:
+      return false;
   }
-  device_opened_ = true;
 
   /* 发送can打开状态 */
+  device_opened_ = true;
   emit signal_can_is_opened();
   show_message(tr("open device ok"));
   return true;
 }
 
+void can_driver::read_info()
+{
+  QString show_info;
+  switch(brand_)
+  {
+    case ZLG_CAN_BRAND:
+      {
+        if(nullptr == device_handle_)
+        {
+          return;
+        }
+        ZCAN_DEVICE_INFO info;
+        ZCAN_GetDeviceInf(device_handle_, &info);
+
+        show_info += QString("<font size='5' color='green'><div align='legt'>hw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.hw_Version, 0, 16);
+        show_info += QString("<font size='5' color='green'><div align='legt'>fw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.fw_Version, 0, 16);
+        show_info += QString("<font size='5' color='green'><div align='legt'>dr_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.dr_Version, 0, 16);
+        show_info += QString("<font size='5' color='green'><div align='legt'>str_Serial_Num:</div> <div align='right'>");
+        char str[sizeof(info.str_Serial_Num) + 1] = {0};
+        memcpy(str, info.str_Serial_Num, sizeof(info.str_Serial_Num));
+        show_info += QString::asprintf("%s", str);
+        show_info += QString("</div> </font>\r\n");
+
+        show_info += QString("<font size='5' color='green'><div align='legt'>str_hw_Type:</div> <div align='right'>");
+        char hwstr[sizeof(info.str_hw_Type) + 1] = {0};
+        memcpy(hwstr, info.str_hw_Type, sizeof(info.str_hw_Type));
+        show_info += QString::asprintf("%s", hwstr);
+        show_info += QString("</div> </font>\r\n");
+
+        show_info += QString("<font size='5' color='green'><div align='legt'>can_Num:</div> <div align='right'>%1</div> </font>\r\n").arg(info.can_Num);
+        break;
+      }
+
+    case GC_CAN_BRAND:
+      {
+        GC_BOARD_INFO info;
+        ReadBoardInfo(kDeviceType[device_type_index_].device_type, device_index_, &info);
+        show_info += QString("<font size='5' color='green'><div align='legt'>hw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.hw_Version, 0, 16);
+        show_info += QString("<font size='5' color='green'><div align='legt'>fw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.fw_Version, 0, 16);
+        show_info += QString("<font size='5' color='green'><div align='legt'>dr_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.dr_Version, 0, 16);
+        show_info += QString("<font size='5' color='green'><div align='legt'>str_Serial_Num:</div> <div align='right'>");
+        char str[sizeof(info.str_Serial_Num) + 1] = {0};
+        memcpy(str, info.str_Serial_Num, sizeof(info.str_Serial_Num));
+        show_info += QString::asprintf("%s", str);
+        show_info += QString("</div> </font>\r\n");
+
+        show_info += QString("<font size='5' color='green'><div align='legt'>str_hw_Type:</div> <div align='right'>");
+        char hwstr[sizeof(info.str_hw_Type) + 1] = {0};
+        memcpy(hwstr, info.str_hw_Type, sizeof(info.str_hw_Type));
+        show_info += QString::asprintf("%s", hwstr);
+        show_info += QString("</div> </font>\r\n");
+
+        show_info += QString("<font size='5' color='green'><div align='legt'>can_Num:</div> <div align='right'>%1</div> </font>\r\n").arg(info.can_Num);
+        break;
+      }
+
+    default:
+      return;
+  }
+
+  QMessageBox message(QMessageBox::Information, tr("Info"), show_info, QMessageBox::Yes, nullptr);
+  message.exec();
+}
+
 bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
 {
-  ZCAN_CHANNEL_INIT_CONFIG config;
-  memset(&config, 0, sizeof(config));
-
-  quint32 type = kDeviceType[device_type_index_].device_type;
-  const bool cloudDevice = type == ZCAN_CLOUD;
-  const bool netcanfd = is_net_can_fd_type(type);
-  const bool netcan = is_net_can_type(type);
-  const bool netDevice = (netcan || netcanfd);
-  const bool tcpDevice = is_net_tcp_type(type);
-  const bool server = net_mode_index_ == 0;
-  const bool usbcanfd = type == ZCAN_USBCANFD_100U ||
-                        type == ZCAN_USBCANFD_200U ||
-                        type == ZCAN_USBCANFD_MINI;
-  const bool pciecanfd = type == ZCAN_PCIE_CANFD_100U ||
-                         type == ZCAN_PCIE_CANFD_200U ||
-                         type == ZCAN_PCIE_CANFD_400U_EX;
-  const bool canfdDevice = usbcanfd || pciecanfd;
-
-  if(cloudDevice)
+  switch(brand_)
   {
-    qDebug() << "cloudDevice";
-  }
-  else if(netDevice)
-  {
-    qDebug() << "netDevice/";
-    char path[50] = {0};
-    char value[100] = {0};
-    if(tcpDevice)
-    {
-      qDebug() << "tcpDevice/";
-      sprintf(path, "%d/work_mode", channel_state.channel_num);
-      sprintf(value, "%d", server ? 1 : 0);
-      ZCAN_SetValue(device_handle_, path, value);
-      if(server)
+    case ZLG_CAN_BRAND:
       {
-        qDebug() << "server";
-        sprintf(path, "%d/local_port", channel_state.channel_num);
-        ZCAN_SetValue(device_handle_, path, local_port_str.toStdString().data());
-      } // server
-      else
-      {
-        qDebug() << "client";
-        sprintf(path, "%d/ip", channel_state.channel_num);
-        ZCAN_SetValue(device_handle_, path, service_ip_str.toStdString().data());
+        ZCAN_CHANNEL_INIT_CONFIG config;
+        memset(&config, 0, sizeof(config));
 
-        sprintf(path, "%d/work_port", channel_state.channel_num);
-        ZCAN_SetValue(device_handle_, path, service_port_str.toStdString().data());
-      }
-    } // tcp
-    else
-    {
-      qDebug() << "udpDevice";
-      sprintf(path, "%d/local_port", channel_state.channel_num);
-      ZCAN_SetValue(device_handle_, path, local_port_str.toStdString().data());
-      sprintf(path, "%d/ip", channel_state.channel_num);
+        quint32 type = kDeviceType[device_type_index_].device_type;
+        const bool cloudDevice = type == ZCAN_CLOUD;
+        const bool netcanfd = is_net_can_fd_type(type);
+        const bool netcan = is_net_can_type(type);
+        const bool netDevice = (netcan || netcanfd);
+        const bool tcpDevice = is_net_tcp_type(type);
+        const bool server = net_mode_index_ == 0;
+        const bool usbcanfd = type == ZCAN_USBCANFD_100U ||
+                              type == ZCAN_USBCANFD_200U ||
+                              type == ZCAN_USBCANFD_MINI;
+        const bool pciecanfd = type == ZCAN_PCIE_CANFD_100U ||
+                               type == ZCAN_PCIE_CANFD_200U ||
+                               type == ZCAN_PCIE_CANFD_400U_EX;
+        const bool canfdDevice = usbcanfd || pciecanfd;
 
-      ZCAN_SetValue(device_handle_, path, service_ip_str.toStdString().data());
-      sprintf(path, "%d/work_port", channel_state.channel_num);
-      ZCAN_SetValue(device_handle_, path, service_port_str.toStdString().data());
-    }
-  }
-  else
-  {
-    //设置波特率
-    if(custom_baud_enable_)
-    {
-      qDebug() << "set diy bps";
-      if(!custom_baud_rate_config(channel_state))
-      {
-        show_message(tr("set diy baudrate faild "), channel_state.channel_num);
-        return false;
-      }
-    }
-    else
-    {
-      qDebug() << "set bps";
-      if(!canfdDevice && !baud_rate_config(channel_state))
-      {
-        show_message(tr("set baudrate faild "), channel_state.channel_num);
-        return false;
-      }
-    }
-
-    if(usbcanfd)
-    {
-      qDebug() << "set usbcanfd channel";
-      char path[50] = {0};
-      char value[100] = {0};
-      sprintf(path, "%d/canfd_standard", channel_state.channel_num);
-      sprintf(value, "%d", 0);
-      ZCAN_SetValue(device_handle_, path, value);
-    }
-    if(usbcanfd)
-    {
-      qDebug() << "usbcanfd diy bps";
-      if(custom_baud_enable_)
-      {
-        qDebug() << "usbcanfd diy bps set ...";
-        if(!custom_baud_rate_config(channel_state))
+        if(cloudDevice)
         {
-          show_message(tr("set diy baudrate faild "), channel_state.channel_num);
+          qDebug() << "cloudDevice";
+        }
+        else if(netDevice)
+        {
+          qDebug() << "netDevice/";
+          char path[50] = {0};
+          char value[100] = {0};
+          if(tcpDevice)
+          {
+            qDebug() << "tcpDevice/";
+            sprintf(path, "%d/work_mode", channel_state.channel_num);
+            sprintf(value, "%d", server ? 1 : 0);
+            ZCAN_SetValue(device_handle_, path, value);
+            if(server)
+            {
+              qDebug() << "server";
+              sprintf(path, "%d/local_port", channel_state.channel_num);
+              ZCAN_SetValue(device_handle_, path, local_port_str.toStdString().data());
+            } // server
+            else
+            {
+              qDebug() << "client";
+              sprintf(path, "%d/ip", channel_state.channel_num);
+              ZCAN_SetValue(device_handle_, path, service_ip_str.toStdString().data());
+
+              sprintf(path, "%d/work_port", channel_state.channel_num);
+              ZCAN_SetValue(device_handle_, path, service_port_str.toStdString().data());
+            }
+          } // tcp
+          else
+          {
+            qDebug() << "udpDevice";
+            sprintf(path, "%d/local_port", channel_state.channel_num);
+            ZCAN_SetValue(device_handle_, path, local_port_str.toStdString().data());
+            sprintf(path, "%d/ip", channel_state.channel_num);
+
+            ZCAN_SetValue(device_handle_, path, service_ip_str.toStdString().data());
+            sprintf(path, "%d/work_port", channel_state.channel_num);
+            ZCAN_SetValue(device_handle_, path, service_port_str.toStdString().data());
+          }
+        }
+        else
+        {
+          /* 设置波特率 */
+          if(custom_baud_enable_)
+          {
+            qDebug() << "set diy bps";
+            if(!custom_baud_rate_config(channel_state))
+            {
+              show_message(tr("set diy baudrate faild "), channel_state.channel_num);
+              return false;
+            }
+          }
+          else
+          {
+            qDebug() << "set bps";
+            if(!canfdDevice && !baud_rate_config(channel_state))
+            {
+              show_message(tr("set baudrate faild "), channel_state.channel_num);
+              return false;
+            }
+          }
+
+          if(usbcanfd)
+          {
+            qDebug() << "set usbcanfd channel";
+            char path[50] = {0};
+            char value[100] = {0};
+            sprintf(path, "%d/canfd_standard", channel_state.channel_num);
+            sprintf(value, "%d", 0);
+            ZCAN_SetValue(device_handle_, path, value);
+          }
+          if(usbcanfd)
+          {
+            qDebug() << "usbcanfd diy bps";
+            if(custom_baud_enable_)
+            {
+              qDebug() << "usbcanfd diy bps set ...";
+              if(!custom_baud_rate_config(channel_state))
+              {
+                show_message(tr("set diy baudrate faild "), channel_state.channel_num);
+                return false;
+              }
+            }
+            else
+            {
+              qDebug() << "usbcanfd bps set ...";
+              if(!cand_fd_bps_config(channel_state))
+              {
+                show_message(tr("set baudrate faild "), channel_state.channel_num);
+                return false;
+              }
+            }
+            config.can_type = TYPE_CANFD;
+            config.canfd.mode = work_mode_index_;
+            config.canfd.filter = filter_mode_;
+            bool ok;
+            config.canfd.acc_code = acc_code_.toUInt(&ok, 16);
+            config.canfd.acc_mask = acc_mask_.toUInt(&ok, 16);
+          }
+          else if(pciecanfd)
+          {
+
+            char path[50] = { 0 };
+            char value[100] = { 0 };
+            if(!cand_fd_bps_config(channel_state))
+            {
+              show_message(tr("set baudrate faild "), channel_state.channel_num);
+              return false;
+            }
+
+            if(type == ZCAN_PCIE_CANFD_400U_EX )
+            {
+              sprintf(path, "0/set_device_recv_merge");
+              sprintf(value, "0");
+              ZCAN_SetValue(device_handle_, path, value);
+            }
+
+            config.can_type = TYPE_CANFD;
+            config.canfd.mode = work_mode_index_;
+            config.canfd.filter = filter_mode_;
+            bool ok;
+            config.canfd.acc_code = acc_code_.toUInt(&ok, 16);
+            config.canfd.acc_mask = acc_mask_.toUInt(&ok, 16);
+
+          }
+          else
+          {
+              config.can_type = TYPE_CAN;
+              config.can.mode = work_mode_index_;
+              config.can.filter = filter_mode_;
+              bool ok;
+              config.can.acc_code = acc_code_.toUInt(&ok, 16);
+              config.can.acc_mask = acc_mask_.toUInt(&ok, 16);
+          }
+        }
+
+        channel_state.channel_hadle = ZCAN_InitCAN(device_handle_, channel_state.channel_num, &config);
+        if(INVALID_CHANNEL_HANDLE == channel_state.channel_hadle)
+        {
+          show_message(tr("zlg can ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
           return false;
         }
-      }
-      else
-      {
-        qDebug() << "usbcanfd bps set ...";
-        if(!cand_fd_bps_config(channel_state))
+        if(usbcanfd)
         {
-          show_message(tr("set baudrate faild "), channel_state.channel_num);
-          return false;
+          if(resistance_enable_ && !resistance_config(channel_state))
+          {
+            show_message(tr("set resistance faild"), channel_state.channel_num);
+            return false;
+          }
         }
+        show_message(tr("zlg can ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
+        return true;
       }
-      config.can_type = TYPE_CANFD;
-      config.canfd.mode = work_mode_index_;
-      config.canfd.filter = filter_mode_;
-      bool ok;
-      config.canfd.acc_code = acc_code_.toUInt(&ok, 16);
-      config.canfd.acc_mask = acc_mask_.toUInt(&ok, 16);
-    }
-    else if(pciecanfd)
-    {
 
-      char path[50] = { 0 };
-      char value[100] = { 0 };
-      if(!cand_fd_bps_config(channel_state))
+    case GC_CAN_BRAND:
       {
-        show_message(tr("set baudrate faild "), channel_state.channel_num);
-        return false;
-      }
+        GC_INIT_CONFIG config;
+        /* 0正常模式 1为只听模式 2为自发自收模式（回环模式） */
+        config.Mode = work_mode_index_;
+        /* 滤波方式，0 单滤波 */
+        config.Filter = 0;
+        switch(kBaudrate[baud_index_] / 1000)
+        {
+          case 1000:
+            config.Timing0 = 0;
+            config.Timing1 =0x14;
+            break;
 
-      if(type == ZCAN_PCIE_CANFD_400U_EX )
-      {
-        sprintf(path, "0/set_device_recv_merge");
-        sprintf(value, "0");
-        ZCAN_SetValue(device_handle_, path, value);
-      }
+          case 800:
+            config.Timing0 = 0;
+            config.Timing1 = 0x16;
+            break;
 
-      config.can_type = TYPE_CANFD;
-      config.canfd.mode = work_mode_index_;
-      config.canfd.filter = filter_mode_;
-      bool ok;
-      config.canfd.acc_code = acc_code_.toUInt(&ok, 16);
-      config.canfd.acc_mask = acc_mask_.toUInt(&ok, 16);
+          case 666:
+            config.Timing0 = 0x80;
+            config.Timing1 = 0xb6;
+            break;
 
-    }
-    else
-    {
-        config.can_type = TYPE_CAN;
-        config.can.mode = work_mode_index_;
-        config.can.filter = filter_mode_;
+          case 500:
+            config.Timing0 = 0;
+            config.Timing1 = 0x1c;
+            break;
+
+          case 400:
+            config.Timing0 = 0x80;
+            config.Timing1 = 0xfa;
+            break;
+
+          case 250:
+            config.Timing0 = 0x01;
+            config.Timing1 = 0x1c;
+            break;
+
+          case 200:
+            config.Timing0 = 0x81;
+            config.Timing1 = 0xfa;
+            break;
+
+          case 125:
+            config.Timing0 = 0x03;
+            config.Timing1 = 0x1c;
+            break;
+
+          case 100:
+            config.Timing0 = 0x04;
+            config.Timing1 = 0x1c;
+            break;
+
+          case 80:
+            config.Timing0 = 0x83;
+            config.Timing1 = 0xff;
+            break;
+
+          case 50:
+            config.Timing0 = 0x09;
+            config.Timing1 = 0x1c;
+            break;
+
+          case 40:
+            config.Timing0 = 0x87;
+            config.Timing1 = 0xff;
+            break;
+
+          case 20:
+            config.Timing0 = 0x18;
+            config.Timing1 = 0x1c;
+            break;
+
+          case 10:
+            config.Timing0 = 0x31;
+            config.Timing1 = 0x1c;
+            break;
+
+          case 5:
+            config.Timing0 = 0xbf;
+            config.Timing1 = 0xff;
+            break;
+
+          default://500
+            config.Timing0 = 0;
+            config.Timing1 = 0x1c;
+            break;
+        }
+
         bool ok;
-        config.can.acc_code = acc_code_.toUInt(&ok, 16);
-        config.can.acc_mask = acc_mask_.toUInt(&ok, 16);
-    }
-  }
+        /* 验收码 */
+        config.AccCode = acc_code_.toUInt(&ok, 16);
+        /* 屏蔽码 */
+        config.AccMask = acc_mask_.toUInt(&ok, 16);
+        /* 初始化 */
+        if(GC_STATUS_OK != InitCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &config))
+        {
+          show_message(tr("gc can ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
+          return false;
+        }
+        show_message(tr("gc can ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
+        return true;
+      }
 
-  channel_state.channel_hadle = ZCAN_InitCAN(device_handle_, channel_state.channel_num, &config);
-  if(INVALID_CHANNEL_HANDLE == channel_state.channel_hadle)
-  {
-    show_message(tr("can ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
-    return false;
-  }
-  if(usbcanfd)
-  {
-    if(resistance_enable_ && !resistance_config(channel_state))
-    {
-      show_message(tr("set resistance faild"), channel_state.channel_num);
+    default:
       return false;
-    }
   }
-  show_message(tr("can ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
-  return true;
 }
 
 bool can_driver::init()
@@ -388,14 +610,33 @@ bool can_driver::init()
 
 bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
 {
-  if(ZCAN_StartCAN(channel_state.channel_hadle) != STATUS_OK)
+  switch(brand_)
   {
-    show_message(tr("start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
-    return false;
-  }
+    case ZLG_CAN_BRAND:
+      {
+        if(ZCAN_StartCAN(channel_state.channel_hadle) != STATUS_OK)
+        {
+          show_message(tr("zlg start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+          return false;
+        }
+        show_message(tr("zlg start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+        return true;
+      }
 
-  show_message(tr("start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
-  return true;
+    case GC_CAN_BRAND:
+      {
+        if(GC_STATUS_OK != StartCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
+        {
+          show_message(tr("gc start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+          return false;
+        }
+        show_message(tr("gc start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+        return true;
+      }
+
+    default:
+      return false;
+  }
 }
 
 bool can_driver::start()
@@ -424,14 +665,33 @@ bool can_driver::start()
 
 bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
 {
-  if(ZCAN_ResetCAN(channel_state.channel_hadle) != STATUS_OK)
+  switch(brand_)
   {
-    show_message(tr("reset can ch %1 faild ").arg(channel_state.channel_num), channel_state.channel_num);
-    return false;
-  }
+    case ZLG_CAN_BRAND:
+      {
+        if(ZCAN_ResetCAN(channel_state.channel_hadle) != STATUS_OK)
+        {
+          show_message(tr("zlg reset can ch %1 faild ").arg(channel_state.channel_num), channel_state.channel_num);
+          return false;
+        }
+        show_message(tr("zlg reset can ch %1 ok ").arg(channel_state.channel_num), channel_state.channel_num);
+        return true;
+      }
 
-  show_message(tr("reset can ch %1 ok ").arg(channel_state.channel_num), channel_state.channel_num);
-  return true;
+    case GC_CAN_BRAND:
+      {
+        if(GC_STATUS_OK != ResetCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
+        {
+          show_message(tr("gc start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+          return false;
+        }
+        show_message(tr("gc start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+        return true;
+      }
+
+    default:
+      return false;
+  }
 }
 
 bool can_driver::reset()
@@ -456,16 +716,30 @@ bool can_driver::reset()
 
 void can_driver::close(const CHANNEL_STATE_Typedef_t &channel_state)
 {
-  // TODO: Add your control notification handler code here
-
-  if(ZCLOUD_IsConnected())
+  switch(brand_)
   {
-    ZCLOUD_DisconnectServer();
-  }
-  ZCAN_ResetCAN(channel_state.channel_hadle);
-  ZCAN_CloseDevice(device_handle_);
+    case ZLG_CAN_BRAND:
+      {
+        if(ZCLOUD_IsConnected())
+        {
+          ZCLOUD_DisconnectServer();
+        }
+        ZCAN_ResetCAN(channel_state.channel_hadle);
+        ZCAN_CloseDevice(device_handle_);
+        show_message(tr("zlg device can ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
+        break;
+      }
 
-  show_message(tr("device can ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
+    case GC_CAN_BRAND:
+      {
+        CloseDevice(kDeviceType[device_type_index_].device_type, device_index_);
+        show_message(tr("gc device can ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
+        break;
+      }
+
+    default:
+      break;
+  }
 }
 
 void can_driver::close()
@@ -489,46 +763,147 @@ void can_driver::close()
   device_opened_ = false;
 }
 
+/* 发送固定协议帧长 */
 bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol)
 {
+  /* 需要发送的帧数 */
   quint32 nSendCount = 1;
-  quint32 result = 0;//发送的帧数
-  if(0 == (quint32)protocol)//can
-  {
-    ZCAN_Transmit_Data can_data;
-    can_frame_packed(can_data, id, (quint32)frame_type, data, size);
 
-    if(nSendCount > 0)
-    {
-      ZCAN_Transmit_Data* pData = new ZCAN_Transmit_Data[nSendCount];
-      for(quint32 i = 0; i < nSendCount; ++i)
+  /* 实际发送的帧数 */
+  quint32 result = 0;
+
+  switch(protocol)
+  {
+    /* can */
+    case CAN_PROTOCOL_TYPE:
       {
-        memcpy_s(&pData[i], sizeof(ZCAN_Transmit_Data), &can_data, sizeof(can_data));
+        switch(brand_)
+        {
+          case ZLG_CAN_BRAND:
+            {
+              ZCAN_Transmit_Data can_data;
+              can_frame_packed(can_data, id, (quint32)frame_type, data, size);
+
+              if(nSendCount > 0)
+              {
+                ZCAN_Transmit_Data* pData = new ZCAN_Transmit_Data[nSendCount];
+                for(quint32 i = 0; i < nSendCount; ++i)
+                {
+                  memcpy_s(&pData[i], sizeof(ZCAN_Transmit_Data), &can_data, sizeof(can_data));
+                }
+
+                show_message(channel_state, pData, 1);
+                result = ZCAN_Transmit(channel_state.channel_hadle, pData, nSendCount);
+                delete [] pData;
+              }
+              break;
+            }
+
+          case GC_CAN_BRAND:
+            {
+              GC_CAN_OBJ can_data;
+              can_data.ID = id;
+              can_data.SendType = send_type_index_;
+              can_data.RemoteFlag = 0;
+              can_data.ExternFlag = (quint8)frame_type;
+              can_data.DataLen = size;
+              memcpy(can_data.Data, data, size);
+
+              if(nSendCount > 0)
+              {
+                GC_CAN_OBJ* pData = new GC_CAN_OBJ[nSendCount];
+                for(quint32 i = 0; i < nSendCount; ++i)
+                {
+                  memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
+                }
+
+                show_message(channel_state, pData, 1, CAN_TX_DIRECT);
+                result = Transmit(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
+                delete [] pData;
+              }
+              break;
+            }
+
+          default:
+            return false;
+        }
+        break;
       }
 
-      show_message(channel_state, pData, 1);
-      result = ZCAN_Transmit(channel_state.channel_hadle, pData, nSendCount);
-      delete [] pData;
-    }
-  }
-  else //canfd
-  {
-    ZCAN_TransmitFD_Data canfd_data;
-    can_frame_packed(canfd_data, id, frame_type, data, size);
-
-    if (nSendCount > 0)
-    {
-      ZCAN_TransmitFD_Data* pData = new ZCAN_TransmitFD_Data[nSendCount];
-      for(quint32 i = 0; i < nSendCount; ++i)
+    /* canfd */
+    case CANFD_PROTOCOL_TYPE:
       {
-        memcpy_s(&pData[i], sizeof(ZCAN_TransmitFD_Data), &canfd_data, sizeof(canfd_data));
+        switch(brand_)
+        {
+          case ZLG_CAN_BRAND:
+            {
+              ZCAN_TransmitFD_Data canfd_data;
+              can_frame_packed(canfd_data, id, frame_type, data, size);
+
+              if (nSendCount > 0)
+              {
+                ZCAN_TransmitFD_Data* pData = new ZCAN_TransmitFD_Data[nSendCount];
+                for(quint32 i = 0; i < nSendCount; ++i)
+                {
+                  memcpy_s(&pData[i], sizeof(ZCAN_TransmitFD_Data), &canfd_data, sizeof(canfd_data));
+                }
+
+                show_message(channel_state, pData, 1);
+                result = ZCAN_TransmitFD(channel_state.channel_hadle, pData, nSendCount);
+                delete [] pData;
+              }
+              break;
+            }
+
+          case GC_CAN_BRAND:
+            {
+#if USE_HW_CAN_SEND_64_DATA
+              /* 对64字节数据拆分8包 */
+              GC_CAN_OBJ can_data;
+              can_data.ID = id;
+              can_data.SendType = send_type_index_;
+              can_data.RemoteFlag = 0;
+              can_data.ExternFlag = (quint8)frame_type;
+
+              /* 计算分包数 */
+              nSendCount = (size + 7) / 8;
+              if(nSendCount > 0)
+              {
+                GC_CAN_OBJ *pData = new GC_CAN_OBJ[nSendCount];
+                for(quint32 i = 0; i < nSendCount; ++i)
+                {
+                  if((i * 8 + 8) > size)
+                  {
+                    can_data.DataLen = size - i * 8;
+                  }
+                  else
+                  {
+                    can_data.DataLen = 8;
+                  }
+                  memcpy(can_data.Data, data + i * 8, can_data.DataLen);
+                  memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
+                }
+
+                show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
+                result = Transmit(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
+                delete [] pData;
+              }
+              break;
+#else
+              return false;
+#endif
+            }
+
+          default:
+            return false;
+        }
+        break;
       }
 
-      show_message(channel_state, pData, 1);
-      result = ZCAN_TransmitFD(channel_state.channel_hadle, pData, nSendCount);
-      delete [] pData;
-    }
+    default:
+      return false;
   }
+
   QString csText;
   csText = QString::asprintf(tr("send num:%d, sucess num:%d").toUtf8().data(), nSendCount, result);
   if(result != nSendCount)
@@ -574,44 +949,191 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
     return;
   }
 
-  quint32 nSendCount = send_count_once_;
-  quint32 result = 0;//发送的帧数
-  if(0 == protocol_index_)//can
-  {
-    ZCAN_Transmit_Data can_data;
-    can_frame_packed(can_data, true);
+  /* 需要发送的帧数 */
+  quint32 nSendCount = 1;
 
-    if(nSendCount > 0)
-    {
-      ZCAN_Transmit_Data* pData = new ZCAN_Transmit_Data[nSendCount];
-      for(quint32 i = 0; i < nSendCount; ++i)
+  /* 实际发送的帧数 */
+  quint32 result = 0;
+
+  switch(protocol_index_)
+  {
+    /* can */
+    case CAN_PROTOCOL_TYPE:
       {
-        memcpy_s(&pData[i], sizeof(ZCAN_Transmit_Data), &can_data, sizeof(can_data));
+        switch(brand_)
+        {
+          case ZLG_CAN_BRAND:
+            {
+              ZCAN_Transmit_Data can_data;
+              bool ok;
+              quint32 id = id_.toUInt(&ok, 16);
+              bool bDelay = frm_delay_flag_;
+              quint32 nDelayTime = frm_delay_time_;
+              memset(&can_data, 0, sizeof(can_data));
+
+              can_data.frame.can_id = MAKE_CAN_ID(id, frame_type_index_, 0, 0);
+              can_data.transmit_type = send_type_index_;
+
+              QStringList data_list = datas_.split(' ');
+              quint32 size = (quint32)data_list.length();
+
+              /* 计算分包数 */
+              nSendCount = (size + 7) / 8;
+
+              if(true && bDelay)
+              {
+                can_data.frame.__pad |= TX_DELAY_SEND_FLAG;
+                can_data.frame.__res0 = (BYTE)(nDelayTime & 0xFF);
+                can_data.frame.__res1 = (BYTE)((nDelayTime >> 8) & 0xFF);
+              }
+
+              if(nSendCount > 0)
+              {
+                ZCAN_Transmit_Data *pData = new ZCAN_Transmit_Data[nSendCount];
+                for(quint32 i = 0; i < nSendCount; ++i)
+                {
+                  if((i * 8 + 8) > size)
+                  {
+                    can_data.frame.can_dlc = size - i * 8;
+                  }
+                  else
+                  {
+                    can_data.frame.can_dlc = 8;
+                  }
+                  /* 拷贝数据 */
+                  for(quint8 index = 0; index < can_data.frame.can_dlc; index++)
+                  {
+                    can_data.frame.data[index] = (quint8)data_list[index + i * 8].toUShort(&ok, 16);
+                  }
+                  memcpy_s(&pData[i], sizeof(ZCAN_Transmit_Data), &can_data, sizeof(can_data));
+                }
+
+                show_message(channel_state, pData, nSendCount);
+                result = ZCAN_Transmit(channel_state.channel_hadle, pData, nSendCount);
+                delete [] pData;
+              }
+              break;
+            }
+
+          case GC_CAN_BRAND:
+            {
+              /* 对字节数据拆分 */
+              GC_CAN_OBJ can_data;
+              bool ok;
+              QStringList data_list = datas_.split(' ');
+              quint32 size = data_list.length();
+
+              can_data.ID = id_.toUInt(&ok, 16);
+              can_data.SendType = send_type_index_;
+              can_data.RemoteFlag = 0;
+              can_data.ExternFlag = (quint8)frame_type_index_;
+
+              /* 计算分包数 */
+              nSendCount = (size + 7) / 8;
+              if(nSendCount > 0)
+              {
+                GC_CAN_OBJ *pData = new GC_CAN_OBJ[nSendCount];
+                for(quint32 i = 0; i < nSendCount; ++i)
+                {
+                  if((i * 8 + 8) > size)
+                  {
+                    can_data.DataLen = size - i * 8;
+                  }
+                  else
+                  {
+                    can_data.DataLen = 8;
+                  }
+                  /* 拷贝数据 */
+                  for(quint8 index = 0; index < can_data.DataLen; index++)
+                  {
+                    can_data.Data[index] = (quint8)data_list[index + i * 8].toUShort(&ok, 16);
+                  }
+                  memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
+                }
+
+                show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
+                result = Transmit(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
+                delete [] pData;
+              }
+              break;
+            }
+
+          default:
+            return;
+        }
+        break;
       }
 
-      show_message(channel_state, pData, 1);
-      result = ZCAN_Transmit(channel_state.channel_hadle, pData, nSendCount);
-      delete [] pData;
-    }
-  }
-  else //canfd
-  {
-    ZCAN_TransmitFD_Data canfd_data;
-    can_frame_packed(canfd_data, true);
-
-    if (nSendCount > 0)
-    {
-      ZCAN_TransmitFD_Data* pData = new ZCAN_TransmitFD_Data[nSendCount];
-      for(quint32 i = 0; i < nSendCount; ++i)
+    /* canfd */
+    case CANFD_PROTOCOL_TYPE:
       {
-        memcpy_s(&pData[i], sizeof(ZCAN_TransmitFD_Data), &canfd_data, sizeof(canfd_data));
-      }
+        switch(brand_)
+        {
+          case ZLG_CAN_BRAND:
+            {
+              ZCAN_TransmitFD_Data canfd_data;
+              bool ok;
+              quint32 id = id_.toUInt(&ok, 16);
+              bool bDelay = frm_delay_flag_;
+              quint32 nDelayTime = frm_delay_time_;
 
-      show_message(channel_state, pData, 1);
-      result = ZCAN_TransmitFD(channel_state.channel_hadle, pData, nSendCount);
-      delete [] pData;
-    }
+              memset(&canfd_data, 0, sizeof(canfd_data));
+              canfd_data.frame.can_id = MAKE_CAN_ID(id, frame_type_index_, 0, 0);
+
+              QStringList data_list = datas_.split(' ');
+              quint32 size = (quint32)data_list.length();
+
+              canfd_data.transmit_type = send_type_index_;
+              canfd_data.frame.flags |= canfd_exp_index_ ? CANFD_BRS : 0;
+              if(true && bDelay)
+              {
+                canfd_data.frame.flags |= TX_DELAY_SEND_FLAG;
+                canfd_data.frame.__res0 = (BYTE)(nDelayTime & 0xFF);
+                canfd_data.frame.__res1 = (BYTE)((nDelayTime >> 8) & 0xFF);
+              }
+
+              /* 计算分包数 */
+              nSendCount = (size + 63) / 64;
+              if (nSendCount > 0)
+              {
+                ZCAN_TransmitFD_Data *pData = new ZCAN_TransmitFD_Data[nSendCount];
+                for(quint32 i = 0; i < nSendCount; ++i)
+                {
+                  if((i * 64 + 64) > size)
+                  {
+                    canfd_data.frame.len = size - i * 64;
+                  }
+                  else
+                  {
+                    canfd_data.frame.len = 64;
+                  }
+                  /* 拷贝数据 */
+                  for(quint8 index = 0; index < canfd_data.frame.len; index++)
+                  {
+                    canfd_data.frame.data[index] = (quint8)data_list[index + i * 8].toUShort(&ok, 16);
+                  }
+                  memcpy_s(&pData[i], sizeof(ZCAN_TransmitFD_Data), &canfd_data, sizeof(canfd_data));
+                }
+
+                show_message(channel_state, pData, nSendCount);
+                result = ZCAN_TransmitFD(channel_state.channel_hadle, pData, nSendCount);
+                delete [] pData;
+              }
+              break;
+            }
+
+          case GC_CAN_BRAND:
+            {
+              return;
+            }
+
+          default:
+            return;
+        }
+        break;
+      }
   }
+
   QString csText;
   csText = QString::asprintf(tr("send num:%d, sucess num:%d").toUtf8().data(), nSendCount, result);
   if(result != nSendCount)
@@ -715,7 +1237,7 @@ void can_driver::function_can_use_update()
     channel_state_list.append(channel_state);
   }
 
-  //队列发送支持
+  /* 队列发送支持 */
   support_delay_send_ = usbcanfd || pciecanfd || netcanfd;
   support_delay_send_mode_ = usbcanfd || pciecanfd;
   support_get_send_mode_ = usbcanfd || pciecanfd;
@@ -725,7 +1247,7 @@ void can_driver::function_can_use_update()
   send_queue_mode = false;
   emit signal_send_queue_mode_can_use(send_queue_mode);
 
-  //定时发送支持
+  /* 定时发送支持 */
   const bool support_autosend_canfd = canfdDevice;    // CANFD 设备
   const bool support_autosend_can = canfdDevice ;     // CANFD 设备和其他CAN设备
   const bool support_autosend_index = (support_autosend_can && !pciecanfd);   // PCIECANFD 不支持使用索引控制定时，PCIECANFD添加一条即立即发送
@@ -825,7 +1347,7 @@ void can_driver::function_can_use_update()
   }
 }
 
-//设置自定义波特率, 需要从CANMaster目录下的baudcal生成字符串
+/* 设置自定义波特率, 需要从CANMaster目录下的baudcal生成字符串 */
 bool can_driver::custom_baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   char path[50] = {0};
@@ -833,26 +1355,53 @@ bool can_driver::custom_baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_
   return 1 == ZCAN_SetValue(device_handle_, path, custom_baudrate_.toUtf8().data());
 }
 
-
 void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
 {
-  ZCAN_Receive_Data can_data[100];
-  ZCAN_ReceiveFD_Data canfd_data[100];
-  quint32 len;
-  /* 获取can数据长度 */
-  len = ZCAN_GetReceiveNum(channel_state.channel_hadle, TYPE_CAN);
-  if(0 < len)
+  switch(brand_)
   {
-    len = ZCAN_Receive(channel_state.channel_hadle, can_data, 100, 50);
-    show_message(channel_state, can_data, len);
-  }
+    case ZLG_CAN_BRAND:
+      {
+        ZCAN_Receive_Data can_data[100];
+        ZCAN_ReceiveFD_Data canfd_data[100];
+        quint32 len;
+        /* 获取can数据长度 */
+        len = ZCAN_GetReceiveNum(channel_state.channel_hadle, TYPE_CAN);
+        if(0 < len)
+        {
+          len = ZCAN_Receive(channel_state.channel_hadle, can_data, 100, 50);
+          show_message(channel_state, can_data, len);
+        }
 
-  /* 获取canfd数据长度 */
-  len = ZCAN_GetReceiveNum(channel_state.channel_hadle, TYPE_CANFD);
-  if(0 < len)
-  {
-    len = ZCAN_ReceiveFD(channel_state.channel_hadle, canfd_data, 100, 50);
-    show_message(channel_state, canfd_data, len);
+        /* 获取canfd数据长度 */
+        len = ZCAN_GetReceiveNum(channel_state.channel_hadle, TYPE_CANFD);
+        if(0 < len)
+        {
+          len = ZCAN_ReceiveFD(channel_state.channel_hadle, canfd_data, 100, 50);
+          show_message(channel_state, canfd_data, len);
+        }
+        break;
+      }
+
+    case GC_CAN_BRAND:
+      {
+        quint32 len;
+        GC_ERR_INFO vei;
+        GC_CAN_OBJ can_data[50];
+        len = Receive(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, can_data, 50, 0);
+        if(4294967295 == len)
+        {
+          if(STATUS_ERR != ReadErrInfo(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &vei))
+          {
+            qDebug() << "gc read data err" << "err code:" << QString::number(vei.ErrCode, 16);
+          }
+          break;
+        }
+        show_message(channel_state, can_data, len, CAN_RX_DIRECT);
+        break;
+      }
+
+    default:
+      break;
   }
 }
 
@@ -1078,6 +1627,107 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
   }
 }
 
+void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const GC_CAN_OBJ *data, quint32 len, CAN_DIRECT_Typedef_t dir)
+{
+  switch(dir)
+  {
+    case CAN_TX_DIRECT:
+      {
+        QString item;
+        quint16 can_id = 0;
+        for(quint32 i = 0; i < len; ++i)
+        {
+          const GC_CAN_OBJ& can = data[i];
+          const canid_t &id = can.ID;
+          const bool is_eff = can.ExternFlag;
+          const bool is_rtr = can.RemoteFlag;
+          can_id = GET_ID(id);
+          item = QString::asprintf(tr("[%u]Tx CAN ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
+                                   channel_state.channel_num, \
+                                   can_id, is_eff ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+                is_rtr ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), can.DataLen);
+          for(quint32 i = 0; i < can.DataLen; ++i)
+          {
+            item += QString::asprintf("%02X ", can.Data[i]);
+          }
+          show_message_bytes(can.DataLen, channel_state.channel_num, CAN_TX_DIRECT);
+          show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.Data, can.DataLen);
+
+          /* 发送接收数据信号 */
+          QDateTime dt = QDateTime::currentDateTime();
+          emit signal_can_driver_msg(can_id, can.Data, can.DataLen, (quint8)CAN_TX_DIRECT, channel_state.channel_num, 0, dt.toMSecsSinceEpoch());
+        }
+        break;
+      }
+
+    case CAN_RX_DIRECT:
+      {
+        uint8_t temp_buf[64 + 2] = {0};
+
+        QString item;
+        quint32 id_temp;
+        quint16 can_id = 0;
+        for(quint32 i = 0; i < len; ++i)
+        {
+          const GC_CAN_OBJ& can = data[i];
+          const canid_t& id = can.ID;
+          const bool is_eff = can.ExternFlag;
+          const bool is_rtr = can.RemoteFlag;
+          item = QString::asprintf(tr("[%u]Rx CAN ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
+                                   channel_state.channel_num, \
+                                   GET_ID(id), is_eff ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+                                   is_rtr ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), \
+                                   can.DataLen);
+          for(quint32 i = 0; i < can.DataLen; ++i)
+          {
+            item += QString::asprintf("%02X ", can.Data[i]);
+          }
+
+          can_id = GET_ID(id);
+
+          /* 消息过滤 */
+          id_temp = (can_id & can_id_mask_);
+          if(can_id == id_temp || false == can_id_mask_en_)
+          {
+            /* 显示接收到的字节数 */
+            show_message_bytes(can.DataLen, channel_state.channel_num, CAN_RX_DIRECT);
+            show_message(item, channel_state.channel_num, CAN_RX_DIRECT, can.Data, can.DataLen, true);
+          }
+
+          /* 加入数据到cq */
+          if(nullptr != cq_obj)
+          {
+            memcpy(temp_buf, &can_id, sizeof(quint16));
+            memcpy(temp_buf + sizeof(quint16), can.Data, can.DataLen);
+            CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, can.DataLen + sizeof(quint16));
+
+            /* 发送接收数据信号 */
+            QDateTime dt = QDateTime::currentDateTime();
+            emit signal_can_driver_msg(can_id, can.Data, can.DataLen, (quint8)CAN_RX_DIRECT, channel_state.channel_num, 0, dt.toMSecsSinceEpoch());
+          }
+
+          /* 消息过滤分发 */
+          if(msg_filter_list.isEmpty())
+          {
+            continue;
+          }
+          for(qint32 index = 0; index < msg_filter_list.size(); index++)
+          {
+            if(msg_filter_list.value(index).can_id == can_id)
+            {
+              CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), can.Data, can.DataLen);
+              break;
+            }
+          }
+        }
+        break;
+      }
+
+    default:
+      return;
+  }
+}
+
 void can_driver::show_message(const QString &str, quint32 channel_num, CAN_DIRECT_Typedef_t direct, const quint8 *data, quint32 data_len, bool thread_mode)
 {
   message = str;
@@ -1109,7 +1759,7 @@ bool can_driver::transmit_type_config(const CHANNEL_STATE_Typedef_t &channel_sta
   return 1 == ZCAN_SetValue(device_handle_, path, value);
 }
 
-//设置终端电阻使能
+/* 设置终端电阻使能 */
 bool can_driver::resistance_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   char path[50] = {0};
@@ -1119,7 +1769,7 @@ bool can_driver::resistance_config(const CHANNEL_STATE_Typedef_t &channel_state)
   return 1 == ZCAN_SetValue(device_handle_, path, value);
 }
 
-//设置CAN卡波特率
+/* 设置CAN卡波特率 */
 bool can_driver::baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   qDebug() << "/baud_rate_config";
@@ -1130,7 +1780,7 @@ bool can_driver::baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state)
   return 1 == ZCAN_SetValue(device_handle_, path, value);
 }
 
-//设置USBCANFD卡波特率
+/* 设置USBCANFD卡波特率 */
 bool can_driver::cand_fd_bps_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   qDebug() << channel_state.channel_num << "/canfd_abit_baud_rate " << kAbitTimingUSB[abit_baud_index_];
@@ -1218,8 +1868,8 @@ bool can_driver::set_send_queue_mode(const CHANNEL_STATE_Typedef_t &channel_stat
   int nRet = ZCAN_SetValue(device_handle_, path, value);
   QString csText, csRet;
   csText = (nDelaySendQueueMode ? tr("[%1]open tx queue mode ").arg(channel_state.channel_num) : tr("[%1]close tx queue mode").arg(channel_state.channel_num));
-  csRet = QString::asprintf((tr("[%s]").toUtf8().data(), \
-          nRet > 0 ? tr(" ok ").toUtf8().data() : tr(" faild ").toUtf8().data()));
+  csRet = QString::asprintf(tr("[%s]").toUtf8().data(), \
+          nRet > 0 ? tr(" ok ").toUtf8().data() : tr(" faild ").toUtf8().data());
   show_message(csText + csRet);
   return nDelaySendQueueMode;
 }

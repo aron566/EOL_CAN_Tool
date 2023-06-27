@@ -240,17 +240,16 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
   return QWidget::eventFilter(target, event);
 }
 
-
 void debug_window::save_cfg()
 {
   QSettings setting("./debug_window_cfg.ini", QSettings::IniFormat);
-  setting.setValue("open_case_sensitive", (int)ui->case_sensitive_checkBox->checkState());
-  setting.setValue("textcolor", ui->color_list_comboBox->currentText());
+  setting.setValue("cfg/open_case_sensitive", (int)ui->case_sensitive_checkBox->checkState());
+  setting.setValue("cfg/textcolor", ui->color_list_comboBox->currentText());
   /* 快捷命令 */
   QString plaintext = ui->quick_compleat_plainTextEdit->toPlainText();
   plaintext.remove(' ');
   plaintext.replace('\n', ',');;
-  setting.setValue("quick_complets_list", plaintext);
+  setting.setValue("cfg/quick_complets_list", plaintext);
   setting.sync();
 }
 
@@ -266,11 +265,11 @@ void debug_window::read_cfg()
     return;
   }
   QSettings setting("./debug_window_cfg.ini", QSettings::IniFormat);
-  ui->case_sensitive_checkBox->setCheckState((Qt::CheckState)setting.value("open_case_sensitive").toInt());
-  ui->color_list_comboBox->setCurrentText(setting.value("textcolor").toString());
+  ui->case_sensitive_checkBox->setCheckState((Qt::CheckState)setting.value("cfg/open_case_sensitive").toInt());
+  ui->color_list_comboBox->setCurrentText(setting.value("cfg/textcolor").toString());
   ui->shell_textEdit->setTextColor(ui->color_list_comboBox->currentText());
   /* 快捷命令 */
-  QString plaintext = setting.value("quick_complets_list").toString();
+  QString plaintext = setting.value("cfg/quick_complets_list").toString();
   quick_complets = plaintext.split(',');
   plaintext.replace(',', '\n');
   ui->quick_compleat_plainTextEdit->setPlainText(plaintext);

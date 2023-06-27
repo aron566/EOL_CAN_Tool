@@ -511,7 +511,7 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
   /* 限制缓冲区大小 */
   if(0 == channel_num)
   {
-    if(ch1_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
+    if((quint32)ch1_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
     {
       ch1_show_msg_list.removeFirst();
     }
@@ -521,7 +521,7 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
     goto __show_msg;
   }
 
-  if(ch2_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
+  if((quint32)ch2_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
   {
     ch2_show_msg_list.removeFirst();
   }

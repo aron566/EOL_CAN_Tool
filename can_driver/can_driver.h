@@ -28,6 +28,7 @@
 #include <QThread>
 #include <QRunnable>
 #include "zlgcan.h"
+#include "ecanvci.h"
 #include "circularqueue.h"
 #include "utility.h"
 /** Private defines ----------------------------------------------------------*/
@@ -80,18 +81,28 @@ public:
 
 public:
 
+  /* 品牌列表 */
+  typedef enum
+  {
+    ZLG_CAN_BRAND = 0,
+    GC_CAN_BRAND,
+  }CAN_BRAND_Typedef_t;
+
+  /* 标准/扩展帧类型 */
   typedef enum
   {
     STD_FRAME_TYPE = 0,
     EXT_FRAME_TYPE,
   }FRAME_TYPE_Typedef_t;
 
+  /* can cnafd协议 */
   typedef enum
   {
     CAN_PROTOCOL_TYPE = 0,
     CANFD_PROTOCOL_TYPE,
   }PROTOCOL_TYPE_Typedef_t;
 
+  /* 设备运行信息 */
   typedef  struct
   {
     void *channel_hadle;
@@ -99,6 +110,7 @@ public:
     bool channel_en;
   }CHANNEL_STATE_Typedef_t;
 
+  /* tx/rx方向 */
   typedef enum
   {
     CAN_TX_DIRECT = 0,
@@ -309,6 +321,11 @@ public:
   bool open();
 
   /**
+   * @brief 读取设备信息
+   */
+  void read_info();
+
+  /**
    * @brief 初始化
    *
    * @return true 成功
@@ -394,6 +411,13 @@ public:
    * @return true发送成功
    */
   bool send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol, quint8 channel_num = 0xFF);
+
+  /**
+   * @brief 设置can品牌
+   * @param brand 品牌
+   * @return 该品牌下的可用设备名列表
+   */
+  QStringList set_device_brand(CAN_BRAND_Typedef_t brand);
 
   /**
    * @brief 设置设备类型
@@ -506,7 +530,7 @@ public:
    *
    * @param send_type 0正常发送、1单次发送、2自发自收
    */
-  void set_send_type(quint32 send_type = 0)
+  void set_send_type(quint8 send_type = 0)
   {
     send_type_index_ = send_type;
   }
@@ -734,10 +758,15 @@ private:
   void delay_send_can_use_update(bool delay_send, bool send_queue_mode, bool get_send_mode);
   void auto_send_can_use_update(bool support_can, bool support_canfd, bool support_index, bool support_single_cancel, bool support_get_autosend_list);
   bool custom_baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state);
+
+  /* zlg消息 */
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Receive_Data *data, quint32 len);
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_ReceiveFD_Data *data, quint32 len);
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Transmit_Data *data, quint32 len);
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_TransmitFD_Data *data, quint32 len);
+
+  /* gc消息 */
+  void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const GC_CAN_OBJ *data, quint32 len, CAN_DIRECT_Typedef_t dir);
 
   /**
    * @brief 显示消息
@@ -798,7 +827,8 @@ private:
 
 private:
   bool device_opened_;
-  DEVICE_HANDLE device_handle_ = nullptr;
+  can_driver::CAN_BRAND_Typedef_t brand_;
+  void *device_handle_ = nullptr;
   qint16 device_type_index_ = 0;
   quint8 device_index_ = 0;
   quint32 channel_index_ = 0;
@@ -815,7 +845,7 @@ private:
   QString custom_baudrate_;
   bool custom_baud_enable_ = false;
   bool send_queue_mode = false;
-  quint32 send_type_index_ = 0;
+  quint8 send_type_index_ = 0;
   bool resistance_enable_ = false;
   quint32 baud_index_ = 0;
   quint32 abit_baud_index_ = 0;
@@ -831,7 +861,6 @@ private:
   CHANNEL_HANDLE channel_handle_ = nullptr;
   IProperty *property_;
   bool start_ = false;
-  quint32 send_count_once_ = 1;
   quint32 frm_delay_time_;//队列帧延时时间ms
   bool frm_delay_flag_ = false;//队列帧延时标记
   bool support_delay_send_ = false;            //设备是否支持队列发送

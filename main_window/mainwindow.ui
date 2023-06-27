@@ -32,88 +32,35 @@
          <string>设备</string>
         </property>
         <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="3">
-          <widget class="QLabel" name="device_index_label">
-           <property name="text">
-            <string>设备索引：</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="5">
-          <widget class="QLabel" name="channel_num_label">
-           <property name="text">
-            <string>通道：</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
+         <item row="0" column="2">
           <widget class="QLabel" name="device_name_label">
            <property name="text">
             <string>设备：</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="4">
-          <widget class="QComboBox" name="device_index_comboBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+         <item row="0" column="5">
+          <widget class="QLabel" name="device_index_label">
+           <property name="text">
+            <string>设备索引：</string>
            </property>
-           <item>
-            <property name="text">
-             <string>0</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>1</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>2</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>3</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>4</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>5</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>6</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>7</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>8</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>9</string>
-            </property>
-           </item>
           </widget>
          </item>
-         <item row="0" column="6">
+         <item row="0" column="0">
+          <widget class="QLabel" name="brand_label">
+           <property name="text">
+            <string>品牌：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="7">
+          <widget class="QLabel" name="channel_num_label">
+           <property name="text">
+            <string>通道：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="8">
           <widget class="QComboBox" name="channel_num_comboBox">
            <item>
             <property name="text">
@@ -122,7 +69,7 @@
            </item>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="0" column="3">
           <widget class="QComboBox" name="device_list_comboBox">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -517,6 +464,87 @@
            </item>
           </widget>
          </item>
+         <item row="0" column="6">
+          <widget class="QComboBox" name="device_index_comboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <item>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>3</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>4</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>5</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>6</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>7</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>8</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>9</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="brand_comboBox">
+           <item>
+            <property name="text">
+             <string>ZCAN</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>GC</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="9">
+          <widget class="QPushButton" name="device_info_pushButton">
+           <property name="text">
+            <string>设备信息</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -718,6 +746,11 @@
             <item>
              <property name="text">
               <string>只听</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>回环</string>
              </property>
             </item>
            </widget>
