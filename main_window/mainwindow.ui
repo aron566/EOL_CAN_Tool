@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>834</width>
     <height>700</height>
    </rect>
   </property>
@@ -528,7 +528,7 @@
           <widget class="QComboBox" name="brand_comboBox">
            <item>
             <property name="text">
-             <string>ZCAN</string>
+             <string>ZLG</string>
             </property>
            </item>
            <item>
@@ -986,7 +986,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>834</width>
      <height>25</height>
     </rect>
    </property>

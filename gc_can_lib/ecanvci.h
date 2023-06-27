@@ -38,7 +38,7 @@
 #define CMD_CHGDESIPANDPORT 2
 
 /* 1.接口卡信息的数据类型 */
-typedef struct _BOARD_INFO
+typedef struct _GC_CAN_BOARD_INFO
 {
   quint16 hw_Version;
   quint16 fw_Version;
@@ -49,7 +49,7 @@ typedef struct _BOARD_INFO
   qint8 str_Serial_Num[20];
   qint8 str_hw_Type[40];
   quint16 Reserved[4];
-} GC_BOARD_INFO, *P_BOARD_INFO;
+} GC_CAN_BOARD_INFO, *P_GC_CAN_BOARD_INFO;
 
 /* 2.定义CAN信息帧的数据类型 */
 typedef struct _CAN_OBJ
@@ -106,13 +106,108 @@ typedef struct _tagChgDesIPAndPort
   qint32 desport;
 } CHGDESIPANDPORT;
 
-
 typedef struct _FILTER_RECORD
 {
   ulong ExtFrame; /**< 是否为扩展帧 */
   ulong Start;
   ulong End;
 } FILTER_RECORD, *P_FILTER_RECORD;
+
+class gc_can_lib_tool
+{
+  public:
+    /**
+     * @brief 获取波特率配置
+     * @param bauds_kb 1000代表需设置1Mb的波特率
+     * @param Timing0 返回配置
+     * @param Timing1 返回配置
+     */
+    static void get_bauds(quint32 bauds_kb, quint8 *Timing0, quint8 *Timing1)
+    {
+      switch(bauds_kb)
+      {
+        case 1000:
+          *Timing0 = 0;
+          *Timing1 =0x14;
+          break;
+
+        case 800:
+          *Timing0 = 0;
+          *Timing1 = 0x16;
+          break;
+
+        case 666:
+          *Timing0 = 0x80;
+          *Timing1 = 0xb6;
+          break;
+
+        case 500:
+          *Timing0 = 0;
+          *Timing1 = 0x1c;
+          break;
+
+        case 400:
+          *Timing0 = 0x80;
+          *Timing1 = 0xfa;
+          break;
+
+        case 250:
+          *Timing0 = 0x01;
+          *Timing1 = 0x1c;
+          break;
+
+        case 200:
+          *Timing0 = 0x81;
+          *Timing1 = 0xfa;
+          break;
+
+        case 125:
+          *Timing0 = 0x03;
+          *Timing1 = 0x1c;
+          break;
+
+        case 100:
+          *Timing0 = 0x04;
+          *Timing1 = 0x1c;
+          break;
+
+        case 80:
+          *Timing0 = 0x83;
+          *Timing1 = 0xff;
+          break;
+
+        case 50:
+          *Timing0 = 0x09;
+          *Timing1 = 0x1c;
+          break;
+
+        case 40:
+          *Timing0 = 0x87;
+          *Timing1 = 0xff;
+          break;
+
+        case 20:
+          *Timing0 = 0x18;
+          *Timing1 = 0x1c;
+          break;
+
+        case 10:
+          *Timing0 = 0x31;
+          *Timing1 = 0x1c;
+          break;
+
+        case 5:
+          *Timing0 = 0xbf;
+          *Timing1 = 0xff;
+          break;
+
+        default://500
+          *Timing0 = 0;
+          *Timing1 = 0x1c;
+          break;
+      }
+    }
+};
 
 #ifdef Dll_EXPORTS
 #define DllAPI __declspec(dllexport)
@@ -132,12 +227,12 @@ DllAPI quint64 CALL CloseDevice(quint64 DeviceType, quint64 DeviceInd);
 
 DllAPI quint64 CALL InitCAN(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, P_INIT_CONFIG pInitConfig);
 
-DllAPI quint64 CALL ReadBoardInfo(quint64 DeviceType, quint64 DeviceInd, P_BOARD_INFO pInfo);
+DllAPI quint64 CALL ReadBoardInfo(quint64 DeviceType, quint64 DeviceInd, P_GC_CAN_BOARD_INFO pInfo);
 DllAPI quint64 CALL ReadErrInfo(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, P_ERR_INFO pErrInfo);
 DllAPI quint64 CALL ReadCANStatus(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, P_CAN_STATUS pCANStatus);
 
-DllAPI quint64 CALL GetReference(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, quint64 RefType, void *pData);
-DllAPI quint64 CALL SetReference(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, quint64 RefType, void *pData);
+//DllAPI quint64 CALL GetReference(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, quint64 RefType, void *pData);
+//DllAPI quint64 CALL SetReference(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, quint64 RefType, void *pData);
 
 DllAPI ulong CALL GetReceiveNum(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd);
 DllAPI quint64 CALL ClearBuffer(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd);

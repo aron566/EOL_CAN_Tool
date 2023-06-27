@@ -13,6 +13,7 @@
   *
   *  @version v1.0.0 aron566 2023.02.21 14:05 初始版本.
   *           v1.0.1 aron566 2023.06.25 17:38 增加多品牌驱动兼容.
+  *           v1.0.2 aron566 2023.06.27 19:27 增加GCcanfd驱动.
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QDateTime>
@@ -65,6 +66,7 @@ static const DEVICE_INFO_Typedef_t kDeviceType[] = {
 
   /* 广成can */
   {"GC_USBCAN_II",            can_driver::GC_CAN_BRAND,  GC_USBCAN2,              2},
+  {"GC_USBCANFD_II",          can_driver::GC_CAN_BRAND,  GC_USBCANFD,             2},
 };
 
 /* USBCANFD */
@@ -193,6 +195,7 @@ bool can_driver::open()
 //    }
 //    device_index_ = dlg.GetDeviceIndex();
 //  }
+  /* 品牌 */
   switch(brand_)
   {
     case ZLG_CAN_BRAND:
@@ -208,10 +211,31 @@ bool can_driver::open()
 
     case GC_CAN_BRAND:
       {
-        if(GC_STATUS_OK != OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0))
+        /* 确定型号 */
+        switch(kDeviceType[device_type_index_].device_type)
         {
-          show_message(tr("open gc device faild"));
-          return false;
+          case GC_USBCAN2:
+            {
+              if(GC_STATUS_OK != OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0))
+              {
+                show_message(tr("open gc device faild"));
+                return false;
+              }
+              break;
+            }
+
+          case GC_USBCANFD:
+            {
+              if(GC_CANFD_STATUS_OK != OpenDeviceFD(kDeviceType[device_type_index_].device_type, device_index_))
+              {
+                show_message(tr("open gc canfd device faild"));
+                return false;
+              }
+              break;
+            }
+
+          default:
+              return false;
         }
         break;
       }
@@ -262,24 +286,58 @@ void can_driver::read_info()
 
     case GC_CAN_BRAND:
       {
-        GC_BOARD_INFO info;
-        ReadBoardInfo(kDeviceType[device_type_index_].device_type, device_index_, &info);
-        show_info += QString("<font size='5' color='green'><div align='legt'>hw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.hw_Version, 0, 16);
-        show_info += QString("<font size='5' color='green'><div align='legt'>fw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.fw_Version, 0, 16);
-        show_info += QString("<font size='5' color='green'><div align='legt'>dr_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.dr_Version, 0, 16);
-        show_info += QString("<font size='5' color='green'><div align='legt'>str_Serial_Num:</div> <div align='right'>");
-        char str[sizeof(info.str_Serial_Num) + 1] = {0};
-        memcpy(str, info.str_Serial_Num, sizeof(info.str_Serial_Num));
-        show_info += QString::asprintf("%s", str);
-        show_info += QString("</div> </font>\r\n");
+        /* 确定型号 */
+        switch(kDeviceType[device_type_index_].device_type)
+        {
+          case GC_USBCAN2:
+            {
+              GC_CAN_BOARD_INFO info;
+              ReadBoardInfo(kDeviceType[device_type_index_].device_type, device_index_, &info);
+              show_info += QString("<font size='5' color='green'><div align='legt'>hw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.hw_Version, 0, 16);
+              show_info += QString("<font size='5' color='green'><div align='legt'>fw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.fw_Version, 0, 16);
+              show_info += QString("<font size='5' color='green'><div align='legt'>dr_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.dr_Version, 0, 16);
+              show_info += QString("<font size='5' color='green'><div align='legt'>str_Serial_Num:</div> <div align='right'>");
+              char str[sizeof(info.str_Serial_Num) + 1] = {0};
+              memcpy(str, info.str_Serial_Num, sizeof(info.str_Serial_Num));
+              show_info += QString::asprintf("%s", str);
+              show_info += QString("</div> </font>\r\n");
 
-        show_info += QString("<font size='5' color='green'><div align='legt'>str_hw_Type:</div> <div align='right'>");
-        char hwstr[sizeof(info.str_hw_Type) + 1] = {0};
-        memcpy(hwstr, info.str_hw_Type, sizeof(info.str_hw_Type));
-        show_info += QString::asprintf("%s", hwstr);
-        show_info += QString("</div> </font>\r\n");
+              show_info += QString("<font size='5' color='green'><div align='legt'>str_hw_Type:</div> <div align='right'>");
+              char hwstr[sizeof(info.str_hw_Type) + 1] = {0};
+              memcpy(hwstr, info.str_hw_Type, sizeof(info.str_hw_Type));
+              show_info += QString::asprintf("%s", hwstr);
+              show_info += QString("</div> </font>\r\n");
 
-        show_info += QString("<font size='5' color='green'><div align='legt'>can_Num:</div> <div align='right'>%1</div> </font>\r\n").arg(info.can_Num);
+              show_info += QString("<font size='5' color='green'><div align='legt'>can_Num:</div> <div align='right'>%1</div> </font>\r\n").arg(info.can_Num);
+              break;
+            }
+
+          case GC_USBCANFD:
+            {
+              GC_CANFD_BOARD_INFO info;
+              GetReference(kDeviceType[device_type_index_].device_type, device_index_, 0, 1, &info);
+              show_info += QString("<font size='5' color='green'><div align='legt'>hw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.hw_Version, 0, 16);
+              show_info += QString("<font size='5' color='green'><div align='legt'>fw_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.fw_Version, 0, 16);
+              show_info += QString("<font size='5' color='green'><div align='legt'>dr_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(info.dr_Version, 0, 16);
+              show_info += QString("<font size='5' color='green'><div align='legt'>str_Serial_Num:</div> <div align='right'>");
+              char str[sizeof(info.str_Serial_Num) + 1] = {0};
+              memcpy(str, info.str_Serial_Num, sizeof(info.str_Serial_Num));
+              show_info += QString::asprintf("%s", str);
+              show_info += QString("</div> </font>\r\n");
+
+              show_info += QString("<font size='5' color='green'><div align='legt'>str_hw_Type:</div> <div align='right'>");
+              char hwstr[sizeof(info.str_hw_Type) + 1] = {0};
+              memcpy(hwstr, info.str_hw_Type, sizeof(info.str_hw_Type));
+              show_info += QString::asprintf("%s", hwstr);
+              show_info += QString("</div> </font>\r\n");
+
+              show_info += QString("<font size='5' color='green'><div align='legt'>can_Num:</div> <div align='right'>%1</div> </font>\r\n").arg(info.can_Num);
+              break;
+            }
+
+          default:
+              return;
+        }
         break;
       }
 
@@ -474,106 +532,56 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
 
     case GC_CAN_BRAND:
       {
-        GC_INIT_CONFIG config;
-        /* 0正常模式 1为只听模式 2为自发自收模式（回环模式） */
-        config.Mode = work_mode_index_;
-        /* 滤波方式，0 单滤波 */
-        config.Filter = 0;
-        switch(kBaudrate[baud_index_] / 1000)
+        /* 确定型号 */
+        switch(kDeviceType[device_type_index_].device_type)
         {
-          case 1000:
-            config.Timing0 = 0;
-            config.Timing1 =0x14;
-            break;
+          case GC_USBCAN2:
+            {
+              GC_INIT_CONFIG config;
+              /* 0正常模式 1为只听模式 2为自发自收模式（回环模式） */
+              config.Mode = work_mode_index_;
+              /* 滤波方式，0 单滤波 */
+              config.Filter = 0;
+              gc_can_lib_tool::get_bauds(kBaudrate[baud_index_] / 1000, &config.Timing0, &config.Timing1);
+              bool ok;
+              /* 验收码 */
+              config.AccCode = acc_code_.toUInt(&ok, 16);
+              /* 屏蔽码 */
+              config.AccMask = acc_mask_.toUInt(&ok, 16);
+              /* 初始化 */
+              if(GC_STATUS_OK != InitCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &config))
+              {
+                show_message(tr("gc can ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
+                return false;
+              }
+              show_message(tr("gc can ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
+              return true;
+            }
 
-          case 800:
-            config.Timing0 = 0;
-            config.Timing1 = 0x16;
-            break;
+          case GC_USBCANFD:
+            {
+              GC_INIT_CONFIG_FD config;
+              config.CanReceMode = GLOBAL_STANDARD_AND_EXTENDED_RECEIVE;
+              config.CanSendMode = PASSIVE_SEND;
+              gc_canfd_lib_tool::get_bauds(kAbitTimingUSB[abit_baud_index_] / 1000,
+                                           kDbitTimingUSB[abit_baud_index_] / 1000,
+                                           &config.NominalBitRateSelect,
+                                           &config.DataBitRateSelect);
+              config.NominalBitRateSelect = kAbitTimingUSB[abit_baud_index_];
+              config.DataBitRateSelect = kDbitTimingUSB[abit_baud_index_];
+              /* 初始化 */
+              if(GC_CANFD_STATUS_OK != InitCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &config))
+              {
+                show_message(tr("gc canfd ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
+                return false;
+              }
+              show_message(tr("gc canfd ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
+              return true;
+            }
 
-          case 666:
-            config.Timing0 = 0x80;
-            config.Timing1 = 0xb6;
-            break;
-
-          case 500:
-            config.Timing0 = 0;
-            config.Timing1 = 0x1c;
-            break;
-
-          case 400:
-            config.Timing0 = 0x80;
-            config.Timing1 = 0xfa;
-            break;
-
-          case 250:
-            config.Timing0 = 0x01;
-            config.Timing1 = 0x1c;
-            break;
-
-          case 200:
-            config.Timing0 = 0x81;
-            config.Timing1 = 0xfa;
-            break;
-
-          case 125:
-            config.Timing0 = 0x03;
-            config.Timing1 = 0x1c;
-            break;
-
-          case 100:
-            config.Timing0 = 0x04;
-            config.Timing1 = 0x1c;
-            break;
-
-          case 80:
-            config.Timing0 = 0x83;
-            config.Timing1 = 0xff;
-            break;
-
-          case 50:
-            config.Timing0 = 0x09;
-            config.Timing1 = 0x1c;
-            break;
-
-          case 40:
-            config.Timing0 = 0x87;
-            config.Timing1 = 0xff;
-            break;
-
-          case 20:
-            config.Timing0 = 0x18;
-            config.Timing1 = 0x1c;
-            break;
-
-          case 10:
-            config.Timing0 = 0x31;
-            config.Timing1 = 0x1c;
-            break;
-
-          case 5:
-            config.Timing0 = 0xbf;
-            config.Timing1 = 0xff;
-            break;
-
-          default://500
-            config.Timing0 = 0;
-            config.Timing1 = 0x1c;
-            break;
+          default:
+              return false;
         }
-
-        bool ok;
-        /* 验收码 */
-        config.AccCode = acc_code_.toUInt(&ok, 16);
-        /* 屏蔽码 */
-        config.AccMask = acc_mask_.toUInt(&ok, 16);
-        /* 初始化 */
-        if(GC_STATUS_OK != InitCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &config))
-        {
-          show_message(tr("gc can ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
-          return false;
-        }
-        show_message(tr("gc can ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
         return true;
       }
 
@@ -625,12 +633,34 @@ bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
 
     case GC_CAN_BRAND:
       {
-        if(GC_STATUS_OK != StartCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
+        /* 确定型号 */
+        switch(kDeviceType[device_type_index_].device_type)
         {
-          show_message(tr("gc start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
-          return false;
+          case GC_USBCAN2:
+            {
+              if(GC_STATUS_OK != StartCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
+              {
+                show_message(tr("gc start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                return false;
+              }
+              show_message(tr("gc start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+              return true;
+            }
+
+          case GC_USBCANFD:
+            {
+              if(GC_CANFD_STATUS_OK != StartCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
+              {
+                show_message(tr("gc start canfd ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                return false;
+              }
+              show_message(tr("gc start canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+              return true;
+            }
+
+          default:
+              return false;
         }
-        show_message(tr("gc start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
         return true;
       }
 
@@ -680,12 +710,34 @@ bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
 
     case GC_CAN_BRAND:
       {
-        if(GC_STATUS_OK != ResetCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
+        /* 确定型号 */
+        switch(kDeviceType[device_type_index_].device_type)
         {
-          show_message(tr("gc start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
-          return false;
+          case GC_USBCAN2:
+            {
+              if(GC_STATUS_OK != ResetCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
+              {
+                show_message(tr("gc start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                return false;
+              }
+              show_message(tr("gc start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+              return true;
+            }
+
+          case GC_USBCANFD:
+            {
+              if(GC_CANFD_STATUS_OK != ResetCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
+              {
+                show_message(tr("gc start canfd ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                return false;
+              }
+              show_message(tr("gc start canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+              return true;
+            }
+
+          default:
+              return false;
         }
-        show_message(tr("gc start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
         return true;
       }
 
@@ -732,8 +784,26 @@ void can_driver::close(const CHANNEL_STATE_Typedef_t &channel_state)
 
     case GC_CAN_BRAND:
       {
-        CloseDevice(kDeviceType[device_type_index_].device_type, device_index_);
-        show_message(tr("gc device can ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
+        /* 确定型号 */
+        switch(kDeviceType[device_type_index_].device_type)
+        {
+          case GC_USBCAN2:
+            {
+              CloseDevice(kDeviceType[device_type_index_].device_type, device_index_);
+              show_message(tr("gc device can ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
+              break;
+            }
+
+          case GC_USBCANFD:
+            {
+              CloseDeviceFD(kDeviceType[device_type_index_].device_type, device_index_);
+              show_message(tr("gc device canfd ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
+              break;
+            }
+
+          default:
+              break;
+        }
         break;
       }
 
@@ -801,25 +871,77 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8
 
           case GC_CAN_BRAND:
             {
-              GC_CAN_OBJ can_data;
-              can_data.ID = id;
-              can_data.SendType = send_type_index_;
-              can_data.RemoteFlag = 0;
-              can_data.ExternFlag = (quint8)frame_type;
-              can_data.DataLen = size;
-              memcpy(can_data.Data, data, size);
-
-              if(nSendCount > 0)
+              /* 确定型号 */
+              switch(kDeviceType[device_type_index_].device_type)
               {
-                GC_CAN_OBJ* pData = new GC_CAN_OBJ[nSendCount];
-                for(quint32 i = 0; i < nSendCount; ++i)
-                {
-                  memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
-                }
+                case GC_USBCAN2:
+                  {
+                    GC_CAN_OBJ can_data;
+                    can_data.ID = id;
+                    can_data.SendType = send_type_index_;
+                    can_data.RemoteFlag = 0;
+                    can_data.ExternFlag = (quint8)frame_type;
+                    can_data.DataLen = size;
+                    memcpy(can_data.Data, data, size);
 
-                show_message(channel_state, pData, 1, CAN_TX_DIRECT);
-                result = Transmit(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
-                delete [] pData;
+                    if(nSendCount > 0)
+                    {
+                      GC_CAN_OBJ* pData = new GC_CAN_OBJ[nSendCount];
+                      for(quint32 i = 0; i < nSendCount; ++i)
+                      {
+                        memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
+                      }
+
+                      show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
+                      result = Transmit(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
+                      delete [] pData;
+                    }
+                    break;
+                  }
+
+                case GC_USBCANFD:
+                  {
+                    GC_CANFD_OBJ can_data;
+                    can_data.ID = id;
+                    can_data.CanORCanfdType.proto = (quint8)protocol;
+                    can_data.CanORCanfdType.type = GC_DATA_TYPE;
+                    can_data.CanORCanfdType.format = (quint8)frame_type;
+                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_ON;
+
+                    can_data.TimeStamp.mday = 0;
+                    can_data.TimeStamp.hour = 0;
+                    can_data.TimeStamp.minute = 0;
+                    can_data.TimeStamp.second = 0;
+                    can_data.TimeStamp.millisecond = 0;
+                    can_data.TimeStamp.microsecond = 0;
+
+                    can_data.DataLen = size;
+                    memcpy(can_data.Data, data, size);
+
+                    if(nSendCount > 0)
+                    {
+                      GC_CANFD_OBJ* pData = new GC_CANFD_OBJ[nSendCount];
+                      for(quint32 i = 0; i < nSendCount; ++i)
+                      {
+                        memcpy_s(&pData[i], sizeof(GC_CANFD_OBJ), &can_data, sizeof(can_data));
+                      }
+
+                      show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
+                      if(GC_CANFD_STATUS_OK == TransmitFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount))
+                      {
+                        result = nSendCount;
+                      }
+                      else
+                      {
+                        nSendCount = 0;
+                      }
+                      delete [] pData;
+                    }
+                    break;
+                  }
+
+                default:
+                    return false;
               }
               break;
             }
@@ -848,7 +970,7 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8
                   memcpy_s(&pData[i], sizeof(ZCAN_TransmitFD_Data), &canfd_data, sizeof(canfd_data));
                 }
 
-                show_message(channel_state, pData, 1);
+                show_message(channel_state, pData, nSendCount);
                 result = ZCAN_TransmitFD(channel_state.channel_hadle, pData, nSendCount);
                 delete [] pData;
               }
@@ -857,41 +979,95 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8
 
           case GC_CAN_BRAND:
             {
-#if USE_HW_CAN_SEND_64_DATA
-              /* 对64字节数据拆分8包 */
-              GC_CAN_OBJ can_data;
-              can_data.ID = id;
-              can_data.SendType = send_type_index_;
-              can_data.RemoteFlag = 0;
-              can_data.ExternFlag = (quint8)frame_type;
-
-              /* 计算分包数 */
-              nSendCount = (size + 7) / 8;
-              if(nSendCount > 0)
+              /* 确定型号 */
+              switch(kDeviceType[device_type_index_].device_type)
               {
-                GC_CAN_OBJ *pData = new GC_CAN_OBJ[nSendCount];
-                for(quint32 i = 0; i < nSendCount; ++i)
-                {
-                  if((i * 8 + 8) > size)
+                case GC_USBCAN2:
                   {
-                    can_data.DataLen = size - i * 8;
-                  }
-                  else
-                  {
-                    can_data.DataLen = 8;
-                  }
-                  memcpy(can_data.Data, data + i * 8, can_data.DataLen);
-                  memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
-                }
+#if USE_HW_CAN_SEND_64_DATA
+                    /* 对64字节数据拆分8包 */
+                    GC_CAN_OBJ can_data;
+                    can_data.ID = id;
+                    can_data.SendType = send_type_index_;
+                    can_data.RemoteFlag = 0;
+                    can_data.ExternFlag = (quint8)frame_type;
 
-                show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
-                result = Transmit(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
-                delete [] pData;
+                    /* 计算分包数 */
+                    nSendCount = (size + 7) / 8;
+                    if(nSendCount > 0)
+                    {
+                      GC_CAN_OBJ *pData = new GC_CAN_OBJ[nSendCount];
+                      for(quint32 i = 0; i < nSendCount; ++i)
+                      {
+                        if((i * 8 + 8) > size)
+                        {
+                          can_data.DataLen = size - i * 8;
+                        }
+                        else
+                        {
+                          can_data.DataLen = 8;
+                        }
+                        memcpy(can_data.Data, data + i * 8, can_data.DataLen);
+                        memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
+                      }
+
+                      show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
+                      result = Transmit(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
+                      delete [] pData;
+                    }
+                    break;
+#else
+                    return false;
+#endif
+                  }
+
+                case GC_USBCANFD:
+                  {
+                    GC_CANFD_OBJ can_data;
+                    can_data.ID = id;
+                    can_data.CanORCanfdType.proto = (quint8)protocol;
+                    can_data.CanORCanfdType.type = GC_DATA_TYPE;
+                    can_data.CanORCanfdType.format = (quint8)frame_type;
+                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_ON;
+
+                    can_data.TimeStamp.mday = 0;
+                    can_data.TimeStamp.hour = 0;
+                    can_data.TimeStamp.minute = 0;
+                    can_data.TimeStamp.second = 0;
+                    can_data.TimeStamp.millisecond = 0;
+                    can_data.TimeStamp.microsecond = 0;
+
+                    can_data.DataLen = size;
+                    memset(can_data.Data, 0, sizeof(can_data.Data));
+                    memcpy(can_data.Data, data, size);
+                    can_data.DataLen = gc_canfd_lib_tool::get_send_len(can_data.DataLen);
+
+                    if(nSendCount > 0)
+                    {
+                      GC_CANFD_OBJ* pData = new GC_CANFD_OBJ[nSendCount];
+                      for(quint32 i = 0; i < nSendCount; ++i)
+                      {
+                        memcpy_s(&pData[i], sizeof(GC_CANFD_OBJ), &can_data, sizeof(can_data));
+                      }
+
+                      show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
+                      if(GC_CANFD_STATUS_OK == TransmitFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount))
+                      {
+                        result = nSendCount;
+                      }
+                      else
+                      {
+                        nSendCount = 0;
+                      }
+                      delete [] pData;
+                    }
+                    break;
+                  }
+
+                default:
+                    return false;
               }
               break;
-#else
-              return false;
-#endif
             }
 
           default:
@@ -1017,43 +1193,111 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
 
           case GC_CAN_BRAND:
             {
-              /* 对字节数据拆分 */
-              GC_CAN_OBJ can_data;
-              bool ok;
-              QStringList data_list = datas_.split(' ');
-              quint32 size = data_list.length();
-
-              can_data.ID = id_.toUInt(&ok, 16);
-              can_data.SendType = send_type_index_;
-              can_data.RemoteFlag = 0;
-              can_data.ExternFlag = (quint8)frame_type_index_;
-
-              /* 计算分包数 */
-              nSendCount = (size + 7) / 8;
-              if(nSendCount > 0)
+              /* 确定型号 */
+              switch(kDeviceType[device_type_index_].device_type)
               {
-                GC_CAN_OBJ *pData = new GC_CAN_OBJ[nSendCount];
-                for(quint32 i = 0; i < nSendCount; ++i)
-                {
-                  if((i * 8 + 8) > size)
+                case GC_USBCAN2:
                   {
-                    can_data.DataLen = size - i * 8;
-                  }
-                  else
-                  {
-                    can_data.DataLen = 8;
-                  }
-                  /* 拷贝数据 */
-                  for(quint8 index = 0; index < can_data.DataLen; index++)
-                  {
-                    can_data.Data[index] = (quint8)data_list[index + i * 8].toUShort(&ok, 16);
-                  }
-                  memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
-                }
+                    /* 对字节数据拆分 */
+                    GC_CAN_OBJ can_data;
+                    bool ok;
+                    QStringList data_list = datas_.split(' ');
+                    quint32 size = data_list.length();
 
-                show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
-                result = Transmit(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
-                delete [] pData;
+                    can_data.ID = id_.toUInt(&ok, 16);
+                    can_data.SendType = send_type_index_;
+                    can_data.RemoteFlag = 0;
+                    can_data.ExternFlag = (quint8)frame_type_index_;
+
+                    /* 计算分包数 */
+                    nSendCount = (size + 7) / 8;
+                    if(nSendCount > 0)
+                    {
+                      GC_CAN_OBJ *pData = new GC_CAN_OBJ[nSendCount];
+                      for(quint32 i = 0; i < nSendCount; ++i)
+                      {
+                        if((i * 8 + 8) > size)
+                        {
+                          can_data.DataLen = size - i * 8;
+                        }
+                        else
+                        {
+                          can_data.DataLen = 8;
+                        }
+                        /* 拷贝数据 */
+                        for(quint8 index = 0; index < can_data.DataLen; index++)
+                        {
+                          can_data.Data[index] = (quint8)data_list[index + i * 8].toUShort(&ok, 16);
+                        }
+                        memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
+                      }
+
+                      show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
+                      result = Transmit(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
+                      delete [] pData;
+                    }
+                    break;
+                  }
+
+                case GC_USBCANFD:
+                  {
+                    GC_CANFD_OBJ can_data;
+                    bool ok;
+                    can_data.ID = id_.toUInt(&ok, 16);
+                    can_data.CanORCanfdType.proto = (quint8)protocol_index_;
+                    can_data.CanORCanfdType.type = GC_DATA_TYPE;
+                    can_data.CanORCanfdType.format = (quint8)frame_type_index_;
+                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_ON;
+
+                    can_data.TimeStamp.mday = 0;
+                    can_data.TimeStamp.hour = 0;
+                    can_data.TimeStamp.minute = 0;
+                    can_data.TimeStamp.second = 0;
+                    can_data.TimeStamp.millisecond = 0;
+                    can_data.TimeStamp.microsecond = 0;
+
+                    QStringList data_list = datas_.split(' ');
+                    quint32 size = (quint32)data_list.length();
+
+                    /* 计算分包数 */
+                    nSendCount = (size + 7) / 8;
+                    if(nSendCount > 0)
+                    {
+                      GC_CANFD_OBJ* pData = new GC_CANFD_OBJ[nSendCount];
+                      for(quint32 i = 0; i < nSendCount; ++i)
+                      {
+                        if((i * 8 + 8) > size)
+                        {
+                          can_data.DataLen = size - i * 8;
+                        }
+                        else
+                        {
+                          can_data.DataLen = 8;
+                        }
+                        /* 拷贝数据 */
+                        for(quint8 index = 0; index < can_data.DataLen; index++)
+                        {
+                          can_data.Data[index] = (quint8)data_list[index + i * 8].toUShort(&ok, 16);
+                        }
+                        memcpy_s(&pData[i], sizeof(GC_CANFD_OBJ), &can_data, sizeof(can_data));
+                      }
+
+                      show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
+                      if(GC_CANFD_STATUS_OK == TransmitFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount))
+                      {
+                        result = nSendCount;
+                      }
+                      else
+                      {
+                        nSendCount = 0;
+                      }
+                      delete [] pData;
+                    }
+                    break;
+                  }
+
+                default:
+                    return;
               }
               break;
             }
@@ -1110,7 +1354,7 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
                   /* 拷贝数据 */
                   for(quint8 index = 0; index < canfd_data.frame.len; index++)
                   {
-                    canfd_data.frame.data[index] = (quint8)data_list[index + i * 8].toUShort(&ok, 16);
+                    canfd_data.frame.data[index] = (quint8)data_list[index + i * 64].toUShort(&ok, 16);
                   }
                   memcpy_s(&pData[i], sizeof(ZCAN_TransmitFD_Data), &canfd_data, sizeof(canfd_data));
                 }
@@ -1124,7 +1368,79 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
 
           case GC_CAN_BRAND:
             {
-              return;
+              /* 确定型号 */
+              switch(kDeviceType[device_type_index_].device_type)
+              {
+                case GC_USBCAN2:
+                  {
+                    /* CAN设备不支持 */
+                    return;
+                  }
+
+                case GC_USBCANFD:
+                  {
+                    GC_CANFD_OBJ can_data;
+                    bool ok;
+                    can_data.ID = id_.toUInt(&ok, 16);
+                    can_data.CanORCanfdType.proto = (quint8)protocol_index_;
+                    can_data.CanORCanfdType.type = GC_DATA_TYPE;
+                    can_data.CanORCanfdType.format = (quint8)frame_type_index_;
+                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_ON;
+
+                    can_data.TimeStamp.mday = 0;
+                    can_data.TimeStamp.hour = 0;
+                    can_data.TimeStamp.minute = 0;
+                    can_data.TimeStamp.second = 0;
+                    can_data.TimeStamp.millisecond = 0;
+                    can_data.TimeStamp.microsecond = 0;
+
+                    QStringList data_list = datas_.split(' ');
+                    quint32 size = (quint32)data_list.length();
+
+                    /* 计算分包数 */
+                    nSendCount = (size + 63) / 64;
+
+                    if(nSendCount > 0)
+                    {
+                      GC_CANFD_OBJ* pData = new GC_CANFD_OBJ[nSendCount];
+                      for(quint32 i = 0; i < nSendCount; ++i)
+                      {
+                        if((i * 64 + 64) > size)
+                        {
+                          can_data.DataLen = size - i * 64;
+                        }
+                        else
+                        {
+                          can_data.DataLen = 64;
+                        }
+                        /* 拷贝数据 */
+                        memset(can_data.Data, 0, sizeof(can_data.Data));
+                        for(quint8 index = 0; index < can_data.DataLen; index++)
+                        {
+                          can_data.Data[index] = (quint8)data_list[index + i * 64].toUShort(&ok, 16);
+                        }
+                        can_data.DataLen = gc_canfd_lib_tool::get_send_len(can_data.DataLen);
+                        memcpy_s(&pData[i], sizeof(GC_CANFD_OBJ), &can_data, sizeof(can_data));
+                      }
+
+                      show_message(channel_state, pData, nSendCount, CAN_TX_DIRECT);
+                      if(GC_CANFD_STATUS_OK == TransmitFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount))
+                      {
+                        result = nSendCount;
+                      }
+                      else
+                      {
+                        nSendCount = 0;
+                      }
+                      delete [] pData;
+                    }
+                    break;
+                  }
+
+                default:
+                    return;
+              }
+              break;
             }
 
           default:
@@ -1210,7 +1526,8 @@ void can_driver::function_can_use_update()
   const bool udpDevice = is_net_udp_type(type);
   const bool usbcanfd = type == ZCAN_USBCANFD_100U ||
                         type == ZCAN_USBCANFD_200U ||
-                        type == ZCAN_USBCANFD_MINI;
+                        type == ZCAN_USBCANFD_MINI ||
+                        type == GC_USBCANFD;
   const bool pciecanfd = type == ZCAN_PCIE_CANFD_100U ||
                          type == ZCAN_PCIE_CANFD_200U ||
                          type == ZCAN_PCIE_CANFD_400U ||
@@ -1384,19 +1701,42 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
 
     case GC_CAN_BRAND:
       {
-        quint32 len;
-        GC_ERR_INFO vei;
-        GC_CAN_OBJ can_data[50];
-        len = Receive(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, can_data, 50, 0);
-        if(4294967295 == len)
+        /* 确定型号 */
+        switch(kDeviceType[device_type_index_].device_type)
         {
-          if(STATUS_ERR != ReadErrInfo(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &vei))
-          {
-            qDebug() << "gc read data err" << "err code:" << QString::number(vei.ErrCode, 16);
-          }
-          break;
+          case GC_USBCAN2:
+            {
+              ulong len;
+              GC_ERR_INFO vei;
+              GC_CAN_OBJ can_data[50];
+              len = Receive(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, can_data, 50, 0);
+              if(4294967295 == len)
+              {
+                if(STATUS_ERR != ReadErrInfo(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &vei))
+                {
+                  qDebug() << "gc read data err" << "err code:" << QString::number(vei.ErrCode, 16);
+                }
+                break;
+              }
+              show_message(channel_state, can_data, len, CAN_RX_DIRECT);
+              break;
+            }
+
+          case GC_USBCANFD:
+            {
+              GC_CANFD_OBJ can_data[50];
+              ulong len = 50;
+              ReceiveFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, can_data, &len);
+              if(0 < len)
+              {
+                show_message(channel_state, can_data, (quint32)len, CAN_RX_DIRECT);
+              }
+              break;
+            }
+
+          default:
+              return;
         }
-        show_message(channel_state, can_data, len, CAN_RX_DIRECT);
         break;
       }
 
@@ -1467,17 +1807,16 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     const canid_t& id = can.frame.can_id;
     const bool is_eff = IS_EFF(id);
     const bool is_rtr = IS_RTR(id);
+    can_id = GET_ID(id);
     item = QString::asprintf(tr("[%u]Rx CAN ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
                              channel_state.channel_num, \
-                             GET_ID(id), is_eff ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+                             can_id, is_eff ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
                              is_rtr ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), \
                              can.frame.can_dlc);
     for(quint32 i = 0; i < can.frame.can_dlc; ++i)
     {
       item += QString::asprintf("%02X ", can.frame.data[i]);
     }
-
-    can_id = GET_ID(id);
 
     /* 消息过滤 */
     id_temp = (can_id & can_id_mask_);
@@ -1527,15 +1866,14 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
   {
     const ZCAN_ReceiveFD_Data& canfd = data[i];
     const canid_t& id = canfd.frame.can_id;
+    can_id = GET_ID(id);
     item = QString::asprintf(tr("[%u]Rx CANFD ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
-            channel_state.channel_num, GET_ID(id), IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data()
+            channel_state.channel_num, can_id, IS_EFF(id) ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data()
         , IS_RTR(id) ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), canfd.frame.len);
     for (quint32 i = 0; i < canfd.frame.len; ++i)
     {
       item += QString::asprintf("%02X ", canfd.frame.data[i]);
     }
-
-    can_id = GET_ID(id);
 
     /* 消息过滤 */
     id_temp = (can_id & can_id_mask_);
@@ -1684,6 +2022,110 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
           }
 
           can_id = GET_ID(id);
+
+          /* 消息过滤 */
+          id_temp = (can_id & can_id_mask_);
+          if(can_id == id_temp || false == can_id_mask_en_)
+          {
+            /* 显示接收到的字节数 */
+            show_message_bytes(can.DataLen, channel_state.channel_num, CAN_RX_DIRECT);
+            show_message(item, channel_state.channel_num, CAN_RX_DIRECT, can.Data, can.DataLen, true);
+          }
+
+          /* 加入数据到cq */
+          if(nullptr != cq_obj)
+          {
+            memcpy(temp_buf, &can_id, sizeof(quint16));
+            memcpy(temp_buf + sizeof(quint16), can.Data, can.DataLen);
+            CircularQueue::CQ_putData(cq_obj->get_cq_handle(), temp_buf, can.DataLen + sizeof(quint16));
+
+            /* 发送接收数据信号 */
+            QDateTime dt = QDateTime::currentDateTime();
+            emit signal_can_driver_msg(can_id, can.Data, can.DataLen, (quint8)CAN_RX_DIRECT, channel_state.channel_num, 0, dt.toMSecsSinceEpoch());
+          }
+
+          /* 消息过滤分发 */
+          if(msg_filter_list.isEmpty())
+          {
+            continue;
+          }
+          for(qint32 index = 0; index < msg_filter_list.size(); index++)
+          {
+            if(msg_filter_list.value(index).can_id == can_id)
+            {
+              CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), can.Data, can.DataLen);
+              break;
+            }
+          }
+        }
+        break;
+      }
+
+    default:
+      return;
+  }
+}
+
+void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, const GC_CANFD_OBJ *data, quint32 len, CAN_DIRECT_Typedef_t dir)
+{
+  switch(dir)
+  {
+    case CAN_TX_DIRECT:
+      {
+        QString item;
+        quint16 can_id = 0;
+        for(quint32 i = 0; i < len; ++i)
+        {
+          const GC_CANFD_OBJ& can = data[i];
+          const canid_t &id = can.ID;
+          const bool is_eff = can.CanORCanfdType.format;
+          const bool is_rtr = can.CanORCanfdType.type;
+          const bool is_fd = can.CanORCanfdType.proto;
+          can_id = GET_ID(id);
+          item = QString::asprintf(tr("[%u]Tx CAN%s ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
+                                   channel_state.channel_num, \
+                                   is_fd ? tr("FD").toUtf8().data() : tr("").toUtf8().data(), \
+                                   can_id, is_eff ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+                is_rtr ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), can.DataLen);
+          for(quint32 i = 0; i < can.DataLen; ++i)
+          {
+            item += QString::asprintf("%02X ", can.Data[i]);
+          }
+          show_message_bytes(can.DataLen, channel_state.channel_num, CAN_TX_DIRECT);
+          show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.Data, can.DataLen);
+
+          /* 发送接收数据信号 */
+          QDateTime dt = QDateTime::currentDateTime();
+          emit signal_can_driver_msg(can_id, can.Data, can.DataLen, (quint8)CAN_TX_DIRECT, channel_state.channel_num, 0, dt.toMSecsSinceEpoch());
+        }
+        break;
+      }
+
+    case CAN_RX_DIRECT:
+      {
+        uint8_t temp_buf[64 + 2] = {0};
+
+        QString item;
+        quint32 id_temp;
+        quint16 can_id = 0;
+        for(quint32 i = 0; i < len; ++i)
+        {
+          const GC_CANFD_OBJ& can = data[i];
+          const canid_t& id = can.ID;
+          const bool is_eff = can.CanORCanfdType.format;
+          const bool is_rtr = can.CanORCanfdType.type;
+          const bool is_fd = can.CanORCanfdType.proto;
+          can_id = GET_ID(id);
+          item = QString::asprintf(tr("[%u]Rx CAN%s ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
+                                   channel_state.channel_num, \
+                                   is_fd ? tr("FD").toUtf8().data() : tr("").toUtf8().data(), \
+                                   can_id, is_eff ? tr("EXT_FRAME").toUtf8().data() : tr("STD_FRAME").toUtf8().data(), \
+                                   is_rtr ? tr("REMOTE_FRAME").toUtf8().data() : tr("DATA_FRAME").toUtf8().data(), \
+                                   can.DataLen);
+          for(quint32 i = 0; i < can.DataLen; ++i)
+          {
+            item += QString::asprintf("%02X ", can.Data[i]);
+          }
 
           /* 消息过滤 */
           id_temp = (can_id & can_id_mask_);

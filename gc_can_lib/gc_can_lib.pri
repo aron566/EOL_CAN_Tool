@@ -1,28 +1,18 @@
 HEADERS += \
-  $$PWD/ecanvci.h
-
-#DISTFILES += \
-#  $$PWD/ECanVci64.lib
+  $$PWD/ecanvci.h \
+  $$PWD/ecanfdvci.h
 
 INCLUDEPATH += $$PWD
 
 # 广成库文件
-contains(QMAKE_TARGET.arch, x86_64) {
-    # 64位平台链接的库文件
-    contains(QMAKE_HOST.os, linux) {
-        # Linux平台链接的库文件
-#        LIBS += -L$$PWD -lECanVci64
-    } else {
-        # Windows平台链接的库文件
-        LIBS += -L$$PWD -lECanVci64.lib
-    }
+contains(QMAKE_HOST.arch, x86_64) {
+    # 64位编译器链接的库文件
+    DEPENDPATH += $$PWD/GCANx64
+    LIBS += -L$$PWD/GCANx64 -lECanVci64 \
+            -L$$PWD/GCANx64 -lECANFDVCI64
 } else {
-    # 32位平台链接的库文件
-    contains(QMAKE_HOST.os, linux) {
-        # Linux平台链接的库文件
-#        LIBS += -L$$PWD -lECanVci
-    } else {
-        # Windows平台链接的库文件
-        LIBS += -L$$PWD -lECanVci.lib
-    }
+    # 32位编译器链接的库文件
+    DEPENDPATH += $$PWD/GCANx86
+    LIBS += -L$$PWD/GCANx86 -lECanVci \
+            -L$$PWD/GCANx86 -lECANFDVCI
 }

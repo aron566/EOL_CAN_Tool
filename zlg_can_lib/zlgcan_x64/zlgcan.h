@@ -1,4 +1,4 @@
-﻿#ifndef ZLGCAN_H_
+#ifndef ZLGCAN_H_
 #define ZLGCAN_H_
 
 #include <time.h>

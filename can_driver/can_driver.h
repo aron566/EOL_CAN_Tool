@@ -29,6 +29,7 @@
 #include <QRunnable>
 #include "zlgcan.h"
 #include "ecanvci.h"
+#include "ecanfdvci.h"
 #include "circularqueue.h"
 #include "utility.h"
 /** Private defines ----------------------------------------------------------*/
@@ -767,6 +768,7 @@ private:
 
   /* gc消息 */
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const GC_CAN_OBJ *data, quint32 len, CAN_DIRECT_Typedef_t dir);
+  void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const GC_CANFD_OBJ *data, quint32 len, CAN_DIRECT_Typedef_t dir);
 
   /**
    * @brief 显示消息

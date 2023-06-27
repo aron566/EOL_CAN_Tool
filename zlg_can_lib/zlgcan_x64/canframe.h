@@ -1,4 +1,4 @@
-﻿#ifndef CANFRAME_H_
+#ifndef CANFRAME_H_
 #define CANFRAME_H_
 
 

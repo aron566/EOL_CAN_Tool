@@ -1,4 +1,4 @@
-﻿#ifndef ZLG_CONFIG_INTF_H
+#ifndef ZLG_CONFIG_INTF_H
 #define ZLG_CONFIG_INTF_H
 
 struct _Meta;
