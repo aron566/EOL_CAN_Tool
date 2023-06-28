@@ -567,8 +567,6 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
                                            kDbitTimingUSB[abit_baud_index_] / 1000,
                                            &config.NominalBitRateSelect,
                                            &config.DataBitRateSelect);
-              config.NominalBitRateSelect = kAbitTimingUSB[abit_baud_index_];
-              config.DataBitRateSelect = kDbitTimingUSB[abit_baud_index_];
               /* 初始化 */
               if(GC_CANFD_STATUS_OK != InitCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &config))
               {
@@ -617,7 +615,7 @@ bool can_driver::init()
 }
 
 bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
-{
+{ 
   switch(brand_)
   {
     case ZLG_CAN_BRAND:
@@ -717,10 +715,10 @@ bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
             {
               if(GC_STATUS_OK != ResetCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
               {
-                show_message(tr("gc start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                show_message(tr("gc reset can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
                 return false;
               }
-              show_message(tr("gc start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+              show_message(tr("gc reset can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
               return true;
             }
 
@@ -728,10 +726,10 @@ bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
             {
               if(GC_CANFD_STATUS_OK != ResetCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
               {
-                show_message(tr("gc start canfd ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                show_message(tr("gc reset canfd ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
                 return false;
               }
-              show_message(tr("gc start canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+              show_message(tr("gc reset canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
               return true;
             }
 
@@ -814,6 +812,13 @@ void can_driver::close(const CHANNEL_STATE_Typedef_t &channel_state)
 
 void can_driver::close()
 {
+  /* 保护 */
+  if(false == device_opened_)
+  {
+    show_message(tr("device is not open "));
+    return;
+  }
+
   start_ = false;
 
   /* 关闭对应通道号 */
@@ -906,7 +911,7 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8
                     can_data.CanORCanfdType.proto = (quint8)protocol;
                     can_data.CanORCanfdType.type = GC_DATA_TYPE;
                     can_data.CanORCanfdType.format = (quint8)frame_type;
-                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_ON;
+                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_OFF;
 
                     can_data.TimeStamp.mday = 0;
                     can_data.TimeStamp.hour = 0;
@@ -1028,7 +1033,7 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8
                     can_data.CanORCanfdType.proto = (quint8)protocol;
                     can_data.CanORCanfdType.type = GC_DATA_TYPE;
                     can_data.CanORCanfdType.format = (quint8)frame_type;
-                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_ON;
+                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_OFF;
 
                     can_data.TimeStamp.mday = 0;
                     can_data.TimeStamp.hour = 0;
@@ -1247,7 +1252,7 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
                     can_data.CanORCanfdType.proto = (quint8)protocol_index_;
                     can_data.CanORCanfdType.type = GC_DATA_TYPE;
                     can_data.CanORCanfdType.format = (quint8)frame_type_index_;
-                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_ON;
+                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_OFF;
 
                     can_data.TimeStamp.mday = 0;
                     can_data.TimeStamp.hour = 0;
@@ -1385,7 +1390,7 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
                     can_data.CanORCanfdType.proto = (quint8)protocol_index_;
                     can_data.CanORCanfdType.type = GC_DATA_TYPE;
                     can_data.CanORCanfdType.format = (quint8)frame_type_index_;
-                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_ON;
+                    can_data.CanORCanfdType.bitratemode = BITRATESITCH_OFF;
 
                     can_data.TimeStamp.mday = 0;
                     can_data.TimeStamp.hour = 0;
