@@ -1306,7 +1306,7 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
             return;
         }
         break;
-      }
+      }// case CAN_PROTOCOL_TYPE
 
     /* canfd */
     case CANFD_PROTOCOL_TYPE:
