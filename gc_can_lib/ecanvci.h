@@ -222,26 +222,26 @@ class gc_can_lib_tool
 extern "C" {
 #endif
 
-DllAPI quint64 CALL OpenDevice(quint64 DeviceType, quint64 DeviceInd, quint64 Reserved);
-DllAPI quint64 CALL CloseDevice(quint64 DeviceType, quint64 DeviceInd);
+DllAPI ulong CALL OpenDevice(ulong DeviceType, ulong DeviceInd, ulong Reserved);
+DllAPI ulong CALL CloseDevice(ulong DeviceType, ulong DeviceInd);
 
-DllAPI quint64 CALL InitCAN(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, P_INIT_CONFIG pInitConfig);
+DllAPI ulong CALL InitCAN(ulong DeviceType, ulong DeviceInd, ulong CANInd, P_INIT_CONFIG pInitConfig);
 
-DllAPI quint64 CALL ReadBoardInfo(quint64 DeviceType, quint64 DeviceInd, P_GC_CAN_BOARD_INFO pInfo);
-DllAPI quint64 CALL ReadErrInfo(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, P_ERR_INFO pErrInfo);
-DllAPI quint64 CALL ReadCANStatus(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, P_CAN_STATUS pCANStatus);
+DllAPI ulong CALL ReadBoardInfo(ulong DeviceType, ulong DeviceInd, P_GC_CAN_BOARD_INFO pInfo);
+DllAPI ulong CALL ReadErrInfo(ulong DeviceType, ulong DeviceInd, ulong CANInd, P_ERR_INFO pErrInfo);
+DllAPI ulong CALL ReadCANStatus(ulong DeviceType, ulong DeviceInd, ulong CANInd, P_CAN_STATUS pCANStatus);
 
-//DllAPI quint64 CALL GetReference(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, quint64 RefType, void *pData);
-//DllAPI quint64 CALL SetReference(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, quint64 RefType, void *pData);
+//DllAPI ulong CALL GetReference(ulong DeviceType, ulong DeviceInd, ulong CANInd, ulong RefType, void *pData);
+//DllAPI ulong CALL SetReference(ulong DeviceType, ulong DeviceInd, ulong CANInd, ulong RefType, void *pData);
 
-DllAPI ulong CALL GetReceiveNum(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd);
-DllAPI quint64 CALL ClearBuffer(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd);
+DllAPI ulong CALL GetReceiveNum(ulong DeviceType, ulong DeviceInd, ulong CANInd);
+DllAPI ulong CALL ClearBuffer(ulong DeviceType, ulong DeviceInd, ulong CANInd);
 
-DllAPI quint64 CALL StartCAN(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd);
-DllAPI quint64 CALL ResetCAN(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd);
+DllAPI ulong CALL StartCAN(ulong DeviceType, ulong DeviceInd, ulong CANInd);
+DllAPI ulong CALL ResetCAN(ulong DeviceType, ulong DeviceInd, ulong CANInd);
 
-DllAPI ulong CALL Transmit(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, P_CAN_OBJ pSend, ulong Len);
-DllAPI ulong CALL Receive(quint64 DeviceType, quint64 DeviceInd, quint64 CANInd, P_CAN_OBJ pReceive, ulong Len, qint32 WaitTime);
+DllAPI ulong CALL Transmit(ulong DeviceType, ulong DeviceInd, ulong CANInd, P_CAN_OBJ pSend, ulong Len);
+DllAPI ulong CALL Receive(ulong DeviceType, ulong DeviceInd, ulong CANInd, P_CAN_OBJ pReceive, ulong Len, qint32 WaitTime);
 
 #ifdef __cplusplus ///<end extern c
 }

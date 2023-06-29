@@ -752,7 +752,8 @@ private:
   bool init(CHANNEL_STATE_Typedef_t &channel_state);
   bool start(const CHANNEL_STATE_Typedef_t &channel_state);
   bool reset(const CHANNEL_STATE_Typedef_t &channel_state);
-  void close(const CHANNEL_STATE_Typedef_t &channel_state);
+  void close_channel(const CHANNEL_STATE_Typedef_t &channel_state);
+  void close(CAN_BRAND_Typedef_t brand);
   void send(const CHANNEL_STATE_Typedef_t &channel_state);
   bool send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol);
   void receice_data(const CHANNEL_STATE_Typedef_t &channel_state);
@@ -829,7 +830,7 @@ private:
 
 private:
   bool device_opened_;
-  can_driver::CAN_BRAND_Typedef_t brand_;
+  can_driver::CAN_BRAND_Typedef_t brand_ = ZLG_CAN_BRAND;
   void *device_handle_ = nullptr;
   qint16 device_type_index_ = 0;
   quint8 device_index_ = 0;

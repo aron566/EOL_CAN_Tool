@@ -14,6 +14,7 @@
   *  @version v1.0.0 aron566 2023.02.21 14:05 初始版本.
   *           v1.0.1 aron566 2023.06.25 17:38 增加多品牌驱动兼容.
   *           v1.0.2 aron566 2023.06.27 19:27 增加GCcanfd驱动.
+  *           v1.0.3 aron566 2023.06.29 10:28 GCcanfd驱动关闭优化避免二次关闭导致异常.
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QDateTime>
@@ -764,18 +765,13 @@ bool can_driver::reset()
   return ret;
 }
 
-void can_driver::close(const CHANNEL_STATE_Typedef_t &channel_state)
+void can_driver::close_channel(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   switch(brand_)
   {
     case ZLG_CAN_BRAND:
       {
-        if(ZCLOUD_IsConnected())
-        {
-          ZCLOUD_DisconnectServer();
-        }
         ZCAN_ResetCAN(channel_state.channel_hadle);
-        ZCAN_CloseDevice(device_handle_);
         show_message(tr("zlg device can ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
         break;
       }
@@ -787,15 +783,59 @@ void can_driver::close(const CHANNEL_STATE_Typedef_t &channel_state)
         {
           case GC_USBCAN2:
             {
-              CloseDevice(kDeviceType[device_type_index_].device_type, device_index_);
+              ClearBuffer(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num);
+              ResetCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num);
               show_message(tr("gc device can ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
               break;
             }
 
           case GC_USBCANFD:
             {
-              CloseDeviceFD(kDeviceType[device_type_index_].device_type, device_index_);
+              ResetCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num);
+              StopCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num);
               show_message(tr("gc device canfd ch %1 closed").arg(channel_state.channel_num), channel_state.channel_num);
+              break;
+            }
+
+          default:
+              break;
+        }
+        break;
+      }
+
+    default:
+      break;
+  }
+}
+
+void can_driver::close(can_driver::CAN_BRAND_Typedef_t brand)
+{
+  switch(brand)
+  {
+    case ZLG_CAN_BRAND:
+      {
+        if(ZCLOUD_IsConnected())
+        {
+          ZCLOUD_DisconnectServer();
+        }
+        ZCAN_CloseDevice(device_handle_);
+        break;
+      }
+
+    case GC_CAN_BRAND:
+      {
+        /* 确定型号 */
+        switch(kDeviceType[device_type_index_].device_type)
+        {
+          case GC_USBCAN2:
+            {
+              CloseDevice(kDeviceType[device_type_index_].device_type, device_index_);
+              break;
+            }
+
+          case GC_USBCANFD:
+            {
+              CloseDeviceFD(kDeviceType[device_type_index_].device_type, device_index_);
               break;
             }
 
@@ -829,8 +869,11 @@ void can_driver::close()
       continue;
     }
 
-    close(channel_state_list.value(i));
+    close_channel(channel_state_list.value(i));
   }
+
+  /* 关闭设备 */
+  close(brand_);
 
   /* 发送can关闭状态 */
   emit signal_can_is_closed();
