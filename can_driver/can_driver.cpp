@@ -15,6 +15,7 @@
   *           v1.0.1 aron566 2023.06.25 17:38 增加多品牌驱动兼容.
   *           v1.0.2 aron566 2023.06.27 19:27 增加GCcanfd驱动.
   *           v1.0.3 aron566 2023.06.29 10:28 GCcanfd驱动关闭优化避免二次关闭导致异常.
+  *           v1.0.4 aron566 2023.06.29 17:16 修复GCcanfd发送帧诊断数据协议类型不对问题.
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QDateTime>
@@ -910,7 +911,7 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, const quint8
                   memcpy_s(&pData[i], sizeof(ZCAN_Transmit_Data), &can_data, sizeof(can_data));
                 }
 
-                show_message(channel_state, pData, 1);
+                show_message(channel_state, pData, nSendCount);
                 result = ZCAN_Transmit(channel_state.channel_hadle, pData, nSendCount);
                 delete [] pData;
               }
@@ -1733,7 +1734,7 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
         len = ZCAN_GetReceiveNum(channel_state.channel_hadle, TYPE_CAN);
         if(0 < len)
         {
-          len = ZCAN_Receive(channel_state.channel_hadle, can_data, 100, 50);
+          len = ZCAN_Receive(channel_state.channel_hadle, can_data, 100, 0);
           show_message(channel_state, can_data, len);
         }
 
@@ -1741,7 +1742,7 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
         len = ZCAN_GetReceiveNum(channel_state.channel_hadle, TYPE_CANFD);
         if(0 < len)
         {
-          len = ZCAN_ReceiveFD(channel_state.channel_hadle, canfd_data, 100, 50);
+          len = ZCAN_ReceiveFD(channel_state.channel_hadle, canfd_data, 100, 0);
           show_message(channel_state, canfd_data, len);
         }
         break;
@@ -2144,7 +2145,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
 
           /* 发送接收数据信号 */
           QDateTime dt = QDateTime::currentDateTime();
-          emit signal_can_driver_msg(can_id, can.Data, can.DataLen, (quint8)CAN_TX_DIRECT, channel_state.channel_num, 0, dt.toMSecsSinceEpoch());
+          emit signal_can_driver_msg(can_id, can.Data, can.DataLen, (quint8)CAN_TX_DIRECT, channel_state.channel_num, can.CanORCanfdType.proto, dt.toMSecsSinceEpoch());
         }
         break;
       }
@@ -2193,7 +2194,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
 
             /* 发送接收数据信号 */
             QDateTime dt = QDateTime::currentDateTime();
-            emit signal_can_driver_msg(can_id, can.Data, can.DataLen, (quint8)CAN_RX_DIRECT, channel_state.channel_num, 0, dt.toMSecsSinceEpoch());
+            emit signal_can_driver_msg(can_id, can.Data, can.DataLen, (quint8)CAN_RX_DIRECT, channel_state.channel_num, can.CanORCanfdType.proto, dt.toMSecsSinceEpoch());
           }
 
           /* 消息过滤分发 */

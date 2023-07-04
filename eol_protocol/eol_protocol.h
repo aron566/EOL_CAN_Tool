@@ -48,7 +48,7 @@
 /* 常规测试 */
 #define EOL_R_PROFILE_NUM_CH_NUM       0x02U  /**< 读EOL下配置数和通道数 */
 #define EOL_RW_VERSION_REG             0x03U  /**< 读取软硬件版本 */
-#define EOL_R_VCAN_TEST_REG            0x04U  /**< VCAN测试 */
+#define EOL_W_VCAN_TEST_REG            0x04U  /**< VCAN测试 */
 #define EOL_RW_SN_REG                  0x05U  /**< SN读写 */
 #define EOL_R_MOUNTID_REG              0x06U  /**< 读取moundID */
 

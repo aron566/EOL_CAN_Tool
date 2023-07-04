@@ -34,7 +34,7 @@ public:
 
     connect(can_driver_obj, &can_driver::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
     connect(can_driver_obj, &can_driver::signal_show_message, this, &more_window::slot_show_message);
-    connect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
+
     /* 线程同步 */
     connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::BlockingQueuedConnection);
   }
@@ -71,29 +71,39 @@ private:
   void tool_window_init(QString titile);
 
   /**
-     * @brief 定时器初始化
-     */
-    void timer_init();
+   * @brief 定时器初始化
+   */
+  void timer_init();
 
-    /**
-     * @brief 待显示是否为空
-     * @return true空
-     */
-    bool ch1_show_msg_is_empty();
-    bool ch2_show_msg_is_empty();
+  /**
+   * @brief read_cfg
+   */
+  void read_cfg();
 
-    /**
-     * @brief show_txt
-     */
-    void show_txt();
+  /**
+   * @brief save_cfg
+   */
+  void save_cfg();
 
-    /**
-     * @brief 获取显示的索引
-     * @param current_show_index
-     * @param totaol_size
-     * @return 显示索引
-     */
-    quint32 get_show_index(quint32 current_show_index, quint32 totaol_size);
+  /**
+   * @brief 待显示是否为空
+   * @return true空
+   */
+  bool ch1_show_msg_is_empty();
+  bool ch2_show_msg_is_empty();
+
+  /**
+   * @brief show_txt
+   */
+  void show_txt();
+
+  /**
+   * @brief 获取显示的索引
+   * @param current_show_index
+   * @param totaol_size
+   * @return 显示索引
+   */
+  quint32 get_show_index(quint32 current_show_index, quint32 totaol_size);
 
 signals:
     void signal_more_window_closed();
@@ -149,6 +159,10 @@ private slots:
 
     void on_tool_pushButton_clicked();
 
+    /**
+     * @brief 显示窗口
+     */
+    void slot_show_window();
 private:
     Ui::more_window *ui;
     eol_window *eol_window_obj = nullptr;
@@ -158,6 +172,7 @@ private:
     can_driver *can_driver_obj = nullptr;
     frame_diagnosis *frame_diagnosis_obj = nullptr;
     QTimer *timer_obj = nullptr;
+
     quint32 rx_frame_cnt = 0;
     quint32 tx_frame_cnt = 0;
     quint32 rx_byte_cnt = 0;
@@ -174,7 +189,6 @@ private:
 
     QList<SHOW_MSG_Typedef_t>ch1_show_msg_list;
     QList<SHOW_MSG_Typedef_t>ch2_show_msg_list;
-
 private:
     /**
      * @brief update_show_msg 显示指定索引消息

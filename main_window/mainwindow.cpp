@@ -39,6 +39,8 @@
  *  <tr><td>2023-06-27 <td>v0.0.21 <td>aron566 <td>适配GCcanfd驱动
  *  <tr><td>2023-06-28 <td>v0.0.22 <td>aron566 <td>修复GCcanfd驱动，初始化波特率设置不对问题，提示信息不对问题
  *  <tr><td>2023-06-29 <td>v0.0.23 <td>aron566 <td>修复GCcanfd驱动，关闭问题避免二次关闭异常
+ *  <tr><td>2023-06-29 <td>v0.0.24 <td>aron566 <td>优化帧诊断，屏蔽black信号刷新避免卡顿，修复gc发送帧协议类型不对问题
+ *  <tr><td>2023-07-03 <td>v0.0.25 <td>aron566 <td>增加more页面数据保存，统一一个配置文件管理
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -50,7 +52,8 @@
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
-#define PC_SOFTWARE_VERSION "v0.0.23"
+#define PC_SOFTWARE_VERSION       "v0.0.25"
+#define CONFIG_VER_STR            " v0.0.1"                /**< 配置文件版本 */
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -191,19 +194,19 @@ void MainWindow::can_driver_init()
 
 void MainWindow::save_cfg()
 {
-  QSettings setting("./main_window_cfg.ini", QSettings::IniFormat);
-  setting.setValue("com/device_brand", ui->brand_comboBox->currentIndex());
-  setting.setValue("com/device_name", ui->device_list_comboBox->currentText());
-  setting.setValue("com/arbitration_bps", ui->arbitration_bps_comboBox->currentIndex());
-  setting.setValue("com/data_bps", ui->data_bps_comboBox->currentIndex());
-  setting.setValue("com/bps", ui->bps_comboBox->currentIndex());
-  setting.setValue("com/end_resistance_en", (int)ui->end_resistance_checkBox->checkState());
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setValue("com" CONFIG_VER_STR "/device_brand", ui->brand_comboBox->currentIndex());
+  setting.setValue("com" CONFIG_VER_STR "/device_name", ui->device_list_comboBox->currentText());
+  setting.setValue("com" CONFIG_VER_STR "/arbitration_bps", ui->arbitration_bps_comboBox->currentIndex());
+  setting.setValue("com" CONFIG_VER_STR "/data_bps", ui->data_bps_comboBox->currentIndex());
+  setting.setValue("com" CONFIG_VER_STR "/bps", ui->bps_comboBox->currentIndex());
+  setting.setValue("com" CONFIG_VER_STR "/end_resistance_en", (int)ui->end_resistance_checkBox->checkState());
   setting.sync();
 }
 
 void MainWindow::read_cfg()
 {
-  QFile file("./main_window_cfg.ini");
+  QFile file("./eol_tool_cfg.ini");
   if(false == file.exists())
   {
     /* 设置默认值 */
@@ -216,13 +219,13 @@ void MainWindow::read_cfg()
     return;
   }
   QSettings setting("./main_window_cfg.ini", QSettings::IniFormat);
-  ui->brand_comboBox->setCurrentIndex((can_driver::CAN_BRAND_Typedef_t)setting.value("com/device_brand").toInt());
-  ui->device_list_comboBox->setCurrentText(setting.value("com/device_name").toString());
-  ui->arbitration_bps_comboBox->setCurrentIndex(setting.value("com/arbitration_bps").toInt());
-  ui->data_bps_comboBox->setCurrentIndex(setting.value("com/data_bps").toInt());
-  ui->bps_comboBox->setCurrentIndex(setting.value("com/bps").toInt());
+  ui->brand_comboBox->setCurrentIndex((can_driver::CAN_BRAND_Typedef_t)setting.value("com" CONFIG_VER_STR "/device_brand").toInt());
+  ui->device_list_comboBox->setCurrentText(setting.value("com" CONFIG_VER_STR "/device_name").toString());
+  ui->arbitration_bps_comboBox->setCurrentIndex(setting.value("com" CONFIG_VER_STR "/arbitration_bps").toInt());
+  ui->data_bps_comboBox->setCurrentIndex(setting.value("com" CONFIG_VER_STR "/data_bps").toInt());
+  ui->bps_comboBox->setCurrentIndex(setting.value("com" CONFIG_VER_STR "/bps").toInt());
   /* 设置终端电阻启用状态 */
-  ui->end_resistance_checkBox->setCheckState((Qt::CheckState)setting.value("com/end_resistance_en").toInt());
+  ui->end_resistance_checkBox->setCheckState((Qt::CheckState)setting.value("com" CONFIG_VER_STR "/end_resistance_en").toInt());
   can_driver_obj->set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
   setting.sync();
 }

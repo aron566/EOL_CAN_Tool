@@ -181,7 +181,8 @@ void eol_window::eol_protocol_init(can_driver *can_driver_obj)
   connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_data_complete, this, &eol_window::slot_recv_eol_data_complete);
   connect(eol_protocol_obj, &eol_protocol::signal_send_eol_data_complete, this, &eol_window::slot_send_eol_data_complete);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_timeout, this, &eol_window::slot_protocol_timeout);
-  connect(eol_protocol_obj, &eol_protocol::signal_device_mode, this, &eol_window::slot_device_mode, Qt::BlockingQueuedConnection);
+//  connect(eol_protocol_obj, &eol_protocol::signal_device_mode, this, &eol_window::slot_device_mode, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_device_mode, this, &eol_window::slot_device_mode);
   connect(eol_protocol_obj, &eol_protocol::signal_send_rec_one_frame, this, &eol_window::slot_send_rec_one_frame, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_window::slot_rw_device_ok);

@@ -2,7 +2,13 @@
 #include "ui_debug_window.h"
 #include <QFile>
 #include <QSettings>
+#include <QClipboard>
+#include <QMenu>
+#include <QContextMenuEvent>
+#include <QMimeData>
 #include <QDebug>
+
+#define CONFIG_VER_STR            " v0.0.1"                /**< 配置文件版本 */
 
 debug_window::debug_window(QString title, QWidget *parent) :
   QWidget(parent),
@@ -39,6 +45,9 @@ debug_window::debug_window(QString title, QWidget *parent) :
 
 debug_window::~debug_window()
 {
+  /* 保存参数 */
+  save_cfg();
+
   delete ui;
 }
 
@@ -71,6 +80,21 @@ void debug_window::showEvent(QShowEvent *event)
   ui->shell_textEdit->setFocus();
 }
 
+//void debug_window::contextMenuEvent(QContextMenuEvent *event)
+//{
+//    QMenu *menu = ui->shell_textEdit->createStandardContextMenu();
+//    QAction *pasteAction = menu->addAction("Paste");
+//    QAction *selectedAction = menu->exec(event->globalPos());
+
+//    if (selectedAction == pasteAction) {
+//        /* 鼠标右键粘贴事件发生 */
+//        QClipboard *clipboard = QApplication::clipboard();
+//        QString text = clipboard->text();
+//        qDebug() << "Right-click paste event detected!";
+//        qDebug() << "Pasted text: " << text;
+//    }
+//}
+
 bool debug_window::eventFilter(QObject *target, QEvent *event)
 {
   /* 检查是否是目标控件 */
@@ -97,11 +121,15 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
   qDebug() << "send key" << k->key() << k->text().toLatin1();
 
   /* 直接发送按键 */
-//  if(127 < (*k->text().toLatin1().data()))
-//  {
-    emit signal_send_command_char(*k->text().toLatin1().data());
-    return true;
-//  }
+  if(127 > (*k->text().toLatin1().data()))
+  {
+    if(k->key() != Qt::Key_Up
+       && k->key() != Qt::Key_Down)
+    {
+      emit signal_send_command_char(*k->text().toLatin1().data());
+      return true;
+    }
+  }
 
   switch(k->key())
   {
@@ -140,6 +168,11 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
 
     case Qt::Key_Up:
       {
+        emit signal_send_command_char(0x1B);
+        emit signal_send_command_char(0x5B);
+        emit signal_send_command_char(0x41);
+        return true;
+
         QTextCursor tc = text_edit_widget->textCursor();
 
         if(history_cmd.size() == 0)
@@ -166,6 +199,11 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
 
     case Qt::Key_Down:
       {
+        emit signal_send_command_char(0x1B);
+        emit signal_send_command_char(0x5B);
+        emit signal_send_command_char(0x42);
+        return true;
+
         QTextCursor tc = text_edit_widget->textCursor();
 
         if(history_cmd.size() == 0)
@@ -234,6 +272,15 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
       }
       break;
 
+    case Qt::Key_Right:
+      {
+        if(minTextCurse == text_edit_widget->textCursor().position())
+        {
+          return true;
+        }
+      }
+      break;
+
     default:
       break;
   }
@@ -242,20 +289,20 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
 
 void debug_window::save_cfg()
 {
-  QSettings setting("./debug_window_cfg.ini", QSettings::IniFormat);
-  setting.setValue("cfg/open_case_sensitive", (int)ui->case_sensitive_checkBox->checkState());
-  setting.setValue("cfg/textcolor", ui->color_list_comboBox->currentText());
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setValue("debug_window" CONFIG_VER_STR "/open_case_sensitive", (int)ui->case_sensitive_checkBox->checkState());
+  setting.setValue("debug_window" CONFIG_VER_STR "/textcolor", ui->color_list_comboBox->currentText());
   /* 快捷命令 */
   QString plaintext = ui->quick_compleat_plainTextEdit->toPlainText();
   plaintext.remove(' ');
   plaintext.replace('\n', ',');;
-  setting.setValue("cfg/quick_complets_list", plaintext);
+  setting.setValue("debug_window" CONFIG_VER_STR "/quick_complets_list", plaintext);
   setting.sync();
 }
 
 void debug_window::read_cfg()
 {
-  QFile file("./debug_window_cfg.ini");
+  QFile file("./eol_tool_cfg.ini");
   if(false == file.exists())
   {
     /* 添加快捷指令 */
@@ -264,12 +311,12 @@ void debug_window::read_cfg()
     ui->quick_compleat_plainTextEdit->setPlainText(QString("clear\n"));
     return;
   }
-  QSettings setting("./debug_window_cfg.ini", QSettings::IniFormat);
-  ui->case_sensitive_checkBox->setCheckState((Qt::CheckState)setting.value("cfg/open_case_sensitive").toInt());
-  ui->color_list_comboBox->setCurrentText(setting.value("cfg/textcolor").toString());
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  ui->case_sensitive_checkBox->setCheckState((Qt::CheckState)setting.value("debug_window" CONFIG_VER_STR "/open_case_sensitive").toInt());
+  ui->color_list_comboBox->setCurrentText(setting.value("debug_window" CONFIG_VER_STR "/textcolor").toString());
   ui->shell_textEdit->setTextColor(ui->color_list_comboBox->currentText());
   /* 快捷命令 */
-  QString plaintext = setting.value("cfg/quick_complets_list").toString();
+  QString plaintext = setting.value("debug_window" CONFIG_VER_STR "/quick_complets_list").toString();
   quick_complets = plaintext.split(',');
   plaintext.replace(',', '\n');
   ui->quick_compleat_plainTextEdit->setPlainText(plaintext);
@@ -386,8 +433,6 @@ void debug_window::on_addquick_compelat_pushButton_clicked()
       quick_complets.append(sliplist[i]);
     }
   }
-  /* 保存参数 */
-  save_cfg();
 }
 
 

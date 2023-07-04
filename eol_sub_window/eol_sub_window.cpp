@@ -51,6 +51,7 @@ void eol_sub_window::on_test_pushButton_clicked()
   ui->sn_write_lineEdit->clear();
   ui->sn_read_lineEdit->clear();
 
+  ui->vcan_test_lineEdit->clear();
   ui->hw_ver_lineEdit->clear();
   ui->soft_ver_lineEdit->clear();
   ui->calibration_ver_lineEdit->clear();
@@ -69,13 +70,13 @@ void eol_sub_window::on_test_pushButton_clicked()
   eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* VCAN测试 */
-//  task.reg = EOL_R_VCAN_TEST_REG;
-//  task.command = eol_protocol::EOL_WRITE_CMD;
-//  task.buf[0] = 1;
-//  task.len = 1;
-//  task.channel_num = "0";
-//  task.com_hw = eol_protocol::EOL_CAN_HW;
-//  eol_protocol_obj->eol_master_common_rw_device(task);
+  task.reg = EOL_W_VCAN_TEST_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = 1;
+  task.len = 1;
+  task.channel_num = "1";
+  task.com_hw = eol_protocol::EOL_CAN_HW;
+  eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* SN读写 */
   task.reg = EOL_RW_SN_REG;
@@ -149,6 +150,11 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
     {
       case EOL_RW_VERSION_REG :
         ui->ver_test_lineEdit->setText(ui->ver_test_lineEdit->text() + tr("write version ok"));
+        break;
+
+      /* VCAN测试 */
+      case EOL_W_VCAN_TEST_REG:
+        ui->vcan_test_lineEdit->setText(ui->vcan_test_lineEdit->text() + tr("write vcan ok "));
         break;
 
       case EOL_RW_SN_REG      :
@@ -237,11 +243,6 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
           /* 启动eol线程 */
           eol_protocol_obj->start_task();
         }
-        break;
-
-      /* VCAN测试 */
-      case EOL_R_VCAN_TEST_REG:
-        ui->vcan_test_lineEdit->setText(tr("read vcan ok "));
         break;
 
       /* SN测试 */
@@ -339,7 +340,7 @@ void eol_sub_window::slot_protocol_rw_err(quint8 reg, quint8 command)
     case EOL_RW_VERSION_REG :
 
       break;
-    case EOL_R_VCAN_TEST_REG:
+    case EOL_W_VCAN_TEST_REG:
 
       break;
     case EOL_RW_SN_REG      :

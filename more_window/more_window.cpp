@@ -9,6 +9,7 @@
 #define SHOW_MSG_SAVE_NUM_MAX     100U                    /**< 最大显示消息数 */
 #define SHOW_MSG_ONE_SCORLL       (5U)                    /**< 上翻每次刷新列表数 */
 #define SAVE_MSG_BUF_MAX          (1024U*1024U*10U)       /**< 最大缓存消息数 */
+#define CONFIG_VER_STR            " v0.0.1"                /**< 配置文件版本 */
 
 more_window::more_window(QString title, QWidget *parent) :
     QWidget(parent),
@@ -47,10 +48,16 @@ more_window::more_window(QString title, QWidget *parent) :
   /* 设置提示值 */
   ui->data_lineEdit->setPlaceholderText("05 66");
   ui->id_lineEdit->setPlaceholderText("157");
+
+  /* 恢复参数 */
+  read_cfg();
 }
 
 more_window::~more_window()
 {
+  /* 保存参数 */
+  save_cfg();
+
   delete frame_diagnosis_obj;
   qDebug() << "del frame_diagnosis_obj";
 
@@ -206,6 +213,35 @@ void more_window::closeEvent(QCloseEvent *event)
 
   this->hide();
   emit signal_more_window_closed();
+}
+
+void more_window::save_cfg()
+{
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  /* can id */
+  setting.setValue("more_window" CONFIG_VER_STR "/data_edit", ui->id_lineEdit->text());
+  /* 数据 */
+  QString plaintext = ui->data_lineEdit->text();
+  plaintext.replace(' ', ',');;
+  setting.setValue("more_window" CONFIG_VER_STR "/data_edit", plaintext);
+  setting.sync();
+}
+
+void more_window::read_cfg()
+{
+  QFile file("./eol_tool_cfg.ini");
+  if(false == file.exists())
+  {
+    return;
+  }
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  /* can id */
+  ui->id_lineEdit->setText(setting.value("more_window" CONFIG_VER_STR "/can_id").toString());
+  /* 数据 */
+  QString plaintext = setting.value("more_window" CONFIG_VER_STR "/data_edit").toString();
+  plaintext.replace(',', ' ');
+  ui->data_lineEdit->setText(plaintext);
+  setting.sync();
 }
 
 bool more_window::ch1_show_msg_is_empty()
@@ -379,6 +415,15 @@ void more_window::update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Ty
 void more_window::frame_diagnosis_window_init(QString title)
 {
   frame_diagnosis_obj = new frame_diagnosis(title);
+
+  connect(frame_diagnosis_obj, &frame_diagnosis::signal_window_closed, this, &more_window::slot_show_window);
+}
+
+void more_window::slot_show_window()
+{
+  disconnect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
+  connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::BlockingQueuedConnection);
+  this->show();
 }
 
 void more_window::slot_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, \
@@ -686,6 +731,8 @@ void more_window::on_mask_en_checkBox_clicked(bool checked)
 
 void more_window::on_frame_diagnosis_pushButton_clicked()
 {
+  disconnect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block);
+  connect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
   frame_diagnosis_obj->show();
 }
 

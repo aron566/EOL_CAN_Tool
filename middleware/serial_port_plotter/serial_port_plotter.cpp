@@ -530,6 +530,50 @@ void serial_port_plotter::readData()
 /** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /**
+ * @brief Read data for inside can net port
+ * @param data
+ */
+void serial_port_plotter::readData(QByteArray data)
+{
+    if(!data.isEmpty()) {                                                             // If the byte array is not empty
+        char *temp = data.data();                                                     // Get a '\0'-terminated char* to the data
+
+        if (!filterDisplayedData){
+            ui->textEdit_UartWindow->append(data);
+        }
+        for(int i = 0; temp[i] != '\0'; i++) {                                        // Iterate over the char*
+            switch(STATE) {                                                           // Switch the current state of the message
+            case WAIT_START:                                                          // If waiting for start [$], examine each char
+                if(temp[i] == START_MSG) {                                            // If the char is $, change STATE to IN_MESSAGE
+                    STATE = IN_MESSAGE;
+                    receivedData.clear();                                             // Clear temporary QString that holds the message
+                    break;                                                            // Break out of the switch
+                }
+                break;
+            case IN_MESSAGE:                                                          // If state is IN_MESSAGE
+                if(temp[i] == END_MSG) {                                              // If char examined is ;, switch state to END_MSG
+                    STATE = WAIT_START;
+                    QStringList incomingData = receivedData.split(' ');               // Split string received from port and put it into list
+                    if(filterDisplayedData){
+                        ui->textEdit_UartWindow->append(receivedData);
+                    }
+                    emit newData(incomingData);                                       // Emit signal for data received with the list
+                    break;
+                }
+                else if (isdigit (temp[i]) || isspace (temp[i]) || temp[i] =='-' || temp[i] =='.')
+                  {
+                    /* If examined char is a digit, and not '$' or ';', append it to temporary string */
+                    receivedData.append(temp[i]);
+                  }
+                break;
+            default: break;
+            }
+        }
+    }
+}
+/** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/**
  * @brief Number of axes combo; when changed, display axes colors in status bar
  * @param index
  */
@@ -948,3 +992,12 @@ void serial_port_plotter::on_pushButton_clicked()
         ui->comboPort->addItem (port.portName());
     }
 }
+
+void serial_port_plotter::on_comboBox_currentTextChanged(const QString &arg1)
+{
+    if(arg1 == "Serial_Port")
+    {
+
+    }
+}
+

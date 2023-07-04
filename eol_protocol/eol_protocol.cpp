@@ -529,7 +529,7 @@ eol_protocol::EOL_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(quint8 reg
       break;
     }
     case EOL_W_DEVICE_REBOOT_REG:
-    case EOL_R_VCAN_TEST_REG:
+    case EOL_W_VCAN_TEST_REG:
     case EOL_RW_SN_REG:
     default:
       /* 发送完成信号 */
