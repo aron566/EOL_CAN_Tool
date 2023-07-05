@@ -41,6 +41,7 @@
  *  <tr><td>2023-06-29 <td>v0.0.23 <td>aron566 <td>修复GCcanfd驱动，关闭问题避免二次关闭异常
  *  <tr><td>2023-06-29 <td>v0.0.24 <td>aron566 <td>优化帧诊断，屏蔽black信号刷新避免卡顿，修复gc发送帧协议类型不对问题
  *  <tr><td>2023-07-03 <td>v0.0.25 <td>aron566 <td>增加more页面数据保存，统一一个配置文件管理
+ *  <tr><td>2023-07-05 <td>v0.0.26 <td>aron566 <td>配置版本号改为下划线
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -52,8 +53,8 @@
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
-#define PC_SOFTWARE_VERSION       "v0.0.25"
-#define CONFIG_VER_STR            " v0.0.1"                /**< 配置文件版本 */
+#define PC_SOFTWARE_VERSION       "v0.0.26"
+#define CONFIG_VER_STR            "_v0.0.1"                /**< 配置文件版本 */
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -218,7 +219,7 @@ void MainWindow::read_cfg()
     can_driver_obj->set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
     return;
   }
-  QSettings setting("./main_window_cfg.ini", QSettings::IniFormat);
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
   ui->brand_comboBox->setCurrentIndex((can_driver::CAN_BRAND_Typedef_t)setting.value("com" CONFIG_VER_STR "/device_brand").toInt());
   ui->device_list_comboBox->setCurrentText(setting.value("com" CONFIG_VER_STR "/device_name").toString());
   ui->arbitration_bps_comboBox->setCurrentIndex(setting.value("com" CONFIG_VER_STR "/arbitration_bps").toInt());

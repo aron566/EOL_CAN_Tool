@@ -8,7 +8,7 @@
 #include <QMimeData>
 #include <QDebug>
 
-#define CONFIG_VER_STR            " v0.0.1"                /**< 配置文件版本 */
+#define CONFIG_VER_STR            "_v0.0.1"                /**< 配置文件版本 */
 
 debug_window::debug_window(QString title, QWidget *parent) :
   QWidget(parent),
@@ -318,8 +318,8 @@ void debug_window::read_cfg()
   /* 快捷命令 */
   QString plaintext = setting.value("debug_window" CONFIG_VER_STR "/quick_complets_list").toString();
   quick_complets = plaintext.split(',');
-  plaintext.replace(',', '\n');
-  ui->quick_compleat_plainTextEdit->setPlainText(plaintext);
+  QString quick_complets_str = plaintext.replace(',', '\n');
+  ui->quick_compleat_plainTextEdit->setPlainText(quick_complets_str);
   setting.sync();
 }
 

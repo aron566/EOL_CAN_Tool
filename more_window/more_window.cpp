@@ -9,7 +9,7 @@
 #define SHOW_MSG_SAVE_NUM_MAX     100U                    /**< 最大显示消息数 */
 #define SHOW_MSG_ONE_SCORLL       (5U)                    /**< 上翻每次刷新列表数 */
 #define SAVE_MSG_BUF_MAX          (1024U*1024U*10U)       /**< 最大缓存消息数 */
-#define CONFIG_VER_STR            " v0.0.1"                /**< 配置文件版本 */
+#define CONFIG_VER_STR            "_v0.0.1"                /**< 配置文件版本 */
 
 more_window::more_window(QString title, QWidget *parent) :
     QWidget(parent),
@@ -48,9 +48,6 @@ more_window::more_window(QString title, QWidget *parent) :
   /* 设置提示值 */
   ui->data_lineEdit->setPlaceholderText("05 66");
   ui->id_lineEdit->setPlaceholderText("157");
-
-  /* 恢复参数 */
-  read_cfg();
 }
 
 more_window::~more_window()
@@ -219,7 +216,7 @@ void more_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
   /* can id */
-  setting.setValue("more_window" CONFIG_VER_STR "/data_edit", ui->id_lineEdit->text());
+  setting.setValue("more_window" CONFIG_VER_STR "/can_id", ui->id_lineEdit->text());
   /* 数据 */
   QString plaintext = ui->data_lineEdit->text();
   plaintext.replace(' ', ',');;
@@ -239,8 +236,8 @@ void more_window::read_cfg()
   ui->id_lineEdit->setText(setting.value("more_window" CONFIG_VER_STR "/can_id").toString());
   /* 数据 */
   QString plaintext = setting.value("more_window" CONFIG_VER_STR "/data_edit").toString();
-  plaintext.replace(',', ' ');
-  ui->data_lineEdit->setText(plaintext);
+  QString data_str = plaintext.replace(',', ' ');
+  ui->data_lineEdit->setText(data_str);
   setting.sync();
 }
 
