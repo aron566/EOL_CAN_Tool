@@ -433,6 +433,8 @@ void debug_window::on_addquick_compelat_pushButton_clicked()
       quick_complets.append(sliplist[i]);
     }
   }
+  /* 应用 */
+  save_cfg();
 }
 
 
