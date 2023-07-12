@@ -106,3 +106,5 @@
 - 支持调试协议的设定内容，并联动rts以及转台
 - 支持modbusTCP协议控制转台
 - 支持TCP/IP协议控制RTS
+
+![Debug](README.image/Debug.gif)
