@@ -5,7 +5,7 @@
 #include <QFileDialog>
 #include <QDebug>
 #include "utility.h"
-
+#include <QScrollArea>
 #define USE_TEMP_FILE_TO_SAVE 0 /**< 使用临时文件存储 */
 
 eol_window::eol_window(QString title, QWidget *parent) :
@@ -1761,7 +1761,7 @@ void eol_window::slot_device_mode(const void *pass_data)
   emit signal_clear_profile_info();
 
   QString msg;
-  msg += QString("<font size='10' color='green'><div align='legt'>profile num:</div> <div align='right'>%1</div> </font>\r\n").arg(profile_num);
+  msg += QString("<font size='5' color='green'><div align='legt'>profile num:</div> <div align='right'>%1</div> </font>").arg(profile_num);
 
   for(quint8 i = 0; i < profile_num; i++)
   {
@@ -1772,11 +1772,12 @@ void eol_window::slot_device_mode(const void *pass_data)
     memcpy(info.tx_order, data_ptr + index, sizeof(info.tx_order));
     index += sizeof(info.tx_order);
 
-    msg += QString("<font size='10' color='green'><div align='legt'>profile id:</div> <div align='right'>%1</div> </font>\r\n").arg(info.profile_id);
-    msg += QString("<font size='10' color='green'><div align='legt'>channel num:</div> <div align='right'>%1</div> </font>\r\n").arg(info.channel_num);
+    msg += QString("<font size='5' color='green'><div align='legt'>profile id:</div> <div align='right'>%1</div> </font>").arg(info.profile_id);
+    msg += QString("<font size='5' color='green'><div align='legt'>channel num:</div> <div align='right'>%1</div> </font>").arg(info.channel_num);
+    msg += QString("<font size='5' color='green'><div align='legt'>tx order:</div> </font>");
     for(quint8 t = 0; t < sizeof(info.tx_order); t++)
     {
-      msg += QString("<font size='10' color='green'><div align='legt'>tx order[%1]:</div> <div align='right'>%2</div> </font>\r\n").arg(t).arg(info.tx_order[t]);
+      msg += QString("<font size='5' color='green'><div align='legt'>[%1]:</div> <div align='right'>%2</div> </font>").arg(t).arg(info.tx_order[t]);
     }
 
     emit signal_profile_info_update(info);
