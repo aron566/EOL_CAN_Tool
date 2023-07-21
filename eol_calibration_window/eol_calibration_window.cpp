@@ -154,13 +154,13 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
 
     /* 目标序号 配置ID 速度 方位角 距离 mag rcs snr 俯仰角 */
     ui->tableWidget->setItem(i, 0, new QTableWidgetItem(QString::number(profile_id)));
-    ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number((double)speed/100)));
-    ui->tableWidget->setItem(i, 2, new QTableWidgetItem(QString::number((double)azi_angle/100)));
-    ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number((double)distance/100)));
-    ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number((double)mag/10)));
-    ui->tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number((double)rcs/10)));
-    ui->tableWidget->setItem(i, 6, new QTableWidgetItem(QString::number((double)snr/10)));
-    ui->tableWidget->setItem(i, 7, new QTableWidgetItem(QString::number((double)ele_angle/100)));
+    ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number((double)speed * 0.01f)));
+    ui->tableWidget->setItem(i, 2, new QTableWidgetItem(QString::number((double)azi_angle * 0.01f)));
+    ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number((double)distance * 0.01f)));
+    ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number((double)mag * 0.1f)));
+    ui->tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number((double)rcs * 0.1f)));
+    ui->tableWidget->setItem(i, 6, new QTableWidgetItem(QString::number((double)snr * 0.1f)));
+    ui->tableWidget->setItem(i, 7, new QTableWidgetItem(QString::number((double)ele_angle * 0.01f)));
   }
 }
 
