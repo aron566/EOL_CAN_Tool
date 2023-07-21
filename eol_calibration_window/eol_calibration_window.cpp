@@ -257,6 +257,7 @@ void eol_calibration_window::on_test_start_pushButton_clicked()
  */
 void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *data, quint16 data_size)
 {
+  Q_UNUSED(data_size)
   switch(reg_addr)
   {
     case EOL_W_SAVE_PAR_REG:
@@ -309,7 +310,7 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
             profile_id = data[index++];
             memcpy(&rcs_offset, data + index, sizeof(rcs_offset));
             index += sizeof(rcs_offset);
-            tips_str += QString("<font size='10' color='green'><div align='legt'>profile id[%1] rcs offset:</div> <div align='right'>%2</div> </font>\r\n").arg(profile_id).arg((float)rcs_offset / 10.f);
+            tips_str += QString("<font size='5' color='green'><div align='legt'>profile id[%1] rcs offset:</div> <div align='right'>%2</div> </font>\r\n").arg(profile_id).arg((float)rcs_offset / 10.f);
           }
           /* 显示rcs offset信息 */
           QMessageBox message(QMessageBox::Information, tr("RCS Info"), tr(tips_str.toUtf8()), QMessageBox::Yes, nullptr);
@@ -339,7 +340,7 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
             profile_id = data[index++];
             memcpy(&cali_mode, data + index, sizeof(cali_mode));
             index += sizeof(cali_mode);
-            tips_str += QString("<font size='10' color='green'><div align='legt'>profile id[%1] cali_mode:</div> <div align='right'>%2</div> </font>\r\n").arg(profile_id).arg(cali_mode);
+            tips_str += QString("<font size='5' color='green'><div align='legt'>profile id[%1] cali_mode:</div> <div align='right'>%2</div> </font>\r\n").arg(profile_id).arg(cali_mode);
           }
           /* 显示Cali Mode信息 */
           QMessageBox message(QMessageBox::Information, tr("Cali Mode Info"), tr(tips_str.toUtf8()), QMessageBox::Yes, nullptr);
