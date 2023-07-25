@@ -124,7 +124,7 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
   qint16 speed;
   qint16 azi_angle;
   quint32 distance;
-  qint16 mag;
+  quint16 mag;
   qint16 rcs;
   qint16 snr;
   qint16 ele_angle;
