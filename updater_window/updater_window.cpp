@@ -134,6 +134,12 @@ void updater_window::read_cfg()
   download_dir = setting.value("updater_window_v" CONFIG_VER_STR "/download_dir").toString();
   updater_url = setting.value("updater_window_v" CONFIG_VER_STR "/updater_url").toString();
   ui->installedVersion->setText(setting.value("updater_window_v" CONFIG_VER_STR "/installedVersion").toString());
+  /* 首次运行不信任配置文件中的版本号，进行检查版本号 */
+  if(qApp->applicationVersion() != ui->installedVersion->text())
+  {
+    ui->installedVersion->setText(qApp->applicationVersion());
+  }
+
   ui->customAppcast->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/customAppcast").toInt());
   ui->enableDownloader->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/enableDownloader").toInt());
   ui->showAllNotifcations->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/showAllNotifcations").toInt());
