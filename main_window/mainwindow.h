@@ -2,12 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QThread>
+#include <QThreadPool>
 #include "more_window.h"
 #include "eol_window.h"
 #include "can_driver.h"
 #include "eol_protocol.h"
-#include <QThread>
-#include <QThreadPool>
+#include "updater_window.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -42,6 +43,7 @@ private:
 
   more_window *more_window_obj = nullptr;
 
+  updater_window *updater_window_obj = nullptr;
 private:
   can_driver *can_driver_obj = nullptr;
 
@@ -55,6 +57,12 @@ private:
    * @brief 载入字体
    */
   void font_file_load();
+
+    /**
+   * @brief 更新子窗口初始化
+   * @param titile
+   */
+  void updater_window_init(QString titile);
 
   /**
    * @brief 下级窗口初始化
@@ -139,5 +147,6 @@ private slots:
   void on_channel_num_comboBox_currentIndexChanged(int index);
   void on_brand_comboBox_currentIndexChanged(int index);
   void on_device_info_pushButton_clicked();
+  void on_updater_pushButton_clicked();
 };
 #endif // MAINWINDOW_H

@@ -1,0 +1,39 @@
+{
+  "updates": {
+    "windows": {
+      "open-url": "",
+      "latest-version": "1.0.1",
+      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/master/packge_release/EOL_CAN_Tool.zip",
+      "changelog": "This is an EOL_CAN_Tool v1.0.1 changelog for Windows. \r\n 1、Add updater function 中文 Go on...",
+      "mandatory": true
+    },
+    "osx": {
+      "open-url": "",
+      "latest-version": "1.0",
+      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/master/packge_release/EOL_CAN_Tool.zip",
+      "changelog": "This is an example changelog for Mac OS X. Go on...",
+      "mandatory": true
+    },
+    "linux": {
+      "open-url": "",
+      "latest-version": "1.0",
+      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/master/packge_release/EOL_CAN_Tool.zip",
+      "changelog": "This is an example changelog for Linux. Go on...",
+      "mandatory": true
+    },
+    "ios": {
+      "open-url": "",
+      "latest-version": "1.0",
+      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/master/packge_release/EOL_CAN_Tool.zip",
+      "changelog": "This is an example changelog for iOS. Go on...",
+      "mandatory": true
+    },
+    "android": {
+      "open-url": "",
+      "latest-version": "1.0",
+      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/master/packge_release/EOL_CAN_Tool.zip",
+      "changelog": "This is an example changelog for Android. Go on...",
+      "mandatory": true
+    }
+  }
+}

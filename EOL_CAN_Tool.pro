@@ -54,6 +54,9 @@ include(can_driver/can_driver.pri)
 ### 数据曲线
 include(middleware/serial_port_plotter/serial_port_plotter.pri)
 
+# 更新工具
+include(middleware/Updater/QSimpleUpdater/QSimpleUpdater.pri)
+
 SOURCES += \
     debug_window/debug_window.cpp \
     eol_angle_calibration_window/eol_angle_calibration_window.cpp \
@@ -65,7 +68,8 @@ SOURCES += \
     main.cpp \
     main_window/mainwindow.cpp \
     more_window/more_window.cpp \
-    tool_window/tool_window.cpp
+    tool_window/tool_window.cpp \
+    updater_window/updater_window.cpp
 
 HEADERS += \
   debug_window/debug_window.h \
@@ -77,7 +81,8 @@ HEADERS += \
   frame_diagnosis_window/frame_diagnosis.h \
   main_window/mainwindow.h \
   more_window/more_window.h \
-  tool_window/tool_window.h
+  tool_window/tool_window.h \
+  updater_window/updater_window.h
 
 FORMS += \
     debug_window/debug_window.ui \
@@ -89,7 +94,8 @@ FORMS += \
     frame_diagnosis_window/frame_diagnosis.ui \
     main_window/mainwindow.ui \
     more_window/more_window.ui \
-    tool_window/tool_window.ui
+    tool_window/tool_window.ui \
+    updater_window/updater_window.ui
 
 # 包含路径
 INCLUDEPATH += \
@@ -97,7 +103,8 @@ INCLUDEPATH += \
     more_window \
     eol_window \
     eol_sub_window \
-    eol_calibration_window
+    eol_calibration_window \
+    updater_window
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -8,7 +8,7 @@
 #include <QMimeData>
 #include <QDebug>
 
-#define CONFIG_VER_STR            "_v0.0.1"                /**< 配置文件版本 */
+#define CONFIG_VER_STR            "0.0.1"                /**< 配置文件版本 */
 
 debug_window::debug_window(QString title, QWidget *parent) :
   QWidget(parent),
@@ -290,13 +290,13 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
 void debug_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setValue("debug_window" CONFIG_VER_STR "/open_case_sensitive", (int)ui->case_sensitive_checkBox->checkState());
-  setting.setValue("debug_window" CONFIG_VER_STR "/textcolor", ui->color_list_comboBox->currentText());
+  setting.setValue("debug_window_v" CONFIG_VER_STR "/open_case_sensitive", (int)ui->case_sensitive_checkBox->checkState());
+  setting.setValue("debug_window_v" CONFIG_VER_STR "/textcolor", ui->color_list_comboBox->currentText());
   /* 快捷命令 */
   QString plaintext = ui->quick_compleat_plainTextEdit->toPlainText();
   plaintext.remove(' ');
   plaintext.replace('\n', ',');;
-  setting.setValue("debug_window" CONFIG_VER_STR "/quick_complets_list", plaintext);
+  setting.setValue("debug_window_v" CONFIG_VER_STR "/quick_complets_list", plaintext);
   setting.sync();
 }
 
@@ -312,11 +312,16 @@ void debug_window::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  ui->case_sensitive_checkBox->setCheckState((Qt::CheckState)setting.value("debug_window" CONFIG_VER_STR "/open_case_sensitive").toInt());
-  ui->color_list_comboBox->setCurrentText(setting.value("debug_window" CONFIG_VER_STR "/textcolor").toString());
+  if(false == setting.contains("debug_window_v" CONFIG_VER_STR "/open_case_sensitive"))
+  {
+    qDebug() << "err debug_window config not exist";
+    return;
+  }
+  ui->case_sensitive_checkBox->setCheckState((Qt::CheckState)setting.value("debug_window_v" CONFIG_VER_STR "/open_case_sensitive").toInt());
+  ui->color_list_comboBox->setCurrentText(setting.value("debug_window_v" CONFIG_VER_STR "/textcolor").toString());
   ui->shell_textEdit->setTextColor(ui->color_list_comboBox->currentText());
   /* 快捷命令 */
-  QString plaintext = setting.value("debug_window" CONFIG_VER_STR "/quick_complets_list").toString();
+  QString plaintext = setting.value("debug_window_v" CONFIG_VER_STR "/quick_complets_list").toString();
   quick_complets = plaintext.split(',');
   QString quick_complets_str = plaintext.replace(',', '\n');
   ui->quick_compleat_plainTextEdit->setPlainText(quick_complets_str);

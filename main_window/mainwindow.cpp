@@ -47,6 +47,7 @@
  *  <tr><td>2023-07-15 <td>v0.0.29 <td>aron566 <td>窗口按钮大小优化
  *  <tr><td>2023-07-21 <td>v0.0.30 <td>aron566 <td>弹窗字体大小修改
  *  <tr><td>2023-07-25 <td>v0.0.31 <td>aron566 <td>mag类型修改为无符号
+ *  <tr><td>2023-07-31 <td>v1.0.0  <td>aron566 <td>增加远程更新功能
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -58,8 +59,7 @@
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
-#define PC_SOFTWARE_VERSION       "v0.0.31"
-#define CONFIG_VER_STR            "_v0.0.1"                /**< 配置文件版本 */
+#define CONFIG_VER_STR            "0.0.1"                /**< 配置文件版本 */
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -96,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
   font_file_load();
 
   /* 设置窗口标题 */
-  this->setWindowTitle(tr("EOL CAN Tool ") + tr(PC_SOFTWARE_VERSION));
+  this->setWindowTitle(qApp->applicationName() + " v" + qApp->applicationVersion());
 
   /* 获取线程池 */
   g_thread_pool = QThreadPool::globalInstance();
@@ -108,6 +108,9 @@ MainWindow::MainWindow(QWidget *parent)
 
   /* can驱动初始化 */
   can_driver_init();
+
+  /* 更新窗口初始化 */
+  updater_window_init("EOL CAN Tool - Updater");
 
   /* 子窗口初始化 */
   more_window_init(tr("EOL CAN Tool - More"));
@@ -130,6 +133,9 @@ MainWindow::~MainWindow()
   g_thread_pool->waitForDone();
   g_thread_pool->clear();
 
+  delete updater_window_obj;
+  qDebug() << "del updater_window_obj";
+
   delete ui;
   qDebug() << "del mainwindow";
 }
@@ -148,6 +154,14 @@ void MainWindow::font_file_load()
         qDebug() << "load fontawesome-webfont.ttf error";
     }
   }
+}
+
+/**
+ * @brief 更新子窗口
+ */
+void MainWindow::updater_window_init(QString titile)
+{
+  updater_window_obj = new updater_window(titile);
 }
 
 /**
@@ -201,12 +215,12 @@ void MainWindow::can_driver_init()
 void MainWindow::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setValue("com" CONFIG_VER_STR "/device_brand", ui->brand_comboBox->currentIndex());
-  setting.setValue("com" CONFIG_VER_STR "/device_name", ui->device_list_comboBox->currentText());
-  setting.setValue("com" CONFIG_VER_STR "/arbitration_bps", ui->arbitration_bps_comboBox->currentIndex());
-  setting.setValue("com" CONFIG_VER_STR "/data_bps", ui->data_bps_comboBox->currentIndex());
-  setting.setValue("com" CONFIG_VER_STR "/bps", ui->bps_comboBox->currentIndex());
-  setting.setValue("com" CONFIG_VER_STR "/end_resistance_en", (int)ui->end_resistance_checkBox->checkState());
+  setting.setValue("com_v" CONFIG_VER_STR "/device_brand", ui->brand_comboBox->currentIndex());
+  setting.setValue("com_v" CONFIG_VER_STR "/device_name", ui->device_list_comboBox->currentText());
+  setting.setValue("com_v" CONFIG_VER_STR "/arbitration_bps", ui->arbitration_bps_comboBox->currentIndex());
+  setting.setValue("com_v" CONFIG_VER_STR "/data_bps", ui->data_bps_comboBox->currentIndex());
+  setting.setValue("com_v" CONFIG_VER_STR "/bps", ui->bps_comboBox->currentIndex());
+  setting.setValue("com_v" CONFIG_VER_STR "/end_resistance_en", (int)ui->end_resistance_checkBox->checkState());
   setting.sync();
 }
 
@@ -225,13 +239,18 @@ void MainWindow::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  ui->brand_comboBox->setCurrentIndex((can_driver::CAN_BRAND_Typedef_t)setting.value("com" CONFIG_VER_STR "/device_brand").toInt());
-  ui->device_list_comboBox->setCurrentText(setting.value("com" CONFIG_VER_STR "/device_name").toString());
-  ui->arbitration_bps_comboBox->setCurrentIndex(setting.value("com" CONFIG_VER_STR "/arbitration_bps").toInt());
-  ui->data_bps_comboBox->setCurrentIndex(setting.value("com" CONFIG_VER_STR "/data_bps").toInt());
-  ui->bps_comboBox->setCurrentIndex(setting.value("com" CONFIG_VER_STR "/bps").toInt());
+  if(false == setting.contains("com_v" CONFIG_VER_STR "/device_brand"))
+  {
+    qDebug() << "err main_window config not exist";
+    return;
+  }
+  ui->brand_comboBox->setCurrentIndex((can_driver::CAN_BRAND_Typedef_t)setting.value("com_v" CONFIG_VER_STR "/device_brand").toInt());
+  ui->device_list_comboBox->setCurrentText(setting.value("com_v" CONFIG_VER_STR "/device_name").toString());
+  ui->arbitration_bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/arbitration_bps").toInt());
+  ui->data_bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/data_bps").toInt());
+  ui->bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/bps").toInt());
   /* 设置终端电阻启用状态 */
-  ui->end_resistance_checkBox->setCheckState((Qt::CheckState)setting.value("com" CONFIG_VER_STR "/end_resistance_en").toInt());
+  ui->end_resistance_checkBox->setCheckState((Qt::CheckState)setting.value("com_v" CONFIG_VER_STR "/end_resistance_en").toInt());
   can_driver_obj->set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
   setting.sync();
 }
@@ -554,5 +573,10 @@ void MainWindow::on_device_info_pushButton_clicked()
 {
   /* 读取设备信息 */
   can_driver_obj->read_info();
+}
+
+void MainWindow::on_updater_pushButton_clicked()
+{
+  updater_window_obj->show();
 }
 /******************************** End of file *********************************/

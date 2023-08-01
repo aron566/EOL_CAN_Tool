@@ -15,7 +15,35 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_3">
-    <item row="0" column="0" colspan="6">
+    <item row="2" column="4">
+     <widget class="QPushButton" name="close_device_pushButton">
+      <property name="text">
+       <string>关闭设备</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QPushButton" name="open_device_pushButton">
+      <property name="text">
+       <string>打开设备</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="5">
+     <widget class="QPushButton" name="updater_pushButton">
+      <property name="text">
+       <string>检查更新</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QPushButton" name="reset_device_pushButton">
+      <property name="text">
+       <string>复位设备</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="7">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QGroupBox" name="device_groupBox">
@@ -550,7 +578,7 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="0" colspan="6">
+    <item row="1" column="0" colspan="7">
      <widget class="QGroupBox" name="par_groupBox">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
@@ -937,13 +965,6 @@
       </layout>
      </widget>
     </item>
-    <item row="2" column="0">
-     <widget class="QPushButton" name="open_device_pushButton">
-      <property name="text">
-       <string>打开设备</string>
-      </property>
-     </widget>
-    </item>
     <item row="2" column="1">
      <widget class="QPushButton" name="init_can_pushButton">
       <property name="text">
@@ -958,21 +979,7 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="3">
-     <widget class="QPushButton" name="reset_device_pushButton">
-      <property name="text">
-       <string>复位设备</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="4">
-     <widget class="QPushButton" name="close_device_pushButton">
-      <property name="text">
-       <string>关闭设备</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="5">
+    <item row="2" column="6">
      <widget class="QPushButton" name="more_pushButton">
       <property name="text">
        <string>更多</string>
@@ -987,7 +994,7 @@
      <x>0</x>
      <y>0</y>
      <width>834</width>
-     <height>25</height>
+     <height>24</height>
     </rect>
    </property>
   </widget>
