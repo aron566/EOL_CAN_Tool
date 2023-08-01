@@ -29,8 +29,8 @@
 
 /** Private constants --------------------------------------------------------*/
 static QString updater_url = "https://raw.githubusercontent.com/"
-                             "alex-spataru/QSimpleUpdater/master/tutorial/"
-                             "definitions/updates.json";
+                             "aron566/EOL_CAN_Tool_Package/master/packge_release/"
+                             "updates.json";
 /** Public variables ---------------------------------------------------------*/
 /** Private variables --------------------------------------------------------*/
 
@@ -200,6 +200,8 @@ void updater_window::slot_update_changelog(const QString &url)
     return;
   }
   ui->changelogText->setText(updater_obj->getChangelog(url));
+  qDebug() << "getDownloadUrl" << updater_obj->getDownloadUrl(updater_url);
+  qDebug() << "getLatestVersion" << updater_obj->getLatestVersion(updater_url);
 }
 
 
