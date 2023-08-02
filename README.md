@@ -108,3 +108,7 @@
 - 支持TCP/IP协议控制RTS
 
 ![Debug](README.image/Debug.gif)
+
+## 新增更新功能
+
+![update](README.image/update.gif)
