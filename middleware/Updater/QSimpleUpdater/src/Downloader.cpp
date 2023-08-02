@@ -143,10 +143,12 @@ void Downloader::startDownload(const QUrl &url)
  */
 void Downloader::setFileName(const QString &file)
 {
-   m_fileName = file;
-
-   if (m_fileName.isEmpty())
+   if (file.isEmpty())
+   {
       m_fileName = "QSU_Update.bin";
+      return;
+   }
+   m_fileName = file;
 }
 
 /**
@@ -347,8 +349,9 @@ void Downloader::metaDataChanged() {
       QRegularExpressionMatch match = regExp.match( contentDisposition );
       if ( match.hasMatch() ) {
          filename = match.captured( "filename" );
+         setFileName( filename );
       }
-      setFileName( filename );
+      // setFileName( filename );
    }
 }
 
