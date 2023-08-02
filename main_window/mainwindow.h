@@ -95,6 +95,13 @@ private slots:
   void slot_show_this_window();
 
   /**
+   * @brief 显示最新版本信息
+   * @param version
+   * @param change_log
+   */
+  void slot_lasted_version_info(QString version, QString change_log);
+
+  /**
    * @brief can已经打开
    */
   void slot_can_is_opened(void);

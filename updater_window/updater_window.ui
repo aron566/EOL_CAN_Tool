@@ -81,27 +81,10 @@
       <string>Updater Options</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="installedVersion">
+      <item row="8" column="0">
+       <widget class="QCheckBox" name="mandatoryUpdate">
         <property name="text">
-         <string>0.1</string>
-        </property>
-        <property name="placeholderText">
-         <string>Write a version string...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Set installed version</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QCheckBox" name="customAppcast">
-        <property name="text">
-         <string>Do not use the QSU library to read the appcast</string>
+         <string>Mandatory Update</string>
         </property>
        </widget>
       </item>
@@ -122,6 +105,30 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Set installed version</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="installedVersion">
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="placeholderText">
+         <string>Write a version string...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QCheckBox" name="customAppcast">
+        <property name="text">
+         <string>Do not use the QSU library to read the appcast</string>
+        </property>
+       </widget>
+      </item>
       <item row="5" column="0">
        <widget class="QCheckBox" name="enableDownloader">
         <property name="text">
@@ -132,10 +139,13 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="0">
-       <widget class="QCheckBox" name="mandatoryUpdate">
+      <item row="6" column="0">
+       <widget class="QCheckBox" name="startup_check_en_checkBox">
         <property name="text">
-         <string>Mandatory Update</string>
+         <string>Check for Updates At Startup</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

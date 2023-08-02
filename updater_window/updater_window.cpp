@@ -12,6 +12,7 @@
   *  @details None.
   *
   *  @version v1.0.0 aron566 2023.08.01 13:05 初始版本.
+  *           v1.0.1 aron566 2023.08.02 10:28 增加启动检查版本开关，修复路径为中文错误.
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QSettings>
@@ -21,6 +22,7 @@
 /** Private includes ---------------------------------------------------------*/
 #include "updater_window.h"
 #include "ui_updater_window.h"
+#include "utility.h"
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
@@ -86,6 +88,12 @@ updater_window::updater_window(QString title, QWidget *parent) :
 
   /* 读取配置 */
   read_cfg();
+
+  /* 启动时检查更新 */
+  if(Qt::Checked == ui->startup_check_en_checkBox->checkState())
+  {
+    checkForUpdates();
+  }
 }
 
 updater_window::~updater_window()
@@ -99,6 +107,9 @@ updater_window::~updater_window()
 void updater_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
+  /* 启动时检查更新 */
+  setting.setValue("updater_window_v" CONFIG_VER_STR "/startup_check_update", (int)ui->startup_check_en_checkBox->checkState());
   /* 下载保存路径 */
   setting.setValue("updater_window_v" CONFIG_VER_STR "/download_dir", download_dir);
   /* url 自定义应用程序更新地址 */
@@ -126,11 +137,14 @@ void updater_window::read_cfg()
       return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
   if(false == setting.contains("updater_window_v" CONFIG_VER_STR "/updater_url"))
   {
     qDebug() << "err updater_window config not exist";
     return;
   }
+  /* 启动时检查更新 */
+  ui->startup_check_en_checkBox->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/startup_check_update").toInt());
   download_dir = setting.value("updater_window_v" CONFIG_VER_STR "/download_dir").toString();
   updater_url = setting.value("updater_window_v" CONFIG_VER_STR "/updater_url").toString();
   ui->installedVersion->setText(setting.value("updater_window_v" CONFIG_VER_STR "/installedVersion").toString());
@@ -180,12 +194,14 @@ void updater_window::checkForUpdates()
   if(download_dir.isEmpty() == true)
   {
     /* 选择文件存储区域 */
-    /* 参数：父对象，标题，默认路径，格式 */
-    download_dir = QFileDialog::getSaveFileName(this, tr("Save  "), "../");
+    /* 参数：父对象，标题，默认路径 */
+    download_dir = QFileDialog::getExistingDirectory(this, tr("Choice Updater Save Dirctory"), "../");
     if(download_dir.isEmpty() == true)
     {
       return;
     }
+
+    qDebug() << "中文UTF8编码显示路径：" << download_dir;
   }
   updater_obj->setDownloadDir(updater_url, download_dir);
 
@@ -199,11 +215,19 @@ void updater_window::slot_update_changelog(const QString &url)
   {
     return;
   }
-  ui->changelogText->setText(updater_obj->getChangelog(url));
-  qDebug() << "getDownloadUrl" << updater_obj->getDownloadUrl(updater_url);
-  qDebug() << "getLatestVersion" << updater_obj->getLatestVersion(updater_url);
+  QString change_log = updater_obj->getChangelog(url);
+  if(true == change_log.isEmpty())
+  {
+    ui->changelogText->setText("please check network");
+    return;
+  }
+  else
+  {
+    ui->changelogText->setText(change_log);
+  }
+  QString lasted_version = updater_obj->getLatestVersion(updater_url);
+  emit signal_lasted_version_info(lasted_version, change_log);
 }
-
 
 void updater_window::slot_display_appcast(const QString &url, const QByteArray &reply)
 {

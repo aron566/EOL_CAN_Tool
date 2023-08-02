@@ -2,9 +2,9 @@
   "updates": {
     "windows": {
       "open-url": "",
-      "latest-version": "1.0.1",
+      "latest-version": "1.0.2",
       "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool_Package/master/packge_release/EOL_CAN_Tool.zip",
-      "changelog": "This is an EOL_CAN_Tool v1.0.1 changelog for Windows. 1、添加更新应用功能 Go on...",
+      "changelog": "This is an EOL_CAN_Tool v1.0.2 changelog for Windows. 1、修复下载路径中文乱码问题 2、增加开关启动时检查更新 3、修复选择下载文件夹一直要选择文件问题...",
       "mandatory": true
     },
     "osx": {

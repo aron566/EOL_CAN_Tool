@@ -215,6 +215,7 @@ void more_window::closeEvent(QCloseEvent *event)
 void more_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
   /* can id */
   setting.setValue("more_window_v" CONFIG_VER_STR "/can_id", ui->id_lineEdit->text());
   /* 数据 */
@@ -232,6 +233,7 @@ void more_window::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
   if(false == setting.contains("more_window_v" CONFIG_VER_STR "/can_id"))
   {
     qDebug() << "err more_window config not exist";

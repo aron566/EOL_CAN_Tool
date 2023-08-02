@@ -33,6 +33,16 @@ private:
    */
     void save_cfg();
 
+public :
+    signals:
+
+    /**
+     * @brief signal_lasted_version_info
+     * @param version
+     * @param change_log
+     */
+    void signal_lasted_version_info(QString version, QString change_log);
+
 private slots:
     /**
      * @brief slot_update_changelog

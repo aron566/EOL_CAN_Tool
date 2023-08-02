@@ -49,6 +49,7 @@
  *  <tr><td>2023-07-25 <td>v0.0.31 <td>aron566 <td>mag类型修改为无符号
  *  <tr><td>2023-07-31 <td>v1.0.0  <td>aron566 <td>增加远程更新功能
  *  <tr><td>2023-08-01 <td>v1.0.1  <td>aron566 <td>增加版本检测逻辑
+ *  <tr><td>2023-08-02 <td>v1.0.2  <td>aron566 <td>增加启动检查版本，中文路径支持
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -163,6 +164,9 @@ void MainWindow::font_file_load()
 void MainWindow::updater_window_init(QString titile)
 {
   updater_window_obj = new updater_window(titile);
+
+  /* 连接版本号信息 */
+  connect(updater_window_obj, &updater_window::signal_lasted_version_info, this, &MainWindow::slot_lasted_version_info);
 }
 
 /**
@@ -216,6 +220,7 @@ void MainWindow::can_driver_init()
 void MainWindow::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
   setting.setValue("com_v" CONFIG_VER_STR "/device_brand", ui->brand_comboBox->currentIndex());
   setting.setValue("com_v" CONFIG_VER_STR "/device_name", ui->device_list_comboBox->currentText());
   setting.setValue("com_v" CONFIG_VER_STR "/arbitration_bps", ui->arbitration_bps_comboBox->currentIndex());
@@ -240,6 +245,7 @@ void MainWindow::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
   if(false == setting.contains("com_v" CONFIG_VER_STR "/device_brand"))
   {
     qDebug() << "err main_window config not exist";
@@ -259,6 +265,11 @@ void MainWindow::read_cfg()
 void MainWindow::slot_show_this_window()
 {
   this->show();
+}
+
+void MainWindow::slot_lasted_version_info(QString version, QString change_log)
+{
+  qDebug() << "lasted version:" << version << "change_log:" << change_log;
 }
 
 void MainWindow::slot_can_is_opened(void)
