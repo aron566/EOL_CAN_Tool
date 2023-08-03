@@ -9,7 +9,11 @@
 #define SHOW_MSG_SAVE_NUM_MAX     100U                    /**< 最大显示消息数 */
 #define SHOW_MSG_ONE_SCORLL       (5U)                    /**< 上翻每次刷新列表数 */
 #define SAVE_MSG_BUF_MAX          (1024U*1024U*10U)       /**< 最大缓存消息数 */
-#define CONFIG_VER_STR            "0.0.1"               /**< 配置文件版本 */
+
+#define SHOW_LINE_CHAR_NUM_MAX    (1024U)                 /**< 一行最大显示多少字符 */
+#define SHOW_CHAR_TIMEOUT_MS_MAX  (1000U)                 /**< 最大等待无换行符时间ms */
+
+#define CONFIG_VER_STR            "0.0.2"                 /**< 配置文件版本 */
 
 more_window::more_window(QString title, QWidget *parent) :
     QWidget(parent),
@@ -436,6 +440,115 @@ void more_window::slot_can_driver_msg(quint16 can_id, const quint8 *data, quint3
   frame_diagnosis_obj->add_msg_to_table(can_id, data, len, direct, channel_num, protocol_type, ms);
 }
 
+bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
+{
+  if(0U == data_len)
+  {
+    return false;
+  }
+  char str_buf[65] = {0};
+  size_t size = data_len > 64U ? 64U : data_len;
+
+  /* 剔除无效字符 */
+  for(size_t i = 0; i < size; i++)
+  {
+    if(data[i] == '\0')
+    {
+      size = i;
+      break;
+    }
+  }
+
+  /* 查看字符的尾部是否是换行符 */
+  if(data[size - 1U] == '\r' || data[size - 1U] == '\n')
+  {
+    memcpy(str_buf, data, size);
+    /* 去除尾部换行 */
+    if(str_buf[size - 1U] == '\r' || str_buf[size - 1U] == '\n')
+    {
+      str_buf[size - 1U] = '\0';
+    }
+    if(str_buf[size - 2U] == '\r' || str_buf[size - 2U] == '\n')
+    {
+      str_buf[size - 2U] = '\0';
+    }
+    QString str = QString::asprintf("%s", str_buf);
+    if(show_line_str.isEmpty() == false)
+    {
+      show_line_str.append(str);
+      msg.append(show_line_str);
+//      qDebug() << "尾部有换行拼接" << a << ":" << show_line_str;
+      show_line_str.clear();
+    }
+    else
+    {
+//      qDebug() << "尾部有换行" << a << ":" << str;
+      msg.append(str);
+    }
+    return true;
+  }
+  /* 找到最后一个\r\n的index */
+  else
+  {
+    size_t index = 0U;
+    for(size_t i = 0; i < size; i++)
+    {
+      if('\r' == data[i] || '\n' == data[i])
+      {
+        index = i;
+      }
+    }
+    /* 找不到，无换行符 */
+    if(0U == index)
+    {
+      memcpy(str_buf, data, size);
+      QString str = QString::asprintf("%s", str_buf);
+      show_line_str.append(str);
+      last_show_line_str_time_ms = current_show_line_str_time_ms;
+      if(true == show_line_str_force)
+      {
+        show_line_str_force = false;
+        msg.append(show_line_str);
+//        qDebug() << "无换行符强制" << a << ":" << show_line_str;
+        show_line_str.clear();
+        return true;
+      }
+      return false;
+    }
+    /* 找到，中间有换行符 */
+    else
+    {
+      /* 输出时换行符 */
+      memcpy(str_buf, data, index);
+      if(str_buf[index - 1U] == '\r' || str_buf[index - 1U] == '\n')
+      {
+        str_buf[index - 1U] = '\0';
+      }
+      QString str = QString::asprintf("%s", str_buf);
+      if(show_line_str.isEmpty() == false)
+      {
+        show_line_str.append(str);
+        msg.append(show_line_str);
+//        qDebug() << "中间有换行符拼接" << a << ":" << show_line_str;
+        show_line_str.clear();
+      }
+      else
+      {
+//        qDebug() << "中间有换行符" << a << ":" << str;
+        msg.append(str);
+      }
+      /* 剩余部分加到下一行显示 */
+      memset(str_buf, 0, sizeof(str_buf));
+      memcpy(str_buf, &data[index + 1U], data_len - index - 1U);
+      str = QString::asprintf("%s", str_buf);
+//      qDebug() << "中间有换行符，剩余部分" << a << ":" << str;
+      show_line_str.append(str);
+      last_show_line_str_time_ms = current_show_line_str_time_ms;
+    }
+  }
+  return true;
+}
+
 void more_window::slot_show_message(const QString &message, quint32 channel_num, \
   quint8 direct, const quint8 *data, quint32 data_len)
 {
@@ -451,8 +564,11 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
   /* 显示字符 */
   if(ui->display_str_checkBox->isChecked())
   {
-    if((quint32)ui->display_ch_comboBox->currentIndex() == channel_num && can_driver::CAN_RX_DIRECT == direct)
+    if((quint32)ui->display_ch_comboBox->currentIndex() == channel_num
+        && can_driver::CAN_RX_DIRECT == direct
+        && 0U < data_len)
     {
+#if 0
       char str_buf[65];
       size_t size = data_len > 64 ? 64 : data_len;
       memcpy(str_buf, data, size);
@@ -464,9 +580,13 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
       {
         str_buf[size] = '\0';
       }
-//      show_message.append(QString("[%1]RX:").arg(channel_num));
       QString str = QString::asprintf("%s", str_buf);
       show_message.append(str);
+#endif
+      if(false == char2str(data, data_len, show_message))
+      {
+        return;
+      }
     }
     else
     {
@@ -525,8 +645,11 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
   /* 显示字符 */
   if(ui->display_str_checkBox->isChecked())
   {
-    if((quint32)ui->display_ch_comboBox->currentIndex() == channel_num && can_driver::CAN_RX_DIRECT == direct)
+    if((quint32)ui->display_ch_comboBox->currentIndex() == channel_num
+        && can_driver::CAN_RX_DIRECT == direct
+        && 0U < data_len)
     {
+#if 0
       char str_buf[65];
       size_t size = data_len > 64 ? 64 : data_len;
       memcpy(str_buf, data, size);
@@ -538,9 +661,13 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
       {
         str_buf[size] = '\0';
       }
-//      show_message.append(QString("[%1]RX:").arg(channel_num));
       QString str = QString::asprintf("%s", str_buf);
       show_message.append(str);
+#endif
+      if(false == char2str(data, data_len, show_message))
+      {
+        return;
+      }
     }
     else
     {
@@ -680,6 +807,14 @@ void more_window::slot_timeout()
   if(ui->timer_checkBox->isChecked())
   {
     can_driver_obj->send(ui->channel_num_comboBox->currentIndex());
+  }
+
+  current_show_line_str_time_ms++;
+  /* 检查没有换行符的字符显示 */
+  if((current_show_line_str_time_ms - last_show_line_str_time_ms) > SHOW_CHAR_TIMEOUT_MS_MAX || show_line_str.size() > SHOW_LINE_CHAR_NUM_MAX)
+  {
+    show_line_str_force = true;
+    last_show_line_str_time_ms = current_show_line_str_time_ms;
   }
 }
 

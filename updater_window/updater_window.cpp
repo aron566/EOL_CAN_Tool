@@ -27,7 +27,7 @@
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
-#define CONFIG_VER_STR            "0.0.1"               /**< 配置文件版本 */
+#define CONFIG_VER_STR            "0.0.2"               /**< 配置文件版本 */
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -110,23 +110,23 @@ void updater_window::save_cfg()
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
   setting.setIniCodec("UTF-8");
   /* 启动时检查更新 */
-  setting.setValue("updater_window_v" CONFIG_VER_STR "/startup_check_update", (int)ui->startup_check_en_checkBox->checkState());
+  setting.setValue("updater_window_v" CONFIG_VER_STR "/startup_check_update", (int)ui->startup_check_en_checkBox->isChecked());
   /* 下载保存路径 */
   setting.setValue("updater_window_v" CONFIG_VER_STR "/download_dir", download_dir);
   /* url 自定义应用程序更新地址 */
   setting.setValue("updater_window_v" CONFIG_VER_STR "/updater_url", updater_url);
   /* version 自定义应用程序当前版本 */
-  setting.setValue("updater_window_v" CONFIG_VER_STR "/installedVersion", ui->installedVersion->text());
+  setting.setValue("updater_window_v" CONFIG_VER_STR "/installed_version", ui->installedVersion->text());
   /* customAppcast 自定义应用程序 */
-  setting.setValue("updater_window_v" CONFIG_VER_STR "/customAppcast", (int)ui->customAppcast->checkState());
+  setting.setValue("updater_window_v" CONFIG_VER_STR "/custom_appcast", (int)ui->customAppcast->isChecked());
   /* enableDownloader 启用下载器 */
-  setting.setValue("updater_window_v" CONFIG_VER_STR "/enableDownloader", (int)ui->enableDownloader->checkState());
+  setting.setValue("updater_window_v" CONFIG_VER_STR "/enable_downloader", (int)ui->enableDownloader->isChecked());
   /* showAllNotifcations 显示所有的通知 */
-  setting.setValue("updater_window_v" CONFIG_VER_STR "/showAllNotifcations", (int)ui->showAllNotifcations->checkState());
+  setting.setValue("updater_window_v" CONFIG_VER_STR "/show_all_notifcations", (int)ui->showAllNotifcations->isChecked());
   /* showUpdateNotifications 显示更新通知 */
-  setting.setValue("updater_window_v" CONFIG_VER_STR "/showUpdateNotifications", (int)ui->showUpdateNotifications->checkState());
+  setting.setValue("updater_window_v" CONFIG_VER_STR "/show_update_notifications", (int)ui->showUpdateNotifications->isChecked());
   /* mandatoryUpdate 强制更新 */
-  setting.setValue("updater_window_v" CONFIG_VER_STR "/mandatoryUpdate", (int)ui->mandatoryUpdate->checkState());
+  setting.setValue("updater_window_v" CONFIG_VER_STR "/mandatory_update", (int)ui->mandatoryUpdate->isChecked());
   setting.sync();
 }
 
@@ -145,21 +145,21 @@ void updater_window::read_cfg()
     return;
   }
   /* 启动时检查更新 */
-  ui->startup_check_en_checkBox->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/startup_check_update").toInt());
+  ui->startup_check_en_checkBox->setChecked((bool)setting.value("updater_window_v" CONFIG_VER_STR "/startup_check_update").toInt());
   download_dir = setting.value("updater_window_v" CONFIG_VER_STR "/download_dir").toString();
   updater_url = setting.value("updater_window_v" CONFIG_VER_STR "/updater_url").toString();
-  ui->installedVersion->setText(setting.value("updater_window_v" CONFIG_VER_STR "/installedVersion").toString());
+  ui->installedVersion->setText(setting.value("updater_window_v" CONFIG_VER_STR "/installed_version").toString());
   /* 首次运行不信任配置文件中的版本号，进行检查版本号 */
   if(qApp->applicationVersion() != ui->installedVersion->text())
   {
     ui->installedVersion->setText(qApp->applicationVersion());
   }
 
-  ui->customAppcast->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/customAppcast").toInt());
-  ui->enableDownloader->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/enableDownloader").toInt());
-  ui->showAllNotifcations->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/showAllNotifcations").toInt());
-  ui->showUpdateNotifications->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/showUpdateNotifications").toInt());
-  ui->mandatoryUpdate->setCheckState((Qt::CheckState)setting.value("updater_window_v" CONFIG_VER_STR "/mandatoryUpdate").toInt());
+  ui->customAppcast->setChecked((bool)setting.value("updater_window_v" CONFIG_VER_STR "/custom_appcast").toInt());
+  ui->enableDownloader->setChecked((bool)setting.value("updater_window_v" CONFIG_VER_STR "/enable_downloader").toInt());
+  ui->showAllNotifcations->setChecked((bool)setting.value("updater_window_v" CONFIG_VER_STR "/show_all_notifcations").toInt());
+  ui->showUpdateNotifications->setChecked((bool)setting.value("updater_window_v" CONFIG_VER_STR "/show_update_notifications").toInt());
+  ui->mandatoryUpdate->setChecked((bool)setting.value("updater_window_v" CONFIG_VER_STR "/mandatory_update").toInt());
   setting.sync();
 }
 

@@ -51,6 +51,7 @@
  *  <tr><td>2023-08-01 <td>v1.0.1  <td>aron566 <td>增加版本检测逻辑
  *  <tr><td>2023-08-02 <td>v1.0.2  <td>aron566 <td>增加启动检查版本，中文路径支持
  *  <tr><td>2023-08-02 <td>v1.0.3  <td>aron566 <td>更新保存文件名逻辑修改
+ *  <tr><td>2023-08-03 <td>v1.0.4  <td>aron566 <td>VCAN打印优化，显示在一行，修改配置文件字段统一小写加下划线
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -62,7 +63,7 @@
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
-#define CONFIG_VER_STR            "0.0.1"                /**< 配置文件版本 */
+#define CONFIG_VER_STR            "0.0.2"                /**< 配置文件版本 */
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -227,7 +228,7 @@ void MainWindow::save_cfg()
   setting.setValue("com_v" CONFIG_VER_STR "/arbitration_bps", ui->arbitration_bps_comboBox->currentIndex());
   setting.setValue("com_v" CONFIG_VER_STR "/data_bps", ui->data_bps_comboBox->currentIndex());
   setting.setValue("com_v" CONFIG_VER_STR "/bps", ui->bps_comboBox->currentIndex());
-  setting.setValue("com_v" CONFIG_VER_STR "/end_resistance_en", (int)ui->end_resistance_checkBox->checkState());
+  setting.setValue("com_v" CONFIG_VER_STR "/end_resistance_en", (int)ui->end_resistance_checkBox->isChecked());
   setting.sync();
 }
 
@@ -258,7 +259,7 @@ void MainWindow::read_cfg()
   ui->data_bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/data_bps").toInt());
   ui->bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/bps").toInt());
   /* 设置终端电阻启用状态 */
-  ui->end_resistance_checkBox->setCheckState((Qt::CheckState)setting.value("com_v" CONFIG_VER_STR "/end_resistance_en").toInt());
+  ui->end_resistance_checkBox->setChecked((bool)setting.value("com_v" CONFIG_VER_STR "/end_resistance_en").toInt());
   can_driver_obj->set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
   setting.sync();
 }

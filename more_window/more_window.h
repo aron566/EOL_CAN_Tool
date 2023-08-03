@@ -108,6 +108,15 @@ private:
    */
   quint32 get_show_index(quint32 current_show_index, quint32 totaol_size);
 
+  /**
+   * @brief 字符转字符串
+   * @param data 字符
+   * @param data_len 字符长度
+   * @param msg 字符串填充
+   * @return true 完整字符串需显示
+   */
+  bool char2str(const quint8 *data, quint32 data_len, QString &msg);
+
 signals:
     void signal_more_window_closed();
 
@@ -192,6 +201,12 @@ private:
 
     QList<SHOW_MSG_Typedef_t>ch1_show_msg_list;
     QList<SHOW_MSG_Typedef_t>ch2_show_msg_list;
+
+    /* 字符显示 */
+    QString show_line_str;
+    bool show_line_str_force = false;
+    quint64 last_show_line_str_time_ms = 0;
+    quint64 current_show_line_str_time_ms = 0;
 private:
     /**
      * @brief update_show_msg 显示指定索引消息
