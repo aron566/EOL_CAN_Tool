@@ -473,13 +473,25 @@
 				<meta>
 					<visible>false</visible>
 					<type>options.int32</type>
-					<desc>UDS诊断功能支持</desc>
+					<desc>CAN UDS诊断功能支持</desc>
 					<options>
 						<option type="int32" value="0" desc="no"></option>
 						<option type="int32" value="1" desc="yes"></option>
 					</options>
 				</meta>
 			</get_device_uds_support>
+			<get_device_lin_uds_support flag="0x002B">
+				<value>1</value>
+				<meta>
+					<visible>false</visible>
+					<type>options.int32</type>
+					<desc>LIN UDS诊断功能支持</desc>
+					<options>
+						<option type="int32" value="0" desc="no"></option>
+						<option type="int32" value="1" desc="yes"></option>
+					</options>
+				</meta>
+			</get_device_lin_uds_support>
 		</channel_0>
 		<channel_1 stream="channel_1" case="parent-value=1">
 			<protocol flag="0x0152" at_initcan="pre">
@@ -901,13 +913,25 @@
 				<meta>
 					<visible>false</visible>
 					<type>options.int32</type>
-					<desc>UDS诊断功能支持</desc>
+					<desc>CAN UDS诊断功能支持</desc>
 					<options>
 						<option type="int32" value="0" desc="no"></option>
 						<option type="int32" value="1" desc="yes"></option>
 					</options>
 				</meta>
 			</get_device_uds_support>
+			<get_device_lin_uds_support flag="0x012B">
+				<value>1</value>
+				<meta>
+					<visible>false</visible>
+					<type>options.int32</type>
+					<desc>LIN UDS诊断功能支持</desc>
+					<options>
+						<option type="int32" value="0" desc="no"></option>
+						<option type="int32" value="1" desc="yes"></option>
+					</options>
+				</meta>
+			</get_device_lin_uds_support>
 		</channel_1>
 	</channel>
 </info>

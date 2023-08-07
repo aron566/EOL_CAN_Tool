@@ -1,3 +1,4 @@
+# 2023.07.28版本驱动库
 
 contains(QMAKE_HOST.arch, x86_64) {
 #    message("64-bit")

@@ -358,14 +358,14 @@
 				</meta>
 			</get_device_tx_echo>
 			<set_tx_retry_policy flag="0x0024">
-				<value>0</value>
+				<value>1</value>
 				<meta>
 					<visible>true</visible>
 					<type>options.int32</type>
 					<desc>设置发送失败时重试策略, 使用单次发送还是一直发送到总线关闭</desc>
 					<options>
-						<option type="int32" value="0" desc="tx_retry_policy_once"></option>
-						<option type="int32" value="1" desc="tx_retry_policy_till_busoff"></option>
+						<option type="int32" value="1" desc="tx_retry_policy_once"></option>
+						<option type="int32" value="2" desc="tx_retry_policy_till_busoff"></option>
 					</options>
 				</meta>
 			</set_tx_retry_policy>
@@ -669,14 +669,14 @@
 				</meta>
 			</get_device_tx_echo>
 			<set_tx_retry_policy flag="0x0124">
-				<value>0</value>
+				<value>1</value>
 				<meta>
 					<visible>true</visible>
 					<type>options.int32</type>
 					<desc>设置发送失败时重试策略, 使用单次发送还是一直发送到总线关闭</desc>
 					<options>
-						<option type="int32" value="0" desc="tx_retry_policy_once"></option>
-						<option type="int32" value="1" desc="tx_retry_policy_till_busoff"></option>
+						<option type="int32" value="1" desc="tx_retry_policy_once"></option>
+						<option type="int32" value="2" desc="tx_retry_policy_till_busoff"></option>
 					</options>
 				</meta>
 			</set_tx_retry_policy>
@@ -980,14 +980,14 @@
 				</meta>
 			</get_device_tx_echo>
 			<set_tx_retry_policy flag="0x0224">
-				<value>0</value>
+				<value>1</value>
 				<meta>
 					<visible>true</visible>
 					<type>options.int32</type>
 					<desc>设置发送失败时重试策略, 使用单次发送还是一直发送到总线关闭</desc>
 					<options>
-						<option type="int32" value="0" desc="tx_retry_policy_once"></option>
-						<option type="int32" value="1" desc="tx_retry_policy_till_busoff"></option>
+						<option type="int32" value="1" desc="tx_retry_policy_once"></option>
+						<option type="int32" value="2" desc="tx_retry_policy_till_busoff"></option>
 					</options>
 				</meta>
 			</set_tx_retry_policy>
@@ -1291,14 +1291,14 @@
 				</meta>
 			</get_device_tx_echo>
 			<set_tx_retry_policy flag="0x0324">
-				<value>0</value>
+				<value>1</value>
 				<meta>
 					<visible>true</visible>
 					<type>options.int32</type>
 					<desc>设置发送失败时重试策略, 使用单次发送还是一直发送到总线关闭</desc>
 					<options>
-						<option type="int32" value="0" desc="tx_retry_policy_once"></option>
-						<option type="int32" value="1" desc="tx_retry_policy_till_busoff"></option>
+						<option type="int32" value="1" desc="tx_retry_policy_once"></option>
+						<option type="int32" value="2" desc="tx_retry_policy_till_busoff"></option>
 					</options>
 				</meta>
 			</set_tx_retry_policy>
@@ -1602,14 +1602,14 @@
 				</meta>
 			</get_device_tx_echo>
 			<set_tx_retry_policy flag="0x0424">
-				<value>0</value>
+				<value>1</value>
 				<meta>
 					<visible>true</visible>
 					<type>options.int32</type>
 					<desc>设置发送失败时重试策略, 使用单次发送还是一直发送到总线关闭</desc>
 					<options>
-						<option type="int32" value="0" desc="tx_retry_policy_once"></option>
-						<option type="int32" value="1" desc="tx_retry_policy_till_busoff"></option>
+						<option type="int32" value="1" desc="tx_retry_policy_once"></option>
+						<option type="int32" value="2" desc="tx_retry_policy_till_busoff"></option>
 					</options>
 				</meta>
 			</set_tx_retry_policy>
@@ -1913,14 +1913,14 @@
 				</meta>
 			</get_device_tx_echo>
 			<set_tx_retry_policy flag="0x0524">
-				<value>0</value>
+				<value>1</value>
 				<meta>
 					<visible>true</visible>
 					<type>options.int32</type>
 					<desc>设置发送失败时重试策略, 使用单次发送还是一直发送到总线关闭</desc>
 					<options>
-						<option type="int32" value="0" desc="tx_retry_policy_once"></option>
-						<option type="int32" value="1" desc="tx_retry_policy_till_busoff"></option>
+						<option type="int32" value="1" desc="tx_retry_policy_once"></option>
+						<option type="int32" value="2" desc="tx_retry_policy_till_busoff"></option>
 					</options>
 				</meta>
 			</set_tx_retry_policy>
@@ -2224,14 +2224,14 @@
 				</meta>
 			</get_device_tx_echo>
 			<set_tx_retry_policy flag="0x0624">
-				<value>0</value>
+				<value>1</value>
 				<meta>
 					<visible>true</visible>
 					<type>options.int32</type>
 					<desc>设置发送失败时重试策略, 使用单次发送还是一直发送到总线关闭</desc>
 					<options>
-						<option type="int32" value="0" desc="tx_retry_policy_once"></option>
-						<option type="int32" value="1" desc="tx_retry_policy_till_busoff"></option>
+						<option type="int32" value="1" desc="tx_retry_policy_once"></option>
+						<option type="int32" value="2" desc="tx_retry_policy_till_busoff"></option>
 					</options>
 				</meta>
 			</set_tx_retry_policy>
@@ -2535,14 +2535,14 @@
 				</meta>
 			</get_device_tx_echo>
 			<set_tx_retry_policy flag="0x0724">
-				<value>0</value>
+				<value>1</value>
 				<meta>
 					<visible>true</visible>
 					<type>options.int32</type>
 					<desc>设置发送失败时重试策略, 使用单次发送还是一直发送到总线关闭</desc>
 					<options>
-						<option type="int32" value="0" desc="tx_retry_policy_once"></option>
-						<option type="int32" value="1" desc="tx_retry_policy_till_busoff"></option>
+						<option type="int32" value="1" desc="tx_retry_policy_once"></option>
+						<option type="int32" value="2" desc="tx_retry_policy_till_busoff"></option>
 					</options>
 				</meta>
 			</set_tx_retry_policy>

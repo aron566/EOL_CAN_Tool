@@ -356,6 +356,7 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
  */
 void eol_calibration_window::slot_protocol_rw_err(quint8 reg, quint8 command)
 {
+  Q_UNUSED(command)
   switch(reg)
   {
     case EOL_W_SAVE_PAR_REG:
@@ -398,7 +399,7 @@ void eol_calibration_window::slot_protocol_rw_err(quint8 reg, quint8 command)
  */
 void eol_calibration_window::on_distance_comboBox_currentTextChanged(const QString &arg1)
 {
-
+  Q_UNUSED(arg1)
 }
 
 /**

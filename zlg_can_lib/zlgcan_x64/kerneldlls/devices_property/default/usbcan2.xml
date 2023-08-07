@@ -135,6 +135,14 @@
 					<desc></desc>
 				</meta>
 			</get_card_parent_instance_id>
+			<get_card_hardware_id flag="0x0066" >
+				<value></value>
+				<meta>
+					<type>string</type>
+					<visible>false</visible>
+					<desc></desc>
+				</meta>
+			</get_card_hardware_id>
 		</channel_0>
 		<channel_1 stream="channel_1" case="parent-value=1">
 			<baud_rate flag="0x0146" at_initcan="pre">
@@ -219,6 +227,14 @@
 					<desc></desc>
 				</meta>
 			</get_card_parent_instance_id>
+			<get_card_hardware_id flag="0x0166" >
+				<value></value>
+				<meta>
+					<type>string</type>
+					<visible>false</visible>
+					<desc></desc>
+				</meta>
+			</get_card_hardware_id>
 		</channel_1>
 	</channel>
 </info>

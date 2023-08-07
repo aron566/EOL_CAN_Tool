@@ -86,6 +86,7 @@
 #define ZCAN_CANFDDTU_CASCADE_TCP           74
 #define ZCAN_CANFDDTU_CASCADE_UDP           75
 #define ZCAN_USBCANFD_400U                  76
+#define ZCAN_CANFDDTU_200U                  77
 
 #define ZCAN_OFFLINE_DEVICE                 98
 #define ZCAN_VIRTUAL_DEVICE                 99
@@ -125,6 +126,16 @@ typedef UINT ZCAN_RET_STATUS;
 #define STATUS_UNSUPPORTED                  4
 #define STATUS_BUFFER_TOO_SMALL             5
 
+typedef UINT ZCAN_LAST_ERROR_STATUS;
+//#define STATUS_NO_ERR                       0
+//#define STATUS_NO_ERR                       1
+
+
+typedef UINT ZCAN_UDS_DATA_DEF;
+#define DEF_CAN_UDS_DATA                    1 // CAN/CANFD UDS数据
+#define DEF_LIN_UDS_DATA                    2 // LIN UDS数据
+#define DEF_DOIP_UDS_DATA                   3 // DOIP UDS数据(暂不支持)    
+
 #define CMD_DESIP                           0
 #define CMD_DESPORT                         1
 #define CMD_CHGDESIPANDPORT                 2
@@ -155,12 +166,77 @@ typedef UINT ZCAN_RET_STATUS;
 #define	ZCAN_DYNAMIC_CONFIG_CAN_SNDCFG_INTERVAL "DYNAMIC_CONFIG_CAN%d_SNDCFG_INTERVAL"// 报文发送间隔，0~255ms
 #define	ZCAN_DYNAMIC_CONFIG_CAN_BUSRATIO_ENABLE "DYNAMIC_CONFIG_CAN%d_BUSRATIO_ENABLE"// 总线利用率使能，使能后，将周期发送总线利用率到设定的TCP/UDP连接。1:使能，0：失能
 #define	ZCAN_DYNAMIC_CONFIG_CAN_BUSRATIO_PERIOD "DYNAMIC_CONFIG_CAN%d_BUSRATIO_PERIOD"// 总线利用率采集周期，取值200~2000ms
-//动态配置 持久配置 END
+
 typedef struct tagZCAN_DYNAMIC_CONFIG_DATA
 {
 	char    key[64];
 	char    value[64];
 }ZCAN_DYNAMIC_CONFIG_DATA;
+
+#define CANFD_FILTER_COUNT_MAX 16
+#define CANFD_DATA_LEN_MAX 64
+
+typedef UINT DynamicConfigDataType;
+#define DYNAMIC_CONFIG_CAN     0  //CAn通道设置 
+#define DYNAMIC_CONFIG_FILTER  1  //滤波设置    
+
+union unionCANFDFilterRulePresent
+{
+	struct {
+		unsigned int bChnl : 1;        // 通道条件 是否存在
+		unsigned int bFD : 1;          // CANFD标识 是否存在
+		unsigned int bEXT : 1;         // 标准帧/扩展帧标识 是否存在
+		unsigned int bRTR : 1;         // 数据帧/远程帧标识 是否存在
+		unsigned int bLen : 1;         // 长度  是否存在
+		unsigned int bID : 1;          // 起始ID/结束ID 是否存在
+		unsigned int bTime : 1;        // 起始时间/结束时间 是否存在
+		unsigned int bFilterMask : 1;  // 报文数据过滤/屏蔽 是否存在
+		unsigned int bErr : 1;         // 错误报文 CAN/CANFD标志 是否存在
+		unsigned int nReserved : 23;   // 保留
+	}unionValue;
+	unsigned int     rawValue;
+};
+// 单条过滤规则，
+struct CANFD_FILTER_RULE
+{
+	unionCANFDFilterRulePresent presentFlag;// 标识对应的数据是否存在
+	int                         nErr;       // 是否错误报文，此条件一定存在，表示此条过滤是正常帧还是错误帧,0:不过滤错误帧 1:过滤错误帧
+	int                         nChnl;      // 通道
+	int                         nFD;        // CANFD标识，0：CAN; 1:CANFD
+	int                         nExt;       // 扩展帧标识, 0:标准帧 1:扩展帧
+	int                         nRtr;       // 远程帧标识, 0:数据帧 1:远程帧
+	int                         nLen;       // 报文长度，0-64
+	int                         nBeginID;   // 起始ID
+	int                         nEndID;     // 结束ID，起始ID值必须<=结束ID，与起始ID成对存在
+	int                         nBeginTime; // 过滤起始时间，单位s，取值0-(24*60*60-1)
+	int                         nEndTime;   // 过滤结束时间，单位s，取值0-(24*60*60-1)，与起始时间成对存在
+	int                         nFilterDataLen;
+	int                         nMaskDataLen;
+	BYTE                        nFilterData[CANFD_DATA_LEN_MAX]; // 报文过滤数据,uint8数组，最长64
+	BYTE                        nMaskData[CANFD_DATA_LEN_MAX];   // 报文屏蔽数据,uint8数组，最长64，与过滤数据成对存在
+};
+typedef UINT enumCANFDFilterBlackWhiteList;
+#define CANFD_FILTER_BLACK_LIST  0        // 黑名单
+#define CANFD_FILTER_WHITE_LIST  1        // 白名单
+
+struct CANFD_FILTER_CFG
+{
+	int                             bEnable;
+	enumCANFDFilterBlackWhiteList   enBlackWhiteList;
+	CANFD_FILTER_RULE				vecFilters[CANFD_FILTER_COUNT_MAX];
+};
+//目前只给滤波使用、后续可集成其他模块
+typedef struct tagZCAN_DYNAMIC_CONFIG
+{
+	DynamicConfigDataType dynamicConfigDataType;
+	UINT                  isPersist;         // 是否是持久配置（即设备掉电保存配置）、TRUE-持久配置 FALSE-动态配置
+	union
+	{
+		CANFD_FILTER_CFG filterCfg;          // dynamicConfigDataType = DYNAMIC_CONFIG_FILTER时有效
+		BYTE			 reserved[10*1024];  // 保留
+	}data;
+}ZCAN_DYNAMIC_CONFIG;
+//动态配置 持久配置 END
 
 typedef void * DEVICE_HANDLE;
 typedef void * CHANNEL_HANDLE;
@@ -178,7 +254,7 @@ typedef struct tagZCAN_DEVICE_INFO {
 }ZCAN_DEVICE_INFO;
 
 typedef struct tagZCAN_CHANNEL_INIT_CONFIG {
-    UINT can_type;                          //type:TYPE_CAN TYPE_CANFD
+    UINT can_type;                          //type:TYPE_CAN TYPE_CANFD（can_type的设备类型只取决于产品硬件的类型，CANFD系列的产品必须设置为1，表示CANFD设备）
     union
     {
         struct
@@ -603,7 +679,7 @@ typedef BYTE ZCAN_UDS_FRAME_TYPE;
 #define ZCAN_UDS_FRAME_CANFD        1       // CANFD帧
 #define ZCAN_UDS_FRAME_CANFD_BRS    2       // CANFD加速帧
 
-// UDS请求数据
+// CAN UDS请求数据
 typedef struct _ZCAN_UDS_REQUEST
 {
     UINT req_id;                            // 请求事务ID，范围0~65535，本次请求的唯一标识
@@ -640,6 +716,33 @@ typedef struct _ZCAN_UDS_REQUEST
     UINT reserved2;                         // 保留
 } ZCAN_UDS_REQUEST;
 
+// LIN UDS请求数据
+typedef struct _ZLIN_UDS_REQUEST
+{
+	UINT req_id;                            // 请求事务ID，范围0~65535，本次请求的唯一标识
+	BYTE channel;                           // 设备通道索引 0~255
+	BYTE suppress_response;                 // 1:抑制响应 0：不抑制
+	BYTE sid;                               // 请求服务id
+	BYTE Nad;                               // 节点地址
+	BYTE reserved1[8];                      // 保留
+	struct {
+		UINT p2_timeout;                    // 响应超时时间(ms)。因PC定时器误差，建议设置不小于200ms
+		UINT enhanced_timeout;              // 收到消极响应错误码为0x78后的超时时间(ms)。因PC定时器误差，建议设置不小于200ms
+		BYTE check_any_negative_response : 1; // 接收到非本次请求服务的消极响应时是否需要判定为响应错误
+		BYTE wait_if_suppress_response : 1;   // 抑制响应时是否需要等待消极响应，等待时长为响应超时时间
+		BYTE flag : 6;                        // 保留
+		BYTE reserved0[7];                  // 保留
+	} session_param;                        // 会话层参数
+	struct {
+		BYTE fill_byte;                     // 无效字节的填充数据
+		BYTE st_min;                        // 从节点准备接收诊断请求的下一帧或传输诊断响应的下一帧所需的最小时间
+		BYTE reserved0[6];                  // 保留
+	} trans_param;                          // 传输层参数
+	BYTE *data;                             // 数据数组(不包含SID)
+	UINT data_len;                          // 数据数组的长度
+	UINT reserved2;                         // 保留
+} ZLIN_UDS_REQUEST;
+
 // UDS错误码
 typedef BYTE ZCAN_UDS_ERROR;
 #define ZCAN_UDS_ERROR_OK                   0    // 没错误
@@ -655,7 +758,7 @@ typedef BYTE ZCAN_UDS_RESPONSE_TYPE;
 #define ZCAN_UDS_RT_NEGATIVE 0              // 消极响应
 #define ZCAN_UDS_RT_POSITIVE 1              // 积极响应
 
-// UDS响应数据，使用后需要调用 ZCAN_UDS_Release 来释放内存
+// UDS响应数据
 typedef struct _ZCAN_UDS_RESPONSE
 {
     ZCAN_UDS_ERROR status;                  // 响应状态
@@ -699,7 +802,32 @@ typedef struct _ZCAN_UDS_CTRL_RESP
     BYTE reserved[8];                       // 保留
 } ZCAN_UDS_CTRL_RESP;
 
+// CAN/CANFD UDS数据
+typedef struct tagZCANCANFDUdsData
+{
+	const ZCAN_UDS_REQUEST* req;			// 请求信息
+	BYTE reserved[28];
+}ZCANCANFDUdsData;
 
+// LIN UDS数据
+typedef struct tagZCANLINUdsData
+{
+	const ZLIN_UDS_REQUEST* req;			// 请求信息
+	BYTE reserved[28];
+}ZCANLINUdsData;
+
+// UDS数据结构，支持CAN/LIN等UDS不同类型数据
+typedef struct tagZCANUdsRequestDataObj
+{
+	ZCAN_UDS_DATA_DEF    dataType;              // 数据类型
+	union
+	{
+		ZCANCANFDUdsData zcanCANFDUdsData;      // CAN/CANFD UDS数据
+		ZCANLINUdsData   zcanLINUdsData;        // LIN UDS数据
+		BYTE             raw[63];               // RAW数据
+	} data;                                     // 实际数据, 联合体，有效成员根据 dataType 字段而定
+	BYTE                 reserved[32];          // 保留位
+}ZCANUdsRequestDataObj;
 
 #pragma pack(pop)
 
@@ -774,7 +902,7 @@ UINT FUNC_CALL ZCAN_SetLINPublish(CHANNEL_HANDLE channel_handle, PZCAN_LIN_PUBLI
  * @param[in] req 请求信息
  * @param[out] resp 响应信息, 可为nullptr, 表示不关心响应数据
  * @param[out] dataBuf 响应数据缓存区, 存放积极响应的诊断数据(不包含SID), 实际长度为resp.positive.data_len
- * @param[out] dataBufSize 响应数据缓存区总大小，如果小于响应诊断数据长度，返回 STATUS_BUFFER_TOO_SMALL
+ * @param[in] dataBufSize 响应数据缓存区总大小，如果小于响应诊断数据长度，返回 STATUS_BUFFER_TOO_SMALL
  * @return 执行结果状态
  */
 ZCAN_RET_STATUS FUNC_CALL ZCAN_UDS_Request(DEVICE_HANDLE device_handle, const ZCAN_UDS_REQUEST* req, ZCAN_UDS_RESPONSE* resp, BYTE* dataBuf, UINT dataBufSize);
@@ -787,6 +915,27 @@ ZCAN_RET_STATUS FUNC_CALL ZCAN_UDS_Request(DEVICE_HANDLE device_handle, const ZC
  * @return 执行结果状态
  */
 ZCAN_RET_STATUS FUNC_CALL ZCAN_UDS_Control(DEVICE_HANDLE device_handle, const ZCAN_UDS_CTRL_REQ *ctrl, ZCAN_UDS_CTRL_RESP* resp);
+
+/**
+* @brief UDS诊断请求(总)
+* @param[in] device_handle 设备句柄
+* @param[in] requestData 请求信息
+* @param[out] resp 响应信息, 可为nullptr, 表示不关心响应数据
+* @param[out] dataBuf 响应数据缓存区, 存放积极响应的诊断数据(不包含SID), 实际长度为resp.positive.data_len
+* @param[in] dataBufSize 响应数据缓存区总大小，如果小于响应诊断数据长度，返回 STATUS_BUFFER_TOO_SMALL
+*/
+ZCAN_RET_STATUS FUNC_CALL ZCAN_UDS_RequestEX(DEVICE_HANDLE device_handle, const ZCANUdsRequestDataObj* requestData, ZCAN_UDS_RESPONSE* resp, BYTE* dataBuf, UINT dataBufSize);
+
+
+/**
+* @brief UDS诊断控制, 如停止正在执行的UDS请求(总)
+* @param[in] device_handle 设备句柄
+* @param[in] dataType 数据类型
+* @param[in] ctrl 控制请求信息
+* @param[out] resp 响应信息, 可为nullptr, 表示不关心响应数据
+* @return 执行结果状态
+*/
+ZCAN_RET_STATUS FUNC_CALL ZCAN_UDS_ControlEX(DEVICE_HANDLE device_handle, ZCAN_UDS_DATA_DEF dataType, const ZCAN_UDS_CTRL_REQ *ctrl, ZCAN_UDS_CTRL_RESP* resp);
 
 /*已弃用*/
 UINT FUNC_CALL ZCAN_SetLINSlaveMsg(CHANNEL_HANDLE channel_handle, PZCAN_LIN_MSG pSend, UINT nMsgCount);

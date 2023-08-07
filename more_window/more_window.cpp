@@ -811,7 +811,7 @@ void more_window::slot_timeout()
 
   current_show_line_str_time_ms++;
   /* 检查没有换行符的字符显示 */
-  if((current_show_line_str_time_ms - last_show_line_str_time_ms) > SHOW_CHAR_TIMEOUT_MS_MAX || show_line_str.size() > SHOW_LINE_CHAR_NUM_MAX)
+  if((current_show_line_str_time_ms - last_show_line_str_time_ms) > SHOW_CHAR_TIMEOUT_MS_MAX || (quint32)show_line_str.size() > SHOW_LINE_CHAR_NUM_MAX)
   {
     show_line_str_force = true;
     last_show_line_str_time_ms = current_show_line_str_time_ms;
