@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>516</width>
-    <height>583</height>
+    <height>605</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -142,7 +142,7 @@
       <item row="6" column="0">
        <widget class="QCheckBox" name="startup_check_en_checkBox">
         <property name="text">
-         <string>Check for Updates At Startup</string>
+         <string>Check for updates at startup</string>
         </property>
         <property name="checked">
          <bool>true</bool>
