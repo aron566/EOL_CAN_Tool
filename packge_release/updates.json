@@ -2,9 +2,9 @@
   "updates": {
     "windows": {
       "open-url": "",
-      "latest-version": "1.0.4",
+      "latest-version": "1.0.6",
       "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool_Package/master/packge_release/EOL_CAN_Tool.zip",
-      "changelog": "EOL_CAN_Tool v1.0.4 for Windows. 1、VCAN打印优化，显示在一行 2、修改配置文件字段统一小写加下划线",
+      "changelog": "EOL_CAN_Tool for Windows. v1.0.6  1、DTC页面增加",
       "mandatory": true
     },
     "osx": {
