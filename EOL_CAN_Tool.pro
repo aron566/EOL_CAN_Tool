@@ -62,6 +62,7 @@ SOURCES += \
     eol_angle_calibration_window/eol_angle_calibration_window.cpp \
     eol_calibration_window/eol_calibration_window.cpp \
     eol_rdm_debug_window/eol_rdm_debug_window.cpp \
+    eol_sub_more_window/eol_sub_more_window.cpp \
     eol_sub_window/eol_sub_window.cpp \
     eol_window/eol_window.cpp \
     frame_diagnosis_window/frame_diagnosis.cpp \
@@ -76,6 +77,7 @@ HEADERS += \
   eol_angle_calibration_window/eol_angle_calibration_window.h \
   eol_calibration_window/eol_calibration_window.h \
   eol_rdm_debug_window/eol_rdm_debug_window.h \
+  eol_sub_more_window/eol_sub_more_window.h \
   eol_sub_window/eol_sub_window.h \
   eol_window/eol_window.h \
   frame_diagnosis_window/frame_diagnosis.h \
@@ -89,6 +91,7 @@ FORMS += \
     eol_angle_calibration_window/eol_angle_calibration_window.ui \
     eol_calibration_window/eol_calibration_window.ui \
     eol_rdm_debug_window/eol_rdm_debug_window.ui \
+    eol_sub_more_window/eol_sub_more_window.ui \
     eol_sub_window/eol_sub_window.ui \
     eol_window/eol_window.ui \
     frame_diagnosis_window/frame_diagnosis.ui \

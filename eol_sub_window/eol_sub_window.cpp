@@ -18,10 +18,14 @@ eol_sub_window::eol_sub_window(QString title, QWidget *parent) :
 
   /* 设置窗口标题 */
   this->setWindowTitle(title);
+
+  /* 下级窗口初始化 */
+  rw_more_window_init(tr("EOL CAN Tool - Device Info RW ..."));
 }
 
 eol_sub_window::~eol_sub_window()
 {
+  delete eol_sub_more_window_obj;
   delete ui;
 }
 
@@ -31,6 +35,55 @@ void eol_sub_window::closeEvent(QCloseEvent *event)
 
   this->hide();
   emit signal_window_closed();
+}
+
+void eol_sub_window::rw_more_window_init(QString title)
+{
+  eol_sub_more_window_obj = new eol_sub_more_window(title);
+  connect(eol_sub_more_window_obj, &eol_sub_more_window::signal_window_closed, this, [=]
+          {
+            this->show();
+          });
+  connect(eol_sub_more_window_obj, &eol_sub_more_window::signal_get_dtc_err_status, this, [=]
+          {
+            this->update_dtc_err_state();
+          });
+  connect(eol_sub_more_window_obj, &eol_sub_more_window::signal_clear_dtc_err_status, this, [=]
+          {
+            this->clear_dtc_err_state();
+          });
+}
+
+void eol_sub_window::update_dtc_err_state()
+{
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.param = nullptr;
+
+  /* 读取dtc错误码 */
+  task.reg = EOL_RW_DTC_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 启动eol线程 */
+  eol_protocol_obj->start_task();
+}
+
+void eol_sub_window::clear_dtc_err_state()
+{
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.param = nullptr;
+
+  /* 清除dtc错误码 */
+  task.reg = EOL_RW_DTC_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = 1;
+  task.len = 1;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 启动eol线程 */
+  eol_protocol_obj->start_task();
 }
 
 void eol_sub_window::set_eol_protocol_obj(eol_protocol *obj)
@@ -136,6 +189,13 @@ void eol_sub_window::on_test_pushButton_clicked()
   task.len = 1;
   eol_protocol_obj->eol_master_common_rw_device(task);
 
+  /* 读取dtc错误码 */
+  task.reg = EOL_RW_DTC_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
 }
@@ -163,6 +223,28 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
 
       case EOL_W_WDG_REG      :
         ui->wdg_opt_status_label->setText(ui->wdg_opt_comboBox->currentText() + tr(" ok"));
+        break;
+
+      /* 写spi测试 */
+      case EOL_RW_SPI_REG:
+        {
+
+        }
+        break;
+
+      /* 写i2c测试 */
+      case EOL_RW_I2C_REG:
+        {
+
+        }
+        break;
+
+      /* 清除dtc测试 */
+      case EOL_RW_DTC_REG:
+        {
+          /* ok，触发一次更新 */
+          update_dtc_err_state();
+        }
         break;
 
       default                 :
@@ -329,6 +411,30 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
           ui->did_hw_sf_ver_lineEdit->setText(str);
         }
         break;
+
+      /* 读spi测试 */
+      case EOL_RW_SPI_REG:
+        {
+
+        }
+        break;
+
+      /* 读i2c测试 */
+      case EOL_RW_I2C_REG:
+        {
+
+        }
+        break;
+
+      /* 读dtc测试 */
+      case EOL_RW_DTC_REG:
+        {
+          eol_sub_more_window_obj->set_dtc_err_status(data, data_len);
+        }
+        break;
+
+      default:
+        break;
     }
   }
 }
@@ -404,5 +510,11 @@ void eol_sub_window::on_write_pushButton_clicked()
     /* 启动eol线程 */
     eol_protocol_obj->start_task();
   }
+}
+
+
+void eol_sub_window::on_more_pushButton_clicked()
+{
+  eol_sub_more_window_obj->show();
 }
 

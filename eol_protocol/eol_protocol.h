@@ -86,6 +86,9 @@
 #define EOL_W_WDG_REG                  0x1BU  /**< 设置看门狗 */
 #define EOL_RW_GPIO_REG                0x1CU  /**< 读写GPIO */
 #define EOL_RW_SHELL_REG               0x1DU  /**< 读写shell，当读命令时持续监听eol协议数据 */
+#define EOL_RW_SPI_REG                 0x1EU  /**< 读写spi测试 */
+#define EOL_RW_I2C_REG                 0x1FU  /**< 读写i2c测试 */
+#define EOL_RW_DTC_REG                 0x20U  /**< 读写dtc测试 */
 
 /** Exported variables -------------------------------------------------------*/
 /** Exported functions prototypes --------------------------------------------*/

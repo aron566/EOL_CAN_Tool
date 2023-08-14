@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "eol_protocol.h"
+#include "eol_sub_more_window/eol_sub_more_window.h"
 
 namespace Ui {
 class eol_sub_window;
@@ -28,6 +29,22 @@ protected:
      */
     virtual void closeEvent(QCloseEvent *event) override;
 private:
+
+    /**
+   * @brief 读写窗口下级窗口初始化
+   * @param title
+   */
+  void rw_more_window_init(QString title);
+
+  /**
+   * @brief 更新dtc错误状态
+   */
+  void update_dtc_err_state();
+
+  /**
+   * @brief 清除dtc错误状态
+   */
+  void clear_dtc_err_state();
 signals:
   /**
    * @brief 窗口关闭信号
@@ -55,8 +72,12 @@ private slots:
 
   void on_write_pushButton_clicked();
 
-private:
+  void on_more_pushButton_clicked();
+
+  private:
   Ui::eol_sub_window *ui;
+
+  eol_sub_more_window *eol_sub_more_window_obj = nullptr;
 
 private:
   eol_protocol *eol_protocol_obj = nullptr;
