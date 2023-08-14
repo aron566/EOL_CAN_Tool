@@ -38,93 +38,171 @@
             <height>646</height>
            </rect>
           </property>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="2" column="1">
-            <widget class="QPushButton" name="clear_err_pushButton">
-             <property name="text">
-              <string>清除故障码</string>
+          <layout class="QGridLayout" name="gridLayout_5">
+           <item row="0" column="0">
+            <widget class="QGroupBox" name="current_groupBox">
+             <property name="title">
+              <string>当前故障</string>
              </property>
+             <layout class="QGridLayout" name="gridLayout_3">
+              <item row="0" column="0">
+               <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                 <widget class="QCheckBox" name="err0_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>CAN0_BUSOFF</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err1_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>CAN1_BUSOFF</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err2_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>RADAR_UDER_VOLTAGE</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err3_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>RADAR_OVER_VOLTAGE</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err4_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>MCU_OVER_TEMPERATURE</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err5_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>MISS_ALIGNMENT</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err6_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>NOT_CALIBRATED</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </widget>
            </item>
-           <item row="0" column="0">
-            <layout class="QVBoxLayout" name="verticalLayout">
-             <item>
-              <widget class="QCheckBox" name="bit0_checkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>CAN0_BUSOFF</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="bit1_checkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>CAN1_BUSOFF</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="bit2_checkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>RADAR_UDER_VOLTAGE</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="bit3_checkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>RADAR_OVER_VOLTAGE</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="bit4_checkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>MCU_OVER_TEMPERATURE</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="bit5_checkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>MISS_ALIGNMENT</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="bit6_checkBox">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>NOT_CALIBRATED</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="2" column="0">
-            <widget class="QPushButton" name="get_err_pushButton">
-             <property name="text">
-              <string>获取故障码</string>
+           <item row="0" column="1">
+            <widget class="QGroupBox" name="history_groupBox">
+             <property name="title">
+              <string>历史故障</string>
              </property>
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="0" column="0">
+               <layout class="QVBoxLayout" name="verticalLayout_2">
+                <item>
+                 <widget class="QCheckBox" name="err0_history_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>CAN0_BUSOFF</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err1_history_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>CAN1_BUSOFF</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err2_history_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>RADAR_UDER_VOLTAGE</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err3_history_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>RADAR_OVER_VOLTAGE</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err4_history_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>MCU_OVER_TEMPERATURE</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err5_history_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>MISS_ALIGNMENT</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err6_history_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>NOT_CALIBRATED</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </widget>
            </item>
            <item row="1" column="0">
@@ -139,6 +217,20 @@
               </size>
              </property>
             </spacer>
+           </item>
+           <item row="2" column="0">
+            <widget class="QPushButton" name="get_err_pushButton">
+             <property name="text">
+              <string>获取故障码</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QPushButton" name="clear_err_pushButton">
+             <property name="text">
+              <string>清除故障码</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>

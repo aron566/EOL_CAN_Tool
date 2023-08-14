@@ -107,12 +107,20 @@ void eol_sub_more_window::set_dtc_err_status(const quint8 *data, quint32 len)
     return;
   }
 
-  ui->bit0_checkBox->setChecked(data[0] & EOL_DTC_BIT0_MAP);
-  ui->bit1_checkBox->setChecked(data[1] & EOL_DTC_BIT1_MAP);
-  ui->bit2_checkBox->setChecked(data[2] & EOL_DTC_BIT2_MAP);
-  ui->bit3_checkBox->setChecked(data[3] & EOL_DTC_BIT3_MAP);
-  ui->bit4_checkBox->setChecked(data[4] & EOL_DTC_BIT4_MAP);
-  ui->bit5_checkBox->setChecked(data[5] & EOL_DTC_BIT5_MAP);
-  ui->bit6_checkBox->setChecked(data[6] & EOL_DTC_BIT6_MAP);
+  ui->err0_checkBox->setChecked(data[0] & EOL_DTC_BIT0_MAP);
+  ui->err1_checkBox->setChecked(data[1] & EOL_DTC_BIT0_MAP);
+  ui->err2_checkBox->setChecked(data[2] & EOL_DTC_BIT0_MAP);
+  ui->err3_checkBox->setChecked(data[3] & EOL_DTC_BIT0_MAP);
+  ui->err4_checkBox->setChecked(data[4] & EOL_DTC_BIT0_MAP);
+  ui->err5_checkBox->setChecked(data[5] & EOL_DTC_BIT0_MAP);
+  ui->err6_checkBox->setChecked(data[6] & EOL_DTC_BIT0_MAP);
+
+  ui->err0_history_checkBox->setChecked(data[0] & EOL_DTC_BIT3_MAP);
+  ui->err1_history_checkBox->setChecked(data[1] & EOL_DTC_BIT3_MAP);
+  ui->err2_history_checkBox->setChecked(data[2] & EOL_DTC_BIT3_MAP);
+  ui->err3_history_checkBox->setChecked(data[3] & EOL_DTC_BIT3_MAP);
+  ui->err4_history_checkBox->setChecked(data[4] & EOL_DTC_BIT3_MAP);
+  ui->err5_history_checkBox->setChecked(data[5] & EOL_DTC_BIT3_MAP);
+  ui->err6_history_checkBox->setChecked(data[6] & EOL_DTC_BIT3_MAP);
 }
 /******************************** End of file *********************************/
