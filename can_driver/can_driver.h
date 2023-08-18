@@ -244,10 +244,10 @@ signals:
   /**
    * @brief 发送信号显示当前消息
    *
-   * @param message 消息内容
+   * @param message 消息内容t
    */
-  void signal_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
-  void signal_show_thread_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
+  void signal_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
+  void signal_show_thread_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
   void signal_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
 
   /**
@@ -778,9 +778,10 @@ private:
    * @param direct 消息方向，发送 or 接收
    * @param data 数据
    * @param data_len 数据长度
+   * @param can_id 消息canid
    * @param thread_mode 当前消息是否来自线程
    */
-  void show_message(const QString &str, quint32 channel_num = 0, CAN_DIRECT_Typedef_t direct = CAN_RX_DIRECT, const quint8 *data = nullptr, quint32 data_len = 0, bool thread_mode = false);
+  void show_message(const QString &str, quint32 channel_num = 0, CAN_DIRECT_Typedef_t direct = CAN_RX_DIRECT, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0, bool thread_mode = false);
   void show_message_bytes(quint8 bytes, quint32 channel_num, CAN_DIRECT_Typedef_t direct);
   bool transmit_type_config(const CHANNEL_STATE_Typedef_t &channel_state);
   bool resistance_config(const CHANNEL_STATE_Typedef_t &channel_state);

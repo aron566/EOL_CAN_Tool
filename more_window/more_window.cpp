@@ -52,6 +52,11 @@ more_window::more_window(QString title, QWidget *parent) :
   /* 设置提示值 */
   ui->data_lineEdit->setPlaceholderText("05 66");
   ui->id_lineEdit->setPlaceholderText("157");
+  ui->display_str_id_limit_lineEdit->setPlaceholderText("FFFF");
+
+  /* 设置悬浮提示 */
+  ui->display_mask_lineEdit->setToolTip(tr("show msg can id = mask & can id"));
+  ui->display_str_id_limit_lineEdit->setToolTip(tr("FFFF show all can str msg"));
 }
 
 more_window::~more_window()
@@ -550,7 +555,7 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
 }
 
 void more_window::slot_show_message(const QString &message, quint32 channel_num, \
-  quint8 direct, const quint8 *data, quint32 data_len)
+  quint8 direct, const quint8 *data, quint32 data_len, quint32 can_id)
 {
   QString show_message;
 
@@ -568,6 +573,12 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
         && can_driver::CAN_RX_DIRECT == direct
         && 0U < data_len)
     {
+      /* canid限制 */
+      if(limit_str_canid != 0xFFFFU
+          && limit_str_canid != can_id)
+      {
+        return;
+      }
 #if 0
       char str_buf[65];
       size_t size = data_len > 64 ? 64 : data_len;
@@ -630,7 +641,7 @@ __show_msg:
 }
 
 
-void more_window::slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data, quint32 data_len)
+void more_window::slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data, quint32 data_len, quint32 can_id)
 {
   /* 线程刷新显示 */
   QString show_message;
@@ -649,6 +660,12 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
         && can_driver::CAN_RX_DIRECT == direct
         && 0U < data_len)
     {
+      /* canid限制 */
+      if(limit_str_canid != 0xFFFFU
+          && limit_str_canid != can_id)
+      {
+        return;
+      }
 #if 0
       char str_buf[65];
       size_t size = data_len > 64 ? 64 : data_len;
@@ -993,3 +1010,8 @@ void more_window::on_tool_pushButton_clicked()
   tool_window_obj->show();
 }
 
+void more_window::on_display_str_id_limit_lineEdit_textChanged(const QString &arg1)
+{
+  bool ok;
+  limit_str_canid = arg1.toUInt(&ok, 16);
+}

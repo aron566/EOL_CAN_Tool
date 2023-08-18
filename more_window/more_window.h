@@ -161,8 +161,8 @@ private slots:
       quint8 direct, quint32 channel_num, quint8 protocol_type, quint64 ms);
 
     void slot_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
-    void slot_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
-    void slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0);
+    void slot_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
+    void slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
     void on_frame_diagnosis_pushButton_clicked();
 
     void on_export_txt_pushButton_clicked();
@@ -175,7 +175,9 @@ private slots:
      * @brief 显示窗口
      */
     void slot_show_window();
-private:
+    void on_display_str_id_limit_lineEdit_textChanged(const QString &arg1);
+
+  private:
     Ui::more_window *ui;
     eol_window *eol_window_obj = nullptr;
     tool_window *tool_window_obj = nullptr;
@@ -207,6 +209,7 @@ private:
     bool show_line_str_force = false;
     quint64 last_show_line_str_time_ms = 0;
     quint64 current_show_line_str_time_ms = 0;
+    quint32 limit_str_canid = 0xFFFF;
 private:
     /**
      * @brief update_show_msg 显示指定索引消息

@@ -1873,7 +1873,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     {
       /* 显示接收到的字节数 */
       show_message_bytes(can.frame.can_dlc, channel_state.channel_num, CAN_RX_DIRECT);
-      show_message(item, channel_state.channel_num, CAN_RX_DIRECT, can.frame.data, can.frame.can_dlc, true);
+      show_message(item, channel_state.channel_num, CAN_RX_DIRECT, can.frame.data, can.frame.can_dlc, (quint32)can_id, true);
     }
 
     /* 加入数据到cq */
@@ -1930,7 +1930,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     {
       /* 显示接收到的字节数 */
       show_message_bytes(canfd.frame.len, channel_state.channel_num, CAN_RX_DIRECT);
-      show_message(item, channel_state.channel_num, CAN_RX_DIRECT, canfd.frame.data, canfd.frame.len, true);
+      show_message(item, channel_state.channel_num, CAN_RX_DIRECT, canfd.frame.data, canfd.frame.len, (quint32)can_id, true);
     }
 
     /* 加入数据到cq */
@@ -1980,7 +1980,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
       item += QString::asprintf("%02X ", can.frame.data[i]);
     }
     show_message_bytes(can.frame.can_dlc, channel_state.channel_num, CAN_TX_DIRECT);
-    show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.can_dlc);
+    show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.can_dlc, (quint32)can_id);
 
     /* 发送接收数据信号 */
     QDateTime dt = QDateTime::currentDateTime();
@@ -2006,7 +2006,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
       item += QString::asprintf("%02X ", can.frame.data[i]);
     }
     show_message_bytes(can.frame.len, channel_state.channel_num, CAN_TX_DIRECT);
-    show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.len);
+    show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.frame.data, can.frame.len, (quint32)can_id);
 
     /* 发送接收数据信号 */
     QDateTime dt = QDateTime::currentDateTime();
@@ -2038,7 +2038,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
             item += QString::asprintf("%02X ", can.Data[i]);
           }
           show_message_bytes(can.DataLen, channel_state.channel_num, CAN_TX_DIRECT);
-          show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.Data, can.DataLen);
+          show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.Data, can.DataLen, (quint32)can_id);
 
           /* 发送接收数据信号 */
           QDateTime dt = QDateTime::currentDateTime();
@@ -2078,7 +2078,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
           {
             /* 显示接收到的字节数 */
             show_message_bytes(can.DataLen, channel_state.channel_num, CAN_RX_DIRECT);
-            show_message(item, channel_state.channel_num, CAN_RX_DIRECT, can.Data, can.DataLen, true);
+            show_message(item, channel_state.channel_num, CAN_RX_DIRECT, can.Data, can.DataLen, (quint32)can_id, true);
           }
 
           /* 加入数据到cq */
@@ -2141,7 +2141,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
             item += QString::asprintf("%02X ", can.Data[i]);
           }
           show_message_bytes(can.DataLen, channel_state.channel_num, CAN_TX_DIRECT);
-          show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.Data, can.DataLen);
+          show_message(item, channel_state.channel_num, CAN_TX_DIRECT, can.Data, can.DataLen, (quint32)can_id);
 
           /* 发送接收数据信号 */
           QDateTime dt = QDateTime::currentDateTime();
@@ -2182,7 +2182,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
           {
             /* 显示接收到的字节数 */
             show_message_bytes(can.DataLen, channel_state.channel_num, CAN_RX_DIRECT);
-            show_message(item, channel_state.channel_num, CAN_RX_DIRECT, can.Data, can.DataLen, true);
+            show_message(item, channel_state.channel_num, CAN_RX_DIRECT, can.Data, can.DataLen, (quint32)can_id, true);
           }
 
           /* 加入数据到cq */
@@ -2219,17 +2219,18 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
   }
 }
 
-void can_driver::show_message(const QString &str, quint32 channel_num, CAN_DIRECT_Typedef_t direct, const quint8 *data, quint32 data_len, bool thread_mode)
+void can_driver::show_message(const QString &str, quint32 channel_num, \
+                              CAN_DIRECT_Typedef_t direct, const quint8 *data, quint32 data_len, quint32 can_id, bool thread_mode)
 {
   message = str;
   /* 输出到显示框 */
   if(false == thread_mode)
   {
-    emit signal_show_message(message, channel_num, (quint8)direct, data, data_len);
+    emit signal_show_message(message, channel_num, (quint8)direct, data, data_len, can_id);
   }
   else
   {
-    emit signal_show_thread_message(message, channel_num, (quint8)direct, data, data_len);
+    emit signal_show_thread_message(message, channel_num, (quint8)direct, data, data_len, can_id);
     return;
   }
 
