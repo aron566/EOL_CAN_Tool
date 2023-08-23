@@ -29,6 +29,7 @@
 #include <QThreadPool>
 #include <QRunnable>
 #include <QSemaphore>
+#include <QAtomicInt>
 #include "circularqueue.h"
 #include "can_driver.h"
 #include "utility.h"
@@ -389,8 +390,18 @@ public:
     thread_run_state = true;
     run_eol_task();
     thread_run_state = false;
-    run_state = false;
+    run_state = false;    
     qDebug() << "[thread]" << QThread::currentThreadId() << "eol protocol end";
+
+    /* 原子操作 */
+    if(thread_run_statex.testAndSetRelaxed(1, 0))
+    {
+      qDebug() << "thread_run_statex was successfully updated.";
+    }
+    else
+    {
+      qDebug() << "thread_run_statex was not updated.";
+    }
   }
 
   void stop_task()
@@ -406,6 +417,17 @@ public:
    */
   void start_task(bool listen_cs = false)
   {
+    /* 原子操作 */
+    if(thread_run_statex.testAndSetRelaxed(0, 1))
+    {
+
+    }
+    else
+    {
+      qDebug() << "eol protocol is running";
+      return;
+    }
+
     listen_run_state = listen_cs;
     if(thread_run_state)
     {
@@ -743,6 +765,7 @@ private:
 
   EOL_SEND_HW_Typedef_t com_hw = EOL_CAN_HW; /**< 通讯硬件选择 */
   QString channel_num = "0";          /**< 通讯硬件端口 */
+  QAtomicInt thread_run_statex;
 };
 #endif
 /******************************** End of file *********************************/

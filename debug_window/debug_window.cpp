@@ -118,14 +118,13 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
     return QWidget::eventFilter(target, event);
   }
 
-  qDebug() << "send key" << k->key() << k->text().toLatin1();
-
   /* 直接发送按键 */
   if(127 > (*k->text().toLatin1().data()))
   {
     if(k->key() != Qt::Key_Up
        && k->key() != Qt::Key_Down)
     {
+      qDebug() << "send key" << k->key() << k->text().toLatin1();
       emit signal_send_command_char(*k->text().toLatin1().data());
       return true;
     }
@@ -491,7 +490,7 @@ void debug_window::rec_shell_data(const quint8 *data, quint32 data_len)
 
   /* 检测是否是清屏命令 */
   QString str = QString::asprintf("%s", strbuf);
-  qDebug() << data_len << str;
+  qDebug() << "debug window rec " << data_len << str;
 
   for(quint32 i = 0; i < data_len; i++)
   {
