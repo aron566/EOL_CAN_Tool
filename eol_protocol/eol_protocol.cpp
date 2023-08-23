@@ -206,7 +206,7 @@ void eol_protocol::run_eol_task()
     }
 
     /* 执行主线程 */
-    QThread::usleep(100);
+    QThread::usleep(500);
   }
   sem.tryAcquire();
   eol_task_list.clear();
@@ -855,7 +855,7 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
   do
   {
     qDebug() << "get_eol_table_data_task step 1";
-    ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_W_TABLE_SEL_REG, data_buf, index);
+    ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_W_TABLE_SEL_REG, data_buf, index, paramx->com_hw, paramx->channel_num);
     if(RETURN_OK != ret)
     {
       error_cnt++;
@@ -886,12 +886,12 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
     {
       data_buf[0] = (quint8)data_record.frame_num;
       data_buf[1] = (quint8)(data_record.frame_num >> 8);
-      ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_W_TABLE_DATA_SEL_REG, data_buf, 2);
+      ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_W_TABLE_DATA_SEL_REG, data_buf, 2, paramx->com_hw, paramx->channel_num);
     }
     else
     {
       /* 读数据帧 */
-      ret = protocol_stack_create_task(EOL_READ_CMD, EOL_RW_TABLE_DATA_REG, nullptr, 0);
+      ret = protocol_stack_create_task(EOL_READ_CMD, EOL_RW_TABLE_DATA_REG, nullptr, 0, paramx->com_hw, paramx->channel_num);
     }
 
     if(RETURN_OK != ret)
@@ -956,7 +956,7 @@ bool eol_protocol::common_rw_device_task(void *param_)
 
   do
   {
-    ret = protocol_stack_create_task(param->command, param->reg, param->buf, param->len);
+    ret = protocol_stack_create_task(param->command, param->reg, param->buf, param->len, param->com_hw, param->channel_num);
     if(RETURN_OK != ret)
     {
       error_cnt++;
@@ -1031,7 +1031,7 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   qDebug() << "step1 send table head ";
   do
   {
-    ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index);
+    ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index, paramx->com_hw, paramx->channel_num);
     if(RETURN_OK != ret)
     {
       error_cnt++;
@@ -1076,7 +1076,7 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
     /* 发送表数据 */
     do
     {
-      ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index);
+      ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index, paramx->com_hw, paramx->channel_num);
       if(RETURN_OK != ret)
       {
         error_cnt++;
@@ -1113,7 +1113,7 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   data_buf[index++] = 0xFF;
   do
   {
-    ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index);
+    ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index, paramx->com_hw, paramx->channel_num);
     if(RETURN_OK != ret)
     {
       error_cnt++;
@@ -1188,6 +1188,8 @@ bool eol_protocol::eol_master_send_table_data(COMMON_TABLE_HEADER_Typedef_t &tab
   send_table_data.data = data;
 
   EOL_TASK_LIST_Typedef_t task;
+  task.com_hw = com_hw;
+  task.channel_num = channel_num;
   task.param = &send_table_data;
   task.task = &eol_protocol::send_eol_table_data_task;
   sem.tryAcquire();
@@ -1210,11 +1212,13 @@ bool eol_protocol::eol_master_get_table_data(TABLE_Typedef_t table_type)
   }
 
   /* 设置消息过滤器 */
-  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
+  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, channel_num.toInt());
 
   send_table_data.head_data.Common_Info.Table_Type = table_type;
 
   EOL_TASK_LIST_Typedef_t task;
+  task.com_hw = com_hw;
+  task.channel_num = channel_num;
   task.param = &send_table_data.head_data;
   task.task = &eol_protocol::get_eol_table_data_task;
   sem.tryAcquire();
@@ -1242,8 +1246,10 @@ bool eol_protocol::eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task, bo
   }
 
   /* 设置消息过滤器 */
-  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
+  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, channel_num.toInt());
 
+  task.com_hw = com_hw;
+  task.channel_num = channel_num;
   task.task = &eol_protocol::common_rw_device_task;
   sem.tryAcquire();
   eol_task_list.append(task);

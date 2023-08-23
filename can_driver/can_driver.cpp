@@ -1807,7 +1807,7 @@ void can_driver::receice_data()
   }
 }
 
-void can_driver::add_msg_filter(quint32 can_id, CircularQueue *cq_obj_)
+void can_driver::add_msg_filter(quint32 can_id, CircularQueue *cq_obj_, qint32 channel_)
 {
   if(nullptr == cq_obj_)
   {
@@ -1817,6 +1817,7 @@ void can_driver::add_msg_filter(quint32 can_id, CircularQueue *cq_obj_)
   MSG_FILTER_Typedef_t msg_filter;
   msg_filter.can_id = can_id;
   msg_filter.cq_obj = cq_obj_;
+  msg_filter.channel = channel_;
 
   /* 查到id重复的，则替换 */
   for(qint32 i = 0; i < msg_filter_list.size(); i++)
@@ -1897,6 +1898,10 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     {
       if(msg_filter_list.value(index).can_id == can_id)
       {
+        if(msg_filter_list.value(index).channel != 0xFFFFFFFF && msg_filter_list.value(index).channel != channel_state.channel_num)
+        {
+          break;
+        }
         CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), can.frame.data, can.frame.can_dlc);
         break;
       }
@@ -1954,6 +1959,10 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     {
       if(msg_filter_list.value(index).can_id == can_id)
       {
+        if(msg_filter_list.value(index).channel != 0xFFFFFFFF && msg_filter_list.value(index).channel != channel_state.channel_num)
+        {
+          break;
+        }
         CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), canfd.frame.data, canfd.frame.len);
 //        utility::debug_print(canfd.frame.data, canfd.frame.len, "can driver:");
         break;
@@ -2102,6 +2111,10 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
           {
             if(msg_filter_list.value(index).can_id == can_id)
             {
+              if(msg_filter_list.value(index).channel != 0xFFFFFFFF && msg_filter_list.value(index).channel != channel_state.channel_num)
+              {
+                break;
+              }
               CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), can.Data, can.DataLen);
               break;
             }
@@ -2206,6 +2219,10 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
           {
             if(msg_filter_list.value(index).can_id == can_id)
             {
+              if(msg_filter_list.value(index).channel != 0xFFFFFFFF && msg_filter_list.value(index).channel != channel_state.channel_num)
+              {
+                break;
+              }
               CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), can.Data, can.DataLen);
               break;
             }

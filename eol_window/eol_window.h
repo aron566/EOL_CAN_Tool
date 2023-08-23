@@ -256,6 +256,16 @@ private:
   void eol_protocol_init(can_driver *can_driver_obj);
 
   /**
+   * @brief 保存配置
+   */
+  void save_cfg();
+
+  /**
+   * @brief 恢复配置
+   */
+  void read_cfg();
+
+  /**
    * @brief 定时器初始化
    */
   void timer_init();
@@ -339,6 +349,8 @@ private slots:
   void on_rcs_calibration_func_pushButton_clicked();
   void on_reboot_pushButton_clicked();
   void on_debug_pushButton_clicked();
+  void on_com_hw_comboBox_currentIndexChanged(int index);
+  void on_com_config_lineEdit_textChanged(const QString &arg1);
 };
 
 #endif // EOL_WINDOW_H

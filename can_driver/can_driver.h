@@ -386,8 +386,9 @@ public:
    * @brief 添加消息过滤器
    * @param can_id can id
    * @param cq_obj_ 消息存储区
+   * @param channel_ CAN通道 0xFFFFFFFF代表不过滤特定通道
    */
-  void add_msg_filter(quint32 can_id, CircularQueue *cq_obj_);
+  void add_msg_filter(quint32 can_id, CircularQueue *cq_obj_, qint32 channel_ = 0xFFFFFFFF);
 
   /**
    * @brief 移除消息过滤器
@@ -880,6 +881,7 @@ private:
   {
     quint32 can_id;
     CircularQueue *cq_obj;
+    qint32 channel;
   }MSG_FILTER_Typedef_t;
 
   QList<MSG_FILTER_Typedef_t>msg_filter_list;

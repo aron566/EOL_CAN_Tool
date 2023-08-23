@@ -569,7 +569,7 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
   /* 显示字符 */
   if(ui->display_str_checkBox->isChecked())
   {
-    if((quint32)ui->display_ch_comboBox->currentIndex() == channel_num
+    if(((quint32)ui->display_ch_comboBox->currentIndex() == channel_num || ui->display_ch_comboBox->currentText() == "ALL")
         && can_driver::CAN_RX_DIRECT == direct
         && 0U < data_len)
     {
@@ -656,7 +656,7 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
   /* 显示字符 */
   if(ui->display_str_checkBox->isChecked())
   {
-    if((quint32)ui->display_ch_comboBox->currentIndex() == channel_num
+    if(((quint32)ui->display_ch_comboBox->currentIndex() == channel_num || ui->display_ch_comboBox->currentText() == "ALL")
         && can_driver::CAN_RX_DIRECT == direct
         && 0U < data_len)
     {

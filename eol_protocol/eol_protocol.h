@@ -441,6 +441,24 @@ public:
   void set_can_driver_obj(can_driver *can_driver_ = nullptr);
 
   /**
+   * @brief 设置eol通讯端口
+   * @param com_hw_ 硬件
+   */
+  void set_eol_com_config_hw(EOL_SEND_HW_Typedef_t com_hw_)
+  {
+    com_hw = com_hw_;
+  }
+
+  /**
+   * @brief 设置eol通讯端口
+   * @param channel_num_ 通道号 "0" or "1"
+   */
+  void set_eol_com_config_channel(QString channel_num_)
+  {
+    channel_num = channel_num_;
+  }
+
+  /**
    * @brief 添加设置设备工作模式任务
    * @param mode 0生产普通 1生产校准
    * @return true 任务添加成功
@@ -722,6 +740,9 @@ private:
 
   quint32 access_code;
   quint8 current_run_mode;
+
+  EOL_SEND_HW_Typedef_t com_hw = EOL_CAN_HW; /**< 通讯硬件选择 */
+  QString channel_num = "0";          /**< 通讯硬件端口 */
 };
 #endif
 /******************************** End of file *********************************/

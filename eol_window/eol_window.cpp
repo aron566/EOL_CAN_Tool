@@ -3,9 +3,12 @@
 #include "ui_eol_window.h"
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QSettings>
 #include <QDebug>
 #include "utility.h"
 #include <QScrollArea>
+
+#define CONFIG_VER_STR            "0.0.2"                 /**< 配置文件版本 */
 #define USE_TEMP_FILE_TO_SAVE 0 /**< 使用临时文件存储 */
 
 eol_window::eol_window(QString title, QWidget *parent) :
@@ -38,6 +41,13 @@ eol_window::eol_window(QString title, QWidget *parent) :
   ui->ant_calibration_func_pushButton->setEnabled(false);
   ui->rcs_calibration_func_pushButton->setEnabled(false);
 
+  /* 设置提示值 */
+  ui->com_config_lineEdit->setPlaceholderText("0 or 1");
+
+  /* 设置悬浮提示 */
+  ui->com_hw_comboBox->setToolTip(tr("eol hw select"));
+  ui->com_config_lineEdit->setToolTip(tr("eol com channel to rec msg or send msg"));
+
   /* 初始化状态 */
   reset_base_ui_info();
 
@@ -68,6 +78,9 @@ eol_window::eol_window(QString title, QWidget *parent) :
 
 eol_window::~eol_window()
 {
+  /* 保存参数 */
+  save_cfg();
+
   run_state = false;
   qDebug() << "eol window wait to end";
 
@@ -205,6 +218,9 @@ void eol_window::eol_protocol_init(can_driver *can_driver_obj)
 
   /* 设置eol协议栈 */
   eol_2dfft_calibration_window_obj->set_eol_protocol_obj(eol_protocol_obj);
+
+  /* 恢复参数 */
+  read_cfg();
 }
 
 void eol_window::timer_init()
@@ -212,6 +228,39 @@ void eol_window::timer_init()
   timer_obj = new QTimer(this);
   connect(timer_obj, &QTimer::timeout, this, &eol_window::slot_timeout);
   timer_obj->setInterval(1000);
+}
+
+
+void eol_window::save_cfg()
+{
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
+  /* com hw */
+  setting.setValue("eol_window_v" CONFIG_VER_STR "/eol_com_hw", ui->com_hw_comboBox->currentIndex());
+  /* com chnannel */
+  setting.setValue("eol_window_v" CONFIG_VER_STR "/eol_com_channel", ui->com_config_lineEdit->text());
+  setting.sync();
+}
+
+void eol_window::read_cfg()
+{
+  QFile file("./eol_tool_cfg.ini");
+  if(false == file.exists())
+  {
+    return;
+  }
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
+  if(false == setting.contains("eol_window_v" CONFIG_VER_STR "/can_id"))
+  {
+    qDebug() << "err eol_window config not exist";
+    return;
+  }
+  /* com hw */
+  ui->com_hw_comboBox->setCurrentIndex(setting.value("eol_window_v" CONFIG_VER_STR "/eol_com_hw").toInt());
+  /* com chnannel */
+  ui->com_config_lineEdit->setText(setting.value("eol_window_v" CONFIG_VER_STR "/eol_com_channel").toString());
+  setting.sync();
 }
 
 void eol_window::slot_show_this_window()
@@ -1928,5 +1977,17 @@ void eol_window::on_reboot_pushButton_clicked()
 void eol_window::on_debug_pushButton_clicked()
 {
   debug_window_window_obj->show();
+}
+
+
+void eol_window::on_com_hw_comboBox_currentIndexChanged(int index)
+{
+  eol_protocol_obj->set_eol_com_config_hw((eol_protocol::EOL_SEND_HW_Typedef_t)index);
+}
+
+
+void eol_window::on_com_config_lineEdit_textChanged(const QString &arg1)
+{
+  eol_protocol_obj->set_eol_com_config_channel(arg1);
 }
 
