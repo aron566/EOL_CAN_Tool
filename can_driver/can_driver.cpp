@@ -1155,7 +1155,7 @@ bool can_driver::send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Ty
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     channel_state = channel_state_list.value(i);
-    if((channel_num == channel_state.channel_num || 0xFF == channel_num) \
+    if((channel_num == channel_state.channel_num || 0xFFU == channel_num) \
        && true == channel_state.channel_en)
     {
       ret = send(channel_state, data, size, id, frame_type, protocol);
@@ -1807,7 +1807,7 @@ void can_driver::receice_data()
   }
 }
 
-void can_driver::add_msg_filter(quint32 can_id, CircularQueue *cq_obj_, qint32 channel_)
+void can_driver::add_msg_filter(quint32 can_id, CircularQueue *cq_obj_, quint8 channel_)
 {
   if(nullptr == cq_obj_)
   {
@@ -1898,7 +1898,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     {
       if(msg_filter_list.value(index).can_id == can_id)
       {
-        if(msg_filter_list.value(index).channel != 0xFFFFFFFF && msg_filter_list.value(index).channel != channel_state.channel_num)
+        if(msg_filter_list.value(index).channel != 0xFFU && msg_filter_list.value(index).channel != (quint8)channel_state.channel_num)
         {
           break;
         }
@@ -1959,7 +1959,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
     {
       if(msg_filter_list.value(index).can_id == can_id)
       {
-        if(msg_filter_list.value(index).channel != 0xFFFFFFFF && msg_filter_list.value(index).channel != channel_state.channel_num)
+        if(msg_filter_list.value(index).channel != 0xFFU && msg_filter_list.value(index).channel != (quint8)channel_state.channel_num)
         {
           break;
         }
@@ -2111,7 +2111,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
           {
             if(msg_filter_list.value(index).can_id == can_id)
             {
-              if(msg_filter_list.value(index).channel != 0xFFFFFFFF && msg_filter_list.value(index).channel != channel_state.channel_num)
+              if(msg_filter_list.value(index).channel != 0xFFU && msg_filter_list.value(index).channel != (quint8)channel_state.channel_num)
               {
                 break;
               }
@@ -2219,7 +2219,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
           {
             if(msg_filter_list.value(index).can_id == can_id)
             {
-              if(msg_filter_list.value(index).channel != 0xFFFFFFFF && msg_filter_list.value(index).channel != channel_state.channel_num)
+              if(msg_filter_list.value(index).channel != 0xFFU && msg_filter_list.value(index).channel != (quint8)channel_state.channel_num)
               {
                 break;
               }

@@ -481,6 +481,15 @@ public:
   }
 
   /**
+   * @brief 设置eol通讯端口
+   * @param channel_num_ 通道号 "0" or "1"
+   */
+  void set_eol_vcom_config_channel(QString channel_num_)
+  {
+    vchannel_num = channel_num_;
+  }
+
+  /**
    * @brief 添加设置设备工作模式任务
    * @param mode 0生产普通 1生产校准
    * @return true 任务添加成功
@@ -765,6 +774,7 @@ private:
 
   EOL_SEND_HW_Typedef_t com_hw = EOL_CAN_HW; /**< 通讯硬件选择 */
   QString channel_num = "0";          /**< 通讯硬件端口 */
+  QString vchannel_num = "255";          /**< 通讯硬件端口 */
   QAtomicInt thread_run_statex;
 };
 #endif

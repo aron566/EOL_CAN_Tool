@@ -351,6 +351,7 @@ private slots:
   void on_debug_pushButton_clicked();
   void on_com_hw_comboBox_currentIndexChanged(int index);
   void on_com_config_lineEdit_textChanged(const QString &arg1);
+  void on_vcom_config_lineEdit_textChanged(const QString &arg1);
 };
 
 #endif // EOL_WINDOW_H

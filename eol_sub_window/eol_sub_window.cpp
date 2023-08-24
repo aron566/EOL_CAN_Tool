@@ -127,7 +127,6 @@ void eol_sub_window::on_test_pushButton_clicked()
   task.command = eol_protocol::EOL_WRITE_CMD;
   task.buf[0] = 1;
   task.len = 1;
-  task.channel_num = "1";
   task.com_hw = eol_protocol::EOL_CAN_HW;
   eol_protocol_obj->eol_master_common_rw_device(task);
 

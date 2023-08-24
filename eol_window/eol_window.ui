@@ -156,7 +156,14 @@
           <item>
            <widget class="QLabel" name="com_config_label">
             <property name="text">
-             <string>通讯参数：</string>
+             <string>PCAN通讯参数：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="vcom_config_label">
+            <property name="text">
+             <string>VCAN通讯参数：</string>
             </property>
            </widget>
           </item>
@@ -192,6 +199,13 @@
            <widget class="QLineEdit" name="com_config_lineEdit">
             <property name="text">
              <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="vcom_config_lineEdit">
+            <property name="text">
+             <string>255</string>
             </property>
            </widget>
           </item>

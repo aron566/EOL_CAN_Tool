@@ -386,9 +386,9 @@ public:
    * @brief 添加消息过滤器
    * @param can_id can id
    * @param cq_obj_ 消息存储区
-   * @param channel_ CAN通道 0xFFFFFFFF代表不过滤特定通道
+   * @param channel_ CAN通道 0xFFU代表不过滤特定通道
    */
-  void add_msg_filter(quint32 can_id, CircularQueue *cq_obj_, qint32 channel_ = 0xFFFFFFFF);
+  void add_msg_filter(quint32 can_id, CircularQueue *cq_obj_, quint8 channel_ = 0xFFU);
 
   /**
    * @brief 移除消息过滤器
@@ -412,7 +412,7 @@ public:
    * @param channel_num 通道号，不写时默认用第一个可用的通道
    * @return true发送成功
    */
-  bool send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol, quint8 channel_num = 0xFF);
+  bool send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol, quint8 channel_num = 0xFFU);
 
   /**
    * @brief 设置can品牌
@@ -881,7 +881,7 @@ private:
   {
     quint32 can_id;
     CircularQueue *cq_obj;
-    qint32 channel;
+    quint8 channel;
   }MSG_FILTER_Typedef_t;
 
   QList<MSG_FILTER_Typedef_t>msg_filter_list;

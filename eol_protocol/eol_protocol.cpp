@@ -225,7 +225,7 @@ bool eol_protocol::eol_send_data_port(const uint8_t *data, uint16_t data_len, \
         bool ret = can_driver_obj->send(data, (quint8)data_len, \
                                         EOL_PROTOCOL_MASTER_CAN_ID, \
                                         can_driver::STD_FRAME_TYPE, \
-                                        data_len > 8 ? \
+                                        data_len > 8U ? \
                                         can_driver::CANFD_PROTOCOL_TYPE : \
                                         can_driver::CAN_PROTOCOL_TYPE, \
                                         (quint8)channel_num.toUInt());
@@ -952,6 +952,18 @@ bool eol_protocol::common_rw_device_task(void *param_)
   /* 清空 */
   eol_protocol_clear();
 
+  /* VCAN通讯 */
+  if(EOL_W_VCAN_TEST_REG == param->reg)
+  {
+    /* 设置消息过滤器 */
+    can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)vchannel_num.toUShort());
+  }
+  else
+  {
+    /* 设置消息过滤器 */
+    can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)channel_num.toUShort());
+  }
+
   qDebug("step1 rw device cmd %u reg 0x%02X len %u", param->command, param->reg, param->len);
 
   do
@@ -1181,7 +1193,7 @@ bool eol_protocol::eol_master_send_table_data(COMMON_TABLE_HEADER_Typedef_t &tab
   }
 
   /* 设置消息过滤器 */
-  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj);
+  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)channel_num.toUShort());
 
   /* 公共 + 私有表头 */
   memcpy(&send_table_data.head_data, &table_info, sizeof(table_info.Common_Info) + table_info.Common_Info.Header_Size);
@@ -1212,7 +1224,7 @@ bool eol_protocol::eol_master_get_table_data(TABLE_Typedef_t table_type)
   }
 
   /* 设置消息过滤器 */
-  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, channel_num.toInt());
+  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)channel_num.toUShort());
 
   send_table_data.head_data.Common_Info.Table_Type = table_type;
 
@@ -1245,11 +1257,17 @@ bool eol_protocol::eol_master_common_rw_device(EOL_TASK_LIST_Typedef_t &task, bo
     }
   }
 
-  /* 设置消息过滤器 */
-  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, channel_num.toInt());
+  /* VCAN通讯，改为V通道设置 */
+  if(EOL_W_VCAN_TEST_REG == task.reg)
+  {
+    task.channel_num = vchannel_num;
+  }
+  else
+  {
+    task.channel_num = channel_num;
+  }
 
   task.com_hw = com_hw;
-  task.channel_num = channel_num;
   task.task = &eol_protocol::common_rw_device_task;
   sem.tryAcquire();
   eol_task_list.append(task);
