@@ -32,7 +32,8 @@ eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   ui->rts_lineEdit->setPlaceholderText("15 - 25 - 35");
 
   /* 设置表格 */
-
+//  ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+  ui->tableWidget->verticalHeader()->setFixedWidth(25);
 }
 
 eol_calibration_window::~eol_calibration_window()
