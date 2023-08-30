@@ -34,8 +34,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>750</width>
-            <height>646</height>
+            <width>758</width>
+            <height>661</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
@@ -114,6 +114,16 @@
                   </property>
                   <property name="text">
                    <string>NOT_CALIBRATED</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err7_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>EOL_ERROR_PPAR_WRITE</string>
                   </property>
                  </widget>
                 </item>
@@ -197,6 +207,16 @@
                   </property>
                   <property name="text">
                    <string>NOT_CALIBRATED</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="err7_history_checkBox">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>EOL_ERROR_PPAR_WRITE</string>
                   </property>
                  </widget>
                 </item>

@@ -43,11 +43,13 @@ eol_window::eol_window(QString title, QWidget *parent) :
 
   /* 设置提示值 */
   ui->com_config_lineEdit->setPlaceholderText("0 or 1 or 255");
+  ui->dev_addr_lineEdit->setPlaceholderText("85 or 4 5 6 7");
 
   /* 设置悬浮提示 */
   ui->com_hw_comboBox->setToolTip(tr("eol hw select"));
   ui->com_config_lineEdit->setToolTip(tr("eol pcom channel to rec msg or send msg 255 is send all channel"));
   ui->vcom_config_lineEdit->setToolTip(tr("eol vcom channel to rec msg or send msg 255 is send all channel"));
+  ui->dev_addr_lineEdit->setToolTip(tr("set dev addr, specify device address 85 is broadcast addr"));
 
   /* 初始化状态 */
   reset_base_ui_info();
@@ -241,6 +243,7 @@ void eol_window::save_cfg()
   /* com chnannel */
   setting.setValue("eol_window_v" CONFIG_VER_STR "/eol_com_channel", ui->com_config_lineEdit->text());
   setting.setValue("eol_window_v" CONFIG_VER_STR "/eol_vcom_channel", ui->vcom_config_lineEdit->text());
+  setting.setValue("eol_window_v" CONFIG_VER_STR "/eol_dev_addr", ui->dev_addr_lineEdit->text());
   setting.sync();
 }
 
@@ -263,6 +266,7 @@ void eol_window::read_cfg()
   /* com chnannel */
   ui->com_config_lineEdit->setText(setting.value("eol_window_v" CONFIG_VER_STR "/eol_com_channel").toString());
   ui->vcom_config_lineEdit->setText(setting.value("eol_window_v" CONFIG_VER_STR "/eol_vcom_channel").toString());
+  ui->dev_addr_lineEdit->setText(setting.value("eol_window_v" CONFIG_VER_STR "/eol_dev_addr").toString());
   setting.sync();
 }
 
@@ -1998,5 +2002,11 @@ void eol_window::on_com_config_lineEdit_textChanged(const QString &arg1)
 void eol_window::on_vcom_config_lineEdit_textChanged(const QString &arg1)
 {
   eol_protocol_obj->set_eol_vcom_config_channel(arg1);
+}
+
+
+void eol_window::on_dev_addr_lineEdit_textChanged(const QString &arg1)
+{
+  eol_protocol_obj->set_eol_dev_addr(arg1);
 }
 

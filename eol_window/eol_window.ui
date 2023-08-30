@@ -167,6 +167,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QLabel" name="dev_addr_label">
+            <property name="text">
+             <string>设备地址：</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
@@ -206,6 +213,13 @@
            <widget class="QLineEdit" name="vcom_config_lineEdit">
             <property name="text">
              <string>255</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="dev_addr_lineEdit">
+            <property name="text">
+             <string>85</string>
             </property>
            </widget>
           </item>

@@ -88,7 +88,9 @@ PS：
 
 #define EOL_FRAME_MIN_SIZE            7U      /**< 最小帧长 */
 
-#define EOL_DEVICE_COM_ADDR           0x55U   /**< 下位机通讯地址 */
+#define EOL_DEVICE_COM_ADDR           dev_addr/**< 下位机通讯地址 */
+#define EOL_DEVICE_BROADCAST_COM_ADDR 0x55U   /**< 下位机通讯广播地址 */
+
 #define EOL_PROTOCOL_MASTER_CAN_ID    0x157U  /**< 上位机CAN ID */
 #define EOL_PROTOCOL_REPLY_CAN_ID     0x257U  /**< 回复上位机CAN ID */
 
@@ -304,14 +306,56 @@ bool eol_protocol::response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait)
 uint32_t eol_protocol::check_can_read(CircularQueue::CQ_handleTypeDef *cq)
 {
   /* 判断CAN ID 跳过无效头 */
-  if(CircularQueue::CQ_ManualGet_Offset_Data(cq, 0) != SLAVE_EOL_FRAME_HEADER || CircularQueue::CQ_ManualGet_Offset_Data(cq, 1) != EOL_DEVICE_COM_ADDR)
+  quint32 len = CircularQueue::CQ_getLength(cq);
+  if(2U > len)
   {
-    if(CircularQueue::CQ_skipInvaildU8Header(cq, (quint8)SLAVE_EOL_FRAME_HEADER) == 0)
+    return len;
+  }
+
+  /* 广播帧不关心地址 */
+  if(EOL_DEVICE_COM_ADDR == EOL_DEVICE_BROADCAST_COM_ADDR)
+  {
+    if(CircularQueue::CQ_ManualGet_Offset_Data(cq, 0) != SLAVE_EOL_FRAME_HEADER)
     {
-      return 0;
+      return CircularQueue::CQ_skipInvaildU8Header(cq, (quint8)SLAVE_EOL_FRAME_HEADER);
+    }
+    /* 返回缓冲区长度 */
+    return CircularQueue::CQ_getLength(cq);
+  }
+  else
+  {
+    /* 匹配地址 */
+    if(CircularQueue::CQ_ManualGet_Offset_Data(cq, 0) != SLAVE_EOL_FRAME_HEADER || \
+        CircularQueue::CQ_ManualGet_Offset_Data(cq, 1) != EOL_DEVICE_COM_ADDR)
+    {
+      /* 剔除首个 */
+      CircularQueue::CQ_ManualOffsetInc(cq, 1);
+      if(CircularQueue::CQ_skipInvaildU8Header(cq, (quint8)SLAVE_EOL_FRAME_HEADER) == 0)
+      {
+        return 0;
+      }
+
+      /* 二次检测不过直接返回0 */
+      len = CircularQueue::CQ_getLength(cq);
+      if(2U > len)
+      {
+        return len;
+      }
+
+      if(CircularQueue::CQ_ManualGet_Offset_Data(cq, 0) != SLAVE_EOL_FRAME_HEADER || \
+          CircularQueue::CQ_ManualGet_Offset_Data(cq, 1) != EOL_DEVICE_COM_ADDR)
+      {
+        return 0;
+      }
+    }
+    /* 匹配上 */
+    else
+    {
+      /* 返回缓冲区长度 */
+      return CircularQueue::CQ_getLength(cq);
     }
   }
-  /* 返回缓冲区长度 */
+  /* 二次检测匹配上返回缓冲区长度 */
   return CircularQueue::CQ_getLength(cq);
 }
 

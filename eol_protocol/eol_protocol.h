@@ -490,6 +490,15 @@ public:
   }
 
   /**
+   * @brief 设置eol通讯设备地址
+   * @param dev_addr_ 广播地址0x55
+   */
+  void set_eol_dev_addr(QString dev_addr_)
+  {
+    dev_addr = (quint8)dev_addr_.toUShort();
+  }
+
+  /**
    * @brief 添加设置设备工作模式任务
    * @param mode 0生产普通 1生产校准
    * @return true 任务添加成功
@@ -775,6 +784,7 @@ private:
   EOL_SEND_HW_Typedef_t com_hw = EOL_CAN_HW; /**< 通讯硬件选择 */
   QString channel_num = "0";          /**< 通讯硬件端口 */
   QString vchannel_num = "255";          /**< 通讯硬件端口 */
+  quint8 dev_addr = 0x55U;            /**< 设备地址，0x55广播地址 */
   QAtomicInt thread_run_statex;
 };
 #endif
