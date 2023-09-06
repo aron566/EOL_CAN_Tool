@@ -16,6 +16,7 @@
   *           v1.0.2 aron566 2023.06.27 19:27 增加GCcanfd驱动.
   *           v1.0.3 aron566 2023.06.29 10:28 GCcanfd驱动关闭优化避免二次关闭导致异常.
   *           v1.0.4 aron566 2023.06.29 17:16 修复GCcanfd发送帧诊断数据协议类型不对问题.
+  *           v1.0.5 aron566 2023.09.01 17:55 优化can接收避免卡顿
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QDateTime>
@@ -1757,24 +1758,28 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
             {
               ulong len;
               GC_ERR_INFO vei;
-              GC_CAN_OBJ can_data[50];
-              len = Receive(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, can_data, 50, 0);
-              if(4294967295 == len)
+              GC_CAN_OBJ can_data[100];
+              len = GetReceiveNum(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num);
+              if(0 < len)
               {
-                if(STATUS_ERR != ReadErrInfo(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &vei))
+                len = Receive(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, can_data, 100, 0);
+                if(4294967295 == len)
                 {
-                  qDebug() << "gc read data err" << "err code:" << QString::number(vei.ErrCode, 16);
+                  if(STATUS_ERR != ReadErrInfo(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &vei))
+                  {
+                    qDebug() << "gc read data err" << "err code:" << QString::number(vei.ErrCode, 16);
+                  }
+                  break;
                 }
-                break;
+                show_message(channel_state, can_data, len, CAN_RX_DIRECT);
               }
-              show_message(channel_state, can_data, len, CAN_RX_DIRECT);
               break;
             }
 
           case GC_USBCANFD:
             {
-              GC_CANFD_OBJ can_data[50];
-              ulong len = 50;
+              GC_CANFD_OBJ can_data[100];
+              ulong len = 100;
               ReceiveFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, can_data, &len);
               if(0 < len)
               {
