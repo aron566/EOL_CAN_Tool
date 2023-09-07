@@ -50,20 +50,7 @@ protected:
     virtual void closeEvent(QCloseEvent *event) override;
 
     virtual void showEvent(QShowEvent *event) override;
-private:
 
-  /**
-   * @brief 定时器初始化
-   */
-  void timer_init();
-
-  /**
-   * @brief 刷新目标列表
-   * @param profile_id 目标所属配置id
-   * @param obj_num 目标数量
-   * @param data 目标信息数据
-   */
-  void refresh_obj_list_info(quint8 profile_id, quint16 obj_num, const quint8 *data);
 signals:
   /**
    * @brief 窗口关闭信号
@@ -125,6 +112,22 @@ private:
   }THRESHOLD_SET_INFO_Typedef_t;
   QList <THRESHOLD_SET_INFO_Typedef_t> threshold_list;/**< 阈值列表 */
 
+  /* 目标统计信息 */
+  typedef struct
+  {
+    quint8 profile_id;  /**< 配置ID */
+    float speed;        /**< 速度 */
+    float azi_angle;    /**< 方位角 */
+    float distance;     /**< 距离 */
+    float mag;          /**< MAG */
+    float rcs;          /**< RCS */
+    float snr;          /**< 信噪比 */
+    float ele_angle;    /**< 俯仰角 */
+    float live_percentage;/**< 目标存在比 */
+    quint32 frame_cnt;  /**< 该总帧数 */
+  }TARGET_CNT_LIST_Typedef_t;
+  QList<TARGET_CNT_LIST_Typedef_t>target_cnt_list;
+
   QTimer *timer_obj = nullptr;
 
   /* 错误计数 */
@@ -138,6 +141,26 @@ private:
 
   /* 校准配置信息 */
   QList<eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t>calibration_profile_info_list;
+private:
+
+  /**
+   * @brief 定时器初始化
+   */
+  void timer_init();
+
+  /**
+   * @brief 刷新目标列表
+   * @param profile_id 目标所属配置id
+   * @param obj_num 目标数量
+   * @param data 目标信息数据
+   */
+  void refresh_obj_list_info(quint8 profile_id, quint16 obj_num, const quint8 *data);
+
+  /**
+   * @brief refresh_obj_cnt_list_info
+   * @param target
+   */
+  void refresh_obj_cnt_list_info(TARGET_CNT_LIST_Typedef_t &target);
 };
 
 #endif // EOL_CALIBRATION_WINDOW_H

@@ -435,7 +435,10 @@ void more_window::frame_diagnosis_window_init(QString title)
 void more_window::slot_show_window()
 {
   disconnect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
-  connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::BlockingQueuedConnection);
+  CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->get_cq_handle();
+  /* 清空 */
+  CircularQueue::CQ_emptyData(cq);
+  connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::QueuedConnection);
   this->show();
 }
 
@@ -727,6 +730,50 @@ __show_msg:
   show_txt();
 }
 
+void more_window::show_can_msg(can_driver::CAN_MSG_DISPLAY_Typedef_t &msg)
+{
+  QString item;
+  if(msg.direction == can_driver::CAN_TX_DIRECT || msg.direction == can_driver::CAN_RX_DIRECT)
+  {
+      item = QString::asprintf(tr("[%u]%sx CAN%s ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
+      msg.channel_num, \
+      msg.direction == can_driver::CAN_TX_DIRECT ? "T" : "R",\
+      msg.can_protocol == can_driver::CANFD_PROTOCOL_TYPE ? "FD" : "", \
+      msg.can_id, msg.frame_type == can_driver::EXT_FRAME_TYPE ? "EXT_FRAME" : "STD_FRAME", \
+      msg.frame_data_type == can_driver::REMOTE_FRAME_TYPE ? "REMOTE_FRAME" : "DATA_FRAME", \
+      msg.data_len);
+    for(quint32 i = 0; i < msg.data_len; ++i)
+    {
+      item += QString::asprintf("%02X ", msg.msg_data[i]);
+    }
+    slot_show_message(item, (quint32)msg.channel_num, (quint8)msg.direction, msg.msg_data, msg.data_len, msg.can_id);
+    slot_show_message_bytes(msg.data_len, msg.channel_num, (quint8)msg.direction);
+  }
+  else if(msg.direction == can_driver::UNKNOW_DIRECT)
+  {
+    item = QString::asprintf("%s", msg.msg_data);
+    slot_show_message(item, (quint32)msg.channel_num, (quint8)can_driver::CAN_TX_DIRECT);
+  }
+}
+
+void more_window::slot_show_can_msg()
+{
+  CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->get_cq_handle();
+
+  /* 判断可读长度 */
+  quint32 len = CircularQueue::CQ_getLength(cq);
+  if(len < sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t))
+  {
+    return;
+  }
+  can_driver::CAN_MSG_DISPLAY_Typedef_t msg;
+  for(quint32 i = 0; i < len / sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t); i++)
+  {
+    CircularQueue::CQ_getData(cq, (quint8 *)&msg, sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t));
+    show_can_msg(msg);
+  }
+}
+
 void more_window::on_frame_type_comboBox_currentIndexChanged(int index)
 {
   /* 设置发送帧类型 */
@@ -887,8 +934,8 @@ void more_window::on_mask_en_checkBox_clicked(bool checked)
 
 void more_window::on_frame_diagnosis_pushButton_clicked()
 {
-  disconnect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block);
-  connect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
+  disconnect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg);
+  connect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg, Qt::QueuedConnection);
   frame_diagnosis_obj->show();
 }
 

@@ -87,6 +87,7 @@ public:
   static bool CQ_isFull(CircularQueue::CQ_handleTypeDef *CircularQueue);
   static void CQ_emptyData(CircularQueue::CQ_handleTypeDef*CircularQueue);
   static uint32_t CQ_getLength(CircularQueue::CQ_handleTypeDef *CircularQueue);
+  static bool CQ_canSaveLength(CQ_handleTypeDef *CircularQueue, uint32_t len);
   /* 手动缩减缓冲区长度--用作：错误帧偏移-正确帧读取后剔除 */
   static void CQ_ManualOffsetInc(CircularQueue::CQ_handleTypeDef *CircularQueue, uint32_t len);
 

@@ -3,7 +3,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.0.12"
+#define PC_SOFTWARE_VERSION       "1.1.0"
 
 int main(int argc, char *argv[])
 {

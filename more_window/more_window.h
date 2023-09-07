@@ -36,8 +36,9 @@ public:
     connect(can_driver_obj, &can_driver::signal_show_message, this, &more_window::slot_show_message);
 
     /* 线程同步 */
-    connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::BlockingQueuedConnection);
+    connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::QueuedConnection);
 
+    connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::QueuedConnection);
     /* 恢复参数 */
     read_cfg();
   }
@@ -163,6 +164,12 @@ private slots:
     void slot_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
     void slot_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
     void slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
+
+    /**
+     * @brief 刷新显示can消息
+     */
+    void slot_show_can_msg();
+
     void on_frame_diagnosis_pushButton_clicked();
 
     void on_export_txt_pushButton_clicked();
@@ -226,6 +233,11 @@ private:
      */
     void frame_diagnosis_window_init(QString title);
 
+    /**
+     * @brief 显示can消息
+     * @param msg 消息
+     */
+    void show_can_msg(can_driver::CAN_MSG_DISPLAY_Typedef_t &msg);
 private:
     /* 已显示消息 */
     quint32 ch1_show_msg_index = 0;

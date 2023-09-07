@@ -27,6 +27,7 @@
 #include <QCoreApplication>
 #include <QThread>
 #include <QRunnable>
+#include <QSemaphore>
 #include "zlgcan.h"
 #include "ecanvci.h"
 #include "ecanfdvci.h"
@@ -95,6 +96,13 @@ public:
     EXT_FRAME_TYPE,
   }FRAME_TYPE_Typedef_t;
 
+  /* 数据帧/远程帧 */
+  typedef enum
+  {
+    DATA_FRAME_TYPE = 0,
+    REMOTE_FRAME_TYPE,
+  }FRAME_DATA_TYPE_Typedef_t;
+
   /* can cnafd协议 */
   typedef enum
   {
@@ -115,7 +123,21 @@ public:
   {
     CAN_TX_DIRECT = 0,
     CAN_RX_DIRECT,
+    UNKNOW_DIRECT = 0xFF,
   }CAN_DIRECT_Typedef_t;
+
+  /* 显示消息 */
+  typedef struct
+  {
+    quint32 can_id;
+    CAN_DIRECT_Typedef_t direction;
+    quint8 channel_num;
+    PROTOCOL_TYPE_Typedef_t can_protocol;
+    FRAME_TYPE_Typedef_t frame_type;
+    FRAME_DATA_TYPE_Typedef_t frame_data_type;
+    quint8 msg_data[64];
+    quint8 data_len;
+  }CAN_MSG_DISPLAY_Typedef_t;
 
   /* 数据缓冲队列 */
   CircularQueue *cq_obj = nullptr;
@@ -245,9 +267,14 @@ signals:
    *
    * @param message 消息内容t
    */
-  void signal_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
-  void signal_show_thread_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
-  void signal_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
+  Q_DECL_DEPRECATED void signal_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
+  Q_DECL_DEPRECATED void signal_show_thread_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data = nullptr, quint32 data_len = 0, quint32 can_id = 0);
+  Q_DECL_DEPRECATED void signal_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct);
+
+  /**
+   * @brief 发送信号-刷新消息显示
+   */
+  void signal_show_can_msg();
 
   /**
    * @brief 发送信号显示当前的can消息
@@ -761,15 +788,69 @@ private:
   void auto_send_can_use_update(bool support_can, bool support_canfd, bool support_index, bool support_single_cancel, bool support_get_autosend_list);
   bool custom_baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state);
 
+  /**
+   * @brief msg_to_cq_buf can消息过滤分发到cq
+   * @param can_id can id
+   * @param channel_num 通道号
+   * @param data 数据
+   * @param data_len 数据长度
+   */
+  void msg_to_cq_buf(quint32 can_id, quint8 channel_num, const quint8 *data, quint32 data_len);
+
+  /**
+   * @brief msg_to_ui_cq_buf can消息过滤分发到显示cq
+   * @param can_id can id
+   * @param channel_num 通道号
+   * @param direction 方向
+   * @param protocol 协议
+   * @param frame_type 帧类型
+   * @param frame_data_type 帧数据类型
+   * @param data 数据
+   * @param data_len 数据长度
+   */
+  void msg_to_ui_cq_buf(quint32 can_id, quint8 channel_num, CAN_DIRECT_Typedef_t direction, \
+                                    PROTOCOL_TYPE_Typedef_t protocol, FRAME_TYPE_Typedef_t frame_type, \
+                                    FRAME_DATA_TYPE_Typedef_t frame_data_type, \
+                                    const quint8 *data, quint8 data_len);
+
   /* zlg消息 */
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Receive_Data *data, quint32 len);
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_ReceiveFD_Data *data, quint32 len);
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_Transmit_Data *data, quint32 len);
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const ZCAN_TransmitFD_Data *data, quint32 len);
 
+  /**
+   * @brief zlg_can_send 发送消息
+   * @param channel_state 句柄
+   * @param data 数据
+   * @param size 数据大小
+   * @param id can id
+   * @param frame_type 帧类型
+   * @param protocol 协议类型
+   * @return 发送成功帧数
+   */
+  quint32 zlg_can_send(const CHANNEL_STATE_Typedef_t &channel_state, \
+                                   const quint8 *data, quint8 size, quint32 id, \
+                                   FRAME_TYPE_Typedef_t frame_type, \
+                                   PROTOCOL_TYPE_Typedef_t protocol);
   /* gc消息 */
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const GC_CAN_OBJ *data, quint32 len, CAN_DIRECT_Typedef_t dir);
   void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const GC_CANFD_OBJ *data, quint32 len, CAN_DIRECT_Typedef_t dir);
+
+  /**
+   * @brief gc_can_send 发送消息
+   * @param channel_state 句柄
+   * @param data 数据
+   * @param size 数据大小
+   * @param id can id
+   * @param frame_type 帧类型
+   * @param protocol 协议类型
+   * @return 发送成功帧数
+   */
+  quint32 gc_can_send(const CHANNEL_STATE_Typedef_t &channel_state, \
+                                  const quint8 *data, quint8 size, quint32 id, \
+                                  FRAME_TYPE_Typedef_t frame_type, \
+                                  PROTOCOL_TYPE_Typedef_t protocol);
 
   /**
    * @brief 显示消息
@@ -885,6 +966,8 @@ private:
 
   QList<MSG_FILTER_Typedef_t>msg_filter_list;
   QList<CHANNEL_STATE_Typedef_t>channel_state_list;
+
+  QSemaphore sem;
 };
 
 #endif // CAN_DRIVER_H

@@ -150,9 +150,25 @@ bool CircularQueue::CQ_isFull(CQ_handleTypeDef *CircularQueue)
  * @param  CircularQueue [环形缓冲区句柄]
  * @return               [剩余长度]
  */
-uint32_t CircularQueue::CQ_getLength(CQ_handleTypeDef*CircularQueue)
+uint32_t CircularQueue::CQ_getLength(CQ_handleTypeDef *CircularQueue)
 {
   return (CircularQueue->entrance - CircularQueue->exit);
+}
+
+/**
+ * @brief 环形缓冲区是否够存指定长度数据
+ * @param CircularQueue cq
+ * @param len 指定长度
+ * @return true 能够存入
+ */
+bool CircularQueue::CQ_canSaveLength(CQ_handleTypeDef *CircularQueue, uint32_t len)
+{
+  uint32_t size = GET_MIN(len, CircularQueue->size - CircularQueue->entrance + CircularQueue->exit);
+  if(len != size)
+  {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -163,7 +179,6 @@ uint32_t CircularQueue::CQ_getLength(CQ_handleTypeDef*CircularQueue)
 void CircularQueue::CQ_emptyData(CQ_handleTypeDef*CircularQueue)
 {
   CircularQueue->entrance = CircularQueue->exit = 0;
-  memset(CircularQueue->Buffer.data8Buffer, 0, CircularQueue->size);
 }
 
 /**

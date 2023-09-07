@@ -137,6 +137,13 @@
             </widget>
            </item>
            <item>
+            <widget class="QCheckBox" name="target_cnt_en_checkBox">
+             <property name="text">
+              <string>开启目标统计</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -294,7 +301,7 @@
       <item row="2" column="1">
        <widget class="QLabel" name="refresh_time_label">
         <property name="text">
-         <string>请求周期ms：</string>
+         <string>强制请求周期ms：</string>
         </property>
        </widget>
       </item>
@@ -316,7 +323,7 @@
         <property name="title">
          <string>数据视口</string>
         </property>
-        <layout class="QGridLayout" name="gridLayout_6">
+        <layout class="QGridLayout" name="gridLayout_2">
          <item row="0" column="0">
           <widget class="QTableWidget" name="tableWidget">
            <attribute name="verticalHeaderMinimumSectionSize">
@@ -364,13 +371,65 @@
            </column>
           </widget>
          </item>
+         <item row="0" column="1">
+          <widget class="QTableWidget" name="target_cnt_tableWidget">
+           <attribute name="verticalHeaderMinimumSectionSize">
+            <number>23</number>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>配置ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>目标速度</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>方位角deg</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>目标距离</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>MAGdB</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>RCSdB</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>SNRdB</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>俯仰角deg</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>目标存在率</string>
+            </property>
+           </column>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
       <item row="2" column="3">
        <widget class="QLabel" name="fps_label">
         <property name="text">
-         <string>帧率fps：</string>
+         <string>实时帧率fps：</string>
         </property>
        </widget>
       </item>

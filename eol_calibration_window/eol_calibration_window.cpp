@@ -34,6 +34,7 @@ eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   /* 设置表格 */
 //  ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
   ui->tableWidget->verticalHeader()->setFixedWidth(25);
+  ui->target_cnt_tableWidget->verticalHeader()->setFixedWidth(30);
 }
 
 eol_calibration_window::~eol_calibration_window()
@@ -99,7 +100,57 @@ void eol_calibration_window::set_eol_protocol_obj(eol_protocol *obj)
   /* 数据接收 */
 //  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_calibration_window::slot_protocol_rw_err);
-  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok, Qt::QueuedConnection);
+}
+
+void eol_calibration_window::refresh_obj_cnt_list_info(TARGET_CNT_LIST_Typedef_t &target)
+{
+  if(ui->target_cnt_en_checkBox->isChecked() == false)
+  {
+    return;
+  }
+  /* 匹配 配置id 距离 速度 方位角度 俯仰 mag */
+  TARGET_CNT_LIST_Typedef_t cur_target;
+  int index = 0;
+  for(int i = 0; i < target_cnt_list.size(); i++)
+  {
+    cur_target = target_cnt_list.value(i);
+    if(cur_target.profile_id == target.profile_id &&
+        (cur_target.azi_angle >= target.azi_angle - 0.05f && cur_target.azi_angle <= target.azi_angle + 0.05f) &&
+        (cur_target.ele_angle >= target.ele_angle - 0.05f && cur_target.ele_angle <= target.ele_angle + 0.05f) &&
+        (cur_target.distance >= target.distance - 0.05f && cur_target.distance <= target.distance + 0.05f) &&
+        (cur_target.speed >= target.speed - 0.05f && cur_target.speed <= target.speed + 0.05f) &&
+        (cur_target.mag >= target.mag - 3.001f && cur_target.mag <= target.mag + 3.001f))
+    {
+      cur_target.frame_cnt++;
+      cur_target.rcs = target.rcs;
+      cur_target.snr = target.snr;
+      cur_target.live_percentage = (float)cur_target.frame_cnt / (float)frame_cnt;
+      target_cnt_list.replace(i, cur_target);
+      index = i;
+      goto _UPDATE_TARGET_CNT_INFO;
+    }
+  }
+
+  target_cnt_list.append(target);
+
+  /* 设置当前表格行数 */
+  ui->target_cnt_tableWidget->setRowCount(target_cnt_list.size());
+
+  index = target_cnt_list.size() - 1;
+_UPDATE_TARGET_CNT_INFO:
+
+  cur_target = target_cnt_list.value(index);
+  /* 目标序号 配置ID 速度 方位角 距离 mag rcs snr 俯仰角 存在率 */
+  ui->target_cnt_tableWidget->setItem(index, 0, new QTableWidgetItem(QString::number(cur_target.profile_id)));
+  ui->target_cnt_tableWidget->setItem(index, 1, new QTableWidgetItem(QString::number(cur_target.speed)));
+  ui->target_cnt_tableWidget->setItem(index, 2, new QTableWidgetItem(QString::number(cur_target.azi_angle)));
+  ui->target_cnt_tableWidget->setItem(index, 3, new QTableWidgetItem(QString::number(cur_target.distance)));
+  ui->target_cnt_tableWidget->setItem(index, 4, new QTableWidgetItem(QString::number(cur_target.mag)));
+  ui->target_cnt_tableWidget->setItem(index, 5, new QTableWidgetItem(QString::number(cur_target.rcs)));
+  ui->target_cnt_tableWidget->setItem(index, 6, new QTableWidgetItem(QString::number(cur_target.snr)));
+  ui->target_cnt_tableWidget->setItem(index, 7, new QTableWidgetItem(QString::number(cur_target.ele_angle)));
+  ui->target_cnt_tableWidget->setItem(index, 8, new QTableWidgetItem(QString::asprintf("%.2f%%", cur_target.live_percentage * 100.f)));
 }
 
 /**
@@ -114,11 +165,11 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
 
   frame_cnt++;
 
-  qDebug() << "profile " << profile_id << "obj_num " << obj_num;
+//  qDebug() << "profile " << profile_id << "obj_num " << obj_num;
 
   /* 设置当前表格行数 */
   ui->tableWidget->clearContents();
-  ui->tableWidget->setRowCount(obj_num);
+  ui->tableWidget->setRowCount(obj_num < 64 ? 64 : obj_num);
 
   /* 刷新数据 */
   quint16 index = 0;
@@ -154,14 +205,27 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
     index += sizeof(ele_angle);
 
     /* 目标序号 配置ID 速度 方位角 距离 mag rcs snr 俯仰角 */
-    ui->tableWidget->setItem(i, 0, new QTableWidgetItem(QString::number(profile_id)));
-    ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number((double)speed * 0.01f)));
-    ui->tableWidget->setItem(i, 2, new QTableWidgetItem(QString::number((double)azi_angle * 0.01f)));
-    ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number((double)distance * 0.01f)));
-    ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number((double)mag * 0.1f)));
-    ui->tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number((double)rcs * 0.1f)));
-    ui->tableWidget->setItem(i, 6, new QTableWidgetItem(QString::number((double)snr * 0.1f)));
-    ui->tableWidget->setItem(i, 7, new QTableWidgetItem(QString::number((double)ele_angle * 0.01f)));
+    TARGET_CNT_LIST_Typedef_t target;
+    target.profile_id = profile_id;
+    target.speed = (float)speed * 0.01f;
+    target.azi_angle = (float)azi_angle * 0.01f;
+    target.distance = (float)distance * 0.01f;
+    target.mag = (float)mag * 0.1f;
+    target.rcs = (float)rcs * 0.1f;
+    target.snr = (float)snr * 0.1f;
+    target.ele_angle = (float)ele_angle * 0.01f;
+
+    ui->tableWidget->setItem(i, 0, new QTableWidgetItem(QString::number(target.profile_id)));
+    ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(target.speed)));
+    ui->tableWidget->setItem(i, 2, new QTableWidgetItem(QString::number(target.azi_angle)));
+    ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(target.distance)));
+    ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number(target.mag)));
+    ui->tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number(target.rcs)));
+    ui->tableWidget->setItem(i, 6, new QTableWidgetItem(QString::number(target.snr)));
+    ui->tableWidget->setItem(i, 7, new QTableWidgetItem(QString::number(target.ele_angle)));
+
+    /* 更新统计信息 */
+    refresh_obj_cnt_list_info(target);
   }
 }
 
@@ -248,6 +312,10 @@ void eol_calibration_window::on_test_start_pushButton_clicked()
   timer_obj->start();
   ui->test_start_pushButton->setText(tr("stop"));
   ui->read_rcs_offset_pushButton->setEnabled(false);
+
+  /* 清除目标统计 */
+  target_cnt_list.clear();
+  ui->target_cnt_tableWidget->clearContents();
 
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
