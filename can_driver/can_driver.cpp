@@ -622,7 +622,7 @@ bool can_driver::init()
 }
 
 bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
-{ 
+{
   switch(brand_)
   {
     case ZLG_CAN_BRAND:
@@ -1628,7 +1628,7 @@ void can_driver::msg_to_cq_buf(quint32 can_id, quint8 channel_num, const quint8 
     {
       break;
     }
-    CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->get_cq_handle(), data, data_len);
+    CircularQueue::CQ_putData(msg_filter_list.value(index).cq_obj->CQ_getCQHandle(), data, data_len);
   }
 }
 
@@ -1655,9 +1655,9 @@ void can_driver::msg_to_ui_cq_buf(quint32 can_id, quint8 channel_num, CAN_DIRECT
   memcpy(ui_msg.msg_data, data, data_len);
 
   sem.tryAcquire();
-  if(true == CircularQueue::CQ_canSaveLength(cq_obj->get_cq_handle(), sizeof(ui_msg)))
+  if(true == CircularQueue::CQ_canSaveLength(cq_obj->CQ_getCQHandle(), sizeof(ui_msg)))
   {
-    CircularQueue::CQ_putData(cq_obj->get_cq_handle(), (quint8 *)&ui_msg, sizeof(ui_msg));
+    CircularQueue::CQ_putData(cq_obj->CQ_getCQHandle(), (quint8 *)&ui_msg, sizeof(ui_msg));
   }
   sem.release();
 

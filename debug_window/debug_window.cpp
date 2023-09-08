@@ -6,6 +6,7 @@
 #include <QMenu>
 #include <QContextMenuEvent>
 #include <QMimeData>
+#include <QInputMethod>
 #include <QDebug>
 
 #define CONFIG_VER_STR            "0.0.2"                /**< 配置文件版本 */
@@ -78,6 +79,8 @@ void debug_window::showEvent(QShowEvent *event)
 {
   Q_UNUSED(event)
   ui->shell_textEdit->setFocus();
+  /* 设置输入法为英文 */
+  ui->shell_textEdit->setAttribute(Qt::WA_InputMethodEnabled, false);
 }
 
 //void debug_window::contextMenuEvent(QContextMenuEvent *event)
@@ -518,12 +521,7 @@ void debug_window::rec_shell_data(const quint8 *data, quint32 data_len)
       default:
         {
           ui->shell_textEdit->moveCursor(QTextCursor::End);
-          ui->shell_textEdit->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
-          QString msg = ui->shell_textEdit->textCursor().selectedText();
-          ui->shell_textEdit->textCursor().removeSelectedText();
-          msg += QString::asprintf("%c", strbuf[i]);
-          ui->shell_textEdit->moveCursor(QTextCursor::End);
-          ui->shell_textEdit->insertPlainText(msg);
+          ui->shell_textEdit->insertPlainText(QString::asprintf("%c", strbuf[i]));
         }
         break;
     }
@@ -534,13 +532,12 @@ void debug_window::rec_shell_data(const quint8 *data, quint32 data_len)
     str = ui->shell_textEdit->textCursor().selectedText();
     if("\u001B[2J\u001B[1H" == str)
     {
-      ui->shell_textEdit->clear();
-      ui->shell_textEdit->moveCursor(QTextCursor::Start);
+//      ui->shell_textEdit->clear();
+//      ui->shell_textEdit->moveCursor(QTextCursor::Start);
       ui->shell_textEdit->setHtml("<body bgcolor=\"#000000\"></body>");
       /* 设置颜色 */
       ui->shell_textEdit->setTextColor(ui->color_list_comboBox->currentText());
       ui->shell_textEdit->insertPlainText(logo);
-      return;
     }
   }
 

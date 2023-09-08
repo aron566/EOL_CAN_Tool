@@ -374,7 +374,7 @@ void more_window::update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Ty
 
   /* 下翻 */
   if(downward_flag)
-  { 
+  {
     text_edit_widget->moveCursor(QTextCursor::End);
     QTextCursor cursor = text_edit_widget->textCursor();
     QTextCharFormat format;
@@ -435,7 +435,7 @@ void more_window::frame_diagnosis_window_init(QString title)
 void more_window::slot_show_window()
 {
   disconnect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
-  CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->get_cq_handle();
+  CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->CQ_getCQHandle();
   /* 清空 */
   CircularQueue::CQ_emptyData(cq);
   connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::QueuedConnection);
@@ -758,7 +758,7 @@ void more_window::show_can_msg(can_driver::CAN_MSG_DISPLAY_Typedef_t &msg)
 
 void more_window::slot_show_can_msg()
 {
-  CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->get_cq_handle();
+  CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->CQ_getCQHandle();
 
   /* 判断可读长度 */
   quint32 len = CircularQueue::CQ_getLength(cq);

@@ -61,6 +61,11 @@
                <string>50</string>
               </property>
              </item>
+             <item>
+              <property name="text">
+               <string>80</string>
+              </property>
+             </item>
             </widget>
            </item>
            <item>
@@ -267,7 +272,7 @@
             <item row="0" column="0">
              <widget class="QLabel" name="threshold_list_label">
               <property name="text">
-               <string>20m,mag:&gt;90 &lt;105,snr:&gt;45 &lt;70,rts:20 40m,mag:&gt;70 &lt;85,snr:&gt;30 &lt;50,rts:20</string>
+               <string>id:0,20m,mag:&gt;90 &lt;105,snr:&gt;45 &lt;70,rts:20 40m,mag:&gt;70 &lt;85,snr:&gt;30 &lt;50,rts:20</string>
               </property>
              </widget>
             </item>

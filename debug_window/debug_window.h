@@ -120,6 +120,7 @@ private:
   int history_cmd_num;/**< 历史命令个数 */
   int minTextCurse;
   int lastTextCurse;
+
   QTimer *timer_obj = nullptr;
 };
 

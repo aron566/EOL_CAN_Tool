@@ -93,6 +93,8 @@ private slots:
 
   void on_set_cali_mode_pushButton_clicked();
 
+  void on_target_cnt_en_checkBox_stateChanged(int arg1);
+
 private:
   Ui::eol_calibration_window *ui;
 
@@ -103,6 +105,7 @@ private:
   typedef struct
   {
     QString str;
+    quint8 profile_id;
     quint8 distance_m;
     qint8 mag_dB_threshold_down;
     qint8 mag_dB_threshold_up;

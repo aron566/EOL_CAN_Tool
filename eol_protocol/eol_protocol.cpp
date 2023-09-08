@@ -169,7 +169,7 @@ void eol_protocol::eol_protocol_clear()
 {
   qDebug() << "---eol_protocol_clear---";
   wait_response_list.clear();
-  CircularQueue::CQ_emptyData(cq_obj->get_cq_handle());
+  CircularQueue::CQ_emptyData(cq_obj->CQ_getCQHandle());
 }
 
 /**
@@ -315,7 +315,7 @@ uint32_t eol_protocol::check_can_read(CircularQueue::CQ_handleTypeDef *cq)
   /* 广播帧不关心地址 */
   if(EOL_DEVICE_COM_ADDR == EOL_DEVICE_BROADCAST_COM_ADDR)
   {
-    if(CircularQueue::CQ_ManualGet_Offset_Data(cq, 0) != SLAVE_EOL_FRAME_HEADER)
+    if(CircularQueue::CQ_manualGetOffsetData(cq, 0) != SLAVE_EOL_FRAME_HEADER)
     {
       return CircularQueue::CQ_skipInvaildU8Header(cq, (quint8)SLAVE_EOL_FRAME_HEADER);
     }
@@ -325,11 +325,11 @@ uint32_t eol_protocol::check_can_read(CircularQueue::CQ_handleTypeDef *cq)
   else
   {
     /* 匹配地址 */
-    if(CircularQueue::CQ_ManualGet_Offset_Data(cq, 0) != SLAVE_EOL_FRAME_HEADER || \
-        CircularQueue::CQ_ManualGet_Offset_Data(cq, 1) != EOL_DEVICE_COM_ADDR)
+    if(CircularQueue::CQ_manualGetOffsetData(cq, 0) != SLAVE_EOL_FRAME_HEADER || \
+        CircularQueue::CQ_manualGetOffsetData(cq, 1) != EOL_DEVICE_COM_ADDR)
     {
       /* 剔除首个 */
-      CircularQueue::CQ_ManualOffsetInc(cq, 1);
+      CircularQueue::CQ_manualOffsetInc(cq, 1);
       if(CircularQueue::CQ_skipInvaildU8Header(cq, (quint8)SLAVE_EOL_FRAME_HEADER) == 0)
       {
         return 0;
@@ -342,8 +342,8 @@ uint32_t eol_protocol::check_can_read(CircularQueue::CQ_handleTypeDef *cq)
         return len;
       }
 
-      if(CircularQueue::CQ_ManualGet_Offset_Data(cq, 0) != SLAVE_EOL_FRAME_HEADER || \
-          CircularQueue::CQ_ManualGet_Offset_Data(cq, 1) != EOL_DEVICE_COM_ADDR)
+      if(CircularQueue::CQ_manualGetOffsetData(cq, 0) != SLAVE_EOL_FRAME_HEADER || \
+          CircularQueue::CQ_manualGetOffsetData(cq, 1) != EOL_DEVICE_COM_ADDR)
       {
         return 0;
       }
@@ -695,7 +695,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
     return RETURN_ERROR;
   }
 
-  CircularQueue::CQ_handleTypeDef *cq = cq_obj->get_cq_handle();
+  CircularQueue::CQ_handleTypeDef *cq = cq_obj->CQ_getCQHandle();
 
   /* 检查响应队列 */
   if(true == wait_response_list.isEmpty() && false == listen_mode)
@@ -756,7 +756,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
     }
 
     /* 判断帧类型 */
-    reg = CircularQueue::CQ_ManualGet_Offset_Data(cq, 2);
+    reg = CircularQueue::CQ_manualGetOffsetData(cq, 2);
     cmd = reg & 0x01;
     reg >>= 1;
 
@@ -768,7 +768,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         package_len = EOL_FRAME_MIN_SIZE;
 
         /* 写入应答完成 */
-        CircularQueue::CQ_ManualGetData(cq, temp_buf, package_len);
+        CircularQueue::CQ_manualGetDataTemp(cq, temp_buf, package_len);
 
         /* 校验CRC */
         if(utility::get_modbus_crc16_rsl_with_tab(temp_buf, static_cast<uint16_t>(package_len - 2)) == false)
@@ -784,7 +784,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
           wait_response_list.removeFirst();
         }
 
-        CircularQueue::CQ_ManualOffsetInc(cq, package_len);
+        CircularQueue::CQ_manualOffsetInc(cq, package_len);
 
         /* 处理ack */
         EOL_OPT_STATUS_Typedef_t ret = decode_ack_frame(reg, temp_buf);
@@ -802,8 +802,8 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
       /* 主机读取，从机回复报文 */
       case EOL_READ_CMD:
       {
-        data_len = static_cast<uint16_t>(CircularQueue::CQ_ManualGet_Offset_Data(cq, 4) << 8);
-        data_len += CircularQueue::CQ_ManualGet_Offset_Data(cq, 3);
+        data_len = static_cast<uint16_t>(CircularQueue::CQ_manualGetOffsetData(cq, 4) << 8);
+        data_len += CircularQueue::CQ_manualGetOffsetData(cq, 3);
         package_len = 7 + data_len;
         package_len = (package_len > FRAME_TEMP_BUF_SIZE) ? FRAME_TEMP_BUF_SIZE : package_len;
 
@@ -811,7 +811,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         {
           return RETURN_WAITTING;
         }
-        CircularQueue::CQ_ManualGetData(cq, temp_buf, package_len);
+        CircularQueue::CQ_manualGetDataTemp(cq, temp_buf, package_len);
         if(utility::get_modbus_crc16_rsl_with_tab(temp_buf, static_cast<uint16_t>(package_len - 2)) == false)
         {
           qDebug() << "crc err package_len " << package_len << "data len " << data_len;
@@ -828,7 +828,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
           wait_response_list.removeFirst();
         }
 
-        CircularQueue::CQ_ManualOffsetInc(cq, package_len);
+        CircularQueue::CQ_manualOffsetInc(cq, package_len);
 
         acc_error_cnt = 0;
         return ret;
@@ -836,15 +836,15 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
 
       default:
         /* TODO */
-        CircularQueue::CQ_ManualOffsetInc(cq, 1);
+        CircularQueue::CQ_manualOffsetInc(cq, 1);
         return RETURN_WAITTING;
     }
-    CircularQueue::CQ_ManualOffsetInc(cq, 1);
+    CircularQueue::CQ_manualOffsetInc(cq, 1);
     return RETURN_ERROR;
 
 __META_CMD_DECDE:
     /* 取出数据 */
-    CircularQueue::CQ_ManualGetData(cq, temp_buf, meta_len);
+    CircularQueue::CQ_manualGetDataTemp(cq, temp_buf, meta_len);
     QString str;
     for(quint8 i = 0; i < meta_len; i++)
     {
@@ -859,12 +859,12 @@ __META_CMD_DECDE:
         {
           wait_response_list.removeFirst();
         }
-        CircularQueue::CQ_ManualOffsetInc(cq, meta_len);
+        CircularQueue::CQ_manualOffsetInc(cq, meta_len);
 
         acc_error_cnt = 0;
         return RETURN_OK;
     }
-    CircularQueue::CQ_ManualOffsetInc(cq, 1);
+    CircularQueue::CQ_manualOffsetInc(cq, 1);
     return RETURN_ERROR;
   }
   return RETURN_ERROR;

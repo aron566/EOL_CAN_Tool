@@ -35,6 +35,7 @@ eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
 //  ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
   ui->tableWidget->verticalHeader()->setFixedWidth(25);
   ui->target_cnt_tableWidget->verticalHeader()->setFixedWidth(30);
+  ui->target_cnt_tableWidget->setVisible(false);
 }
 
 eol_calibration_window::~eol_calibration_window()
@@ -235,6 +236,7 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
 void eol_calibration_window::on_add_pushButton_clicked()
 {
   THRESHOLD_SET_INFO_Typedef_t threshold_info;
+  threshold_info.profile_id = (quint8)ui->profile_id_comboBox->currentText().toUShort();
   threshold_info.distance_m = (quint8)ui->distance_comboBox->currentText().toUShort();
   threshold_info.mag_dB_threshold_down = (qint8)ui->mag_threshold_min_lineEdit->text().toShort();
   threshold_info.mag_dB_threshold_up = (qint8)ui->mag_threshold_max_lineEdit->text().toShort();
@@ -242,7 +244,8 @@ void eol_calibration_window::on_add_pushButton_clicked()
   threshold_info.snr_dB_threshold_up = (qint8)ui->snr_threshold_max_lineEdit->text().toShort();
   threshold_info.rts_dBsm = (quint8)ui->rts_lineEdit->text().toUShort();
 
-  threshold_info.str = QString::asprintf("%um,mag:>%u <%u,snr:>%u <%u,rts:%u\r\n", \
+  threshold_info.str = QString::asprintf("id:%u,%um,mag:>%u <%u,snr:>%u <%u,rts:%u\r\n", \
+                                         threshold_info.profile_id, \
                                          threshold_info.distance_m, \
                                          threshold_info.mag_dB_threshold_down, \
                                          threshold_info.mag_dB_threshold_up, \
@@ -590,5 +593,11 @@ void eol_calibration_window::on_set_cali_mode_pushButton_clicked()
 
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
+}
+
+
+void eol_calibration_window::on_target_cnt_en_checkBox_stateChanged(int arg1)
+{
+  ui->target_cnt_tableWidget->setVisible((bool)arg1);
 }
 
