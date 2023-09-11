@@ -6,7 +6,7 @@
 #include <QDateTime>
 #include <QWheelEvent>
 
-#define SHOW_MSG_SAVE_NUM_MAX     100U                    /**< 最大显示消息数 */
+#define SHOW_MSG_SAVE_NUM_MAX     200U                    /**< 最大显示消息数 */
 #define SHOW_MSG_ONE_SCORLL       (5U)                    /**< 上翻每次刷新列表数 */
 #define SAVE_MSG_BUF_MAX          (1024U*1024U*10U)       /**< 最大缓存消息数 */
 
@@ -48,6 +48,12 @@ more_window::more_window(QString title, QWidget *parent) :
   ui->ch2_receive_data_textEdit->setVisible(true);
   ui->ch1_receive_data_textEdit->setUndoRedoEnabled(false);
   ui->ch2_receive_data_textEdit->setUndoRedoEnabled(false);
+
+  /* 限制显示行数 */
+  ui->ch1_receive_data_textEdit->setReadOnly(true);
+  ui->ch2_receive_data_textEdit->setReadOnly(true);
+  ui->ch1_receive_data_textEdit->document()->setMaximumBlockCount(SHOW_MSG_SAVE_NUM_MAX);
+  ui->ch2_receive_data_textEdit->document()->setMaximumBlockCount(SHOW_MSG_SAVE_NUM_MAX);
 
   /* 设置提示值 */
   ui->data_lineEdit->setPlaceholderText("05 66");
@@ -293,7 +299,7 @@ void more_window::show_txt()
   /* 显示 */
   QTextEdit *text_edit_widget = nullptr;
   SHOW_MSG_Typedef_t show_messagex;
-  bool remove_line_flag = false;
+//  bool remove_line_flag = false;
 
   if(ch1_show_msg_is_empty() == false)
   {
@@ -303,10 +309,12 @@ void more_window::show_txt()
     ch1_scroll_cnt = show_index + 1;
 
     text_edit_widget = ui->ch1_receive_data_textEdit;
+#if 0
     if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_index)
     {
       remove_line_flag = true;
     }
+#endif
 
     /* 设置颜色 */
     if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
@@ -320,6 +328,7 @@ void more_window::show_txt()
 
     text_edit_widget->append(show_messagex.str);
 
+#if 0
     if(true == remove_line_flag)
     {
       text_edit_widget->moveCursor(QTextCursor::Start);
@@ -329,6 +338,7 @@ void more_window::show_txt()
       text_edit_widget->textCursor().removeSelectedText();
       text_edit_widget->moveCursor(QTextCursor::End);
     }
+#endif
   }
 
   if(ch2_show_msg_is_empty() == false)
@@ -339,10 +349,13 @@ void more_window::show_txt()
     ch2_scroll_cnt = show_index + 1;
 
     text_edit_widget = ui->ch2_receive_data_textEdit;
+
+#if 0
     if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_index)
     {
       remove_line_flag = true;
     }
+#endif
 
     /* 设置颜色 */
     if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
@@ -356,6 +369,7 @@ void more_window::show_txt()
 
     text_edit_widget->append(show_messagex.str);
 
+#if 0
     if(true == remove_line_flag)
     {
       text_edit_widget->moveCursor(QTextCursor::Start);
@@ -365,6 +379,8 @@ void more_window::show_txt()
       text_edit_widget->textCursor().removeSelectedText();
       text_edit_widget->moveCursor(QTextCursor::End);
     }
+#endif
+
   }
 }
 
@@ -767,6 +783,7 @@ void more_window::slot_show_can_msg()
     return;
   }
   can_driver::CAN_MSG_DISPLAY_Typedef_t msg;
+  qDebug() << "len " << (len / sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t));
   for(quint32 i = 0; i < len / sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t); i++)
   {
     CircularQueue::CQ_getData(cq, (quint8 *)&msg, sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t));
