@@ -783,7 +783,6 @@ void more_window::slot_show_can_msg()
     return;
   }
   can_driver::CAN_MSG_DISPLAY_Typedef_t msg;
-  qDebug() << "len " << (len / sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t));
   for(quint32 i = 0; i < len / sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t); i++)
   {
     CircularQueue::CQ_getData(cq, (quint8 *)&msg, sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t));
