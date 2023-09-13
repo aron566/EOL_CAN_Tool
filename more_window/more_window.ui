@@ -393,213 +393,217 @@
      <property name="title">
       <string>数据发送</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_6">
+     <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_8">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
         <item>
-         <widget class="QGroupBox" name="send_par_groupBox">
-          <property name="title">
-           <string>发送设置</string>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_9">
-           <item>
-            <widget class="QComboBox" name="channel_num_comboBox">
-             <item>
-              <property name="text">
-               <string>通道0</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>通道1</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="id_label">
-             <property name="text">
-              <string>ID（0x）:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="id_lineEdit">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="frame_type_label">
-             <property name="text">
-              <string>帧类型：</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="frame_type_comboBox">
-             <item>
-              <property name="text">
-               <string>标准帧</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>扩展帧</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="protocol_label">
-             <property name="text">
-              <string>协议：</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="protocol_comboBox">
-             <item>
-              <property name="text">
-               <string>CAN</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>CANFD</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="canfd_pluse_label">
-             <property name="text">
-              <string>CANFD加速：</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="canfd_pluse_comboBox">
-             <item>
-              <property name="text">
-               <string>否</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>是</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="1" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_10">
-        <item>
-         <widget class="QLabel" name="data_label">
-          <property name="text">
-           <string>数据：</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="data_lineEdit">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="crc_comboBox">
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
           <item>
-           <property name="text">
-            <string>CRC选择</string>
-           </property>
+           <widget class="QGroupBox" name="send_par_groupBox">
+            <property name="title">
+             <string>发送设置</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QComboBox" name="channel_num_comboBox">
+               <item>
+                <property name="text">
+                 <string>通道0</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>通道1</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="id_label">
+               <property name="text">
+                <string>ID（0x）:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="id_lineEdit">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="frame_type_label">
+               <property name="text">
+                <string>帧类型：</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="frame_type_comboBox">
+               <item>
+                <property name="text">
+                 <string>标准帧</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>扩展帧</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="protocol_label">
+               <property name="text">
+                <string>协议：</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="protocol_comboBox">
+               <item>
+                <property name="text">
+                 <string>CAN</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>CANFD</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="canfd_pluse_label">
+               <property name="text">
+                <string>CANFD加速：</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="canfd_pluse_comboBox">
+               <item>
+                <property name="text">
+                 <string>否</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>是</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <item>
+           <widget class="QLabel" name="data_label">
+            <property name="text">
+             <string>数据：</string>
+            </property>
+           </widget>
           </item>
           <item>
-           <property name="text">
-            <string>CRC16</string>
-           </property>
+           <widget class="QLineEdit" name="data_lineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
           </item>
           <item>
-           <property name="text">
-            <string>CRC32</string>
-           </property>
+           <widget class="QComboBox" name="crc_comboBox">
+            <item>
+             <property name="text">
+              <string>CRC选择</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CRC16</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CRC32</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>SUM</string>
+             </property>
+            </item>
+           </widget>
           </item>
           <item>
-           <property name="text">
-            <string>SUM</string>
-           </property>
+           <widget class="QPushButton" name="crc_pushButton">
+            <property name="text">
+             <string>CRC</string>
+            </property>
+           </widget>
           </item>
-         </widget>
+         </layout>
         </item>
         <item>
-         <widget class="QPushButton" name="crc_pushButton">
-          <property name="text">
-           <string>CRC</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="0">
-       <layout class="QHBoxLayout" name="timer_horizontalLayout_2">
-        <item>
-         <widget class="QLabel" name="period_label">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>周期ms：</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="period_lineEdit">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>0</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="timer_checkBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>定时发送</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="send_pushButton">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>发送一帧</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="timer_horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="period_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>周期ms：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="period_lineEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="timer_checkBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>定时发送</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="send_pushButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>发送一帧</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>

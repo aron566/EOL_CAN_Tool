@@ -1546,10 +1546,10 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
     return;
   }
 
-  if(0 < frame_num && 0xFFFF > frame_num)
+  if(0U < frame_num && 0xFFFFU > frame_num)
   {
     /* 表大小，每帧256字节，显示进度 */
-    quint32 size = 256 * (frame_num - 1) + data_len;
+    quint32 size = 256U * (frame_num - 1U) + data_len;
     if(recv_file.isOpen() == false)
     {
       return;
@@ -1574,10 +1574,10 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
         case eol_protocol::CALTERAH_CFX_28BIT_DATA_TYPE:
           {
             quint32 Val = 0;
-            memcpy(&Val, data + i, 4);
+            memcpy(&Val, data + i, 4U);
             data_list.append(QString("%1").arg(Val));
             origin_data_list.append(QString("%1").arg(Val));
-            i += 4;
+            i += 4U;
           }
           break;
 
@@ -1585,13 +1585,13 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
         case eol_protocol::FLOAT32_BIN_DATA_TYPE:
           {
             float Val = 0;
-            memcpy(&Val, data + i, 4);
+            memcpy(&Val, data + i, 4U);
             data_list.append(QString("%1").arg(Val));
 
             quint32 originVal = 0;
-            memcpy(&originVal, data + i, 4);
+            memcpy(&originVal, data + i, 4U);
             origin_data_list.append(QString("%1").arg(originVal));
-            i += 4;
+            i += 4U;
           }
           break;
 
@@ -1602,7 +1602,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
               default:
                 {
                   qint16 Val = 0;
-                  memcpy(&Val, data + i, 2);
+                  memcpy(&Val, data + i, 2U);
                   data_list.append(QString("%1").arg(Val));
                   origin_data_list.append(QString("%1").arg(Val));
                   i += sizeof(Val);

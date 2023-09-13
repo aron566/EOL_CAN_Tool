@@ -31,6 +31,7 @@
 #include "zlgcan.h"
 #include "ecanvci.h"
 #include "ecanfdvci.h"
+#include "TSCANLINApi.h"
 #include "circularqueue.h"
 #include "utility.h"
 /** Private defines ----------------------------------------------------------*/
@@ -85,8 +86,9 @@ public:
   /* 品牌列表 */
   typedef enum
   {
-    ZLG_CAN_BRAND = 0,
-    GC_CAN_BRAND,
+    ZLG_CAN_BRAND = 0,  /**< 周立功 */
+    GC_CAN_BRAND,       /**< 广成 */
+    TS_CAN_BRAND,       /**< 同星 */
   }CAN_BRAND_Typedef_t;
 
   /* 标准/扩展帧类型 */
@@ -113,7 +115,8 @@ public:
   /* 设备运行信息 */
   typedef  struct
   {
-    void *channel_hadle;
+    void *channel_handle;
+    size_t device_handle; /**< 同星 */
     qint32 channel_num;
     bool channel_en;
   }CHANNEL_STATE_Typedef_t;
@@ -853,6 +856,24 @@ private:
                                   PROTOCOL_TYPE_Typedef_t protocol);
 
   /**
+   * @brief ts_can_send 发送消息
+   * @param channel_state 句柄
+   * @param data 数据
+   * @param size 数据大小
+   * @param id can id
+   * @param frame_type 帧类型
+   * @param protocol 协议类型
+   * @return 发送成功帧数
+   */
+  quint32 ts_can_send(const CHANNEL_STATE_Typedef_t &channel_state, \
+                      const quint8 *data, quint8 size, quint32 id, \
+                      FRAME_TYPE_Typedef_t frame_type, \
+                      PROTOCOL_TYPE_Typedef_t protocol);
+  /* ts消息 */
+  void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const TLibCAN *data, quint32 len);
+  void show_message(const CHANNEL_STATE_Typedef_t &channel_state, const TLibCANFD *data, quint32 len);
+
+  /**
    * @brief 显示消息
    * @param str 消息数据
    * @param channel_num 消息通道号
@@ -968,6 +989,9 @@ private:
   QList<CHANNEL_STATE_Typedef_t>channel_state_list;
 
   QSemaphore sem;
+
+  /* 同星can */
+  QSharedPointer<TSCANLINApi> ts_can_obj;
 };
 
 #endif // CAN_DRIVER_H

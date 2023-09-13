@@ -567,7 +567,12 @@
            </item>
            <item>
             <property name="text">
-             <string>GC</string>
+             <string>GCAN</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>TOSUN</string>
             </property>
            </item>
           </widget>
@@ -1000,7 +1005,7 @@
      <x>0</x>
      <y>0</y>
      <width>834</width>
-     <height>24</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>
