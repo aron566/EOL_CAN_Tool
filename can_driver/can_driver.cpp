@@ -1713,24 +1713,21 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
       {
         TLibCAN can_data[CAN_MSG_NUM_MAX];
         qint32 can_frame_size = CAN_MSG_NUM_MAX;
-        if(0U == ts_can_obj->tsfifo_receive_can_msgs(channel_state.device_handle, can_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES))
+        quint32 len = 0;
+        len = ts_can_obj->tsfifo_receive_can_msgs(channel_state.device_handle, can_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES);
+        if(0 < len)
         {
-          if(0 < can_frame_size)
-          {
-            show_message(channel_state, can_data, (quint32)can_frame_size);
-            emit signal_show_can_msg();
-          }
+          show_message(channel_state, can_data, (quint32)can_frame_size);
+          emit signal_show_can_msg();
         }
 
         TLibCANFD canfd_data[CAN_MSG_NUM_MAX];
         can_frame_size = CAN_MSG_NUM_MAX;
-        if(0U == ts_can_obj->tsfifo_receive_canfd_msgs(channel_state.device_handle, canfd_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES))
+        len = ts_can_obj->tsfifo_receive_canfd_msgs(channel_state.device_handle, canfd_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES);
+        if(0 < len)
         {
-          if(0 < can_frame_size)
-          {
-            show_message(channel_state, canfd_data, (quint32)can_frame_size);
-            emit signal_show_can_msg();
-          }
+          show_message(channel_state, canfd_data, (quint32)can_frame_size);
+          emit signal_show_can_msg();
         }
         break;
       }
