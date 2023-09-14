@@ -116,7 +116,7 @@ public:
   typedef  struct
   {
     void *channel_handle;
-    size_t device_handle; /**< 同星 */
+    quint64 device_handle; /**< 同星 */
     qint32 channel_num;
     bool channel_en;
   }CHANNEL_STATE_Typedef_t;

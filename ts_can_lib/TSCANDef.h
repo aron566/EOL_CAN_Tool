@@ -279,7 +279,7 @@ typedef u32(__stdcall *tscan_delete_cyclic_msg_canfd_t)(const size_t ADeviceHand
 
 // 读取CAN报文
 // ADeviceHandle：设备句柄；ACANBuffers:存储接收报文的数组；ACANBufferSize：存储数组的长度
-// 返回值：实际收到的报文数量
+// 返回值：0成功
 typedef u32(__stdcall *tsfifo_receive_can_msgs_t)(const size_t ADeviceHandle, const TLibCAN *ACANBuffers, s32 *ACANBufferSize, u8 AChn, u8 ARXTX);
 
 // CANFD工具相关
@@ -441,7 +441,7 @@ extern "C"
   u32 __stdcall tscan_config_canfd_by_baudrate(const size_t ADeviceHandle, const TS_APP_CHANNEL AChnIdx, const double AArbRateKbps, const double ADataRateKbps, const TLIBCANFDControllerType AControllerType, const TLIBCANFDControllerMode AControllerMode, const u32 A120OhmConnected);
   // 读取CANFD报文
   // ADeviceHandle：设备句柄；ACANBuffers:存储接收报文的数组；ACANBufferSize：存储数组的长度
-  // 返回值：实际收到的报文数量
+  // 返回值：0成功
   u32 __stdcall tsfifo_receive_canfd_msgs(const size_t ADeviceHandle, const TLibCANFD *ACANBuffers, s32 *ACANBufferSize, u8 AChn, u8 ARXTX);
 
   // LIN工具相关

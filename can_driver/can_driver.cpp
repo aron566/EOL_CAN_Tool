@@ -724,14 +724,15 @@ bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
     case TS_CAN_BRAND:
       {
         quint32 connect_state;
-        connect_state = ts_can_obj->tscan_connect(0, (size_t *)&channel_state.device_handle);
+        init();
+        connect_state = ts_can_obj->tscan_connect(0, (quint64 *)&channel_state.device_handle);
         if((connect_state == 0U) || (connect_state == 5U))
         {
           show_message(tr("ts start canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
-          return false;
+          return true;
         }
         show_message(tr("ts start canfd ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
-        return true;
+        return false;
       }
 
     default:
@@ -1713,9 +1714,9 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
       {
         TLibCAN can_data[CAN_MSG_NUM_MAX];
         qint32 can_frame_size = CAN_MSG_NUM_MAX;
-        quint32 len = 0;
-        len = ts_can_obj->tsfifo_receive_can_msgs(channel_state.device_handle, can_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES);
-        if(0 < len)
+        quint32 ret = 0;
+        ret = ts_can_obj->tsfifo_receive_can_msgs(channel_state.device_handle, can_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES);
+        if(0 < can_frame_size && ret == 0U)
         {
           show_message(channel_state, can_data, (quint32)can_frame_size);
           emit signal_show_can_msg();
@@ -1723,8 +1724,8 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
 
         TLibCANFD canfd_data[CAN_MSG_NUM_MAX];
         can_frame_size = CAN_MSG_NUM_MAX;
-        len = ts_can_obj->tsfifo_receive_canfd_msgs(channel_state.device_handle, canfd_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES);
-        if(0 < len)
+        ret = ts_can_obj->tsfifo_receive_canfd_msgs(channel_state.device_handle, canfd_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES);
+        if(0 < can_frame_size && ret == 0U)
         {
           show_message(channel_state, canfd_data, (quint32)can_frame_size);
           emit signal_show_can_msg();
@@ -1868,6 +1869,11 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
   for(quint32 i = 0; i < len; ++i)
   {
     const TLibCANFD& can = data[i];
+    /* 检测是否是fd报文 */
+    if(0U == can.FFDProperties.bits.EDL)
+    {
+      continue;
+    }
     const canid_t& id = can.FIdentifier;
     const bool is_eff = can.FProperties.bits.extframe;
     const bool is_rtr = can.FProperties.bits.remoteframe;
@@ -1875,7 +1881,7 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
 
     /* 消息分发到UI显示cq */
     msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT, \
-                     CAN_PROTOCOL_TYPE, is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
+                     CANFD_PROTOCOL_TYPE, is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
                      is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE, \
                      can.FData.d, can.FDLC);
 
