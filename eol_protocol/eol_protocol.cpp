@@ -996,17 +996,8 @@ bool eol_protocol::common_rw_device_task(void *param_)
   /* 清空 */
   eol_protocol_clear();
 
-  /* VCAN通讯 */
-  if(EOL_W_VCAN_TEST_REG == param->reg)
-  {
-    /* 设置消息过滤器 */
-    can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)vchannel_num.toUShort());
-  }
-  else
-  {
-    /* 设置消息过滤器 */
-    can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)channel_num.toUShort());
-  }
+  /* 设置消息过滤器 */
+  can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)param->channel_num.toUShort());
 
   qDebug("step1 rw device cmd %u reg 0x%02X len %u", param->command, param->reg, param->len);
 
