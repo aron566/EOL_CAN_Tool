@@ -18,6 +18,7 @@
   *           v1.0.4 aron566 2023.06.29 17:16 修复GCcanfd发送帧诊断数据协议类型不对问题.
   *           v1.0.5 aron566 2023.09.01 17:55 优化can接收避免卡顿
   *           v1.0.6 aron566 2023.09.06 20:04 重构发送函数，重构ui显示的消息信号发送机制
+  *           v1.0.7 aron566 2023.09.14 11:59 支持tscan盒
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QDateTime>
@@ -1712,17 +1713,19 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
 
     case TS_CAN_BRAND:
       {
-        TLibCAN can_data[CAN_MSG_NUM_MAX];
-        qint32 can_frame_size = CAN_MSG_NUM_MAX;
-        quint32 ret = 0;
-        ret = ts_can_obj->tsfifo_receive_can_msgs(channel_state.device_handle, can_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES);
-        if(0 < can_frame_size && ret == 0U)
-        {
-          show_message(channel_state, can_data, (quint32)can_frame_size);
-          emit signal_show_can_msg();
-        }
+//        TLibCAN can_data[CAN_MSG_NUM_MAX];
+//        qint32 can_frame_size = CAN_MSG_NUM_MAX;
+//        quint32 ret = 0;
+//        ret = ts_can_obj->tsfifo_receive_can_msgs(channel_state.device_handle, can_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES);
+//        if(0 < can_frame_size && ret == 0U)
+//        {
+//          show_message(channel_state, can_data, (quint32)can_frame_size);
+//          emit signal_show_can_msg();
+//        }
 
         TLibCANFD canfd_data[CAN_MSG_NUM_MAX];
+        qint32 can_frame_size = CAN_MSG_NUM_MAX;
+        quint32 ret = 0;
         can_frame_size = CAN_MSG_NUM_MAX;
         ret = ts_can_obj->tsfifo_receive_canfd_msgs(channel_state.device_handle, canfd_data, &can_frame_size, channel_state.channel_num, ONLY_RX_MESSAGES);
         if(0 < can_frame_size && ret == 0U)
@@ -1869,11 +1872,6 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
   for(quint32 i = 0; i < len; ++i)
   {
     const TLibCANFD& can = data[i];
-    /* 检测是否是fd报文 */
-    if(0U == can.FFDProperties.bits.EDL)
-    {
-      continue;
-    }
     const canid_t& id = can.FIdentifier;
     const bool is_eff = can.FProperties.bits.extframe;
     const bool is_rtr = can.FProperties.bits.remoteframe;
@@ -1881,9 +1879,10 @@ void can_driver::show_message(const CHANNEL_STATE_Typedef_t &channel_state, cons
 
     /* 消息分发到UI显示cq */
     msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT, \
-                     CANFD_PROTOCOL_TYPE, is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
-                     is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE, \
-                     can.FData.d, can.FDLC);
+                      (PROTOCOL_TYPE_Typedef_t)can.FFDProperties.bits.EDL, \
+                      is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
+                      is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE, \
+                      can.FData.d, can.FDLC);
 
     /* 消息过滤分发 */
     msg_to_cq_buf(can_id, (quint8)channel_state.channel_num, can.FData.d, can.FDLC);
