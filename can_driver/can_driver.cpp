@@ -1171,7 +1171,7 @@ quint32 can_driver::gc_can_send(const CHANNEL_STATE_Typedef_t &channel_state, \
               can_data.CanORCanfdType.proto = (quint8)protocol;
               can_data.CanORCanfdType.type = GC_DATA_TYPE;
               can_data.CanORCanfdType.format = (quint8)frame_type;
-              can_data.CanORCanfdType.bitratemode = BITRATESITCH_OFF;
+              can_data.CanORCanfdType.bitratemode = BITRATESITCH_ON;
 
               can_data.TimeStamp.mday = 0;
               can_data.TimeStamp.hour = 0;
@@ -1183,6 +1183,7 @@ quint32 can_driver::gc_can_send(const CHANNEL_STATE_Typedef_t &channel_state, \
               can_data.DataLen = size;
               memset(can_data.Data, 0, sizeof(can_data.Data));
               memcpy(can_data.Data, data, size);
+              /* 对齐 */
               can_data.DataLen = gc_canfd_lib_tool::get_send_len(can_data.DataLen);
 
               if(nSendCount > 0)
@@ -1286,6 +1287,8 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, \
   /* 实际发送的帧数 */
   quint32 result = 0;
 
+  bool ret = false;
+
   switch(brand_)
   {
     case ZLG_CAN_BRAND:
@@ -1307,7 +1310,7 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, \
       }
 
     default:
-      return 0;
+      return false;
   }
 
   /* 消息分发到UI显示cq */
@@ -1322,10 +1325,12 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, \
   QString result_info_str;
   if(result != nSendCount)
   {
+    ret = false;
     result_info_str = tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText;
   }
   else
   {
+    ret = true;
     result_info_str = tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText;
   }
   msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, UNKNOW_DIRECT, \
@@ -1335,7 +1340,7 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, \
                    (const quint8 *)result_info_str.toUtf8().data(), result_info_str.size());
 
   emit signal_show_can_msg();
-  return result;
+  return ret;
 }
 
 bool can_driver::send(const quint8 *data, quint8 size, quint32 id, FRAME_TYPE_Typedef_t frame_type, PROTOCOL_TYPE_Typedef_t protocol, quint8 channel_num)

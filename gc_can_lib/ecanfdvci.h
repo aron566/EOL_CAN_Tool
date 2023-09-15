@@ -415,32 +415,46 @@ class gc_canfd_lib_tool
      */
     static quint8 get_send_len(quint8 len)
     {
-      switch(len)
+      if(8U >= len)
       {
-        case 9:
-          return 12;
-
-        case 10:
-          return 16;
-
-        case 11:
-          return 20;
-
-        case 12:
-          return 24;
-
-        case 13:
-          return 32;
-
-        case 14:
-          return 48;
-
-        case 15:
-          return 64;
-
-        default:
-          return len;
+        return len;
       }
+
+      if(12 >= len)
+      {
+        return 12U;
+      }
+
+      if(16 >= len)
+      {
+        return 16U;
+      }
+
+      if(20 >= len)
+      {
+        return 20U;
+      }
+
+      if(24 >= len)
+      {
+        return 24U;
+      }
+
+      if(32 >= len)
+      {
+        return 32U;
+      }
+
+      if(48 >= len)
+      {
+        return 48U;
+      }
+
+      if(64 >= len)
+      {
+        return 64U;
+      }
+      return len;
     }
 };
 
