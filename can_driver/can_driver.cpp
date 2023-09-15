@@ -19,6 +19,7 @@
   *           v1.0.5 aron566 2023.09.01 17:55 优化can接收避免卡顿
   *           v1.0.6 aron566 2023.09.06 20:04 重构发送函数，重构ui显示的消息信号发送机制
   *           v1.0.7 aron566 2023.09.14 11:59 支持tscan盒
+  *           v1.0.8 aron566 2023.09.15 11:59 修复gccanfd发送未对齐导致发送失败问题，掩码只针对接收报文
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QDateTime>
@@ -1823,9 +1824,14 @@ void can_driver::msg_to_ui_cq_buf(quint32 can_id, quint8 channel_num, CAN_DIRECT
 {
   quint32 id_temp;
   id_temp = (can_id & can_id_mask_);
-  if(nullptr == cq_obj || (can_id != id_temp && false != can_id_mask_en_))
+
+  /* 掩码只针对接收 */
+  if(CAN_RX_DIRECT == direction)
   {
-    return;
+    if(nullptr == cq_obj || (can_id != id_temp && false != can_id_mask_en_))
+    {
+      return;
+    }
   }
 
   CAN_MSG_DISPLAY_Typedef_t ui_msg;
