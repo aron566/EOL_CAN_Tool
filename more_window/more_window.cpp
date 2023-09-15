@@ -454,7 +454,7 @@ void more_window::slot_show_window()
   CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->CQ_getCQHandle();
   /* 清空 */
   CircularQueue::CQ_emptyData(cq);
-  connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::QueuedConnection);
+  connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg);
   this->show();
 }
 
@@ -782,8 +782,11 @@ void more_window::slot_show_can_msg()
   {
     return;
   }
+  quint32 msg_len = len / sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t);
+//  qDebug() << "msg" << msg_len;
+  msg_len = msg_len > 1000U ? 1000U : msg_len;
   can_driver::CAN_MSG_DISPLAY_Typedef_t msg;
-  for(quint32 i = 0; i < len / sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t); i++)
+  for(quint32 i = 0; i < msg_len; i++)
   {
     CircularQueue::CQ_getData(cq, (quint8 *)&msg, sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t));
     show_can_msg(msg);
