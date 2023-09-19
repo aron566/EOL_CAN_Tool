@@ -42,29 +42,6 @@
  *  <tr><td>2023-06-29 <td>v0.0.24 <td>aron566 <td>优化帧诊断，屏蔽black信号刷新避免卡顿，修复gc发送帧协议类型不对问题
  *  <tr><td>2023-07-03 <td>v0.0.25 <td>aron566 <td>增加more页面数据保存，统一一个配置文件管理
  *  <tr><td>2023-07-05 <td>v0.0.26 <td>aron566 <td>配置版本号改为下划线
- *  <tr><td>2023-07-10 <td>v0.0.27 <td>aron566 <td>调试窗口应用参数后立即生效
- *  <tr><td>2023-07-14 <td>v0.0.28 <td>aron566 <td>EOL显示校准配置信息显示优化
- *  <tr><td>2023-07-15 <td>v0.0.29 <td>aron566 <td>窗口按钮大小优化
- *  <tr><td>2023-07-21 <td>v0.0.30 <td>aron566 <td>弹窗字体大小修改
- *  <tr><td>2023-07-25 <td>v0.0.31 <td>aron566 <td>mag类型修改为无符号
- *  <tr><td>2023-07-31 <td>v1.0.0  <td>aron566 <td>增加远程更新功能
- *  <tr><td>2023-08-01 <td>v1.0.1  <td>aron566 <td>增加版本检测逻辑
- *  <tr><td>2023-08-02 <td>v1.0.2  <td>aron566 <td>增加启动检查版本，中文路径支持
- *  <tr><td>2023-08-02 <td>v1.0.3  <td>aron566 <td>更新保存文件名逻辑修改
- *  <tr><td>2023-08-03 <td>v1.0.4  <td>aron566 <td>VCAN打印优化，显示在一行，修改配置文件字段统一小写加下划线
- *  <tr><td>2023-08-07 <td>v1.0.5  <td>aron566 <td>更新ZLG 20230728驱动库文件
- *  <tr><td>2023-08-14 <td>v1.0.6  <td>aron566 <td>增加DTC检测清除页面，优化手动发送页面布局
- *  <tr><td>2023-08-18 <td>v1.0.7  <td>aron566 <td>更多页面增加针对can打印的can id限制
- *  <tr><td>2023-08-23 <td>v1.0.8  <td>aron566 <td>eol页面增加通讯通道选择，修复字符显示通道设置异常，提高eol线程空闲时间
- *  <tr><td>2023-08-24 <td>v1.0.9  <td>aron566 <td>修复shell窗口发送按键导致崩溃问题，增加原子操作避免线程多发
- *  <tr><td>2023-08-24 <td>v1.0.10 <td>aron566 <td>增加VCAN测试通道选择，目标列表显示优化
- *  <tr><td>2023-08-30 <td>v1.0.11 <td>aron566 <td>增加DTC故障检测，增加设备地址选择
- *  <tr><td>2023-09-06 <td>v1.0.12 <td>aron566 <td>取消接收can消息的延时100us，增大can缓冲区防止丢失数据，优化卡顿，以及频繁的发送信号
- *  <tr><td>2023-09-07 <td>v1.1.0  <td>aron566 <td>重构can数据接收显示机制，显示流畅优化，避免数据量大导致的界面卡顿
- *  <tr><td>2023-09-08 <td>v1.1.1  <td>aron566 <td>进入shell调试页面自动关闭中文输入法，避免输入异常，增加rcs80测试阈值，格式优化cq代码，优化shell界面
- *  <tr><td>2023-09-08 <td>v1.1.2  <td>aron566 <td>eol协议默认64字节发送，can不支持的设备默认分包发送
- *  <tr><td>2023-09-13 <td>v1.1.3  <td>aron566 <td>增加tscan盒支持
- *  <tr><td>2023-09-15 <td>v1.1.4  <td>aron566 <td>修复gccanfd发送数据长度未对齐导致发送失败问题
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -290,6 +267,7 @@ void MainWindow::slot_lasted_version_info(QString version, QString change_log)
 void MainWindow::slot_can_is_opened(void)
 {
   /* can设备打开状态，则置为不可选择状态 */
+  ui->brand_comboBox->setEnabled(false);
   ui->device_index_comboBox->setEnabled(false);
   ui->device_list_comboBox->setEnabled(false);
   ui->channel_num_comboBox->setEnabled(false);
@@ -301,6 +279,7 @@ void MainWindow::slot_can_is_opened(void)
 void MainWindow::slot_can_is_closed(void)
 {
   /* 关闭设备状态时，启动与初始化为可用状态 */
+  ui->brand_comboBox->setEnabled(true);
   ui->device_index_comboBox->setEnabled(true);
   ui->device_list_comboBox->setEnabled(true);
   ui->channel_num_comboBox->setEnabled(true);

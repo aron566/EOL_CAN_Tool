@@ -378,10 +378,10 @@
       <item row="0" column="1">
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
-         <widget class="QTextEdit" name="ch1_receive_data_textEdit"/>
+         <widget class="QPlainTextEdit" name="ch1_receive_data_textEdit"/>
         </item>
         <item>
-         <widget class="QTextEdit" name="ch2_receive_data_textEdit"/>
+         <widget class="QPlainTextEdit" name="ch2_receive_data_textEdit"/>
         </item>
        </layout>
       </item>

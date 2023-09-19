@@ -160,7 +160,7 @@ can_driver::can_driver(QObject *parent)
   cq_obj = new CircularQueue(CircularQueue::UINT8_DATA_BUF, CircularQueue::CQ_BUF_1M, this);
   if(nullptr == cq_obj)
   {
-    qDebug() << "create cq faild";
+    qDebug() << "create cq failed";
   }
 }
 
@@ -216,7 +216,7 @@ bool can_driver::open()
         device_handle_ = ZCAN_OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0);
         if(INVALID_DEVICE_HANDLE == device_handle_)
         {
-          show_message(tr("open zlg device faild"));
+          show_message(tr("open zlg device failed"));
           return false;
         }
         break;
@@ -231,7 +231,7 @@ bool can_driver::open()
             {
               if(GC_STATUS_OK != OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0))
               {
-                show_message(tr("open gc device faild"));
+                show_message(tr("open gc device failed"));
                 return false;
               }
               break;
@@ -241,7 +241,7 @@ bool can_driver::open()
             {
               if(GC_CANFD_STATUS_OK != OpenDeviceFD(kDeviceType[device_type_index_].device_type, device_index_))
               {
-                show_message(tr("open gc canfd device faild"));
+                show_message(tr("open gc canfd device failed"));
                 return false;
               }
               break;
@@ -460,7 +460,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
             qDebug() << "set diy bps";
             if(!custom_baud_rate_config(channel_state))
             {
-              show_message(tr("set diy baudrate faild "), channel_state.channel_num);
+              show_message(tr("set diy baudrate failed "), channel_state.channel_num);
               return false;
             }
           }
@@ -469,7 +469,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
             qDebug() << "set bps";
             if(!canfdDevice && !baud_rate_config(channel_state))
             {
-              show_message(tr("set baudrate faild "), channel_state.channel_num);
+              show_message(tr("set baudrate failed "), channel_state.channel_num);
               return false;
             }
           }
@@ -491,7 +491,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
               qDebug() << "usbcanfd diy bps set ...";
               if(!custom_baud_rate_config(channel_state))
               {
-                show_message(tr("set diy baudrate faild "), channel_state.channel_num);
+                show_message(tr("set diy baudrate failed "), channel_state.channel_num);
                 return false;
               }
             }
@@ -500,7 +500,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
               qDebug() << "usbcanfd bps set ...";
               if(!cand_fd_bps_config(channel_state))
               {
-                show_message(tr("set baudrate faild "), channel_state.channel_num);
+                show_message(tr("set baudrate failed "), channel_state.channel_num);
                 return false;
               }
             }
@@ -518,7 +518,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
             char value[100] = { 0 };
             if(!cand_fd_bps_config(channel_state))
             {
-              show_message(tr("set baudrate faild "), channel_state.channel_num);
+              show_message(tr("set baudrate failed "), channel_state.channel_num);
               return false;
             }
 
@@ -551,14 +551,14 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
         channel_state.channel_handle = ZCAN_InitCAN(device_handle_, channel_state.channel_num, &config);
         if(INVALID_CHANNEL_HANDLE == channel_state.channel_handle)
         {
-          show_message(tr("zlg can ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
+          show_message(tr("zlg can ch %1 init failed").arg(channel_state.channel_num), channel_state.channel_num);
           return false;
         }
         if(usbcanfd)
         {
           if(resistance_enable_ && !resistance_config(channel_state))
           {
-            show_message(tr("set resistance faild"), channel_state.channel_num);
+            show_message(tr("set resistance failed"), channel_state.channel_num);
             return false;
           }
         }
@@ -587,7 +587,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
               /* 初始化 */
               if(GC_STATUS_OK != InitCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &config))
               {
-                show_message(tr("gc can ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
+                show_message(tr("gc can ch %1 init failed").arg(channel_state.channel_num), channel_state.channel_num);
                 return false;
               }
               show_message(tr("gc can ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -606,7 +606,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
               /* 初始化 */
               if(GC_CANFD_STATUS_OK != InitCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &config))
               {
-                show_message(tr("gc canfd ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
+                show_message(tr("gc canfd ch %1 init failed").arg(channel_state.channel_num), channel_state.channel_num);
                 return false;
               }
               show_message(tr("gc canfd ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -635,7 +635,7 @@ bool can_driver::init(CHANNEL_STATE_Typedef_t &channel_state)
                                                                resistance_enable_);
           if(0 != ret)
           {
-              show_message(tr("ts canfd ch %1 init faild").arg(channel_state.channel_num), channel_state.channel_num);
+              show_message(tr("ts canfd ch %1 init failed").arg(channel_state.channel_num), channel_state.channel_num);
               return false;
           }
           show_message(tr("ts canfd ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -683,7 +683,7 @@ bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
       {
         if(ZCAN_StartCAN(channel_state.channel_handle) != STATUS_OK)
         {
-          show_message(tr("zlg start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+          show_message(tr("zlg start can ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
           return false;
         }
         show_message(tr("zlg start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -699,7 +699,7 @@ bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
             {
               if(GC_STATUS_OK != StartCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
               {
-                show_message(tr("gc start can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                show_message(tr("gc start can ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
                 return false;
               }
               show_message(tr("gc start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -710,7 +710,7 @@ bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
             {
               if(GC_CANFD_STATUS_OK != StartCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
               {
-                show_message(tr("gc start canfd ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                show_message(tr("gc start canfd ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
                 return false;
               }
               show_message(tr("gc start canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -733,7 +733,7 @@ bool can_driver::start(const CHANNEL_STATE_Typedef_t &channel_state)
           show_message(tr("ts start canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
           return true;
         }
-        show_message(tr("ts start canfd ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+        show_message(tr("ts start canfd ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
         return false;
       }
 
@@ -774,7 +774,7 @@ bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
       {
         if(ZCAN_ResetCAN(channel_state.channel_handle) != STATUS_OK)
         {
-          show_message(tr("zlg reset can ch %1 faild ").arg(channel_state.channel_num), channel_state.channel_num);
+          show_message(tr("zlg reset can ch %1 failed ").arg(channel_state.channel_num), channel_state.channel_num);
           return false;
         }
         show_message(tr("zlg reset can ch %1 ok ").arg(channel_state.channel_num), channel_state.channel_num);
@@ -790,7 +790,7 @@ bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
             {
               if(GC_STATUS_OK != ResetCAN(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
               {
-                show_message(tr("gc reset can ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                show_message(tr("gc reset can ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
                 return false;
               }
               show_message(tr("gc reset can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -801,7 +801,7 @@ bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
             {
               if(GC_CANFD_STATUS_OK != ResetCANFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num))
               {
-                show_message(tr("gc reset canfd ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+                show_message(tr("gc reset canfd ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
                 return false;
               }
               show_message(tr("gc reset canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -818,7 +818,7 @@ bool can_driver::reset(const CHANNEL_STATE_Typedef_t &channel_state)
       {
         if (0U != ts_can_obj->tscan_disconnect_by_handle(channel_state.device_handle))
         {
-          show_message(tr("ts reset canfd ch %1 faild").arg(channel_state.channel_num), channel_state.channel_num);
+          show_message(tr("ts reset canfd ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
           return false;
         }
         show_message(tr("ts reset canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -1327,7 +1327,7 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, \
   if(result != nSendCount)
   {
     ret = false;
-    result_info_str = tr("[%1]send data faild! ").arg(channel_state.channel_num) + csText;
+    result_info_str = tr("[%1]send data failed! ").arg(channel_state.channel_num) + csText;
   }
   else
   {
@@ -2118,7 +2118,7 @@ void can_driver::show_tx_queue_available(const CHANNEL_STATE_Typedef_t &channel_
   }
   else
   {
-    csText = tr("get queue can use space faild");
+    csText = tr("get queue can use space failed");
   }
   show_message(csText);
 }
@@ -2145,7 +2145,7 @@ void can_driver::clear_tx_queue(const CHANNEL_STATE_Typedef_t &channel_state)
   sprintf(path, "%d/clear_delay_send_queue", channel_state.channel_num);
   int nRet = ZCAN_SetValue(device_handle_, path, value);
   QString csText;
-  csText = QString(tr("[%1]clear tx queue [%2] ").arg(channel_state.channel_num).arg(nRet > 0 ? tr(" ok ") : tr(" faild ")));
+  csText = QString(tr("[%1]clear tx queue [%2] ").arg(channel_state.channel_num).arg(nRet > 0 ? tr(" ok ") : tr(" failed ")));
   show_message(csText);
 }
 void can_driver::clear_tx_queue()
@@ -2174,7 +2174,7 @@ bool can_driver::set_send_queue_mode(const CHANNEL_STATE_Typedef_t &channel_stat
   QString csText, csRet;
   csText = (nDelaySendQueueMode ? tr("[%1]open tx queue mode ").arg(channel_state.channel_num) : tr("[%1]close tx queue mode").arg(channel_state.channel_num));
   csRet = QString::asprintf(tr("[%s]").toUtf8().data(), \
-          nRet > 0 ? tr(" ok ").toUtf8().data() : tr(" faild ").toUtf8().data());
+          nRet > 0 ? tr(" ok ").toUtf8().data() : tr(" failed ").toUtf8().data());
   show_message(csText + csRet);
   return nDelaySendQueueMode;
 }
@@ -2255,7 +2255,7 @@ void can_driver::show_send_mode(const CHANNEL_STATE_Typedef_t &channel_state)
   }
   else
   {
-    csText = tr("[%1]get channel modefaild").arg(channel_state.channel_num);
+    csText = tr("[%1]get channel modefailed").arg(channel_state.channel_num);
   }
   show_message(csText);
 }
@@ -2415,7 +2415,7 @@ void can_driver::add_auto_can(quint32 nEnable)
   QString csText;
   csText = QString::asprintf(tr("add CAN timed transmission index:%d enable:%d period:%d ms ID:0x%X [%s] ").toUtf8().data(), \
                              autoObj.index, autoObj.enable, autoObj.interval, autoObj.obj.frame.can_id, \
-                             (nRet ? tr(" ok ").toUtf8().data() : tr(" faild ").toUtf8().data()));
+                             (nRet ? tr(" ok ").toUtf8().data() : tr(" failed ").toUtf8().data()));
   show_message(csText);
 }
 
@@ -2436,7 +2436,7 @@ void can_driver::add_auto_can_fd(quint32 nEnable)
   QString csText;
   csText = QString::asprintf(tr("add CANFD timed transmission index:%d enable:%d period:%d ms ID:0x%X [%s] ").toUtf8().data(), \
                              autoObj.index, autoObj.enable, autoObj.interval, autoObj.obj.frame.can_id, \
-                             (nRet ? tr(" ok ").toUtf8().data() : tr(" faild ").toUtf8().data()));
+                             (nRet ? tr(" ok ").toUtf8().data() : tr(" failed ").toUtf8().data()));
   show_message(csText);
 }
 
@@ -2448,7 +2448,7 @@ void can_driver::auto_send_start()
   sprintf(path, "%d/apply_auto_send", channel_index_);
   int nRet = ZCAN_SetValue(device_handle_, path,"0");
   QString csText = tr("start timed transmission");
-  QString ret_str = nRet ? tr("[ok]") : tr("[faild]");
+  QString ret_str = nRet ? tr("[ok]") : tr("[failed]");
   csText += ret_str;
   show_message(csText);
 }
@@ -2461,7 +2461,7 @@ void can_driver::auto_send_stop()
   sprintf(path, "%d/clear_auto_send", channel_index_);
   int nRet = ZCAN_SetValue(device_handle_, path, "0");
   QString csText = tr("stop timed transmission");
-  QString ret_str = nRet ? tr("[ok]") : tr("[faild]");
+  QString ret_str = nRet ? tr("[ok]") : tr("[failed]");
   csText += ret_str;
   show_message(csText);
 }
@@ -2531,7 +2531,7 @@ void can_driver::show_dev_auto_send()
       }
       else
       {
-        csText = tr("get CAN timed transmission data faild");
+        csText = tr("get CAN timed transmission data failed");
         show_message(csText);
         return;
       }
@@ -2539,7 +2539,7 @@ void can_driver::show_dev_auto_send()
   }
   else
   {
-    csText = tr("get CAN timed transmission num faild");
+    csText = tr("get CAN timed transmission num failed");
     show_message(csText);
     return;
   }
@@ -2569,7 +2569,7 @@ void can_driver::show_dev_auto_send()
       }
       else
       {
-        csText = tr("get CANFD timed transmission data faild");
+        csText = tr("get CANFD timed transmission data failed");
         show_message(csText);
         return;
       }
@@ -2577,7 +2577,7 @@ void can_driver::show_dev_auto_send()
   }
   else
   {
-    csText = tr("get CANFD timed transmission num faild");
+    csText = tr("get CANFD timed transmission num failed");
     show_message(csText);
     return;
   }

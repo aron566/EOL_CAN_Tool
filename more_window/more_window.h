@@ -9,6 +9,7 @@
 #include "can_driver.h"
 #include "frame_diagnosis_window/frame_diagnosis.h"
 #include "tool_window/tool_window.h"
+#include "utilities/line_highlighter.h"
 
 namespace Ui {
 class more_window;
@@ -208,7 +209,10 @@ private:
       quint8 direct;
     }SHOW_MSG_Typedef_t;
 
+    line_highlighter ch1_line_highlighter;
     QList<SHOW_MSG_Typedef_t>ch1_show_msg_list;
+
+    line_highlighter ch2_line_highlighter;
     QList<SHOW_MSG_Typedef_t>ch2_show_msg_list;
 
     /* 字符显示 */
@@ -225,7 +229,7 @@ private:
      * @param show_index 索引
      * @param downward_flag true 下翻标识 false 上翻标识
      */
-    void update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag);
+    void update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag);
 
     /**
      * @brief 帧诊断窗口初始化

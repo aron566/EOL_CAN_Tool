@@ -55,6 +55,14 @@ more_window::more_window(QString title, QWidget *parent) :
   ui->ch1_receive_data_textEdit->document()->setMaximumBlockCount(SHOW_MSG_SAVE_NUM_MAX);
   ui->ch2_receive_data_textEdit->document()->setMaximumBlockCount(SHOW_MSG_SAVE_NUM_MAX);
 
+  /* 设置高亮器 */
+  ch1_line_highlighter.setDocument(ui->ch1_receive_data_textEdit->document());
+  ch2_line_highlighter.setDocument(ui->ch2_receive_data_textEdit->document());
+  ch1_line_highlighter.set_text_color("Tx", Qt::red);
+  ch2_line_highlighter.set_text_color("Tx", Qt::red);
+  ch1_line_highlighter.set_text_color("send", Qt::red);
+  ch2_line_highlighter.set_text_color("send", Qt::red);
+
   /* 设置提示值 */
   ui->data_lineEdit->setPlaceholderText("05 66");
   ui->id_lineEdit->setPlaceholderText("157");
@@ -123,8 +131,8 @@ void more_window::wheelEvent(QWheelEvent *event)
   int xp1, yp1, xp2, yp2;
   quint32 *pchx_scroll_cnt = nullptr;
   QList<SHOW_MSG_Typedef_t> *pList = nullptr;
-  QTextEdit *text_edit_widget = nullptr;
-  QTextEdit *text_edit_widget_temp = ui->ch1_receive_data_textEdit;
+  QPlainTextEdit *text_edit_widget = nullptr;
+  QPlainTextEdit *text_edit_widget_temp = ui->ch1_receive_data_textEdit;
   QPoint A = QWidget::mapToGlobal(text_edit_widget_temp->pos());
   xp1 = A.x();
   yp1 = A.y();
@@ -297,9 +305,8 @@ quint32 more_window::get_show_index(quint32 current_show_index, quint32 totaol_s
 void more_window::show_txt()
 {
   /* 显示 */
-  QTextEdit *text_edit_widget = nullptr;
+  QPlainTextEdit *text_edit_widget = nullptr;
   SHOW_MSG_Typedef_t show_messagex;
-//  bool remove_line_flag = false;
 
   if(ch1_show_msg_is_empty() == false)
   {
@@ -309,36 +316,7 @@ void more_window::show_txt()
     ch1_scroll_cnt = show_index + 1;
 
     text_edit_widget = ui->ch1_receive_data_textEdit;
-#if 0
-    if(SHOW_MSG_SAVE_NUM_MAX < ch1_show_msg_index)
-    {
-      remove_line_flag = true;
-    }
-#endif
-
-    /* 设置颜色 */
-    if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
-    {
-      text_edit_widget->setTextColor(QColor("white"));
-    }
-    else
-    {
-      text_edit_widget->setTextColor(QColor("red"));
-    }
-
-    text_edit_widget->append(show_messagex.str);
-
-#if 0
-    if(true == remove_line_flag)
-    {
-      text_edit_widget->moveCursor(QTextCursor::Start);
-      text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
-      text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-  //    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
-      text_edit_widget->textCursor().removeSelectedText();
-      text_edit_widget->moveCursor(QTextCursor::End);
-    }
-#endif
+    text_edit_widget->insertPlainText(show_messagex.str);
   }
 
   if(ch2_show_msg_is_empty() == false)
@@ -349,42 +327,11 @@ void more_window::show_txt()
     ch2_scroll_cnt = show_index + 1;
 
     text_edit_widget = ui->ch2_receive_data_textEdit;
-
-#if 0
-    if(SHOW_MSG_SAVE_NUM_MAX < ch2_show_msg_index)
-    {
-      remove_line_flag = true;
-    }
-#endif
-
-    /* 设置颜色 */
-    if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
-    {
-      text_edit_widget->setTextColor(QColor("white"));
-    }
-    else
-    {
-      text_edit_widget->setTextColor(QColor("red"));
-    }
-
-    text_edit_widget->append(show_messagex.str);
-
-#if 0
-    if(true == remove_line_flag)
-    {
-      text_edit_widget->moveCursor(QTextCursor::Start);
-      text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
-      text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-  //    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
-      text_edit_widget->textCursor().removeSelectedText();
-      text_edit_widget->moveCursor(QTextCursor::End);
-    }
-#endif
-
+    text_edit_widget->appendPlainText(show_messagex.str);
   }
 }
 
-void more_window::update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag)
+void more_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag)
 {
   SHOW_MSG_Typedef_t show_messagex = pList->value(show_index);
 
@@ -393,18 +340,7 @@ void more_window::update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Ty
   {
     text_edit_widget->moveCursor(QTextCursor::End);
     QTextCursor cursor = text_edit_widget->textCursor();
-    QTextCharFormat format;
-    /* 设置颜色 */
-    if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
-    {
-      format.setForeground(Qt::white);
-    }
-    else
-    {
-      format.setForeground(Qt::red);
-    }
-    cursor.setCharFormat(format);
-    cursor.insertText(show_messagex.str + '\n');
+    cursor.insertText(show_messagex.str);
     text_edit_widget->setTextCursor(cursor);
 
     text_edit_widget->moveCursor(QTextCursor::Start);
@@ -417,27 +353,20 @@ void more_window::update_show_msg(QTextEdit *text_edit_widget, QList<SHOW_MSG_Ty
   /* 上翻 */
   else
   {
+    text_edit_widget->moveCursor(QTextCursor::Start);
+    QTextCursor cursor = text_edit_widget->textCursor();
+    cursor.insertText(show_messagex.str);
+    text_edit_widget->setTextCursor(cursor);
+
+    /* 删除尾部行数据 */
     text_edit_widget->moveCursor(QTextCursor::End);
     text_edit_widget->moveCursor(QTextCursor::PreviousBlock, QTextCursor::KeepAnchor);
     text_edit_widget->moveCursor(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-//    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
+    //    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
     text_edit_widget->textCursor().removeSelectedText();
 
+    /* 回到头部显示 */
     text_edit_widget->moveCursor(QTextCursor::Start);
-    QTextCursor cursor = text_edit_widget->textCursor();
-    QTextCharFormat format;
-    /* 设置颜色 */
-    if(can_driver::CAN_RX_DIRECT == show_messagex.direct)
-    {
-      format.setForeground(Qt::white);
-    }
-    else
-    {
-      format.setForeground(Qt::red);
-    }
-    cursor.setCharFormat(format);
-    cursor.insertText(show_messagex.str + '\n');
-    text_edit_widget->setTextCursor(cursor);
   }
 }
 
@@ -598,21 +527,6 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
       {
         return;
       }
-#if 0
-      char str_buf[65];
-      size_t size = data_len > 64 ? 64 : data_len;
-      memcpy(str_buf, data, size);
-      if('\n' == str_buf[size - 1] || '\r' == str_buf[size - 1])
-      {
-        str_buf[size - 1] = '\0';
-      }
-      else
-      {
-        str_buf[size] = '\0';
-      }
-      QString str = QString::asprintf("%s", str_buf);
-      show_message.append(str);
-#endif
       if(false == char2str(data, data_len, show_message))
       {
         return;
@@ -630,7 +544,7 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
 
   SHOW_MSG_Typedef_t msg;
   msg.channel_num = channel_num;
-  msg.str = show_message;
+  msg.str = show_message + "\n";
   msg.direct = direct;
 
   /* 限制缓冲区大小 */
@@ -685,21 +599,6 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
       {
         return;
       }
-#if 0
-      char str_buf[65];
-      size_t size = data_len > 64 ? 64 : data_len;
-      memcpy(str_buf, data, size);
-      if('\n' == str_buf[size - 1] || '\r' == str_buf[size - 1])
-      {
-        str_buf[size - 1] = '\0';
-      }
-      else
-      {
-        str_buf[size] = '\0';
-      }
-      QString str = QString::asprintf("%s", str_buf);
-      show_message.append(str);
-#endif
       if(false == char2str(data, data_len, show_message))
       {
         return;
@@ -717,7 +616,7 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
 
   SHOW_MSG_Typedef_t msg;
   msg.channel_num = channel_num;
-  msg.str = show_message;
+  msg.str = show_message + "\n";
   msg.direct = direct;
 
   /* 限制缓冲区大小 */
