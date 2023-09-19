@@ -8,7 +8,7 @@
 
 #define SHOW_MSG_SAVE_NUM_MAX     200U                    /**< 最大显示消息数 */
 #define SHOW_MSG_ONE_SCORLL       (5U)                    /**< 上翻每次刷新列表数 */
-#define SAVE_MSG_BUF_MAX          (1024U*1024U*10U)       /**< 最大缓存消息数 */
+#define SAVE_MSG_BUF_MAX          (1024U*1024U*1U)        /**< 最大缓存消息数 */
 
 #define SHOW_LINE_CHAR_NUM_MAX    (1024U)                 /**< 一行最大显示多少字符 */
 #define SHOW_CHAR_TIMEOUT_MS_MAX  (1000U)                 /**< 最大等待无换行符时间ms */
@@ -25,8 +25,8 @@ more_window::more_window(QString title, QWidget *parent) :
   QFile file(":/qdarkstyle/dark/style.qss");
   if(file.open(QIODevice::ReadOnly | QIODevice::Text))
   {
-      this->setStyleSheet(file.readAll());
-      file.close();
+    this->setStyleSheet(file.readAll());
+    file.close();
   }
 
   /* 设置标题 */
@@ -316,7 +316,7 @@ void more_window::show_txt()
     ch1_scroll_cnt = show_index + 1;
 
     text_edit_widget = ui->ch1_receive_data_textEdit;
-    text_edit_widget->insertPlainText(show_messagex.str);
+    text_edit_widget->appendPlainText(show_messagex.str);
   }
 
   if(ch2_show_msg_is_empty() == false)
@@ -340,7 +340,7 @@ void more_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_M
   {
     text_edit_widget->moveCursor(QTextCursor::End);
     QTextCursor cursor = text_edit_widget->textCursor();
-    cursor.insertText(show_messagex.str);
+    cursor.insertText(show_messagex.str + '\n');
     text_edit_widget->setTextCursor(cursor);
 
     text_edit_widget->moveCursor(QTextCursor::Start);
@@ -355,7 +355,7 @@ void more_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_M
   {
     text_edit_widget->moveCursor(QTextCursor::Start);
     QTextCursor cursor = text_edit_widget->textCursor();
-    cursor.insertText(show_messagex.str);
+    cursor.insertText(show_messagex.str + '\n');
     text_edit_widget->setTextCursor(cursor);
 
     /* 删除尾部行数据 */
@@ -383,7 +383,7 @@ void more_window::slot_show_window()
   CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->CQ_getCQHandle();
   /* 清空 */
   CircularQueue::CQ_emptyData(cq);
-  connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg);
+  connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
   this->show();
 }
 
@@ -544,7 +544,7 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
 
   SHOW_MSG_Typedef_t msg;
   msg.channel_num = channel_num;
-  msg.str = show_message + "\n";
+  msg.str = show_message;
   msg.direct = direct;
 
   /* 限制缓冲区大小 */
@@ -556,7 +556,6 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
     }
     ch1_show_msg_list.append(msg);
     ch1_add_msg_index++;
-
     goto __show_msg;
   }
 
@@ -616,7 +615,7 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
 
   SHOW_MSG_Typedef_t msg;
   msg.channel_num = channel_num;
-  msg.str = show_message + "\n";
+  msg.str = show_message;
   msg.direct = direct;
 
   /* 限制缓冲区大小 */
@@ -683,7 +682,7 @@ void more_window::slot_show_can_msg()
   }
   quint32 msg_len = len / sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t);
 //  qDebug() << "msg" << msg_len;
-  msg_len = msg_len > 1000U ? 1000U : msg_len;
+  msg_len = msg_len > 64U ? 64U : msg_len;
   can_driver::CAN_MSG_DISPLAY_Typedef_t msg;
   for(quint32 i = 0; i < msg_len; i++)
   {

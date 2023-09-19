@@ -30,7 +30,7 @@
 
 /** Private macros -----------------------------------------------------------*/
 #define USE_HW_CAN_SEND_64_DATA_EN  1/**< 是否开启非CANFD设备发送大于64Bytes的数据，采用分包发送 */
-#define CAN_MSG_NUM_MAX             100U/**< can接收一次消息最大允许帧数 */
+#define CAN_MSG_NUM_MAX             64U/**< can接收一次消息最大允许帧数 */
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -1654,7 +1654,7 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
         len = ZCAN_GetReceiveNum(channel_state.channel_handle, TYPE_CAN);
         if(0 < len)
         {
-          len = ZCAN_Receive(channel_state.channel_handle, can_data, CAN_MSG_NUM_MAX, 0);
+          len = ZCAN_Receive(channel_state.channel_handle, can_data, CAN_MSG_NUM_MAX, 0U);
           show_message(channel_state, can_data, len);
           emit signal_show_can_msg();
         }
@@ -1663,7 +1663,7 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
         len = ZCAN_GetReceiveNum(channel_state.channel_handle, TYPE_CANFD);
         if(0 < len)
         {
-          len = ZCAN_ReceiveFD(channel_state.channel_handle, canfd_data, CAN_MSG_NUM_MAX, 0);
+          len = ZCAN_ReceiveFD(channel_state.channel_handle, canfd_data, CAN_MSG_NUM_MAX, 0U);
           show_message(channel_state, canfd_data, len);
           emit signal_show_can_msg();
         }
