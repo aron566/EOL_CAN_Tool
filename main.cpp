@@ -67,6 +67,8 @@
  *  <tr><td>2023-09-15 <td>v1.1.4  <td>aron566 <td>修复gccanfd发送数据长度未对齐导致发送失败问题
  *  <tr><td>2023-09-18 <td>v1.1.5  <td>aron566 <td>显示控件更换为QPlainTextEdit提高性能，删除无效代码
  *  <tr><td>2023-09-19 <td>v1.1.6  <td>aron566 <td>打开设备时关闭品牌选择下拉框
+ *  <tr><td>2023-09-20 <td>v1.1.7  <td>aron566 <td>2dfft增加时间计算
+ *  <tr><td>2023-09-22 <td>v1.1.7  <td>aron566 <td>发送消息改为异步方式，发送消息增加事件处理否则会异常
  *  </table>
  */
 #include "mainwindow.h"
@@ -74,7 +76,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.1.6"
+#define PC_SOFTWARE_VERSION       "1.1.8"
 
 int main(int argc, char *argv[])
 {

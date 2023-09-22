@@ -384,6 +384,7 @@ void more_window::slot_show_window()
   /* 清空 */
   CircularQueue::CQ_emptyData(cq);
   connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
+  connect(can_driver_obj, &can_driver::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
   this->show();
 }
 
@@ -852,6 +853,7 @@ void more_window::on_mask_en_checkBox_clicked(bool checked)
 void more_window::on_frame_diagnosis_pushButton_clicked()
 {
   disconnect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg);
+  disconnect(can_driver_obj, &can_driver::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
   connect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg, Qt::QueuedConnection);
   frame_diagnosis_obj->show();
 }

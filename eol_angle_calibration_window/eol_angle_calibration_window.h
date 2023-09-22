@@ -154,6 +154,10 @@ private:
   float rts_start_frequency = 0;
   float rts_bandwidth = 0;
 
+  /* 转动时间 */
+  qint64 time_ms_s = 0;
+  qint64 time_ms_e = 0;
+
   /* 水平转动 */
   float azi_left_angle_start = 0;
   float azi_right_angle_end = 0;

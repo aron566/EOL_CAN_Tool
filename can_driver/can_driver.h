@@ -24,6 +24,8 @@
 #include <QByteArray>
 #include <QString>
 #include <QStringList>
+#include <QQueue>
+#include <QMutex>
 #include <QCoreApplication>
 #include <QThread>
 #include <QRunnable>
@@ -68,16 +70,17 @@ public:
   }
 
   /**
-   * @brief 监听线程启动
+   * @brief can线程启动
    */
   virtual void run() override
   {
     thread_run_state = true;
     while(start_)
     {
+      send_data();
       receice_data();
     }
-    qDebug() << "[thread]" << QThread::currentThreadId() << "can driver listen end";
+    qDebug() << "[thread]" << QThread::currentThreadId() << "can driver task end";
     thread_run_state = false;
   }
 
@@ -280,6 +283,11 @@ signals:
   void signal_show_can_msg();
 
   /**
+   * @brief 发送信号-刷新消息显示 asynchronous
+   */
+  void signal_show_can_msg_asynchronous();
+
+  /**
    * @brief 发送信号显示当前的can消息
    * @param can_id id
    * @param data 数据
@@ -384,6 +392,11 @@ public:
    *
    */
   void close();
+
+  /**
+   * @brief 数据发送
+   */
+  void send_data();
 
   /**
    * @brief 数据接收
@@ -988,10 +1001,21 @@ private:
   QList<MSG_FILTER_Typedef_t>msg_filter_list;
   QList<CHANNEL_STATE_Typedef_t>channel_state_list;
 
-  QSemaphore sem;
+  QSemaphore cq_sem;
 
   /* 同星can */
   QSharedPointer<TSCANLINApi> ts_can_obj;
+
+  /* 异步消息发送数据结构 */
+  typedef struct
+  {
+    QString data;
+    quint32 id;
+    FRAME_TYPE_Typedef_t frame_type;
+    PROTOCOL_TYPE_Typedef_t protocol;
+    quint8 channel_num;
+  }SEND_MSG_Typedef_t;
+  QQueue<SEND_MSG_Typedef_t>send_msg_list;
 };
 
 #endif // CAN_DRIVER_H

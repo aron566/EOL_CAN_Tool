@@ -2,6 +2,7 @@
 #include "ui_eol_angle_calibration_window.h"
 #include <QFileDialog>
 #include <QTableWidgetItem>
+#include <QDateTime>
 
 eol_angle_calibration_window::eol_angle_calibration_window(QString title, QWidget *parent) :
   QWidget(parent),
@@ -276,6 +277,10 @@ void eol_angle_calibration_window::on_start_pushButton_clicked()
 
   ui->start_pushButton->setText(tr("stop"));
 
+  /* 记录起始时间 */
+  QDateTime dt = QDateTime::currentDateTime();
+  time_ms_s = dt.toMSecsSinceEpoch();
+
   /* 设置转台条件 */
   FFT_REQUEST_CONDITION_Typedef_t condition;
   angle_position_index = 0;
@@ -284,7 +289,7 @@ void eol_angle_calibration_window::on_start_pushButton_clicked()
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
   task.param = nullptr;
 
-  /* 设置转台后读取2DFFT */
+  /* 设置转台后读取2DFFT */  
   task.reg = EOL_W_2DFFT_CONDITION_REG;
   task.command = eol_protocol::EOL_WRITE_CMD;
   task.buf[0] = condition.direction;
@@ -324,6 +329,10 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
   {
     return false;
   }
+
+  /* 记录到达时间 */
+  QDateTime dt = QDateTime::currentDateTime();
+  time_ms_e = dt.toMSecsSinceEpoch();
 
   /* 返回<所有配置>下的2dfft数据
    * DATA[0]：配置ID
@@ -392,7 +401,17 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
       condition.fft_data[i][ch].real = real;
       condition.fft_data[i][ch].image = image;
     }
-    ui->tableWidget->setItem(angle_position_index, 8, new QTableWidgetItem(QString("ok")));
+    qint64 time_ms = time_ms_e - time_ms_s;
+    ui->tableWidget->setItem(angle_position_index, 8, new QTableWidgetItem(QString("ok,%1ms").arg(time_ms)));
+    QTableWidgetItem *item = ui->tableWidget->item(angle_position_index, 8);
+    if(100 < time_ms)
+    {
+      item->setForeground(QBrush(Qt::red));
+    }
+    else
+    {
+      item->setForeground(QBrush(Qt::white));
+    }
   }
   QString fft_data_str = profile_fft_list.join(",");
   ui->tableWidget->setItem(angle_position_index, 9, new QTableWidgetItem(fft_data_str));
@@ -659,6 +678,10 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
     /* 角度校准 */
     case EOL_W_2DFFT_CONDITION_REG:
       {
+        /* 记录起始时间 */
+        QDateTime dt = QDateTime::currentDateTime();
+        time_ms_s = dt.toMSecsSinceEpoch();
+
         eol_protocol::EOL_TASK_LIST_Typedef_t task;
         task.param = nullptr;
 

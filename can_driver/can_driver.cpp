@@ -20,6 +20,7 @@
   *           v1.0.6 aron566 2023.09.06 20:04 重构发送函数，重构ui显示的消息信号发送机制
   *           v1.0.7 aron566 2023.09.14 11:59 支持tscan盒
   *           v1.0.8 aron566 2023.09.15 11:59 修复gccanfd发送未对齐导致发送失败问题，掩码只针对接收报文
+  *           v1.0.9 aron566 2023.09.22 14:05 发送消息改为异步方式，发送消息增加事件处理否则会异常
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QDateTime>
@@ -155,7 +156,7 @@ can_driver::can_driver(QObject *parent)
     : QObject{parent}
 {
   /* 创建访问资源锁1个 */
-  sem.release(1);
+  cq_sem.release(1);
 
   cq_obj = new CircularQueue(CircularQueue::UINT8_DATA_BUF, CircularQueue::CQ_BUF_1M, this);
   if(nullptr == cq_obj)
@@ -836,7 +837,7 @@ bool can_driver::reset()
   bool ret = false;
 
   start_ = false;
-
+  send_msg_list.clear();
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     if(false == channel_state_list.value(i).channel_en)
@@ -958,7 +959,7 @@ void can_driver::close()
   }
 
   start_ = false;
-
+  send_msg_list.clear();
   /* 关闭对应通道号 */
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
@@ -1433,6 +1434,14 @@ void can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state)
 
 void can_driver::send(quint8 channel_index)
 {
+  if(datas_.isEmpty())
+  {
+    show_message(tr("data is empty"));
+    return;
+  }
+
+  SEND_MSG_Typedef_t msg;
+
   CHANNEL_STATE_Typedef_t channel_state;
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
@@ -1440,7 +1449,12 @@ void can_driver::send(quint8 channel_index)
     if(true == channel_state.channel_en && (channel_index == channel_state.channel_num \
        || channel_index == channel_state_list.size()))
     {
-      send(channel_state);
+      msg.channel_num = (quint8)channel_state.channel_num;
+      msg.data = datas_;
+      msg.frame_type = (FRAME_TYPE_Typedef_t)frame_type_index_;
+      msg.protocol = (PROTOCOL_TYPE_Typedef_t)protocol_index_;
+      msg.id = id_.toUInt(nullptr, 16);
+      send_msg_list.enqueue(msg);
     }
   }
 }
@@ -1747,6 +1761,32 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
   }
 }
 
+void can_driver::send_data()
+{
+  /* 检查是否有发送任务 */
+  if(true == send_msg_list.isEmpty())
+  {
+    return;
+  }
+  QCoreApplication::processEvents();
+  SEND_MSG_Typedef_t msg = send_msg_list.dequeue();
+  qint32 channel_index = msg.channel_num;
+  CHANNEL_STATE_Typedef_t channel_state;
+  for(qint32 i = 0; i < channel_state_list.size(); i++)
+  {
+    channel_state = channel_state_list.value(i);
+    if(true == channel_state.channel_en && channel_index == channel_state.channel_num)
+    {
+      datas_ = msg.data;
+      frame_type_index_ = (quint32)msg.frame_type;
+      protocol_index_ = (quint32)msg.protocol;
+      id_ = QString::number(msg.id, 16);
+      send(channel_state);
+      return;
+    }
+  }
+}
+
 void can_driver::receice_data()
 {
   CHANNEL_STATE_Typedef_t channel_state;
@@ -1844,12 +1884,12 @@ void can_driver::msg_to_ui_cq_buf(quint32 can_id, quint8 channel_num, CAN_DIRECT
   ui_msg.data_len = data_len;
   memcpy(ui_msg.msg_data, data, data_len);
 
-  sem.tryAcquire();
+  cq_sem.tryAcquire();
   if(true == CircularQueue::CQ_canSaveLength(cq_obj->CQ_getCQHandle(), sizeof(ui_msg)))
   {
     CircularQueue::CQ_putData(cq_obj->CQ_getCQHandle(), (quint8 *)&ui_msg, sizeof(ui_msg));
   }
-  sem.release();
+  cq_sem.release();
 
   QDateTime dt = QDateTime::currentDateTime();
   emit signal_can_driver_msg(can_id, data, data_len, (quint8)direction, channel_num, (quint8)protocol, dt.toMSecsSinceEpoch());
