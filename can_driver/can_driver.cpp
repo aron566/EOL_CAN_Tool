@@ -1891,6 +1891,11 @@ void can_driver::msg_to_ui_cq_buf(quint32 can_id, quint8 channel_num, CAN_DIRECT
   }
   cq_sem.release();
 
+  /* 其他报文不统计 */
+  if(UNKNOW_DIRECT == direction)
+  {
+    return;
+  }
   QDateTime dt = QDateTime::currentDateTime();
   emit signal_can_driver_msg(can_id, data, data_len, (quint8)direction, channel_num, (quint8)protocol, dt.toMSecsSinceEpoch());
 }

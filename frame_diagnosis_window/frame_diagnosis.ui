@@ -44,7 +44,7 @@
         </column>
         <column>
          <property name="text">
-          <string>接收帧数</string>
+          <string>帧数</string>
          </property>
         </column>
         <column>
