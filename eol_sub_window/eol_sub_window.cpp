@@ -94,7 +94,7 @@ void eol_sub_window::set_eol_protocol_obj(eol_protocol *obj)
   }
   eol_protocol_obj = obj;
 
-  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_sub_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_sub_window::slot_rw_device_ok, Qt::QueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_sub_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
 }
 

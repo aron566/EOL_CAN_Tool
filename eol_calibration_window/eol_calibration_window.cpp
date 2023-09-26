@@ -100,7 +100,7 @@ void eol_calibration_window::set_eol_protocol_obj(eol_protocol *obj)
   eol_protocol_obj = obj;
   /* 数据接收 */
 //  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok);
-  connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_calibration_window::slot_protocol_rw_err);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_calibration_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok, Qt::QueuedConnection);
 }
 
