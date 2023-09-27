@@ -383,7 +383,7 @@ void more_window::slot_show_window()
   CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->CQ_getCQHandle();
   /* 清空 */
   CircularQueue::CQ_emptyData(cq);
-  connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::QueuedConnection);
+  connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
   connect(can_driver_obj, &can_driver::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
   this->show();
 }

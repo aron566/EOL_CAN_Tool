@@ -79,8 +79,8 @@ public:
     {
       send_data();
       receice_data();
-      /* 执行调度 */
-      QThread::sleep(0);
+      /* 刷新界面 */
+      emit signal_show_can_msg();
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << "can driver task end";
     thread_run_state = false;

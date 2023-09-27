@@ -70,7 +70,7 @@
  *  <tr><td>2023-09-20 <td>v1.1.7  <td>aron566 <td>2dfft增加时间计算
  *  <tr><td>2023-09-22 <td>v1.1.8  <td>aron566 <td>发送消息改为异步方式，发送消息增加事件处理否则会异常
  *  <tr><td>2023-09-25 <td>v1.1.9  <td>aron566 <td>修复诊断报文统计unknow direction消息
- *  <tr><td>2023-09-26 <td>v1.1.10 <td>aron566 <td>修复发送表数据会导致信号死锁问题
+ *  <tr><td>2023-09-26 <td>v1.1.10 <td>aron566 <td>修复发送表数据会导致信号死锁问题，接收数据过多导致卡死问题
  *  </table>
  */
 #include "mainwindow.h"

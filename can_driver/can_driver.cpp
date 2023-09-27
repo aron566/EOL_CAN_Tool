@@ -21,6 +21,7 @@
   *           v1.0.7 aron566 2023.09.14 11:59 支持tscan盒
   *           v1.0.8 aron566 2023.09.15 11:59 修复gccanfd发送未对齐导致发送失败问题，掩码只针对接收报文
   *           v1.0.9 aron566 2023.09.22 14:05 发送消息改为异步方式，发送消息增加事件处理否则会异常
+  *           v1.0.10 aron566 2023.09.27 14:05 信号统一发送
   */
 /** Includes -----------------------------------------------------------------*/
 #include <QDateTime>
@@ -1340,8 +1341,6 @@ bool can_driver::send(const CHANNEL_STATE_Typedef_t &channel_state, \
                    frame_type, \
                    DATA_FRAME_TYPE, \
                    (const quint8 *)result_info_str.toUtf8().data(), result_info_str.size());
-
-  emit signal_show_can_msg();
   return ret;
 }
 
@@ -1670,7 +1669,6 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
         {
           len = ZCAN_Receive(channel_state.channel_handle, can_data, CAN_MSG_NUM_MAX, 0U);
           show_message(channel_state, can_data, len);
-          emit signal_show_can_msg();
         }
 
         /* 获取canfd数据长度 */
@@ -1679,7 +1677,6 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
         {
           len = ZCAN_ReceiveFD(channel_state.channel_handle, canfd_data, CAN_MSG_NUM_MAX, 0U);
           show_message(channel_state, canfd_data, len);
-          emit signal_show_can_msg();
         }
         break;
       }
@@ -1707,7 +1704,6 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
                   break;
                 }
                 show_message(channel_state, can_data, len, CAN_RX_DIRECT);
-                emit signal_show_can_msg();
               }
               break;
             }
@@ -1720,7 +1716,6 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
               if(0 < len)
               {
                 show_message(channel_state, can_data, (quint32)len, CAN_RX_DIRECT);
-                emit signal_show_can_msg();
               }
               break;
             }
@@ -1740,7 +1735,6 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
 //        if(0 < can_frame_size && ret == 0U)
 //        {
 //          show_message(channel_state, can_data, (quint32)can_frame_size);
-//          emit signal_show_can_msg();
 //        }
 
         TLibCANFD canfd_data[CAN_MSG_NUM_MAX];
@@ -1751,7 +1745,6 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
         if(0 < can_frame_size && ret == 0U)
         {
           show_message(channel_state, canfd_data, (quint32)can_frame_size);
-          emit signal_show_can_msg();
         }
         break;
       }
