@@ -8,7 +8,7 @@
 
 #define SHOW_MSG_SAVE_NUM_MAX     200U                    /**< 最大显示消息数 */
 #define SHOW_MSG_ONE_SCORLL       (5U)                    /**< 上翻每次刷新列表数 */
-#define SAVE_MSG_BUF_MAX          (1024U*1024U*1U)        /**< 最大缓存消息数 */
+#define SAVE_MSG_BUF_MAX          (1024U*512U*1U)         /**< 最大缓存消息数 */
 
 #define SHOW_LINE_CHAR_NUM_MAX    (1024U)                 /**< 一行最大显示多少字符 */
 #define SHOW_CHAR_TIMEOUT_MS_MAX  (1000U)                 /**< 最大等待无换行符时间ms */

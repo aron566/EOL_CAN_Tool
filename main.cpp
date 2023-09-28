@@ -71,6 +71,7 @@
  *  <tr><td>2023-09-22 <td>v1.1.8  <td>aron566 <td>发送消息改为异步方式，发送消息增加事件处理否则会异常
  *  <tr><td>2023-09-25 <td>v1.1.9  <td>aron566 <td>修复诊断报文统计unknow direction消息
  *  <tr><td>2023-09-26 <td>v1.1.10 <td>aron566 <td>修复发送表数据会导致信号死锁问题，接收数据过多导致卡死问题
+ *  <tr><td>2023-09-27 <td>v1.1.11 <td>aron566 <td>减少内存占用，消息数限制
  *  </table>
  */
 #include "mainwindow.h"
@@ -78,7 +79,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.1.10"
+#define PC_SOFTWARE_VERSION       "1.1.11"
 
 int main(int argc, char *argv[])
 {
