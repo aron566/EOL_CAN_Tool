@@ -286,6 +286,7 @@ quint32 utility::num_type_to_bytes(utility::NUM_TYPE_Typedef_t Type)
   switch(Type)
   {
     case CALTERAH_CFX_28BIT_DATA_TYPE:
+    case CALTERAH_CFL_32BIT_DATA_TYPE:
     case INT32_DATA_TYPE:
     {
       unit_bytes = sizeof(qint32);
@@ -442,6 +443,7 @@ quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NU
         break;
       }
       case CALTERAH_CFX_28BIT_DATA_TYPE:
+      case CALTERAH_CFL_32BIT_DATA_TYPE:
       case UINT32_DATA_TYPE:
       case FLOAT32_BIN_DATA_TYPE:
       {

@@ -1572,6 +1572,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
       switch(common_table_info.Common_Info.Data_Type)
       {
         case eol_protocol::CALTERAH_CFX_28BIT_DATA_TYPE:
+        case eol_protocol::CALTERAH_CFL_32BIT_DATA_TYPE:
           {
             quint32 Val = 0;
             memcpy(&Val, data + i, 4U);

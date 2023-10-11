@@ -62,6 +62,7 @@ public:
     UINT16_DAYA_TYPE,                 /**< 无符号整型16位 */
     UINT8_DATA_TYPE,                  /**< 无符号整型8位 */
     FLOAT32_BIN_DATA_TYPE,            /**< 32位浮点数二进制类型 */
+    CALTERAH_CFL_32BIT_DATA_TYPE,     /**< 加特兰CFL 32位数据格式 */
     UNKNOW_DATA_TYPE = 0xFF,          /**< 未知数据类型 */
   }NUM_TYPE_Typedef_t;
 

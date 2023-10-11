@@ -90,7 +90,7 @@
 #define EOL_RW_SPI_REG                 0x1EU  /**< 读写spi测试 */
 #define EOL_RW_I2C_REG                 0x1FU  /**< 读写i2c测试 */
 #define EOL_RW_DTC_REG                 0x20U  /**< 读写dtc测试 */
-
+#define EOL_RW_TX_WAVE_MODE_REG        0x21U  /**< 读写TX工作模式 */
 /** Exported variables -------------------------------------------------------*/
 /** Exported functions prototypes --------------------------------------------*/
 
@@ -152,9 +152,9 @@ public:
   /* 数据格式 */
   typedef enum
   {
-    CALTERAH_CFX_28BIT_DATA_TYPE = 0,     /**< 加特兰CFX 28位数据格式 */
+    CALTERAH_CFX_28BIT_DATA_TYPE = 0,     /**< 加特兰CFX 28位数据格式 CFX(14, 1, s) */
     COMPLEX_FLOAT_DATA_TYPE,              /**< 浮点类型 */
-    COMPLEX_INT16_DATA_TYPE,              /**< 16位整型复数 @ref Complex_I16_t */
+    COMPLEX_INT16_DATA_TYPE,              /**< 16位整型复数 @ref Complex_I16_Typedef_t */
     FLOAT32_DATA_TYPE,                    /**< 32位浮点类型 */
     INT32_DATA_TYPE,                      /**< 整型32位 */
     INT16_DAYA_TYPE,                      /**< 整型16位 */
@@ -163,6 +163,7 @@ public:
     UINT16_DAYA_TYPE,                     /**< 无符号整型16位 */
     UINT8_DATA_TYPE,                      /**< 无符号整型8位 */
     FLOAT32_BIN_DATA_TYPE,                /**< 32位浮点数二进制类型 */
+    CALTERAH_CFL_32BIT_DATA_TYPE,         /**< 加特兰CFX 32位数据格式 CFL(14, 1, s, 4, s) */
     UNKNOW_DATA_TYPE = 0xFF,              /**< 未知数据类型 */
   }DATA_Typedef_t;
 

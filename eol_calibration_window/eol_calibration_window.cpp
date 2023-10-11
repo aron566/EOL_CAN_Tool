@@ -51,6 +51,19 @@ void eol_calibration_window::closeEvent(QCloseEvent *event)
 {
   Q_UNUSED(event)
 
+  eol_protocol::EOL_TASK_LIST_Typedef_t task;
+  task.param = nullptr;
+
+  /* 设置校准工作波形 */
+  task.reg = EOL_RW_TX_WAVE_MODE_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = 0;
+  task.len = 1;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 启动eol线程 */
+  eol_protocol_obj->start_task();
+
   this->hide();
   emit signal_window_closed();
 }
@@ -65,6 +78,13 @@ void eol_calibration_window::showEvent(QShowEvent *event)
 
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
   task.param = nullptr;
+
+  /* 设置正常工作波形 */
+  task.reg = EOL_RW_TX_WAVE_MODE_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = 1;
+  task.len = 1;
+  eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* 读取校准模式 */
   task.reg = EOL_RW_CALI_MODE_REG;
@@ -332,6 +352,9 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
   Q_UNUSED(data_size)
   switch(reg_addr)
   {
+    case EOL_RW_TX_WAVE_MODE_REG:
+      break;
+
     case EOL_W_SAVE_PAR_REG:
       break;
     /* rcs校准，目标测试 */
@@ -412,6 +435,12 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
             profile_id = data[index++];
             memcpy(&cali_mode, data + index, sizeof(cali_mode));
             index += sizeof(cali_mode);
+            /* 更新显示 */
+            if(ui->profile_id_comboBox->currentIndex() == profile_id)
+            {
+              ui->cali_mode_comboBox->setCurrentIndex(cali_mode);
+            }
+
             tips_str += QString("<font size='5' color='green'><div align='legt'>profile id[%1] cali_mode:</div> <div align='right'>%2</div> </font>\r\n").arg(profile_id).arg(cali_mode);
           }
           /* 显示Cali Mode信息 */
@@ -431,6 +460,33 @@ void eol_calibration_window::slot_protocol_rw_err(quint8 reg, quint8 command)
   Q_UNUSED(command)
   switch(reg)
   {
+    case EOL_RW_TX_WAVE_MODE_REG:
+      if(this->isHidden() == false)
+      {
+        eol_protocol::EOL_TASK_LIST_Typedef_t task;
+        task.param = nullptr;
+
+        /* 设置正常工作波形 */
+        task.reg = EOL_RW_TX_WAVE_MODE_REG;
+        task.command = eol_protocol::EOL_WRITE_CMD;
+        task.buf[0] = 1;
+        task.len = 1;
+        eol_protocol_obj->eol_master_common_rw_device(task);
+      }
+      else
+      {
+        eol_protocol::EOL_TASK_LIST_Typedef_t task;
+        task.param = nullptr;
+
+        /* 设置校准波形 */
+        task.reg = EOL_RW_TX_WAVE_MODE_REG;
+        task.command = eol_protocol::EOL_WRITE_CMD;
+        task.buf[0] = 0;
+        task.len = 1;
+        eol_protocol_obj->eol_master_common_rw_device(task);
+      }
+      break;
+
     case EOL_W_SAVE_PAR_REG:
       break;
     /* rcs校准，目标测试 */

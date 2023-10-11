@@ -72,6 +72,8 @@
  *  <tr><td>2023-09-25 <td>v1.1.9  <td>aron566 <td>修复诊断报文统计unknow direction消息
  *  <tr><td>2023-09-26 <td>v1.1.10 <td>aron566 <td>修复发送表数据会导致信号死锁问题，接收数据过多导致卡死问题
  *  <tr><td>2023-09-27 <td>v1.1.11 <td>aron566 <td>减少内存占用，消息数限制
+ *  <tr><td>2023-10-10 <td>v1.1.12 <td>aron566 <td>支持CFL数据类型csv格式
+ *  <tr><td>2023-10-11 <td>v1.1.13 <td>aron566 <td>支持v0.0.25协议，增加波形设置用与目标测试
  *  </table>
  */
 #include "mainwindow.h"
@@ -79,7 +81,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.1.11"
+#define PC_SOFTWARE_VERSION       "1.1.13"
 
 int main(int argc, char *argv[])
 {
