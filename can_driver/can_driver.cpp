@@ -1780,7 +1780,7 @@ void can_driver::send_data()
   }
 }
 
-void can_driver::receice_data()
+void can_driver::receive_data()
 {
   CHANNEL_STATE_Typedef_t channel_state;
   for(qint32 i = 0; i < channel_state_list.size(); i++)
