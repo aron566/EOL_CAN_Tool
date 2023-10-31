@@ -78,7 +78,7 @@ public:
     while(start_)
     {
       send_data();
-      receice_data();
+      receive_data();
       /* 刷新界面 */
       emit signal_show_can_msg();
     }
@@ -94,6 +94,7 @@ public:
     ZLG_CAN_BRAND = 0,  /**< 周立功 */
     GC_CAN_BRAND,       /**< 广成 */
     TS_CAN_BRAND,       /**< 同星 */
+    KVASER_BRAND,       /**< kvaser */
   }CAN_BRAND_Typedef_t;
 
   /* 标准/扩展帧类型 */
@@ -403,7 +404,7 @@ public:
   /**
    * @brief 数据接收
    */
-  void receice_data();
+  void receive_data();
 
   /**
    * @brief 设置canid掩码

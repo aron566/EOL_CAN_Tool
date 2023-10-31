@@ -1467,7 +1467,7 @@ void can_driver::set_channel_index(quint8 index)
 {
   /* 判断通道号是否全部使能 */
   CHANNEL_STATE_Typedef_t channel_state;
-  if(kDeviceType[device_type_index_].channel_count <= index)
+  if((quint8)channel_state_list.size() <= index)
   {
     for(qint32 i = 0; i < channel_state_list.size(); i++)
     {
@@ -1697,7 +1697,7 @@ void can_driver::receice_data(const CHANNEL_STATE_Typedef_t &channel_state)
                 len = Receive(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, can_data, CAN_MSG_NUM_MAX, 0);
                 if(4294967295 == len)
                 {
-                  if(STATUS_ERR != ReadErrInfo(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &vei))
+                  if(GC_STATUS_ERR != ReadErrInfo(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, &vei))
                   {
                     qDebug() << "gc read data err" << "err code:" << QString::number(vei.ErrCode, 16);
                   }
