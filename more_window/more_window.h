@@ -6,7 +6,7 @@
 #include <QTextEdit>
 
 #include "eol_window.h"
-#include "can_driver.h"
+#include "can_driver_model.h"
 #include "frame_diagnosis_window/frame_diagnosis.h"
 #include "tool_window/tool_window.h"
 #include "utilities/line_highlighter.h"
@@ -27,20 +27,20 @@ public:
    * @brief 设置can驱动
    * @param can_driver_
    */
-  void set_can_driver_obj(can_driver *can_driver_ = nullptr)
+  void set_can_driver_obj(can_driver_model *can_driver_)
   {
     can_driver_obj = can_driver_;
     /* 设置can驱动 after */
     eol_window_obj->set_can_driver_obj(can_driver_obj);
 
-    connect(can_driver_obj, &can_driver::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
-    connect(can_driver_obj, &can_driver::signal_show_message, this, &more_window::slot_show_message);
+    connect(can_driver_obj, &can_driver_model::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
+    connect(can_driver_obj, &can_driver_model::signal_show_message, this, &more_window::slot_show_message);
 
     /* 线程同步 */
-    connect(can_driver_obj, &can_driver::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::QueuedConnection);
+    connect(can_driver_obj, &can_driver_model::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::QueuedConnection);
 
-    connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
-    connect(can_driver_obj, &can_driver::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
+    connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
+    connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
 
     /* 恢复参数 */
     read_cfg();
@@ -193,7 +193,7 @@ private slots:
     tool_window *tool_window_obj = nullptr;
 
 private:
-    can_driver *can_driver_obj = nullptr;
+    can_driver_model *can_driver_obj = nullptr;
     frame_diagnosis *frame_diagnosis_obj = nullptr;
     QTimer *timer_obj = nullptr;
 
@@ -243,7 +243,7 @@ private:
      * @brief 显示can消息
      * @param msg 消息
      */
-    void show_can_msg(can_driver::CAN_MSG_DISPLAY_Typedef_t &msg);
+    void show_can_msg(can_driver_model::CAN_MSG_DISPLAY_Typedef_t &msg);
 private:
     /* 已显示消息 */
     quint32 ch1_show_msg_index = 0;

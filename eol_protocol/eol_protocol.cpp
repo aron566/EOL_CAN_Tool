@@ -156,13 +156,13 @@ eol_protocol::eol_protocol(QObject *parent)
   timer_init();
 }
 
-void eol_protocol::set_can_driver_obj(can_driver *can_driver_)
+void eol_protocol::set_can_driver_obj(can_driver_model *can_driver_)
 {
-  can_driver_obj = can_driver_;
   if(nullptr == can_driver_)
   {
     return;
   }
+  can_driver_obj = can_driver_;
 }
 
 void eol_protocol::eol_protocol_clear()
@@ -226,10 +226,10 @@ bool eol_protocol::eol_send_data_port(const uint8_t *data, uint16_t data_len, \
         /* 发送 */
         bool ret = can_driver_obj->send(data, (quint8)data_len, \
                                         EOL_PROTOCOL_MASTER_CAN_ID, \
-                                        can_driver::STD_FRAME_TYPE, \
+                                        can_driver_model::STD_FRAME_TYPE, \
                                         data_len > 8U ? \
-                                        can_driver::CANFD_PROTOCOL_TYPE : \
-                                        can_driver::CAN_PROTOCOL_TYPE, \
+                                        can_driver_model::CANFD_PROTOCOL_TYPE : \
+                                        can_driver_model::CAN_PROTOCOL_TYPE, \
                                         (quint8)channel_num.toUInt());
         return ret;
       }
@@ -652,6 +652,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(quint8 reg_a
         }
       }
       break;
+
     case EOL_RW_VERSION_REG:
     case EOL_RW_SN_REG:
     case EOL_R_MOUNTID_REG:

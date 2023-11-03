@@ -6,7 +6,11 @@
 #include <QThreadPool>
 #include "more_window.h"
 #include "eol_window.h"
-#include "can_driver.h"
+#include "can_driver_model.h"
+#include "can_driver_zlg.h"
+#include "can_driver_gc.h"
+#include "can_driver_ts.h"
+#include "can_driver_kvaser.h"
 #include "eol_protocol.h"
 #include "updater_window.h"
 
@@ -45,7 +49,7 @@ private:
 
   updater_window *updater_window_obj = nullptr;
 private:
-  can_driver *can_driver_obj = nullptr;
+  can_driver_model *can_driver_obj = nullptr;
 
   /**
    * @brief fontDb
@@ -87,6 +91,11 @@ private:
    */
   void save_cfg();
 
+  /**
+   * @brief update_can_use 更新页面状态显示
+   * @param function_can_use
+   */
+  void update_can_use(can_driver_model::SET_FUNCTION_CAN_USE_Typedef_t &function_can_use);
 private slots:
   /**
    * @brief 显示主窗口

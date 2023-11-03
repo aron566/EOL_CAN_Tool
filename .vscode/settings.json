@@ -22,6 +22,9 @@
     "algorithm": "cpp",
     "sstream": "cpp",
     "xlocale": "cpp",
-    "initializer_list": "cpp"
+    "initializer_list": "cpp",
+    "format": "cpp",
+    "random": "cpp",
+    "xtree": "cpp"
   }
 }

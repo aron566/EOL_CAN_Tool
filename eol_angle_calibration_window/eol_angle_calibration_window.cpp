@@ -289,7 +289,7 @@ void eol_angle_calibration_window::on_start_pushButton_clicked()
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
   task.param = nullptr;
 
-  /* 设置转台后读取2DFFT */  
+  /* 设置转台后读取2DFFT */
   task.reg = EOL_W_2DFFT_CONDITION_REG;
   task.command = eol_protocol::EOL_WRITE_CMD;
   task.buf[0] = condition.direction;
@@ -316,7 +316,7 @@ void eol_angle_calibration_window::on_start_pushButton_clicked()
  */
 bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint16 size)
 {
-  if(6 > size)
+  if(6U > size)
   {
     return false;
   }
@@ -358,7 +358,8 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
   profile_fft_list.clear();
   for(quint16 i = 0; i < calibration_profile_info_list.size(); i++)
   {
-    if(size < index)
+    /* 过程合法性检查 */
+    if(size < (index + 6U))
     {
       return false;
     }
@@ -377,6 +378,12 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
     bit_tx_order <<= 8;
     bit_tx_order |= tx0;
 
+    /* 过程合法性检查 */
+    if(size < (index + channel_num * 8U))
+    {
+      return false;
+    }
+
     /* 更新此配置下的tx order */
     condition.bit_tx_order[i] = bit_tx_order;
 
@@ -393,7 +400,7 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
       index += sizeof(real);
       profile_fft_list.append(QString::number(real));
 
-      memcpy(&image, data + index, sizeof(real));
+      memcpy(&image, data + index, sizeof(image));
       index += sizeof(image);
       profile_fft_list.append(QString::number(image));
 

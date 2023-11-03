@@ -168,43 +168,10 @@ void MainWindow::more_window_init(QString titile)
 {
   more_window_obj = new more_window(titile);
   connect(more_window_obj, &more_window::signal_more_window_closed, this, &MainWindow::slot_show_this_window);
-
-  /* 设置can驱动接口 */
-  more_window_obj->set_can_driver_obj(can_driver_obj);
 }
 
 void MainWindow::can_driver_init()
 {
-  can_driver_obj = new can_driver(this);
-
-  /* 禁止线程完成后执行析构对象 */
-  can_driver_obj->setAutoDelete(false);
-
-  connect(can_driver_obj, &can_driver::signal_can_is_opened, this, &MainWindow::slot_can_is_opened);
-  connect(can_driver_obj, &can_driver::signal_can_is_closed, this, &MainWindow::slot_can_is_closed);
-  connect(can_driver_obj, &can_driver::signal_work_mode_can_use, this, &MainWindow::slot_work_mode_can_use);
-  connect(can_driver_obj, &can_driver::signal_resistance_cs_use, this, &MainWindow::slot_resistance_cs_use);
-  connect(can_driver_obj, &can_driver::signal_bauds_can_use, this, &MainWindow::slot_bauds_can_use);
-  connect(can_driver_obj, &can_driver::signal_arbitration_data_bauds_can_use, this, &MainWindow::slot_arbitration_data_bauds_can_use);
-  connect(can_driver_obj, &can_driver::signal_diy_bauds_can_use, this, &MainWindow::slot_diy_bauds_can_use);
-  connect(can_driver_obj, &can_driver::signal_filter_can_use, this, &MainWindow::slot_filter_can_use);
-  connect(can_driver_obj, &can_driver::signal_local_port_can_use, this, &MainWindow::slot_local_port_can_use);
-  connect(can_driver_obj, &can_driver::signal_remote_port_can_use, this, &MainWindow::slot_remote_port_can_use);
-  connect(can_driver_obj, &can_driver::signal_remote_addr_can_use, this, &MainWindow::slot_remote_addr_can_use);
-  connect(can_driver_obj, &can_driver::signal_send_queue_delay_can_use, this, &MainWindow::slot_send_queue_delay_can_use);
-  connect(can_driver_obj, &can_driver::signal_get_tx_available_can_use, this, &MainWindow::slot_get_tx_available_can_use);
-  connect(can_driver_obj, &can_driver::signal_clear_tx_queue_can_use, this, &MainWindow::slot_clear_tx_queue_can_use);
-  connect(can_driver_obj, &can_driver::signal_queue_delay_flag_can_use, this, &MainWindow::slot_queue_delay_flag_can_use);
-  connect(can_driver_obj, &can_driver::signal_get_sen_mode_can_use, this, &MainWindow::slot_get_sen_mode_can_use);
-  connect(can_driver_obj, &can_driver::signal_send_queue_mode_can_use, this, &MainWindow::slot_send_queue_mode_can_use);
-  connect(can_driver_obj, &can_driver::signal_auto_send_dev_index_can_use, this, &MainWindow::slot_auto_send_dev_index_can_use);
-  connect(can_driver_obj, &can_driver::signal_auto_send_period_can_use, this, &MainWindow::slot_auto_send_period_can_use);
-  connect(can_driver_obj, &can_driver::signal_auto_send_add_can_use, this, &MainWindow::slot_auto_send_add_can_use);
-  connect(can_driver_obj, &can_driver::signal_auto_send_start_can_use, this, &MainWindow::slot_auto_send_start_can_use);
-  connect(can_driver_obj, &can_driver::signal_auto_send_stop_can_use, this, &MainWindow::slot_auto_send_stop_can_use);
-  connect(can_driver_obj, &can_driver::signal_auto_send_cancel_once_can_use, this, &MainWindow::slot_auto_send_cancel_once_can_use);
-  connect(can_driver_obj, &can_driver::signal_get_dev_auto_send_list_can_use, this, &MainWindow::slot_get_dev_auto_send_list_can_use);
-
   /* 读取设备信息不可用状态 */
   ui->device_info_pushButton->setEnabled(false);
 }
@@ -228,12 +195,12 @@ void MainWindow::read_cfg()
   if(false == file.exists())
   {
     /* 设置默认值 */
-    ui->brand_comboBox->setCurrentIndex(can_driver::ZLG_CAN_BRAND);
+    ui->brand_comboBox->setCurrentIndex(can_driver_model::ZLG_CAN_BRAND);
     ui->device_list_comboBox->setCurrentText("ZCAN_USBCANFD_200U");
     ui->arbitration_bps_comboBox->setCurrentIndex(2);
     ui->data_bps_comboBox->setCurrentIndex(2);
     /* 设置终端电阻启用状态 */
-    can_driver_obj->set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
+    can_driver_model::set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
@@ -243,15 +210,54 @@ void MainWindow::read_cfg()
     qDebug() << "err main_window config not exist";
     return;
   }
-  ui->brand_comboBox->setCurrentIndex((can_driver::CAN_BRAND_Typedef_t)setting.value("com_v" CONFIG_VER_STR "/device_brand").toInt());
+  ui->brand_comboBox->setCurrentIndex((can_driver_model::CAN_BRAND_Typedef_t)setting.value("com_v" CONFIG_VER_STR "/device_brand").toInt());
   ui->device_list_comboBox->setCurrentText(setting.value("com_v" CONFIG_VER_STR "/device_name").toString());
   ui->arbitration_bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/arbitration_bps").toInt());
   ui->data_bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/data_bps").toInt());
   ui->bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/bps").toInt());
   /* 设置终端电阻启用状态 */
   ui->end_resistance_checkBox->setChecked((bool)setting.value("com_v" CONFIG_VER_STR "/end_resistance_en").toInt());
-  can_driver_obj->set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
+  can_driver_model::set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
   setting.sync();
+}
+
+void MainWindow::update_can_use(can_driver_model::SET_FUNCTION_CAN_USE_Typedef_t &function_can_use)
+{
+  /* 工作模式是否可选 */
+  slot_work_mode_can_use(function_can_use.work_mode_can_use);
+
+  /* 终端电阻使能是否可选 */
+  slot_resistance_cs_use(function_can_use.resistance_cs_use);
+
+  /* 波特率选择是否可选 */
+  slot_bauds_can_use(function_can_use.bauds_can_use);
+
+  /* 仲裁域，数据域波特率是否可选 */
+  slot_arbitration_data_bauds_can_use(function_can_use.arbitration_data_bauds_can_use);
+
+  /* 自定义波特率选择是否可选 */
+  slot_diy_bauds_can_use(function_can_use.diy_bauds_can_use);
+
+  /* 过滤模式是否可选（验收码，屏蔽码） */
+  slot_filter_can_use(function_can_use.filter_can_use);
+
+  /* 网络相关可选设置 */
+  /* 本地端口是否可选 */
+  slot_local_port_can_use(function_can_use.local_port_can_use);
+
+  /* 远程端口是否可选 */
+  slot_remote_port_can_use(function_can_use.remote_port_can_use);
+
+  /* 远程地址是否可选 */
+  slot_remote_addr_can_use(function_can_use.remote_addr_can_use);
+
+  /* 更新波特率 */
+  ui->arbitration_bps_comboBox->clear();
+  ui->data_bps_comboBox->clear();
+  ui->bps_comboBox->clear();
+  ui->arbitration_bps_comboBox->addItems(function_can_use.abitrate_list);
+  ui->data_bps_comboBox->addItems(function_can_use.datarate_list);
+  ui->bps_comboBox->addItems(function_can_use.baudrate_list);
 }
 
 void MainWindow::slot_show_this_window()
@@ -415,13 +421,85 @@ void MainWindow::slot_get_dev_auto_send_list_can_use(bool can_use)
 void MainWindow::on_open_device_pushButton_clicked()
 {
   /* 打开设备 */
-  can_driver_obj->open();
+  switch((can_driver_model::CAN_BRAND_Typedef_t)ui->brand_comboBox->currentIndex())
+  {
+    case can_driver_model::ZLG_CAN_BRAND:      /**< 周立功 */
+      can_driver_obj = new can_driver_zlg(this);
+      break;
+
+    case can_driver_model::GC_CAN_BRAND:       /**< 广成 */
+      can_driver_obj = new can_driver_gc(this);
+      break;
+
+    case can_driver_model::TS_CAN_BRAND:       /**< 同星 */
+      can_driver_obj = new can_driver_ts(this);
+      break;
+
+    case can_driver_model::KVASER_BRAND:       /**< kvaser */
+      can_driver_obj = new can_driver_kvaser(this);
+      break;
+
+    default:
+      return;
+  }
+
+  /* 设置所选设备 */
+  if(0U == can_driver_obj->set_device_type(ui->device_list_comboBox->currentText()))
+  {
+    qDebug() << "device choise failed";
+    return;
+  }
+
+  /* 设置通道使能 */
+  can_driver_obj->set_channel_index((quint8)ui->channel_num_comboBox->currentIndex());
+
+  /* 禁止线程完成后执行析构对象 */
+  can_driver_obj->setAutoDelete(false);
+
+  connect(can_driver_obj, &can_driver_model::signal_can_is_opened, this, &MainWindow::slot_can_is_opened);
+  connect(can_driver_obj, &can_driver_model::signal_can_is_closed, this, &MainWindow::slot_can_is_closed);
+  connect(can_driver_obj, &can_driver_model::signal_work_mode_can_use, this, &MainWindow::slot_work_mode_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_resistance_cs_use, this, &MainWindow::slot_resistance_cs_use);
+  connect(can_driver_obj, &can_driver_model::signal_bauds_can_use, this, &MainWindow::slot_bauds_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_arbitration_data_bauds_can_use, this, &MainWindow::slot_arbitration_data_bauds_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_diy_bauds_can_use, this, &MainWindow::slot_diy_bauds_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_filter_can_use, this, &MainWindow::slot_filter_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_local_port_can_use, this, &MainWindow::slot_local_port_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_remote_port_can_use, this, &MainWindow::slot_remote_port_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_remote_addr_can_use, this, &MainWindow::slot_remote_addr_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_send_queue_delay_can_use, this, &MainWindow::slot_send_queue_delay_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_get_tx_available_can_use, this, &MainWindow::slot_get_tx_available_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_clear_tx_queue_can_use, this, &MainWindow::slot_clear_tx_queue_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_queue_delay_flag_can_use, this, &MainWindow::slot_queue_delay_flag_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_get_sen_mode_can_use, this, &MainWindow::slot_get_sen_mode_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_send_queue_mode_can_use, this, &MainWindow::slot_send_queue_mode_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_auto_send_dev_index_can_use, this, &MainWindow::slot_auto_send_dev_index_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_auto_send_period_can_use, this, &MainWindow::slot_auto_send_period_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_auto_send_add_can_use, this, &MainWindow::slot_auto_send_add_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_auto_send_start_can_use, this, &MainWindow::slot_auto_send_start_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_auto_send_stop_can_use, this, &MainWindow::slot_auto_send_stop_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_auto_send_cancel_once_can_use, this, &MainWindow::slot_auto_send_cancel_once_can_use);
+  connect(can_driver_obj, &can_driver_model::signal_get_dev_auto_send_list_can_use, this, &MainWindow::slot_get_dev_auto_send_list_can_use);
+
+  /* 设置can驱动接口 */
+  more_window_obj->set_can_driver_obj(can_driver_obj);
+
+  /* 打开设备 */
+  if(false == can_driver_obj->open())
+  {
+    return;
+  }
+
   /* 禁用打开设备按钮 */
   ui->open_device_pushButton->setEnabled(false);
 }
 
 void MainWindow::on_init_can_pushButton_clicked()
 {
+  if(nullptr == can_driver_obj)
+  {
+    return;
+  }
   /* 初始化设备 */
   if(false == can_driver_obj->init())
   {
@@ -433,6 +511,10 @@ void MainWindow::on_init_can_pushButton_clicked()
 
 void MainWindow::on_start_can_pushButton_clicked()
 {
+  if(nullptr == can_driver_obj)
+  {
+    return;
+  }
   /* 启动设备 */
   if(false == can_driver_obj->start())
   {
@@ -445,6 +527,10 @@ void MainWindow::on_start_can_pushButton_clicked()
 
 void MainWindow::on_reset_device_pushButton_clicked()
 {
+  if(nullptr == can_driver_obj)
+  {
+    return;
+  }
   /* 复位设备 */
   if(false == can_driver_obj->reset())
   {
@@ -456,6 +542,10 @@ void MainWindow::on_reset_device_pushButton_clicked()
 
 void MainWindow::on_close_device_pushButton_clicked()
 {
+  if(nullptr == can_driver_obj)
+  {
+    return;
+  }
   /* 关闭设备 */
   can_driver_obj->close();
   /* 禁用打开设备按钮 */
@@ -468,9 +558,114 @@ void MainWindow::on_more_pushButton_clicked()
   more_window_obj->show();
 }
 
+void MainWindow::on_end_resistance_checkBox_clicked(bool checked)
+{
+  /* 设置终端电阻启用状态 */
+  can_driver_model::set_resistance_enbale(checked);
+}
+
+void MainWindow::on_bps_comboBox_currentIndexChanged(int index)
+{
+  /* 设置can卡波特率 */
+  can_driver_model::set_bps((quint32)index);
+}
+
+void MainWindow::on_arbitration_bps_comboBox_currentIndexChanged(int index)
+{
+  /* 设置仲裁域波特率 */
+  can_driver_model::set_abit_bps((quint32)index);
+}
+
+void MainWindow::on_data_bps_comboBox_currentIndexChanged(int index)
+{
+  /* 设置数据域波特率 */
+  can_driver_model::set_dbit_bps((quint32)index);
+}
+
+void MainWindow::on_mode_comboBox_currentIndexChanged(int index)
+{
+  /* 设置工作模式 */
+  can_driver_model::set_work_mode((quint32)index);
+}
+
+void MainWindow::on_filter_mode_comboBox_currentIndexChanged(int index)
+{
+  /* 设置过滤模式 */
+  can_driver_model::set_filter_mode((quint32)index);
+}
+
+void MainWindow::on_verification_code_lineEdit_textChanged(const QString &arg1)
+{
+  /* 设置验收码 */
+  can_driver_model::set_acc_code(arg1);
+}
+
+void MainWindow::on_mask_code_lineEdit_textChanged(const QString &arg1)
+{
+  /* 设置掩码 */
+  can_driver_model::set_acc_mask_code(arg1);
+}
+
+void MainWindow::on_role_comboBox_currentIndexChanged(int index)
+{
+  /* 设置网络角色 */
+  can_driver_model::set_net_work_role((quint32)index);
+
+  can_driver_model::SET_FUNCTION_CAN_USE_Typedef_t function_can_use;
+  switch((can_driver_model::CAN_BRAND_Typedef_t)index)
+  {
+    case can_driver_model::ZLG_CAN_BRAND:      /**< 周立功 */
+        function_can_use = can_driver_zlg::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+        break;
+
+    case can_driver_model::GC_CAN_BRAND:       /**< 广成 */
+        function_can_use = can_driver_gc::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+        break;
+
+    case can_driver_model::TS_CAN_BRAND:       /**< 同星 */
+        function_can_use = can_driver_ts::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+        break;
+
+    case can_driver_model::KVASER_BRAND:       /**< kvaser */
+        function_can_use = can_driver_kvaser::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+        break;
+
+    default:
+        return;
+  }
+  update_can_use(function_can_use);
+}
+
 void MainWindow::on_device_list_comboBox_currentTextChanged(const QString &arg1)
 {
-  quint8 channel_num = can_driver_obj->set_device_type(arg1);
+  /* 设置设备名 */
+  can_driver_model::SET_FUNCTION_CAN_USE_Typedef_t function_can_use;
+  switch((can_driver_model::CAN_BRAND_Typedef_t)ui->brand_comboBox->currentIndex())
+  {
+    case can_driver_model::ZLG_CAN_BRAND:      /**< 周立功 */
+        function_can_use = can_driver_zlg::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+        break;
+
+    case can_driver_model::GC_CAN_BRAND:       /**< 广成 */
+        function_can_use = can_driver_gc::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+        break;
+
+    case can_driver_model::TS_CAN_BRAND:       /**< 同星 */
+        function_can_use = can_driver_ts::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+        break;
+
+    case can_driver_model::KVASER_BRAND:       /**< kvaser */
+        function_can_use = can_driver_kvaser::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+        break;
+
+    default:
+        return;
+  }
+
+  /* 更新功能项 */
+  update_can_use(function_can_use);
+
+  quint8 channel_num = function_can_use.channel_num;
   qDebug() << " set device type " << arg1 << "CH " << channel_num;
   /* 根据所选设备类型，更新通道数量 */
   ui->channel_num_comboBox->clear();
@@ -489,94 +684,58 @@ void MainWindow::on_device_list_comboBox_currentTextChanged(const QString &arg1)
 void MainWindow::on_device_index_comboBox_currentTextChanged(const QString &arg1)
 {
   /* 设置设备索引号，多个同样的设备接入时，index不同 */
-  can_driver_obj->set_device_index(arg1.toUShort());
+  can_driver_model::set_device_index(arg1.toUShort());
 }
-
-void MainWindow::on_end_resistance_checkBox_clicked(bool checked)
-{
-  /* 设置终端电阻启用状态 */
-  can_driver_obj->set_resistance_enbale(checked);
-}
-
-void MainWindow::on_bps_comboBox_currentIndexChanged(int index)
-{
-  /* 设置can卡波特率 */
-  can_driver_obj->set_bps((quint32)index);
-}
-
-void MainWindow::on_arbitration_bps_comboBox_currentIndexChanged(int index)
-{
-  /* 设置仲裁域波特率 */
-  can_driver_obj->set_abit_bps((quint32)index);
-}
-
-void MainWindow::on_data_bps_comboBox_currentIndexChanged(int index)
-{
-  /* 设置数据域波特率 */
-  can_driver_obj->set_dbit_bps((quint32)index);
-}
-
-
-void MainWindow::on_mode_comboBox_currentIndexChanged(int index)
-{
-  /* 设置工作模式 */
-  can_driver_obj->set_work_mode((quint32)index);
-}
-
-
-void MainWindow::on_filter_mode_comboBox_currentIndexChanged(int index)
-{
-  /* 设置过滤模式 */
-  can_driver_obj->set_filter_mode((quint32)index);
-}
-
-
-void MainWindow::on_verification_code_lineEdit_textChanged(const QString &arg1)
-{
-  /* 设置验收码 */
-  can_driver_obj->set_acc_code(arg1);
-}
-
-
-void MainWindow::on_mask_code_lineEdit_textChanged(const QString &arg1)
-{
-  /* 设置掩码 */
-  can_driver_obj->set_acc_mask_code(arg1);
-}
-
-
-void MainWindow::on_role_comboBox_currentIndexChanged(int index)
-{
-  /* 设置网络角色 */
-  can_driver_obj->set_net_work_role((quint32)index);
-}
-
 
 void MainWindow::on_diy_bps_checkBox_clicked(bool checked)
 {
   /* 设置自定义波特率是否启用 */
-  can_driver_obj->set_diy_baud_rate_en(checked);
+  can_driver_model::set_diy_baud_rate_en(checked);
 }
 
 void MainWindow::on_channel_num_comboBox_currentIndexChanged(int index)
 {
   /* 设置通道号 */
   qDebug() << " set channel index:" << index;
-  can_driver_obj->set_channel_index(index);
 }
 
 void MainWindow::on_brand_comboBox_currentIndexChanged(int index)
 {
-  /* 设置品牌 */
-  QStringList device_list = can_driver_obj->set_device_brand((can_driver::CAN_BRAND_Typedef_t)index);
-  ui->device_list_comboBox->clear();
+  can_driver_model::SET_FUNCTION_CAN_USE_Typedef_t function_can_use;
+  switch((can_driver_model::CAN_BRAND_Typedef_t)index)
+  {
+    case can_driver_model::ZLG_CAN_BRAND:      /**< 周立功 */
+      function_can_use = can_driver_zlg::function_can_use_update_for_choose();
+      break;
 
+    case can_driver_model::GC_CAN_BRAND:       /**< 广成 */
+      function_can_use = can_driver_gc::function_can_use_update_for_choose();
+      break;
+
+    case can_driver_model::TS_CAN_BRAND:       /**< 同星 */
+      function_can_use = can_driver_ts::function_can_use_update_for_choose();
+      break;
+
+    case can_driver_model::KVASER_BRAND:       /**< kvaser */
+      function_can_use = can_driver_kvaser::function_can_use_update_for_choose();
+      break;
+
+    default:
+      return;
+  }
   /* 更新列表 */
-  ui->device_list_comboBox->addItems(device_list);
+  ui->device_list_comboBox->clear();
+  ui->device_list_comboBox->addItems(function_can_use.device_list);
+
+  update_can_use(function_can_use);
 }
 
 void MainWindow::on_device_info_pushButton_clicked()
 {
+  if(nullptr == can_driver_obj)
+  {
+    return;
+  }
   /* 读取设备信息 */
   can_driver_obj->read_info();
 }

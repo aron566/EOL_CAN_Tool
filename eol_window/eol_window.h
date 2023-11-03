@@ -40,7 +40,7 @@ public:
    * @brief 设置can驱动接口
    * @param can_driver_obj
    */
-  void set_can_driver_obj(can_driver *can_driver_obj);
+  void set_can_driver_obj(can_driver_model *can_driver_obj);
 
   /**
    * @brief eol协议窗口线程启动
@@ -253,7 +253,7 @@ private:
    * @brief eol协议栈初始化
    * @param can_driver_obj can驱动接口
    */
-  void eol_protocol_init(can_driver *can_driver_obj);
+  void eol_protocol_init(can_driver_model *can_driver_obj);
 
   /**
    * @brief 保存配置

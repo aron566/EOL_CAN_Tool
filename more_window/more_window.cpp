@@ -379,12 +379,12 @@ void more_window::frame_diagnosis_window_init(QString title)
 
 void more_window::slot_show_window()
 {
-  disconnect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
+  disconnect(can_driver_obj, &can_driver_model::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
   CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->CQ_getCQHandle();
   /* 清空 */
   CircularQueue::CQ_emptyData(cq);
-  connect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
-  connect(can_driver_obj, &can_driver::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
+  connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
+  connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
   this->show();
 }
 
@@ -519,7 +519,7 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
   if(ui->display_str_checkBox->isChecked())
   {
     if(((quint32)ui->display_ch_comboBox->currentIndex() == channel_num || ui->display_ch_comboBox->currentText() == "ALL")
-        && can_driver::CAN_RX_DIRECT == direct
+        && can_driver_model::CAN_RX_DIRECT == direct
         && 0U < data_len)
     {
       /* canid限制 */
@@ -590,7 +590,7 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
   if(ui->display_str_checkBox->isChecked())
   {
     if(((quint32)ui->display_ch_comboBox->currentIndex() == channel_num || ui->display_ch_comboBox->currentText() == "ALL")
-        && can_driver::CAN_RX_DIRECT == direct
+        && can_driver_model::CAN_RX_DIRECT == direct
         && 0U < data_len)
     {
       /* canid限制 */
@@ -645,17 +645,17 @@ __show_msg:
   show_txt();
 }
 
-void more_window::show_can_msg(can_driver::CAN_MSG_DISPLAY_Typedef_t &msg)
+void more_window::show_can_msg(can_driver_model::CAN_MSG_DISPLAY_Typedef_t &msg)
 {
   QString item;
-  if(msg.direction == can_driver::CAN_TX_DIRECT || msg.direction == can_driver::CAN_RX_DIRECT)
+  if(msg.direction == can_driver_model::CAN_TX_DIRECT || msg.direction == can_driver_model::CAN_RX_DIRECT)
   {
       item = QString::asprintf(tr("[%u]%sx CAN%s ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
       msg.channel_num, \
-      msg.direction == can_driver::CAN_TX_DIRECT ? "T" : "R",\
-      msg.can_protocol == can_driver::CANFD_PROTOCOL_TYPE ? "FD" : "", \
-      msg.can_id, msg.frame_type == can_driver::EXT_FRAME_TYPE ? "EXT_FRAME" : "STD_FRAME", \
-      msg.frame_data_type == can_driver::REMOTE_FRAME_TYPE ? "REMOTE_FRAME" : "DATA_FRAME", \
+      msg.direction == can_driver_model::CAN_TX_DIRECT ? "T" : "R",\
+      msg.can_protocol == can_driver_model::CANFD_PROTOCOL_TYPE ? "FD" : "", \
+      msg.can_id, msg.frame_type == can_driver_model::EXT_FRAME_TYPE ? "EXT_FRAME" : "STD_FRAME", \
+      msg.frame_data_type == can_driver_model::REMOTE_FRAME_TYPE ? "REMOTE_FRAME" : "DATA_FRAME", \
       msg.data_len);
     for(quint32 i = 0; i < msg.data_len; ++i)
     {
@@ -664,10 +664,10 @@ void more_window::show_can_msg(can_driver::CAN_MSG_DISPLAY_Typedef_t &msg)
     slot_show_message(item, (quint32)msg.channel_num, (quint8)msg.direction, msg.msg_data, msg.data_len, msg.can_id);
     slot_show_message_bytes(msg.data_len, msg.channel_num, (quint8)msg.direction);
   }
-  else if(msg.direction == can_driver::UNKNOW_DIRECT)
+  else if(msg.direction == can_driver_model::UNKNOW_DIRECT)
   {
     item = QString::asprintf("%s", msg.msg_data);
-    slot_show_message(item, (quint32)msg.channel_num, (quint8)can_driver::CAN_TX_DIRECT);
+    slot_show_message(item, (quint32)msg.channel_num, (quint8)can_driver_model::CAN_TX_DIRECT);
   }
 }
 
@@ -677,17 +677,17 @@ void more_window::slot_show_can_msg()
 
   /* 判断可读长度 */
   quint32 len = CircularQueue::CQ_getLength(cq);
-  if(len < sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t))
+  if(len < sizeof(can_driver_model::CAN_MSG_DISPLAY_Typedef_t))
   {
     return;
   }
-  quint32 msg_len = len / sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t);
+  quint32 msg_len = len / sizeof(can_driver_model::CAN_MSG_DISPLAY_Typedef_t);
 //  qDebug() << "msg" << msg_len;
   msg_len = msg_len > 64U ? 64U : msg_len;
-  can_driver::CAN_MSG_DISPLAY_Typedef_t msg;
+  can_driver_model::CAN_MSG_DISPLAY_Typedef_t msg;
   for(quint32 i = 0; i < msg_len; i++)
   {
-    CircularQueue::CQ_getData(cq, (quint8 *)&msg, sizeof(can_driver::CAN_MSG_DISPLAY_Typedef_t));
+    CircularQueue::CQ_getData(cq, (quint8 *)&msg, sizeof(can_driver_model::CAN_MSG_DISPLAY_Typedef_t));
     show_can_msg(msg);
   }
 }
@@ -803,7 +803,7 @@ void more_window::slot_timeout()
 void more_window::slot_show_message_bytes(quint8 bytes, quint32 channel_num, quint8 direct)
 {
   Q_UNUSED(channel_num)
-  if(can_driver::CAN_RX_DIRECT == direct)
+  if(can_driver_model::CAN_RX_DIRECT == direct)
   {
     rx_frame_cnt++;
     ui->rx_frame_num_label->setNum((int)rx_frame_cnt);
@@ -811,14 +811,13 @@ void more_window::slot_show_message_bytes(quint8 bytes, quint32 channel_num, qui
     ui->rx_byte_num_label->setNum((int)rx_byte_cnt);
   }
 
-  if(can_driver::CAN_TX_DIRECT == direct)
+  if(can_driver_model::CAN_TX_DIRECT == direct)
   {
     tx_frame_cnt++;
     ui->tx_frame_num_label->setNum((int)tx_frame_cnt);
     tx_byte_cnt += bytes;
     ui->tx_byte_num_label->setNum((int)tx_byte_cnt);
   }
-
 }
 
 void more_window::on_display_mask_lineEdit_textChanged(const QString &arg1)
@@ -834,7 +833,6 @@ void more_window::on_display_mask_lineEdit_textChanged(const QString &arg1)
     can_driver_obj->set_msg_canid_mask(0xFFFF, ui->mask_en_checkBox->isChecked());
   }
 }
-
 
 void more_window::on_mask_en_checkBox_clicked(bool checked)
 {
@@ -852,12 +850,11 @@ void more_window::on_mask_en_checkBox_clicked(bool checked)
 
 void more_window::on_frame_diagnosis_pushButton_clicked()
 {
-  disconnect(can_driver_obj, &can_driver::signal_show_can_msg, this, &more_window::slot_show_can_msg);
-  disconnect(can_driver_obj, &can_driver::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
-  connect(can_driver_obj, &can_driver::signal_can_driver_msg, this, &more_window::slot_can_driver_msg, Qt::QueuedConnection);
+  disconnect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg);
+  disconnect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
+  connect(can_driver_obj, &can_driver_model::signal_can_driver_msg, this, &more_window::slot_can_driver_msg, Qt::QueuedConnection);
   frame_diagnosis_obj->show();
 }
-
 
 void more_window::on_export_txt_pushButton_clicked()
 {
@@ -969,7 +966,6 @@ void more_window::on_crc_pushButton_clicked()
       break;
   }
 }
-
 
 void more_window::on_tool_pushButton_clicked()
 {

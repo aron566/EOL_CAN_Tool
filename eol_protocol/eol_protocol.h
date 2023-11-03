@@ -31,7 +31,7 @@
 #include <QSemaphore>
 #include <QAtomicInt>
 #include "circularqueue.h"
-#include "can_driver.h"
+#include "can_driver_model.h"
 #include "utility.h"
 /** Private defines ----------------------------------------------------------*/
 
@@ -461,7 +461,7 @@ public:
    * @brief 设置can驱动对象
    * @param can_driver_
    */
-  void set_can_driver_obj(can_driver *can_driver_ = nullptr);
+  void set_can_driver_obj(can_driver_model *can_driver_);
 
   /**
    * @brief 设置eol通讯端口
@@ -764,7 +764,7 @@ private:
 
   QThreadPool *g_thread_pool = nullptr;
   CircularQueue *cq_obj = nullptr;
-  can_driver *can_driver_obj = nullptr;
+  can_driver_model *can_driver_obj = nullptr;
 
   quint32 current_send_can_id;
 

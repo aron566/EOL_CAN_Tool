@@ -359,7 +359,7 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
       break;
     /* rcs校准，目标测试 */
     case EOL_R_OBJ_LIST_REG:
-      {  
+      {
         quint8 profile_id = data[0];
         quint16 obj_num = 0;
         memcpy(&obj_num, data + 1, sizeof(obj_num));
@@ -381,10 +381,6 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
     case EOL_RW_PROFILE_ID_REG:
       break;
 
-    /* 角度校准 */
-    case EOL_W_2DFFT_CONDITION_REG:
-    case EOL_R_2DFFT_DATA_REG:
-      break;
     case EOL_RW_RCS_OFFSET_REG:
       {
         /* 写入 */
@@ -449,6 +445,8 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
         }
       }
       break;
+    default:
+      break;
   }
 }
 
@@ -511,13 +509,11 @@ void eol_calibration_window::slot_protocol_rw_err(quint8 reg, quint8 command)
 
     case EOL_RW_PROFILE_ID_REG:
 
-    /* 角度校准 */
-    case EOL_W_2DFFT_CONDITION_REG:
-    case EOL_R_2DFFT_DATA_REG:
-
     case EOL_RW_RCS_OFFSET_REG:
     case EOL_W_PAR_RESET_REG:
     case EOL_RW_CALI_MODE_REG:
+      break;
+    default:
       break;
   }
 }
@@ -656,4 +652,3 @@ void eol_calibration_window::on_target_cnt_en_checkBox_stateChanged(int arg1)
 {
   ui->target_cnt_tableWidget->setVisible((bool)arg1);
 }
-

@@ -4,9 +4,9 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QSettings>
+#include <QScrollArea>
 #include <QDebug>
 #include "utility.h"
-#include <QScrollArea>
 
 #define CONFIG_VER_STR            "0.0.2"                 /**< 配置文件版本 */
 #define USE_TEMP_FILE_TO_SAVE 0 /**< 使用临时文件存储 */
@@ -172,19 +172,19 @@ void eol_window::eol_debug_window_init(QString title)
   connect(debug_window_window_obj, &debug_window::signal_send_command_char, this, &eol_window::slot_send_command_char);
 }
 
-void eol_window::set_can_driver_obj(can_driver *can_driver_obj)
+void eol_window::set_can_driver_obj(can_driver_model *can_driver_obj)
 {
   /* 接收can驱动断开信号 */
-  connect(can_driver_obj, &can_driver::signal_can_driver_reset, this, [this]{
+  connect(can_driver_obj, &can_driver_model::signal_can_driver_reset, this, [this]{
     this->eol_protocol_obj->stop_task();
   });
-  connect(can_driver_obj, &can_driver::signal_can_is_closed, this, [this]{
+  connect(can_driver_obj, &can_driver_model::signal_can_is_closed, this, [this]{
     this->eol_protocol_obj->stop_task();
   });
   eol_protocol_init(can_driver_obj);
 }
 
-void eol_window::eol_protocol_init(can_driver *can_driver_obj)
+void eol_window::eol_protocol_init(can_driver_model *can_driver_obj)
 {
   /* eol协议栈初始化 */
   eol_protocol_obj = new eol_protocol(this);
@@ -256,7 +256,7 @@ void eol_window::read_cfg()
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
   setting.setIniCodec("UTF-8");
-  if(false == setting.contains("eol_window_v" CONFIG_VER_STR "/can_id"))
+  if(false == setting.contains("eol_window_v" CONFIG_VER_STR "/eol_com_hw"))
   {
     qDebug() << "err eol_window config not exist";
     return;

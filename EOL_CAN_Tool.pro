@@ -40,6 +40,9 @@ include(gc_can_lib/gc_can_lib.pri)
 # 同星can驱动库
 include(ts_can_lib/ts_can_lib.pri)
 
+# kvasercan驱动库
+include(kvaser_can_lib/kvaser_can_lib.pri)
+
 # ini配置文件解析驱动库
 include(ini_parse/ini_parse.pri)
 

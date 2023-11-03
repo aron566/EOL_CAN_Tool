@@ -575,6 +575,11 @@
              <string>TOSUN</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>KVASER</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item row="0" column="9">
