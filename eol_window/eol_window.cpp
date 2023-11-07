@@ -118,7 +118,10 @@ void eol_window::closeEvent(QCloseEvent *event)
   run_state = false;
 
   /* 停止协议栈 */
-  eol_protocol_obj->stop_task();
+  if(nullptr != eol_protocol_obj)
+  {
+    eol_protocol_obj->stop_task();
+  }
 
   this->hide();
   emit signal_eol_window_closed();
