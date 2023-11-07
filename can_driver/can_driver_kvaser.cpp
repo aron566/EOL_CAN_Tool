@@ -64,7 +64,7 @@ static const can_driver_model::DEVICE_INFO_Typedef_t kDeviceType[] = {
   {"ETHERCAN",           can_driver_model::KVASER_BRAND, canHWTYPE_ETHERCAN       , 1},///< Kvaser Ethercan
   {"USBCAN_LIGHT",       can_driver_model::KVASER_BRAND, canHWTYPE_USBCAN_LIGHT   , 1},///< Kvaser USBcan Light
   {"USBCAN_PRO2",        can_driver_model::KVASER_BRAND, canHWTYPE_USBCAN_PRO2    , 5},///< Kvaser USBcan Pro 5xHS and variants
-  {"PCIE_V2",            can_driver_model::KVASER_BRAND, canHWTYPE_PCIE_V2        , 4},///< Kvaser PCIEcan 4xHS and variants
+  {"PCIE_V2",            can_driver_model::KVASER_BRAND, canHWTYPE_PCIE_V2        , 2},///< Kvaser PCIEcan 4xHS and variants 2个虚拟通道不可用
   {"MEMORATOR_PRO2",     can_driver_model::KVASER_BRAND, canHWTYPE_MEMORATOR_PRO2 , 5},///< Kvaser Memorator Pro 5xHS and variants
   {"LEAF2",              can_driver_model::KVASER_BRAND, canHWTYPE_LEAF2          , 2},///< Kvaser Leaf Pro HS v2 and variants
   {"MEMORATOR_V2",       can_driver_model::KVASER_BRAND, canHWTYPE_MEMORATOR_V2   , 1},///< Kvaser Memorator (2nd generation)
@@ -84,6 +84,17 @@ static const quint32 kAbitTimingUSB[] = {
   2000080U,//2Mbps 80P
   1000000U,//1Mbps 80P
   500000U, //500Kbps 80P
+};
+
+static const char *kAbitTimingSample[] = {
+  "70P",
+  "80P",
+  "60P",
+  "80P",
+  "60P",
+  "80P",
+  "80P",
+  "80P",
 };
 
 static const quint32 kDbitTimingUSB[] = {
@@ -252,7 +263,7 @@ can_driver_model::SET_FUNCTION_CAN_USE_Typedef_t can_driver_kvaser::function_can
 
   for(quint16 i = 0; i < sizeof(kAbitTimingUSB) / sizeof(kAbitTimingUSB[0]); i++)
   {
-    function_can_use.abitrate_list.append(bps_number2str(kAbitTimingUSB[i]));
+    function_can_use.abitrate_list.append(bps_number2str(kAbitTimingUSB[i]) + kAbitTimingSample[i]);
   }
   for(quint16 i = 0; i < sizeof(kDbitTimingUSB) / sizeof(kDbitTimingUSB[0]); i++)
   {
