@@ -935,6 +935,12 @@ void eol_window::run_eol_window_file_decode_task()
 
     /* 解析csv文件 */
     csv_analysis(current_file_path, csv, i);
+
+    /* 传输完毕关闭 */
+    if(current_file.isOpen() == true)
+    {
+      current_file.close();
+    }
   }
 
   /* 任务结束 */
@@ -1085,6 +1091,12 @@ void eol_window::on_add_list_pushButton_clicked()
 
   /* 解析csv文件传输列表 */
   csv_analysis(current_file_path, csv, 0, true);
+
+  /* 解析完毕关闭 */
+  if(current_file.isOpen() == true)
+  {
+    current_file.close();
+  }
 
   /* 加入csv文件列表 */
   csv_list.append(csv);
@@ -1561,6 +1573,8 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
     {
       return;
     }
+
+    /* 写入数据 */
 
     qDebug() << "get pack num: " << frame_num;
 //    recv_file.seek((frame_num - 1) * 256);

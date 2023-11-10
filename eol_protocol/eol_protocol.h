@@ -591,6 +591,15 @@ signals:
                                    data_len);
 
   /**
+   * @brief 表头数据
+   * @param frame_num 帧号
+   * @param data 数据
+   * @param data_len 数据长度
+   */
+  void signal_recv_eol_table_header_data(quint16 frame_num, const quint8 *data, quint16
+                                                                             data_len);
+
+  /**
    * @brief 发送进度信号
    * @param current_size 当前大小
    * @param total_size 总大小

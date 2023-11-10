@@ -618,13 +618,12 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(quint8 reg_a
       {
         quint16 frame_num;
         memcpy(&frame_num, data, 2);
-        qDebug() << "signal_recv_eol_table_data";
-        emit signal_recv_eol_table_data(frame_num, data + 2, data_len - 2);
 
         /* 表信息帧 */
         if(0 == frame_num)
         {
           memset(&data_record, 0, sizeof(data_record));
+          emit signal_recv_eol_table_data(frame_num, data + 2, data_len - 2);
         }
 
         /* 表数据帧 */
@@ -634,9 +633,10 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(quint8 reg_a
           if((data_record.frame_num + 1) == frame_num)
           {
             /* 只拷贝数据 帧号[0..1] 数据[2..257] */
-            memcpy(&data_record.data_buf[data_record.frame_num * 256], data + 2, data_len - 2);
+//            memcpy(&data_record.data_buf[data_record.frame_num * 256], data + 2, data_len - 2);
             data_record.frame_num++;
             data_record.data_size += (data_len - 2);
+            emit signal_recv_eol_table_data(frame_num, data + 2, data_len - 2);
           }
           /* 丢帧要求重发 */
           else
@@ -644,6 +644,8 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(quint8 reg_a
             return RETURN_LOST_FRAME;
           }
         }
+
+        /* 结束帧 */
         else
         {
           data_record.frame_num = frame_num;

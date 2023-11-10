@@ -723,7 +723,8 @@ void more_window::on_id_lineEdit_textChanged(const QString &arg1)
 void more_window::on_data_lineEdit_textChanged(const QString &arg1)
 {
   /* 设置消息数据 */
-  can_driver_obj->set_message_data(arg1);
+  QString data = utility::line_data2split(arg1);
+  can_driver_obj->set_message_data(data);
 }
 
 
@@ -925,7 +926,11 @@ void more_window::on_crc_pushButton_clicked()
 
   bool ok;
   quint8 temp_data[2048];
-  QStringList data_list = ui->data_lineEdit->text().split(' ');
+
+  QString str = utility::line_data2split(ui->data_lineEdit->text());
+  QRegExp split_rx("\\s+");
+  QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
+
   quint32 len = (quint32)data_list.length() > sizeof(temp_data) ? sizeof(temp_data) : (quint32)data_list.length();
 
   for(quint32 i = 0; i < len; i++)

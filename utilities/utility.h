@@ -27,6 +27,10 @@
 #include <QTimer>
 #include <QStringList>
 /** Private defines ----------------------------------------------------------*/
+/* 包重复检测 */
+#define EVEN_PACKAGE_REPEAT_CHECK_SIZE 10U    /**< 10包偶数循环检测 */
+#define ODD_PACKAGE_REPEAT_CHECK_SIZE  (EVEN_PACKAGE_REPEAT_CHECK_SIZE / 2U)
+
 /** Exported typedefines -----------------------------------------------------*/
 /** Exported constants -------------------------------------------------------*/
 
@@ -87,6 +91,13 @@ public:
     int key_val;                      /**< 按键键值 */
     char key_ascii;                   /**< ascii键值 */
   }KEY_MAP_Typedef_t;
+
+  /* 包重复检测 */
+  typedef struct
+  {
+    uint8_t State_Record_Even[EVEN_PACKAGE_REPEAT_CHECK_SIZE];
+    uint8_t State_Record_Odd[ODD_PACKAGE_REPEAT_CHECK_SIZE];
+  }PACK_REPEAT_CHECK_Typedef_t;
 
   /**
    * @brief 延时ms数，保持事件循环
@@ -157,6 +168,25 @@ public:
    * @return sum
    */
   static quint8 get_data_sum(const quint8 *data, quint32 len);
+
+  /**
+   * @brief line_data2split 发送数据转换为标准空格16进制数据
+   * @param line_data 支持以"0xaa , ac  56"解析
+   * @return "aa ac 56"
+   */
+  static QString line_data2split(const QString &line_data);
+
+  /**
+   * @brief 包号重复检测
+   *
+   * @param pRecord 记录句柄
+   * @param Pack_Num 包号
+   * @param Init_En 初始化使能，初始化使能时，仅进行初始化，
+   * @param Check_En 检测使能，检测使能时检测，false时记录
+   * @return 返回true代表重复包
+   */
+  static bool Check_Current_Pack_Num_Is_Repeat(PACK_REPEAT_CHECK_Typedef_t *pRecord, uint32_t Pack_Num, \
+                                               bool Init_En, bool Check_En);
 
   /**
    * @brief 16进制格式调试打印

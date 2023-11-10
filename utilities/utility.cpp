@@ -519,6 +519,71 @@ bool utility::get_sum_rsl(const quint8 *data, quint32 len)
   return false;
 }
 
+QString utility::line_data2split(const QString &line_data)
+{
+  QString line_str = line_data;
+  /* 删除0x */
+  QRegExp hex_remove_rx("0x");
+  QString str = line_str.replace(hex_remove_rx, "");
+
+  /* 替换逗号 */
+  str = str.replace(",", " ");
+
+  /* 匹配一个或多个空格字符，逗号字符，分割 */
+  QRegExp split_rx("\\s+");
+  QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
+  QString data = data_list.join(' ');
+  return data;
+}
+
+/**
+ * @brief 包号重复检测
+ *
+ * @param pRecord 记录句柄
+ * @param Pack_Num 包号
+ * @param Init_En 初始化使能，初始化使能时，仅进行初始化，
+ * @param Check_En 检测使能，检测使能时检测，false时记录
+ * @return 返回true代表重复包
+ */
+bool utility::Check_Current_Pack_Num_Is_Repeat(PACK_REPEAT_CHECK_Typedef_t *pRecord, uint32_t Pack_Num, \
+                                             bool Init_En, bool Check_En)
+{
+  if(true == Init_En)
+  {
+    (void)memset(pRecord, 0, sizeof(PACK_REPEAT_CHECK_Typedef_t));
+    return true;
+  }
+
+  if(true == Check_En)
+  {
+    /* 检测是否需要重置 */
+    if((Pack_Num % EVEN_PACKAGE_REPEAT_CHECK_SIZE) == 0U)
+    {
+      (void)memset(pRecord->State_Record_Even, 0, sizeof(pRecord->State_Record_Even));
+    }
+    if(((Pack_Num + 1U) % ODD_PACKAGE_REPEAT_CHECK_SIZE) == 0U)
+    {
+      (void)memset(pRecord->State_Record_Odd, 0, sizeof(pRecord->State_Record_Odd));
+    }
+
+    /* 检测 */
+    if(pRecord->State_Record_Even[Pack_Num % EVEN_PACKAGE_REPEAT_CHECK_SIZE] == 1U ||
+        pRecord->State_Record_Odd[(Pack_Num + 1U) % ODD_PACKAGE_REPEAT_CHECK_SIZE] == 1U)
+    {
+      return true;
+    }
+    /* 未重复 */
+    return false;
+  }
+  else
+  {
+    /* 记录 */
+    pRecord->State_Record_Even[Pack_Num % EVEN_PACKAGE_REPEAT_CHECK_SIZE] = 1U;
+    pRecord->State_Record_Odd[(Pack_Num + 1U) % ODD_PACKAGE_REPEAT_CHECK_SIZE] = 1U;
+  }
+  return true;
+}
+
 /**
  * @brief 16进制格式调试打印
  *
