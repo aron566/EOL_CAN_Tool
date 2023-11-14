@@ -311,7 +311,7 @@
           <item>
            <widget class="QLabel" name="table_type_label">
             <property name="text">
-             <string>表类型：</string>
+             <string>单项导出选择表类型：</string>
             </property>
            </widget>
           </item>
@@ -448,6 +448,13 @@
               <string>CFGALL通道底噪表</string>
              </property>
             </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="export_all_pushButton">
+            <property name="text">
+             <string>一键导出</string>
+            </property>
            </widget>
           </item>
           <item>

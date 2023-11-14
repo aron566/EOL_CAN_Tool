@@ -21,6 +21,10 @@ eol_angle_calibration_window::eol_angle_calibration_window(QString title, QWidge
   /* 设置窗口标题 */
   this->setWindowTitle(title);
 
+  /* 设置悬浮提示 */
+  ui->angle_ele_at_set_lineEdit->setToolTip(tr("this dimension is not used if it is empty"));
+  ui->angle_azi_at_set_lineEdit->setToolTip(tr("this dimension is not used if it is empty"));
+
   /* 初始化定时器 */
   timer_init();
 }

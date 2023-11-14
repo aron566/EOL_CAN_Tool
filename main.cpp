@@ -77,6 +77,7 @@
  *  <tr><td>2023-11-03 <td>v1.2.1  <td>aron566 <td>重构can驱动接口使用派生类方式减少耦合，修复获取2D失败导致的异常崩溃
  *  <tr><td>2023-11-08 <td>v1.2.2  <td>aron566 <td>修复表文件占用问题
  *  <tr><td>2023-11-09 <td>v1.2.3  <td>aron566 <td>手动发送数据优化使用正则表达匹配多个空格问题，优化重帧导致读取表数据异常
+ *  <tr><td>2023-11-13 <td>v1.2.4  <td>aron566 <td>增加一键导出表功能，优化目标刷新显示增加导出功能，筛选功能
  *  </table>
  */
 #include "mainwindow.h"
@@ -84,7 +85,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.3"
+#define PC_SOFTWARE_VERSION       "1.2.4"
 
 int main(int argc, char *argv[])
 {

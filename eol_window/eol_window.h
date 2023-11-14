@@ -79,6 +79,11 @@ private slots:
   void slot_protocol_no_response();
 
   /**
+   * @brief crc检测到错误
+   */
+  void slot_protocol_crc_check_failed();
+
+  /**
    * @brief ack错误反馈
    * @param error_msg
    */
@@ -353,6 +358,7 @@ private slots:
   void on_com_config_lineEdit_textChanged(const QString &arg1);
   void on_vcom_config_lineEdit_textChanged(const QString &arg1);
   void on_dev_addr_lineEdit_textChanged(const QString &arg1);
+  void on_export_all_pushButton_clicked();
 };
 
 #endif // EOL_WINDOW_H

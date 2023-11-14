@@ -1,6 +1,7 @@
 #include "eol_calibration_window.h"
 #include "ui_eol_calibration_window.h"
 #include <QFile>
+#include <QFileDialog>
 #include <QDateTime>
 #include <QMessageBox>
 
@@ -30,6 +31,23 @@ eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   ui->snr_threshold_max_lineEdit->setPlaceholderText("20m70 - 50m50");
   ui->snr_threshold_min_lineEdit->setPlaceholderText("20m45 - 50m30");
   ui->rts_lineEdit->setPlaceholderText("15 - 25 - 35");
+
+  ui->target_total_range_lineEdit->setPlaceholderText("-100 100m ±2");
+  ui->target_total_azi_lineEdit->setPlaceholderText("-80 80deg ±5");
+  ui->target_total_ele_lineEdit->setPlaceholderText("-20 20deg ±5");
+  ui->target_total_velocity_lineEdit->setPlaceholderText("-10 10km/h ±2");
+  ui->target_total_rcs_lineEdit->setPlaceholderText("10 20dB ±5");
+  ui->target_total_snr_lineEdit->setPlaceholderText("-10 10dB ±5");
+  ui->target_total_mag_lineEdit->setPlaceholderText("-10 10dB ±5");
+
+  /* 设置悬浮提示 */
+  ui->target_total_range_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_total_azi_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_total_ele_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_total_velocity_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_total_rcs_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_total_snr_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_total_mag_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
 
   /* 设置表格 */
 //  ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -124,12 +142,101 @@ void eol_calibration_window::set_eol_protocol_obj(eol_protocol *obj)
   connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok, Qt::QueuedConnection);
 }
 
+/**
+   * @brief 目标统计信息过滤
+   * @param target 目标信息
+   * @return true 需要过滤
+   */
+bool eol_calibration_window::obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &target)
+{
+  /* 检查筛选设置项是否为空，不为空则有效 */
+
+  /* 距离 */
+  if(false == ui->target_total_range_lineEdit->text().isEmpty())
+  {
+    qint32 val = ui->target_total_range_lineEdit->text().toInt();
+    if(abs((float)val - target.distance) > 2.0)
+    {
+      return true;
+    }
+  }
+
+  /* 方位 */
+  if(false == ui->target_total_azi_lineEdit->text().isEmpty())
+  {
+    qint32 val = ui->target_total_azi_lineEdit->text().toInt();
+    if(abs((float)val - target.azi_angle) > 5.0)
+    {
+      return true;
+    }
+  }
+
+  /* 俯仰 */
+  if(false == ui->target_total_ele_lineEdit->text().isEmpty())
+  {
+    qint32 val = ui->target_total_ele_lineEdit->text().toInt();
+    if(abs((float)val - target.ele_angle) > 5.0)
+    {
+      return true;
+    }
+  }
+
+  /* 速度 */
+  if(false == ui->target_total_velocity_lineEdit->text().isEmpty())
+  {
+    qint32 val = ui->target_total_velocity_lineEdit->text().toInt();
+    if(abs((float)val - target.speed) > 2.0)
+    {
+      return true;
+    }
+  }
+
+  /* rcs */
+  if(false == ui->target_total_rcs_lineEdit->text().isEmpty())
+  {
+    qint32 val = ui->target_total_rcs_lineEdit->text().toInt();
+    if(abs((float)val - target.rcs) > 5.0)
+    {
+      return true;
+    }
+  }
+
+  /* snr */
+  if(false == ui->target_total_snr_lineEdit->text().isEmpty())
+  {
+    qint32 val = ui->target_total_snr_lineEdit->text().toInt();
+    if(abs((float)val - target.snr) > 5.0)
+    {
+      return true;
+    }
+  }
+
+  /* mag */
+  if(false == ui->target_total_mag_lineEdit->text().isEmpty())
+  {
+    qint32 val = ui->target_total_mag_lineEdit->text().toInt();
+    if(abs((float)val - target.mag) > 5.0)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void eol_calibration_window::refresh_obj_cnt_list_info(TARGET_CNT_LIST_Typedef_t &target)
 {
   if(ui->target_cnt_en_checkBox->isChecked() == false)
   {
     return;
   }
+
+  /* 检查筛选设置 */
+  if(true == obj_cnt_filter_check((target)))
+  {
+    return;
+  }
+
   /* 匹配 配置id 距离 速度 方位角度 俯仰 mag */
   TARGET_CNT_LIST_Typedef_t cur_target;
   int index = 0;
@@ -162,15 +269,15 @@ void eol_calibration_window::refresh_obj_cnt_list_info(TARGET_CNT_LIST_Typedef_t
 _UPDATE_TARGET_CNT_INFO:
 
   cur_target = target_cnt_list.value(index);
-  /* 目标序号 配置ID 速度 方位角 距离 mag rcs snr 俯仰角 存在率 */
+  /* 目标序号 配置ID 距离 方位角 俯仰角 速度 rcs snr mag 存在率 */
   ui->target_cnt_tableWidget->setItem(index, 0, new QTableWidgetItem(QString::number(cur_target.profile_id)));
-  ui->target_cnt_tableWidget->setItem(index, 1, new QTableWidgetItem(QString::number(cur_target.speed)));
+  ui->target_cnt_tableWidget->setItem(index, 1, new QTableWidgetItem(QString::number(cur_target.distance)));
   ui->target_cnt_tableWidget->setItem(index, 2, new QTableWidgetItem(QString::number(cur_target.azi_angle)));
-  ui->target_cnt_tableWidget->setItem(index, 3, new QTableWidgetItem(QString::number(cur_target.distance)));
-  ui->target_cnt_tableWidget->setItem(index, 4, new QTableWidgetItem(QString::number(cur_target.mag)));
+  ui->target_cnt_tableWidget->setItem(index, 3, new QTableWidgetItem(QString::number(cur_target.ele_angle)));
+  ui->target_cnt_tableWidget->setItem(index, 4, new QTableWidgetItem(QString::number(cur_target.speed)));
   ui->target_cnt_tableWidget->setItem(index, 5, new QTableWidgetItem(QString::number(cur_target.rcs)));
   ui->target_cnt_tableWidget->setItem(index, 6, new QTableWidgetItem(QString::number(cur_target.snr)));
-  ui->target_cnt_tableWidget->setItem(index, 7, new QTableWidgetItem(QString::number(cur_target.ele_angle)));
+  ui->target_cnt_tableWidget->setItem(index, 7, new QTableWidgetItem(QString::number(cur_target.mag)));
   ui->target_cnt_tableWidget->setItem(index, 8, new QTableWidgetItem(QString::asprintf("%.2f%%", cur_target.live_percentage * 100.f)));
 }
 
@@ -225,7 +332,7 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
     memcpy(&ele_angle, data + index, sizeof(ele_angle));
     index += sizeof(ele_angle);
 
-    /* 目标序号 配置ID 速度 方位角 距离 mag rcs snr 俯仰角 */
+    /* 目标序号 配置ID 距离 方位角 俯仰角 速度 rcs snr mag */
     TARGET_CNT_LIST_Typedef_t target;
     target.profile_id = profile_id;
     target.speed = (float)speed * 0.01f;
@@ -237,13 +344,13 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
     target.ele_angle = (float)ele_angle * 0.01f;
 
     ui->tableWidget->setItem(i, 0, new QTableWidgetItem(QString::number(target.profile_id)));
-    ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(target.speed)));
+    ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(target.distance)));
     ui->tableWidget->setItem(i, 2, new QTableWidgetItem(QString::number(target.azi_angle)));
-    ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(target.distance)));
-    ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number(target.mag)));
+    ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(target.ele_angle)));
+    ui->tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number(target.speed)));
+    ui->tableWidget->setItem(i, 7, new QTableWidgetItem(QString::number(target.mag)));
     ui->tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number(target.rcs)));
     ui->tableWidget->setItem(i, 6, new QTableWidgetItem(QString::number(target.snr)));
-    ui->tableWidget->setItem(i, 7, new QTableWidgetItem(QString::number(target.ele_angle)));
 
     /* 更新统计信息 */
     refresh_obj_cnt_list_info(target);
@@ -651,4 +758,20 @@ void eol_calibration_window::on_set_cali_mode_pushButton_clicked()
 void eol_calibration_window::on_target_cnt_en_checkBox_stateChanged(int arg1)
 {
   ui->target_cnt_tableWidget->setVisible((bool)arg1);
+}
+
+void eol_calibration_window::on_export_total_list_pushButton_clicked()
+{
+  /* 导出统计的目标列表 */
+  QString current_file_path = QFileDialog::getSaveFileName(this, tr("Save  "), last_file_path, tr("csv (*.csv)"));
+  if(current_file_path.isEmpty() == false)
+  {
+    /* 获取文件信息 */
+    QFileInfo info(current_file_path);
+
+    /* 更新最近路径信息 */
+    last_file_path = info.absolutePath();
+
+    utility::export_table2csv_file(ui->target_cnt_tableWidget, current_file_path);
+  }
 }

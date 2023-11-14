@@ -95,6 +95,8 @@ private slots:
 
   void on_target_cnt_en_checkBox_stateChanged(int arg1);
 
+  void on_export_total_list_pushButton_clicked();
+
 private:
   Ui::eol_calibration_window *ui;
 
@@ -144,6 +146,9 @@ private:
 
   /* 校准配置信息 */
   QList<eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t>calibration_profile_info_list;
+
+  QString last_file_path = "../";
+
 private:
 
   /**
@@ -160,10 +165,17 @@ private:
   void refresh_obj_list_info(quint8 profile_id, quint16 obj_num, const quint8 *data);
 
   /**
-   * @brief refresh_obj_cnt_list_info
-   * @param target
+   * @brief 刷新目标统计信息
+   * @param target 目标信息
    */
   void refresh_obj_cnt_list_info(TARGET_CNT_LIST_Typedef_t &target);
+
+  /**
+   * @brief 目标统计信息过滤
+   * @param target 目标信息
+   * @return true 需要过滤
+   */
+  bool obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &target);
 };
 
 #endif // EOL_CALIBRATION_WINDOW_H

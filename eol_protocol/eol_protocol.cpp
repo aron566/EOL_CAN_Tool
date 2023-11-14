@@ -632,8 +632,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(quint8 reg_a
           /* 是否否和预期帧号，否则属于丢帧 */
           if((data_record.frame_num + 1) == frame_num)
           {
-            /* 只拷贝数据 帧号[0..1] 数据[2..257] */
-//            memcpy(&data_record.data_buf[data_record.frame_num * 256], data + 2, data_len - 2);
+            /* 只记录数据 帧号[0..1] 数据[2..257] 数据长度 */
             data_record.frame_num++;
             data_record.data_size += (data_len - 2);
             emit signal_recv_eol_table_data(frame_num, data + 2, data_len - 2);
@@ -649,7 +648,6 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(quint8 reg_a
         else
         {
           data_record.frame_num = frame_num;
-          qDebug() << "signal_recv_eol_data_complete";
           emit signal_recv_eol_data_complete();
         }
       }
@@ -1066,7 +1064,12 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   if(param->head_data.Common_Info.Crc_Val != crc)
   {
     qDebug() << "err crc expectance " << crc << "?" << param->head_data.Common_Info.Crc_Val;
-    goto __send_eol_table_data_err;
+
+    /* 恢复数据接收显示 */
+    can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
+
+    emit signal_protocol_crc_check_failed();
+    return false;
   }
 
   param->head_data.Common_Info.Crc_Val = crc;

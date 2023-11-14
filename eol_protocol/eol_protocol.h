@@ -612,6 +612,11 @@ signals:
   void signal_send_eol_data_complete();
 
   /**
+   * @brief 表crc计算检测到错误
+   */
+  void signal_protocol_crc_check_failed();
+
+  /**
    * @brief 接收数据完成-表传输
    */
   void signal_recv_eol_data_complete();
@@ -779,7 +784,6 @@ private:
 
   typedef struct
   {
-    quint8 data_buf[25 * 1024];
     quint16 frame_num;
     quint32 data_size;
   }DATA_RECORD_Typedef_t;

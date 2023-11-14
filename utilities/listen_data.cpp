@@ -1,6 +1,6 @@
 #include "listen_data.h"
 
-listen_data::listen_data(can_driver *can_driver_ptr, QObject *parent)
+listen_data::listen_data(can_driver_model *can_driver_ptr, QObject *parent)
   : QObject{parent}
 {
   can_driver_obj = can_driver_ptr;

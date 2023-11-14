@@ -194,6 +194,7 @@ void eol_window::eol_protocol_init(can_driver_model *can_driver_obj)
 
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_error_occur, this, &eol_window::slot_protocol_error_occur, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_no_response, this, &eol_window::slot_protocol_no_response, Qt::BlockingQueuedConnection);
+  connect(eol_protocol_obj, &eol_protocol::signal_protocol_crc_check_failed, this, &eol_window::slot_protocol_crc_check_failed);
 //  connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, this, &eol_window::slot_recv_eol_table_data);
   connect(eol_protocol_obj, &eol_protocol::signal_recv_eol_table_data, this, &eol_window::slot_recv_eol_table_data, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_send_progress, this, &eol_window::slot_send_progress);
@@ -1000,7 +1001,6 @@ void eol_window::on_file_sel_pushButton_clicked()
   }
 }
 
-
 void eol_window::on_upload_pushButton_clicked()
 {
   eol_protocol::TABLE_Typedef_t table_type = (eol_protocol::TABLE_Typedef_t)ui->table_type_comboBox->currentIndex();
@@ -1008,6 +1008,7 @@ void eol_window::on_upload_pushButton_clicked()
 
   /* 清空更新表 */
   csv_list.clear();
+
   /* 更新显示列表 */
   emit signal_update_show_table_list();
 
@@ -1033,7 +1034,6 @@ void eol_window::on_upload_pushButton_clicked()
   ui->upload_pushButton->setEnabled(false);
   ui->add_list_pushButton->setEnabled(false);
 }
-
 
 void eol_window::on_update_pushButton_clicked()
 {
@@ -1108,7 +1108,6 @@ void eol_window::on_add_list_pushButton_clicked()
   ui->update_pushButton->setEnabled(true);
 }
 
-
 void eol_window::on_clear_list_pushButton_clicked()
 {
   /* 清空传输列表 */
@@ -1168,6 +1167,14 @@ void eol_window::slot_protocol_no_response()
     ui->upload_pushButton->setEnabled(true);
     ui->add_list_pushButton->setEnabled(true);
   }
+}
+
+/**
+ * @brief crc检测到错误
+ */
+void eol_window::slot_protocol_crc_check_failed()
+{
+  ui->msg_str_label->setText("CRC Check Failed");
 }
 
 /* 错误码解析 */
@@ -1506,7 +1513,6 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
     /* 表头写入文件 */
     recv_file.write(csv_header.toUtf8());
     recv_file.write(str.toUtf8());
-
 
     /* 原始表先关闭 */
     if(recv_file_origin.isOpen() == true)
@@ -1983,7 +1989,6 @@ void eol_window::on_rcs_calibration_func_pushButton_clicked()
   eol_calibration_window_obj->show();
 }
 
-
 void eol_window::on_reboot_pushButton_clicked()
 {
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
@@ -2004,12 +2009,10 @@ void eol_window::on_debug_pushButton_clicked()
   debug_window_window_obj->show();
 }
 
-
 void eol_window::on_com_hw_comboBox_currentIndexChanged(int index)
 {
   eol_protocol_obj->set_eol_com_config_hw((eol_protocol::EOL_SEND_HW_Typedef_t)index);
 }
-
 
 void eol_window::on_com_config_lineEdit_textChanged(const QString &arg1)
 {
@@ -2022,9 +2025,42 @@ void eol_window::on_vcom_config_lineEdit_textChanged(const QString &arg1)
   eol_protocol_obj->set_eol_vcom_config_channel(arg1);
 }
 
-
 void eol_window::on_dev_addr_lineEdit_textChanged(const QString &arg1)
 {
   eol_protocol_obj->set_eol_dev_addr(arg1);
 }
 
+void eol_window::on_export_all_pushButton_clicked()
+{
+  /* 轮询所有表导出 */
+  eol_protocol::TABLE_Typedef_t table_type = (eol_protocol::TABLE_Typedef_t)ui->table_type_comboBox->currentIndex();
+  eol_protocol_obj->eol_master_get_table_data(table_type);
+
+  /* 清空更新表 */
+  csv_list.clear();
+
+  /* 更新显示列表 */
+  emit signal_update_show_table_list();
+
+  /* 重置界面 */
+  reset_base_ui_info();
+
+  /* 重置错误统计 */
+  err_constantly_cnt = 0;
+
+  /* 重置计时 */
+  time_cnt = 0;
+
+  /* 启动状态 */
+  run_state = true;
+
+  /* 启动计时 */
+  timer_obj->start();
+
+  /* 启动接收数据线程 */
+  eol_protocol_obj->start_task();
+
+  /* 本按钮不可用 */
+  ui->upload_pushButton->setEnabled(false);
+  ui->add_list_pushButton->setEnabled(false);
+}

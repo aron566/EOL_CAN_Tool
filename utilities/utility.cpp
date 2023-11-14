@@ -16,6 +16,8 @@
 /** Includes -----------------------------------------------------------------*/
 #include <QTextCodec>
 #include <QByteArray>
+#include <QFile>
+#include <QTextStream>
 /** Private includes ---------------------------------------------------------*/
 #include "utility.h"
 #include "qdebug.h"
@@ -582,6 +584,56 @@ bool utility::Check_Current_Pack_Num_Is_Repeat(PACK_REPEAT_CHECK_Typedef_t *pRec
     pRecord->State_Record_Odd[(Pack_Num + 1U) % ODD_PACKAGE_REPEAT_CHECK_SIZE] = 1U;
   }
   return true;
+}
+
+void utility::export_table2csv_file(QTableWidget *tableWidget, QString filePath)
+{
+  QFile file(filePath);
+  if(false == file.open(QIODevice::WriteOnly | QIODevice::Text))
+  {
+    return;
+  }
+
+  QTextStream out(&file);
+  out.setCodec("UTF-8");
+
+  int rowCount = tableWidget->rowCount();
+  int columnCount = tableWidget->columnCount();
+
+  /* 写入表头 */
+  for (int i = 0; i < columnCount; i++)
+  {
+    QTableWidgetItem *headerItem = tableWidget->horizontalHeaderItem(i);
+    if(headerItem)
+    {
+      out << headerItem->text();
+      if (i < columnCount - 1)
+      {
+        out << ",";
+      }
+    }
+  }
+  out << "\n";
+
+  /* 写入数据 */
+  for(int row = 0; row < rowCount; row++)
+  {
+    for(int col = 0; col < columnCount; col++)
+    {
+      QTableWidgetItem *item = tableWidget->item(row, col);
+      if(item)
+      {
+        out << item->text();
+        if (col < columnCount - 1)
+        {
+          out << ",";
+        }
+      }
+    }
+    out << "\n";
+  }
+
+  file.close();
 }
 
 /**

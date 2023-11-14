@@ -26,6 +26,8 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QStringList>
+#include <QTableWidget>
+
 /** Private defines ----------------------------------------------------------*/
 /* 包重复检测 */
 #define EVEN_PACKAGE_REPEAT_CHECK_SIZE 10U    /**< 10包偶数循环检测 */
@@ -187,6 +189,13 @@ public:
    */
   static bool Check_Current_Pack_Num_Is_Repeat(PACK_REPEAT_CHECK_Typedef_t *pRecord, uint32_t Pack_Num, \
                                                bool Init_En, bool Check_En);
+
+  /**
+   * @brief 导出表空间数据到csv文件
+   * @param tableWidget 表控件
+   * @param filePath 文件名
+   */
+  static void export_table2csv_file(QTableWidget *tableWidget, QString filePath);
 
   /**
    * @brief 16进制格式调试打印
