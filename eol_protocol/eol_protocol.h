@@ -224,6 +224,7 @@ public:
 
     PROFILE_ALL_BACKGROUND_NOISE_TABLE,   /**< 所有配置下通道底噪表 */
 
+    TABLE_TYPE_NUM_MAX,                   /**< 表总数 */
     UNKNOW_TABLE = 0xFF,                  /**< 未知表类型 */
   }TABLE_Typedef_t;
 

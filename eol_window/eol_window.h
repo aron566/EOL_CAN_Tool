@@ -8,6 +8,7 @@
 #include <QThreadPool>
 #include <QThread>
 #include <QRunnable>
+#include <QAtomicInt>
 #include <QTemporaryFile>
 #include <eol_protocol.h>
 #include "eol_sub_window.h"
@@ -50,10 +51,34 @@ public:
     thread_run_state = true;
     while(run_state)
     {
-      run_eol_window_file_decode_task();
+      /* 检查任务合法性 */
+      switch(current_running_task)
+      {
+        case UPDATE_TABLE_TASK:
+          run_eol_window_file_decode_task();
+          break;
+        case EXPORT_TABLE_TASK:
+          run_eol_window_export_task();
+          break;
+        case NO_TASK_RUNNING:
+        default:
+          /* todo nothing */
+          break;
+      }
+      current_running_task = NO_TASK_RUNNING;
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << "eol window end";
     thread_run_state = false;
+
+    /* 原子操作 */
+    if(thread_run_statex.testAndSetRelaxed(1, 0))
+    {
+//      qDebug() << "eol window thread_run_statex was successfully updated.";
+    }
+    else
+    {
+//      qDebug() << "eol window thread_run_statex was not updated.";
+    }
   }
 protected:
     /**
@@ -229,6 +254,19 @@ private:
   }TASK_STATE_Tyedef_t;
 
   TASK_STATE_Tyedef_t current_task_complete_state = TASK_COMPLETE;
+
+  QFile all_table_file;
+  QString all_table_file_name = "";
+
+  typedef enum
+  {
+    UPDATE_TABLE_TASK = 0,
+    EXPORT_TABLE_TASK,
+    NO_TASK_RUNNING,
+  }EOL_WINDOW_TASK_Typedef_t;
+
+  EOL_WINDOW_TASK_Typedef_t current_running_task = NO_TASK_RUNNING;
+  QAtomicInt thread_run_statex;
 private:
   /**
    * @brief 设备信息读写窗口
@@ -314,9 +352,23 @@ private:
   bool csv_data_analysis(QByteArray &data, quint64 line_num, int table_type_index, int data_type);
 
   /**
+   * @brief 一键导出所有表
+   * @param frame_num 帧计数
+   * @param data 数据
+   * @return 导出成功
+   */
+  bool one_key_rec_all_table_data_silent(quint16 frame_num, const QByteArray &data);
+
+  /**
    * @brief 执行eol文件解析任务
    */
   void run_eol_window_file_decode_task();
+
+  /**
+   * @brief 执行eol导出任务
+   */
+  void run_eol_window_export_task();
+
 signals:
   void signal_eol_window_closed();
 
@@ -335,6 +387,12 @@ signals:
    * @brief 清除配置信息
    */
   void signal_clear_profile_info();
+
+  /**
+   * @brief 导出表任务完成
+   */
+  void signal_export_table_task_ok();
+
 private slots:
   void slot_show_this_window();
   void slot_close_shell_window();

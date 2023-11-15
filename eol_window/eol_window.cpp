@@ -35,6 +35,7 @@ eol_window::eol_window(QString title, QWidget *parent) :
   ui->add_list_pushButton->setEnabled(false);
   ui->upload_pushButton->setEnabled(false);
   ui->update_pushButton->setEnabled(false);
+  ui->export_all_pushButton->setEnabled(false);
   ui->reboot_pushButton->setEnabled(false);
   ui->debug_pushButton->setEnabled(false);
   ui->eol_device_rw_func_pushButton->setEnabled(false);
@@ -56,6 +57,7 @@ eol_window::eol_window(QString title, QWidget *parent) :
 
   /* 本窗口子线程更新传输列表动作 */
   connect(this, &eol_window::signal_update_show_table_list, this, &eol_window::slot_update_show_table_list);
+  connect(this, &eol_window::signal_export_table_task_ok, this, &eol_window::slot_recv_eol_data_complete);
 
   /* 设备信息读写窗口初始化 */
   eol_sub_window_init(tr("EOL CAN Tool - Device Info RW"));
@@ -318,7 +320,7 @@ void eol_window::slot_send_command_char(char c)
 
 void eol_window::slot_timeout()
 {
-  if(run_state == false)
+  if(run_state == false && true == all_table_file_name.isEmpty())
   {
     timer_obj->stop();
   }
@@ -849,14 +851,12 @@ bool eol_window::csv_analysis(QString &file_path, CSV_INFO_Typedef_t &csv, int c
             continue;
           }
 
-          /* 启动发送数据线程 */
-          eol_protocol_obj->start_task();
-
           /* 设置当前任务状态 */
           current_task_complete_state = TASK_RUNNING;
-
           while(current_task_complete_state == TASK_RUNNING && run_state)
           {
+            /* 启动发送数据线程 */
+            eol_protocol_obj->start_task();
             QThread::msleep(1);
           }
 
@@ -950,6 +950,72 @@ void eol_window::run_eol_window_file_decode_task()
   /* 本按钮可用 */
   ui->update_pushButton->setEnabled(true);
   ui->add_list_pushButton->setEnabled(true);
+  ui->export_all_pushButton->setEnabled(true);
+}
+
+void eol_window::run_eol_window_export_task()
+{
+  /* 检测导出文件名是否为空 */
+  if(true == all_table_file_name.isEmpty())
+  {
+    return;
+  }
+
+  /* 先关闭 */
+  if(all_table_file.isOpen() == true)
+  {
+    all_table_file.close();
+  }
+
+  /* 关联文件名 */
+  all_table_file.setFileName(all_table_file_name);
+
+  /* 打开文件，只写方式 */
+  if(all_table_file.open(QIODevice::WriteOnly) == false)
+  {
+    goto _end_task;
+  }
+
+  /* 启动线程 */
+  /* 轮询所有表导出 */
+  for(quint8 i = 0; i < (quint8)eol_protocol::TABLE_TYPE_NUM_MAX; i++)
+  {
+    eol_protocol::TABLE_Typedef_t table_type = (eol_protocol::TABLE_Typedef_t)i;
+    eol_protocol_obj->eol_master_get_table_data(table_type);
+
+    /* 设置当前任务状态 */
+    current_task_complete_state = TASK_RUNNING;
+    while(current_task_complete_state == TASK_RUNNING && run_state)
+    {
+      /* 启动接收数据线程 */
+      eol_protocol_obj->start_task();
+      QThread::msleep(1);
+    }
+
+    if(TASK_COMPLETE == current_task_complete_state)
+    {
+      /* 换行 */
+      all_table_file.write("\n");
+    }
+    run_state = true;
+  }
+
+_end_task:
+
+  /* 任务结束 */
+  run_state = false;
+
+  /* 清除文件名 */
+  all_table_file_name.clear();
+
+  /* 关闭 */
+  if(all_table_file.isOpen() == true)
+  {
+    all_table_file.close();
+  }
+
+  /* 任务完成 */
+  emit signal_export_table_task_ok();
 }
 
 void eol_window::on_file_sel_pushButton_clicked()
@@ -979,7 +1045,7 @@ void eol_window::on_file_sel_pushButton_clicked()
     last_file_path = info.absolutePath();
 
     /* 检查非法空格字段 */
-    current_file_name.replace(QChar(' '), QChar('_'));
+//    current_file_name.replace(QChar(' '), QChar('_'));
 
     /* 设置待写入表信息 */
     if(csv_list.size() == 0)
@@ -1033,6 +1099,7 @@ void eol_window::on_upload_pushButton_clicked()
   /* 本按钮不可用 */
   ui->upload_pushButton->setEnabled(false);
   ui->add_list_pushButton->setEnabled(false);
+  ui->export_all_pushButton->setEnabled(false);
 }
 
 void eol_window::on_update_pushButton_clicked()
@@ -1052,18 +1119,31 @@ void eol_window::on_update_pushButton_clicked()
   /* 重置界面 */
   reset_base_ui_info();
 
+  /* 设置线程任务 */
+  current_running_task = UPDATE_TABLE_TASK;
+
   /* 启动传输 */
   run_state = true;
+
+  /* 原子操作 */
+  if(thread_run_statex.testAndSetRelaxed(0, 1))
+  {
+    /* 启动任务线程 */
+    g_thread_pool->start(this);
+  }
+  else
+  {
+    qDebug() << "eol window task is running";
+    return;
+  }
 
   /* 启动计时 */
   timer_obj->start();
 
-  /* 启动任务线程 */
-  g_thread_pool->start(this);
-
   /* 本按钮不可用 */
   ui->update_pushButton->setEnabled(false);
   ui->add_list_pushButton->setEnabled(false);
+  ui->export_all_pushButton->setEnabled(false);
 }
 
 void eol_window::on_add_list_pushButton_clicked()
@@ -1166,6 +1246,7 @@ void eol_window::slot_protocol_no_response()
     }
     ui->upload_pushButton->setEnabled(true);
     ui->add_list_pushButton->setEnabled(true);
+    ui->export_all_pushButton->setEnabled(true);
   }
 }
 
@@ -1201,6 +1282,27 @@ void eol_window::slot_protocol_error_occur(quint8 error_msg)
       break;
   }
   ui->msg_str_label->setText(msg);
+}
+
+/**
+   * @brief 一键导出所有表
+   * @param frame_num 帧计数
+   * @param data 数据
+   * @return 导出成功
+   */
+bool eol_window::one_key_rec_all_table_data_silent(quint16 frame_num, const QByteArray &data)
+{
+  Q_UNUSED(frame_num)
+  if(true == all_table_file_name.isEmpty())
+  {
+    return false;
+  }
+
+  all_table_file.seek(all_table_file.pos());
+
+  /* 写入文件 */
+  all_table_file.write(data);
+  return true;
 }
 
 /**
@@ -1478,6 +1580,12 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
         return;
     }
 
+    if(true == one_key_rec_all_table_data_silent(frame_num, csv_header.toUtf8()))
+    {
+      one_key_rec_all_table_data_silent(frame_num, str.toUtf8());
+      return;
+    }
+
     /* 显示表信息 */
     QMessageBox message(QMessageBox::Information, tr("Table Info"), tr(tips_str.toUtf8()), QMessageBox::Yes, nullptr);
     message.exec();
@@ -1538,26 +1646,27 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
     recv_file_origin.write(str.toUtf8());
     return;
 #else
-  /* 创建临时文件 */
-  tmpFile.remove();
-  if(tmpFile.open() == false)
-  {
-    qDebug() << "open tmp file faild";
+    /* 创建临时文件 */
+    tmpFile.remove();
+    if(tmpFile.open() == false)
+    {
+      qDebug() << "open tmp file faild";
+      return;
+    }
+
+    /* 关联文件名 */
+    recv_file.setFileName(tmpFile.fileName());
+
+    /* 打开文件，只写方式 */
+    if(recv_file.open(QIODevice::WriteOnly) == false)
+    {
+      return;
+    }
+
+    /* 表头写入文件 */
+    recv_file.write(csv_header.toUtf8());
+    recv_file.write(str.toUtf8());
     return;
-  }
-
-  /* 关联文件名 */
-  recv_file.setFileName(tmpFile.fileName());
-
-  /* 打开文件，只写方式 */
-  if(recv_file.open(QIODevice::WriteOnly) == false)
-  {
-    return;
-  }
-
-  /* 表头写入文件 */
-  recv_file.write(csv_header.toUtf8());
-  recv_file.write(str.toUtf8());
 #endif
   }
 
@@ -1571,14 +1680,6 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
   {
     /* 表大小，每帧256字节，显示进度 */
     quint32 size = 256U * (frame_num - 1U) + data_len;
-    if(recv_file.isOpen() == false)
-    {
-      return;
-    }
-    if(recv_file_origin.isOpen() == false)
-    {
-      return;
-    }
 
     /* 写入数据 */
 
@@ -1645,12 +1746,29 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
     {
       data_str += ",";
     }
+
+    /* 一键导出 */
+    if(true == one_key_rec_all_table_data_silent(frame_num, data_str.toUtf8()))
+    {
+      ui->transfer_progressBar->setValue(size > common_table_info.Common_Info.Data_Size ? common_table_info.Common_Info.Data_Size : size);
+      ui->bytes_lcdNumber->display((int)size);
+      return;
+    }
+
+    if(recv_file.isOpen() == false)
+    {
+      return;
+    }
     recv_file.write(data_str.toUtf8());
 
     data_str = origin_data_list.join(",");
     if(size < common_table_info.Common_Info.Data_Size)
     {
       data_str += ",";
+    }
+    if(recv_file_origin.isOpen() == false)
+    {
+      return;
     }
     recv_file_origin.write(data_str.toUtf8());
 
@@ -1688,6 +1806,8 @@ void eol_window::slot_send_eol_data_complete()
     ui->update_pushButton->setEnabled(false);
   }
   ui->add_list_pushButton->setEnabled(true);
+  ui->export_all_pushButton->setEnabled(true);
+  ui->export_all_pushButton->setEnabled(true);
 }
 
 /**
@@ -1700,6 +1820,12 @@ void eol_window::slot_recv_eol_data_complete()
 
   /* 设置完成状态 */
   current_task_complete_state = TASK_COMPLETE;
+
+  /* 检测接收任务是否全部完成 */
+  if(false == all_table_file_name.isEmpty())
+  {
+    return;
+  }
 
   /* 关闭文件 */
   recv_file.close();
@@ -1720,6 +1846,7 @@ void eol_window::slot_recv_eol_data_complete()
   }
   ui->upload_pushButton->setEnabled(true);
   ui->add_list_pushButton->setEnabled(true);
+  ui->export_all_pushButton->setEnabled(true);
 }
 
 void eol_window::on_entry_produce_mode_pushButton_clicked()
@@ -1786,6 +1913,7 @@ void eol_window::slot_device_mode(const void *pass_data)
   {
     ui->add_list_pushButton->setEnabled(true);
     ui->upload_pushButton->setEnabled(true);
+    ui->export_all_pushButton->setEnabled(true);
     if(csv_list.size() > 0)
     {
       ui->update_pushButton->setEnabled(true);
@@ -1807,6 +1935,7 @@ void eol_window::slot_device_mode(const void *pass_data)
   {
     ui->add_list_pushButton->setEnabled(true);
     ui->upload_pushButton->setEnabled(true);
+    ui->export_all_pushButton->setEnabled(true);
     if(csv_list.size() > 0)
     {
       ui->update_pushButton->setEnabled(true);
@@ -1828,6 +1957,7 @@ void eol_window::slot_device_mode(const void *pass_data)
   {
     ui->add_list_pushButton->setEnabled(false);
     ui->upload_pushButton->setEnabled(false);
+    ui->export_all_pushButton->setEnabled(false);
     ui->update_pushButton->setEnabled(false);
     ui->reboot_pushButton->setEnabled(false);
     ui->eol_device_rw_func_pushButton->setEnabled(false);
@@ -2032,9 +2162,23 @@ void eol_window::on_dev_addr_lineEdit_textChanged(const QString &arg1)
 
 void eol_window::on_export_all_pushButton_clicked()
 {
-  /* 轮询所有表导出 */
-  eol_protocol::TABLE_Typedef_t table_type = (eol_protocol::TABLE_Typedef_t)ui->table_type_comboBox->currentIndex();
-  eol_protocol_obj->eol_master_get_table_data(table_type);
+  if(false == all_table_file_name.isEmpty())
+  {
+    return;
+  }
+
+  /* 导出统计的目标列表 */
+  all_table_file_name = QFileDialog::getSaveFileName(this, tr("Save  "), last_file_path, tr("csv (*.csv)"));
+  if(true == all_table_file_name.isEmpty())
+  {
+    return;
+  }
+
+  /* 获取文件信息 */
+  QFileInfo info(current_file_path);
+
+  /* 更新最近路径信息 */
+  last_file_path = info.absolutePath();
 
   /* 清空更新表 */
   csv_list.clear();
@@ -2051,16 +2195,29 @@ void eol_window::on_export_all_pushButton_clicked()
   /* 重置计时 */
   time_cnt = 0;
 
-  /* 启动状态 */
-  run_state = true;
-
-  /* 启动计时 */
-  timer_obj->start();
-
-  /* 启动接收数据线程 */
-  eol_protocol_obj->start_task();
-
   /* 本按钮不可用 */
   ui->upload_pushButton->setEnabled(false);
   ui->add_list_pushButton->setEnabled(false);
+  ui->export_all_pushButton->setEnabled(false);
+
+  /* 设置线程任务 */
+  current_running_task = EXPORT_TABLE_TASK;
+
+  /* 启动线程 */
+  run_state = true;
+
+  /* 原子操作 */
+  if(thread_run_statex.testAndSetRelaxed(0, 1))
+  {
+    /* 启动任务线程 */
+    g_thread_pool->start(this);
+  }
+  else
+  {
+    qDebug() << "eol window task is running";
+    return;
+  }
+
+  /* 启动计时 */
+  timer_obj->start();
 }
