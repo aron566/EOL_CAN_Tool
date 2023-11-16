@@ -386,13 +386,19 @@ bool can_driver_ts::init()
 
     channel_state_list.insert(i, channel_state);
   }
+  ts_init_flag = true;
   return ret;
 }
 
 bool can_driver_ts::start(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   quint32 connect_state;
-  init();
+
+  /* 避免二次初始化 */
+  if(false == ts_init_flag)
+  {
+    init();
+  }
   connect_state = ts_can_obj->tscan_connect(0, (quint64 *)&channel_state.device_handle);
   if((connect_state == 0U) || (connect_state == 5U))
   {
@@ -442,7 +448,7 @@ bool can_driver_ts::reset()
 {
   /* 复位对应通道号 */
   bool ret = false;
-
+  ts_init_flag = false;
   start_ = false;
   send_msg_list.clear();
   for(qint32 i = 0; i < channel_state_list.size(); i++)
@@ -472,7 +478,7 @@ bool can_driver_ts::close()
     show_message(tr("device is not open "));
     return false;
   }
-
+  ts_init_flag = false;
   start_ = false;
   send_msg_list.clear();
   /* 关闭对应通道号 */
@@ -536,6 +542,8 @@ quint32 can_driver_ts::ts_can_send(const CHANNEL_STATE_Typedef_t &channel_state,
         CANFDMsg.FProperties.bits.extframe    = (quint8)frame_type;
         CANFDMsg.FProperties.bits.remoteframe = (quint8)DATA_FRAME_TYPE;// not remote frame，standard frame
         CANFDMsg.FProperties.bits.istx        = 1;    // 设置属性为发送报文
+        CANFDMsg.FFDProperties.value          = 0;    /* 清除原始属性 */
+        CANFDMsg.FFDProperties.bits.EDL       = 1;    /* canfd报文 */
         CANFDMsg.FIdxChn                      = channel_state.channel_num;
         CANFDMsg.FDLC                         = size > 64U ? 64U : size;
         memcpy_s(CANFDMsg.FData.d, sizeof(CANFDMsg.FData.d), data, CANFDMsg.FDLC);

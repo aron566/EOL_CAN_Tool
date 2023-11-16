@@ -177,6 +177,9 @@ private:
 private:
   /* 同星can */
   QSharedPointer<TSCANLINApi> ts_can_obj;
+
+  /* 初始化标识 */
+  bool ts_init_flag = false;
 };
 
 #endif // CAN_DRIVER_TS_H
