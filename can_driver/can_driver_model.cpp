@@ -59,7 +59,6 @@ quint32 can_driver_model::auto_send_index_ = 0;
 quint32 can_driver_model::auto_send_period_ = 1000;//ms
 QString can_driver_model::id_;
 QString can_driver_model::datas_;
-QString can_driver_model::message;
 quint32 can_driver_model::frame_type_index_ = 0;
 quint32 can_driver_model::protocol_index_ = 0;
 quint32 can_driver_model::canfd_exp_index_ = 0;
@@ -91,7 +90,7 @@ QList<can_driver_model::CHANNEL_STATE_Typedef_t>can_driver_model::channel_state_
 can_driver_model::can_driver_model(QObject *parent)
     : QObject{parent}
 {
-  /* 创建访问资源锁1个 */
+  /* 创建访问资源锁2个 */
   cq_sem.release(1);
 
   cq_obj = new CircularQueue(CircularQueue::UINT8_DATA_BUF, CircularQueue::CQ_BUF_1M, this);
@@ -104,15 +103,14 @@ can_driver_model::can_driver_model(QObject *parent)
 void can_driver_model::show_message(const QString &str, quint32 channel_num, \
                                   CAN_DIRECT_Typedef_t direct, const quint8 *data, quint32 data_len, quint32 can_id, bool thread_mode)
 {
-  message = str;
   /* 输出到显示框 */
   if(false == thread_mode)
   {
-    emit signal_show_message(message, channel_num, (quint8)direct, data, data_len, can_id);
+    emit signal_show_message(str, channel_num, (quint8)direct, data, data_len, can_id);
   }
   else
   {
-    emit signal_show_thread_message(message, channel_num, (quint8)direct, data, data_len, can_id);
+    emit signal_show_thread_message(str, channel_num, (quint8)direct, data, data_len, can_id);
     return;
   }
 }
@@ -444,6 +442,7 @@ void can_driver_model::msg_to_ui_cq_buf(quint32 can_id, quint8 channel_num, CAN_
   {
     return;
   }
+
   QDateTime dt = QDateTime::currentDateTime();
   emit signal_can_driver_msg(can_id, data, data_len, (quint8)direction, channel_num, (quint8)protocol, dt.toMSecsSinceEpoch());
 }
@@ -453,6 +452,11 @@ void can_driver_model::send(quint8 channel_index)
   if(datas_.isEmpty())
   {
     show_message(tr("data is empty"));
+    return;
+  }
+
+  if(1000 < send_msg_list.size())
+  {
     return;
   }
 
@@ -470,7 +474,7 @@ void can_driver_model::send(quint8 channel_index)
       msg.frame_type = (FRAME_TYPE_Typedef_t)frame_type_index_;
       msg.protocol = (PROTOCOL_TYPE_Typedef_t)protocol_index_;
       msg.id = id_.toUInt(nullptr, 16);
-      send_msg_list.enqueue(msg);
+      send_msg_list.append(msg);
     }
   }
 }

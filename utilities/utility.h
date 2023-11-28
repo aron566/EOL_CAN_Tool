@@ -179,6 +179,15 @@ public:
   static QString line_data2split(const QString &line_data);
 
   /**
+   * @brief array2hexstr 数组转字符串
+   * @param data 数据
+   * @param len 数据长度
+   * @param split 分割
+   * @return 字符串
+   */
+  static QString array2hexstr(const quint8 *data, quint32 len, const QString &split);
+
+  /**
    * @brief 包号重复检测
    *
    * @param pRecord 记录句柄

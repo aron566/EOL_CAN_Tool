@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QList>
+#include "can_driver_model.h"
 
 namespace Ui {
 class frame_diagnosis;
@@ -27,6 +28,21 @@ protected:
 public:
 
   /**
+   * @brief set_can_driver_obj
+   * @param can_driver_obj_
+   */
+  void set_can_driver_obj(can_driver_model *can_driver_obj_)
+  {
+    can_driver_obj = can_driver_obj_;
+  }
+
+  /**
+   * @brief set_channel_num
+   * @param channel_num
+   */
+  void set_channel_num(quint8 channel_num);
+
+  /**
    * @brief 添加消息到表
    * @param id can id
    * @param data 数据
@@ -43,11 +59,28 @@ public:
    * @brief 清除统计信息
    */
   void clear();
+
+private:
+
+  /**
+   * @brief frame_translation 报文转换
+   * @param id id
+   * @param data 数据
+   * @param len 数据长度
+   * @param direct 方向 0Tx 1Rx
+   * @param channel_num 通道号
+   * @param protocol_type 协议类型 0can 1canfd
+   */
+  void frame_translation(uint16_t id, const quint8 *data, quint32 len, \
+                         quint8 direct, quint32 channel_num, quint8 protocol_type);
+
 signals:
   /**
    * @brief 发送窗口关闭信号
    */
   void signal_window_closed();
+
+private slots:
 
 private:
   Ui::frame_diagnosis *ui;
@@ -68,6 +101,8 @@ private:
   }CAN_MSG_LIST_Typedef_t;
 
   QList <CAN_MSG_LIST_Typedef_t> can_msg_list;
+
+  can_driver_model *can_driver_obj = nullptr;
 };
 
 #endif // FRAME_DIAGNOSIS_H

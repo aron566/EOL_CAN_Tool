@@ -186,6 +186,19 @@ void MainWindow::save_cfg()
   setting.setValue("com_v" CONFIG_VER_STR "/data_bps", ui->data_bps_comboBox->currentIndex());
   setting.setValue("com_v" CONFIG_VER_STR "/bps", ui->bps_comboBox->currentIndex());
   setting.setValue("com_v" CONFIG_VER_STR "/end_resistance_en", (int)ui->end_resistance_checkBox->isChecked());
+
+  /* 网络RTS */
+  setting.setValue("com_v" CONFIG_VER_STR "/rts_role", ui->rts_role_comboBox->currentIndex());
+  setting.setValue("com_v" CONFIG_VER_STR "/rts_server_ip", ui->rts_remote_ip_lineEdit->text());
+  setting.setValue("com_v" CONFIG_VER_STR "/rts_server_port", ui->rts_remote_port_lineEdit->text());
+  setting.setValue("com_v" CONFIG_VER_STR "/rts_client_port", ui->rts_local_port_lineEdit->text());
+
+  /* 网络PLC */
+  setting.setValue("com_v" CONFIG_VER_STR "/plc_role", ui->plc_role_comboBox->currentIndex());
+  setting.setValue("com_v" CONFIG_VER_STR "/plc_server_ip", ui->plc_remote_ip_lineEdit->text());
+  setting.setValue("com_v" CONFIG_VER_STR "/plc_server_port", ui->plc_remote_port_lineEdit->text());
+  setting.setValue("com_v" CONFIG_VER_STR "/plc_client_port", ui->plc_local_port_lineEdit->text());
+
   setting.sync();
 }
 
@@ -218,6 +231,19 @@ void MainWindow::read_cfg()
   /* 设置终端电阻启用状态 */
   ui->end_resistance_checkBox->setChecked((bool)setting.value("com_v" CONFIG_VER_STR "/end_resistance_en").toInt());
   can_driver_model::set_resistance_enbale(ui->end_resistance_checkBox->isChecked());
+
+  /* 网络RTS */
+  ui->rts_role_comboBox->setCurrentIndex((can_driver_model::CAN_BRAND_Typedef_t)setting.value("com_v" CONFIG_VER_STR "/rts_role").toInt());
+  ui->rts_remote_ip_lineEdit->setText(setting.value("com_v" CONFIG_VER_STR "/rts_server_ip").toString());
+  ui->rts_remote_port_lineEdit->setText(setting.value("com_v" CONFIG_VER_STR "/rts_server_port").toString());
+  ui->rts_local_port_lineEdit->setText(setting.value("com_v" CONFIG_VER_STR "/rts_client_port").toString());
+
+  /* 网络PLC */
+  ui->plc_role_comboBox->setCurrentIndex((can_driver_model::CAN_BRAND_Typedef_t)setting.value("com_v" CONFIG_VER_STR "/plc_role").toInt());
+  ui->plc_remote_ip_lineEdit->setText(setting.value("com_v" CONFIG_VER_STR "/plc_server_ip").toString());
+  ui->plc_remote_port_lineEdit->setText(setting.value("com_v" CONFIG_VER_STR "/plc_server_port").toString());
+  ui->plc_local_port_lineEdit->setText(setting.value("com_v" CONFIG_VER_STR "/plc_client_port").toString());
+
   setting.sync();
 }
 
@@ -744,4 +770,75 @@ void MainWindow::on_updater_pushButton_clicked()
 {
   updater_window_obj->show();
 }
+
+void MainWindow::on_rts_start_pushButton_clicked()
+{
+  network_window * pobj = more_window_obj->get_network_window_obj();
+
+  /* 当前角色 */
+  switch (ui->rts_role_comboBox->currentIndex())
+  {
+    /* 客户端：服务ip，本地端口与服务器一致 */
+    case 1:
+      pobj->set_network_par(ui->rts_remote_ip_lineEdit->text(),
+                            ui->rts_local_port_lineEdit->text(),
+                            (network_driver_model::NETWORK_WORK_ROLE_Typedef_t)ui->rts_role_comboBox->currentIndex(),
+                            (network_driver_model::NETWORK_TYPE_Typedef_t)ui->rts_net_type_comboBox->currentIndex(),
+                            network_window::RTS_NETWORK_DEVICE);
+      break;
+
+    /* 服务端：设定自己的端口 */
+    default:
+      pobj->set_network_par(ui->rts_remote_ip_lineEdit->text(),
+                            ui->rts_remote_port_lineEdit->text(),
+                            (network_driver_model::NETWORK_WORK_ROLE_Typedef_t)ui->rts_role_comboBox->currentIndex(),
+                            (network_driver_model::NETWORK_TYPE_Typedef_t)ui->rts_net_type_comboBox->currentIndex(),
+                            network_window::RTS_NETWORK_DEVICE);
+      break;
+  }
+  /* 启动网络 */
+  pobj->network_start(network_window::RTS_NETWORK_DEVICE);
+}
+
+void MainWindow::on_plc_start_pushButton_clicked()
+{
+  network_window * pobj = more_window_obj->get_network_window_obj();
+
+  /* 当前角色 */
+  switch (ui->plc_role_comboBox->currentIndex())
+  {
+    /* 客户端：服务ip，本地端口与服务器一致 */
+    case 1:
+      pobj->set_network_par(ui->plc_remote_ip_lineEdit->text(),
+                            ui->plc_local_port_lineEdit->text(),
+                            (network_driver_model::NETWORK_WORK_ROLE_Typedef_t)ui->plc_role_comboBox->currentIndex(),
+                            (network_driver_model::NETWORK_TYPE_Typedef_t)ui->plc_net_type_comboBox->currentIndex(),
+                            network_window::PLC_NETWORK_DEVICE);
+      break;
+
+    /* 服务端：设定自己的端口 */
+    default:
+      pobj->set_network_par(ui->plc_remote_ip_lineEdit->text(),
+                            ui->plc_remote_port_lineEdit->text(),
+                            (network_driver_model::NETWORK_WORK_ROLE_Typedef_t)ui->plc_role_comboBox->currentIndex(),
+                            (network_driver_model::NETWORK_TYPE_Typedef_t)ui->plc_net_type_comboBox->currentIndex(),
+                            network_window::PLC_NETWORK_DEVICE);
+      break;
+  }
+  /* 启动网络 */
+  pobj->network_start(network_window::PLC_NETWORK_DEVICE);
+}
+
+void MainWindow::on_plc_stop_pushButton_clicked()
+{
+  network_window * pobj = more_window_obj->get_network_window_obj();
+  pobj->network_stop(network_window::PLC_NETWORK_DEVICE);
+}
+
+void MainWindow::on_rts_stop_pushButton_clicked()
+{
+  network_window * pobj = more_window_obj->get_network_window_obj();
+  pobj->network_stop(network_window::RTS_NETWORK_DEVICE);
+}
+
 /******************************** End of file *********************************/

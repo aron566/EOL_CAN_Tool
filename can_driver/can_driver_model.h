@@ -151,7 +151,6 @@ public:
   static quint32 auto_send_period_;//ms
   static QString id_;
   static QString datas_;
-  static QString message;
   static quint32 frame_type_index_;
   static quint32 protocol_index_;
   static quint32 canfd_exp_index_;

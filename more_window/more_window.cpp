@@ -35,6 +35,9 @@ more_window::more_window(QString title, QWidget *parent) :
   /* EOL窗口初始化 */
   eol_window_init(tr("EOL CAN Tool - EOL"));
 
+  /* 网络调试窗口初始化 */
+  network_window_init(tr("EOL CAN Tool - Network"));
+
   /* 工具窗口初始化 */
   tool_window_init(tr("EOL CAN Tool - TOOL"));
 
@@ -84,6 +87,9 @@ more_window::~more_window()
   delete eol_window_obj;
   qDebug() << "del eol_window_obj";
 
+  delete network_window_obj;
+  qDebug() << "del network_window_obj";
+
   delete ui;
   qDebug() << "del more_window";
 }
@@ -98,6 +104,16 @@ void more_window::eol_window_init(QString titile)
 
   /* 禁止线程完成后执行析构对象 */
   eol_window_obj->setAutoDelete(false);
+}
+
+/* 网络调试窗口 */
+void more_window::network_window_init(QString titile)
+{
+  network_window_obj = new network_window(titile);
+
+  connect(network_window_obj, &network_window::signal_window_closed, this, [=]{
+    this->show();
+  });
 }
 
 /* 工具集子窗口 */
@@ -262,6 +278,10 @@ void more_window::read_cfg()
     qDebug() << "err more_window config not exist";
     return;
   }
+  if(false == ui->id_lineEdit->text().isEmpty())
+  {
+    return;
+  }
   /* can id */
   ui->id_lineEdit->setText(setting.value("more_window_v" CONFIG_VER_STR "/can_id").toString());
   /* 数据 */
@@ -385,6 +405,18 @@ void more_window::slot_show_window()
   CircularQueue::CQ_emptyData(cq);
   connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
   connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
+
+  /* 恢复发送数据设置 */
+  /* 设置发送的canid */
+  can_driver_obj->set_message_id(ui->id_lineEdit->text());
+  /* 设置发送协议类型 */
+  can_driver_obj->set_protocol_type((quint32)ui->protocol_comboBox->currentIndex());
+  /* 设置发送帧类型 */
+  can_driver_obj->set_frame_type((quint32)ui->frame_type_comboBox->currentIndex());
+  /* 设置消息数据 */
+  QString data = utility::line_data2split(ui->data_lineEdit->text());
+  can_driver_obj->set_message_data(data);
+
   this->show();
 }
 
@@ -771,6 +803,9 @@ void more_window::set_channel_num(quint8 channel_num)
   /* 打开全部通道 */
   ui->channel_num_comboBox->addItem("ALL");
   ui->display_ch_comboBox->addItem("ALL");
+
+  /* 更新诊断页面 */
+  frame_diagnosis_obj->set_channel_num(channel_num);
 }
 
 void more_window::on_send_pushButton_clicked()
@@ -982,3 +1017,9 @@ void more_window::on_display_str_id_limit_lineEdit_textChanged(const QString &ar
   bool ok;
   limit_str_canid = arg1.toUInt(&ok, 16);
 }
+
+void more_window::on_network_test_pushButton_clicked()
+{
+  network_window_obj->show();
+}
+

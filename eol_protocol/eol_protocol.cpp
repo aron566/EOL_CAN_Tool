@@ -224,12 +224,12 @@ bool eol_protocol::eol_send_data_port(const uint8_t *data, uint16_t data_len, \
     case EOL_CAN_HW:            /**< can发送数据 */
       {
         /* 发送 */
-        bool ret = can_driver_obj->send(data, (quint8)data_len, \
-                                        EOL_PROTOCOL_MASTER_CAN_ID, \
-                                        can_driver_model::STD_FRAME_TYPE, \
-                                        data_len > 8U ? \
-                                        can_driver_model::CANFD_PROTOCOL_TYPE : \
-                                        can_driver_model::CAN_PROTOCOL_TYPE, \
+        bool ret = can_driver_obj->send(data, (quint8)data_len,
+                                        EOL_PROTOCOL_MASTER_CAN_ID,
+                                        can_driver_model::STD_FRAME_TYPE,
+                                        data_len > 8U ?
+                                        can_driver_model::CANFD_PROTOCOL_TYPE :
+                                        can_driver_model::CAN_PROTOCOL_TYPE,
                                         (quint8)channel_num.toUInt());
         return ret;
       }

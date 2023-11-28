@@ -9,6 +9,7 @@
 #include "can_driver_model.h"
 #include "frame_diagnosis_window/frame_diagnosis.h"
 #include "tool_window/tool_window.h"
+#include "network_window/network_window.h"
 #include "utilities/line_highlighter.h"
 
 namespace Ui {
@@ -44,6 +45,9 @@ public:
 
     /* 恢复参数 */
     read_cfg();
+
+    /* 设置帧诊断can驱动 */
+    frame_diagnosis_obj->set_can_driver_obj(can_driver_);
   }
 
   /**
@@ -51,6 +55,16 @@ public:
    * @param channel_num 通道数量
    */
   void set_channel_num(quint8 channel_num);
+
+  /**
+   * @brief get_network_window_obj
+   * @return 网络调试窗口句柄
+   */
+  network_window *get_network_window_obj()
+  {
+    return network_window_obj;
+  }
+
 public:
 
 protected:
@@ -70,6 +84,12 @@ private:
    * @param titile
    */
   void eol_window_init(QString titile);
+
+  /**
+   * @brief 网络调试窗口
+   * @param titile
+   */
+  void network_window_init(QString titile);
 
   /**
    * @brief 工具子窗口
@@ -187,9 +207,12 @@ private slots:
     void slot_show_window();
     void on_display_str_id_limit_lineEdit_textChanged(const QString &arg1);
 
+    void on_network_test_pushButton_clicked();
+
   private:
     Ui::more_window *ui;
     eol_window *eol_window_obj = nullptr;
+    network_window *network_window_obj = nullptr;
     tool_window *tool_window_obj = nullptr;
 
 private:

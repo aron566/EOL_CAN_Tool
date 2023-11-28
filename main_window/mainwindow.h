@@ -164,5 +164,9 @@ private slots:
   void on_brand_comboBox_currentIndexChanged(int index);
   void on_device_info_pushButton_clicked();
   void on_updater_pushButton_clicked();
+  void on_rts_start_pushButton_clicked();
+  void on_plc_start_pushButton_clicked();
+  void on_plc_stop_pushButton_clicked();
+  void on_rts_stop_pushButton_clicked();
 };
 #endif // MAINWINDOW_H

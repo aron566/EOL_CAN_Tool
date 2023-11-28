@@ -1,0 +1,15 @@
+32位版本，添加qt 安装目录下的tools目录的编译工具链bin目录到path环境变量
+cmake . -G "MinGW Makefiles" -DCMAKE_MAKE_PROGRAM=mingw32-make -Bbuild/mingw32 -DCMAKE_C_COMPILER=i686-w64-mingw32-gcc -DWITH_OPENSSL=TRUE -DCMAKE_INSTALL_PREFIX=build/mingw32/install
+修改makefile
+CMAKE_CXX_FLAGS:STRING=-ID:/QT_Install/Tools/OpenSSL/Win_x86/include -LD:/QT_Install/Tools/OpenSSL/Win_x86/bin -LD:/QT_Install/Tools/OpenSSL/Win_x86/lib -llibcrypto-1_1 -llibssl-1_1
+CMAKE_C_FLAGS:STRING=-ID:/QT_Install/Tools/OpenSSL/Win_x86/include -LD:/QT_Install/Tools/OpenSSL/Win_x86/bin -LD:/QT_Install/Tools/OpenSSL/Win_x86/lib -llibcrypto-1_1 -llibssl-1_1
+编译
+cmake --build .\build\mingw32
+
+64位版本，添加qt 安装目录下的tools目录的编译工具链bin目录到path环境变量
+cmake . -G "MinGW Makefiles" -DCMAKE_MAKE_PROGRAM=mingw32-make -Bbuild/mingw64 -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc -DWITH_OPENSSL=TRUE -DCMAKE_INSTALL_PREFIX=build/mingw64/install
+修改makefile
+CMAKE_CXX_FLAGS:STRING=-ID:/QT_Install/Tools/OpenSSL/Win_x64/include -LD:/QT_Install/Tools/OpenSSL/Win_x64/bin -LD:/QT_Install/Tools/OpenSSL/Win_x64/lib -llibcrypto-1_1-x64 -llibssl-1_1-x64
+CMAKE_C_FLAGS:STRING=-ID:/QT_Install/Tools/OpenSSL/Win_x64/include -LD:/QT_Install/Tools/OpenSSL/Win_x64/bin -LD:/QT_Install/Tools/OpenSSL/Win_x64/lib -llibcrypto-1_1-x64 -llibssl-1_1-x64
+编译
+cmake --build .\build\mingw64

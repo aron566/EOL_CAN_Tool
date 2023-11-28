@@ -531,11 +531,24 @@ QString utility::line_data2split(const QString &line_data)
   /* 替换逗号 */
   str = str.replace(",", " ");
 
+  /* 替换冒号 */
+  str = str.replace(":", " ");
+
   /* 匹配一个或多个空格字符，逗号字符，分割 */
   QRegExp split_rx("\\s+");
   QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
   QString data = data_list.join(' ');
   return data;
+}
+
+QString utility::array2hexstr(const quint8 *data, quint32 len, const QString &split)
+{
+  QStringList data_list;
+  for(quint32 i = 0; i < len; i++)
+  {
+    data_list.append(QString::number((int)data[i], 16));
+  }
+  return data_list.join(split);
 }
 
 /**

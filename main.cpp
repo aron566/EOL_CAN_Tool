@@ -79,6 +79,7 @@
  *  <tr><td>2023-11-09 <td>v1.2.3  <td>aron566 <td>手动发送数据优化使用正则表达匹配多个空格问题，优化重帧导致读取表数据异常
  *  <tr><td>2023-11-13 <td>v1.2.4  <td>aron566 <td>增加一键导出表功能，优化目标刷新显示增加导出功能，筛选功能
  *  <tr><td>2023-11-16 <td>v1.2.5  <td>aron566 <td>修复ts未发出canfd报文问题
+ *  <tr><td>2023-11-21 <td>v1.2.6  <td>aron566 <td>增加网络接口及调试页面，修复打开设备导致消息框清空问题，报文诊断页面增加转译功能
  *  </table>
  */
 #include "mainwindow.h"
@@ -86,7 +87,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.5"
+#define PC_SOFTWARE_VERSION       "1.2.6"
 
 int main(int argc, char *argv[])
 {

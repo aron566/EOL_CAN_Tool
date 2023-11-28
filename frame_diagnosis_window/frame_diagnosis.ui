@@ -20,7 +20,54 @@
       <string>帧统计</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
+      <item row="1" column="2">
+       <widget class="QLabel" name="frame_translation_ch_label">
+        <property name="text">
+         <string>指定通道号：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QLabel" name="id_start_label">
+        <property name="text">
+         <string>代理ID起始：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="5">
+       <widget class="QLineEdit" name="id_start_lineEdit">
+        <property name="text">
+         <string>FFFF</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="frame_translation_comboBox">
+        <item>
+         <property name="text">
+          <string>NULL</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>CAN2CANFD</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>CANFD2CAN</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="frame_translation_label">
+        <property name="text">
+         <string>开启报文转换：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="9">
        <widget class="QTableWidget" name="frame_cnt_tableWidget">
         <column>
          <property name="text">
@@ -62,6 +109,42 @@
           <string>帧率fps</string>
          </property>
         </column>
+       </widget>
+      </item>
+      <item row="1" column="6">
+       <widget class="QLabel" name="id_end_label">
+        <property name="text">
+         <string>代理ID结束：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="8">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="3">
+       <widget class="QComboBox" name="frame_translation_ch_comboBox">
+        <item>
+         <property name="text">
+          <string>ALL</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="7">
+       <widget class="QLineEdit" name="id_end_lineEdit">
+        <property name="text">
+         <string>FFFF</string>
+        </property>
        </widget>
       </item>
      </layout>
