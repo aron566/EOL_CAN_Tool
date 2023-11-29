@@ -43,9 +43,6 @@ public:
     connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
     connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
 
-    /* 恢复参数 */
-    read_cfg();
-
     /* 设置帧诊断can驱动 */
     frame_diagnosis_obj->set_can_driver_obj(can_driver_);
   }

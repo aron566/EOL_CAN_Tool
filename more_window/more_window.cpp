@@ -74,6 +74,9 @@ more_window::more_window(QString title, QWidget *parent) :
   /* 设置悬浮提示 */
   ui->display_mask_lineEdit->setToolTip(tr("show msg can id = mask & can id"));
   ui->display_str_id_limit_lineEdit->setToolTip(tr("FFFF show all can str msg"));
+
+  /* 恢复参数 */
+  read_cfg();
 }
 
 more_window::~more_window()
@@ -280,6 +283,7 @@ void more_window::read_cfg()
   }
   if(false == ui->id_lineEdit->text().isEmpty())
   {
+    qDebug() << "id_lineEdit isEmpty false";
     return;
   }
   /* can id */
@@ -399,23 +403,26 @@ void more_window::frame_diagnosis_window_init(QString title)
 
 void more_window::slot_show_window()
 {
-  disconnect(can_driver_obj, &can_driver_model::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
-  CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->CQ_getCQHandle();
-  /* 清空 */
-  CircularQueue::CQ_emptyData(cq);
-  connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
-  connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
+  if(nullptr != can_driver_obj)
+  {
+    disconnect(can_driver_obj, &can_driver_model::signal_can_driver_msg, this, &more_window::slot_can_driver_msg);
+    CircularQueue::CQ_handleTypeDef *cq = can_driver_model::cq_obj->CQ_getCQHandle();
+    /* 清空 */
+    CircularQueue::CQ_emptyData(cq);
+    connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
+    connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
+  }
 
   /* 恢复发送数据设置 */
   /* 设置发送的canid */
-  can_driver_obj->set_message_id(ui->id_lineEdit->text());
+  can_driver_model::set_message_id(ui->id_lineEdit->text());
   /* 设置发送协议类型 */
-  can_driver_obj->set_protocol_type((quint32)ui->protocol_comboBox->currentIndex());
+  can_driver_model::set_protocol_type((quint32)ui->protocol_comboBox->currentIndex());
   /* 设置发送帧类型 */
-  can_driver_obj->set_frame_type((quint32)ui->frame_type_comboBox->currentIndex());
+  can_driver_model::set_frame_type((quint32)ui->frame_type_comboBox->currentIndex());
   /* 设置消息数据 */
   QString data = utility::line_data2split(ui->data_lineEdit->text());
-  can_driver_obj->set_message_data(data);
+  can_driver_model::set_message_data(data);
 
   this->show();
 }
@@ -705,7 +712,7 @@ void more_window::show_can_msg(can_driver_model::CAN_MSG_DISPLAY_Typedef_t &msg)
 
 void more_window::slot_show_can_msg()
 {
-  CircularQueue::CQ_handleTypeDef *cq = can_driver_obj->cq_obj->CQ_getCQHandle();
+  CircularQueue::CQ_handleTypeDef *cq = can_driver_model::cq_obj->CQ_getCQHandle();
 
   /* 判断可读长度 */
   quint32 len = CircularQueue::CQ_getLength(cq);
@@ -727,28 +734,28 @@ void more_window::slot_show_can_msg()
 void more_window::on_frame_type_comboBox_currentIndexChanged(int index)
 {
   /* 设置发送帧类型 */
-  can_driver_obj->set_frame_type((quint32)index);
+  can_driver_model::set_frame_type((quint32)index);
 }
 
 
 void more_window::on_protocol_comboBox_currentIndexChanged(int index)
 {
   /* 设置发送协议类型 */
-  can_driver_obj->set_protocol_type((quint32)index);
+  can_driver_model::set_protocol_type((quint32)index);
 }
 
 
 void more_window::on_canfd_pluse_comboBox_currentIndexChanged(int index)
 {
   /* 设置canfd加速 */
-  can_driver_obj->set_can_fd_exp((quint32)index);
+  can_driver_model::set_can_fd_exp((quint32)index);
 }
 
 
 void more_window::on_id_lineEdit_textChanged(const QString &arg1)
 {
   /* 设置发送的canid */
-  can_driver_obj->set_message_id(arg1);
+  can_driver_model::set_message_id(arg1);
 }
 
 
@@ -756,7 +763,7 @@ void more_window::on_data_lineEdit_textChanged(const QString &arg1)
 {
   /* 设置消息数据 */
   QString data = utility::line_data2split(arg1);
-  can_driver_obj->set_message_data(data);
+  can_driver_model::set_message_data(data);
 }
 
 
@@ -810,9 +817,24 @@ void more_window::set_channel_num(quint8 channel_num)
 
 void more_window::on_send_pushButton_clicked()
 {
+  if(nullptr == can_driver_obj)
+  {
+    return;
+  }
+  /* 设置发送的canid */
+//  can_driver_obj->set_message_id(ui->id_lineEdit->text());
+//  /* 设置发送协议类型 */
+//  can_driver_obj->set_protocol_type((quint32)ui->protocol_comboBox->currentIndex());
+//  /* 设置发送帧类型 */
+//  can_driver_obj->set_frame_type((quint32)ui->frame_type_comboBox->currentIndex());
+//  /* 设置canfd加速 */
+//  can_driver_obj->set_can_fd_exp((quint32)ui->canfd_pluse_comboBox->currentIndex());
+//  /* 设置消息数据 */
+//  QString data = utility::line_data2split(ui->data_lineEdit->text());
+//  can_driver_obj->set_message_data(data);
+  /* 发送 */
   can_driver_obj->send(ui->channel_num_comboBox->currentIndex());
 }
-
 
 void more_window::on_period_lineEdit_textChanged(const QString &arg1)
 {
@@ -824,7 +846,7 @@ void more_window::slot_timeout()
   /* 定时发送 */
   if(ui->timer_checkBox->isChecked())
   {
-    can_driver_obj->send(ui->channel_num_comboBox->currentIndex());
+    on_send_pushButton_clicked();
   }
 
   current_show_line_str_time_ms++;
@@ -862,11 +884,11 @@ void more_window::on_display_mask_lineEdit_textChanged(const QString &arg1)
   quint32 canid_mask = arg1.toUInt(&ok, 16);
   if(ok)
   {
-    can_driver_obj->set_msg_canid_mask(canid_mask, ui->mask_en_checkBox->isChecked());
+    can_driver_model::set_msg_canid_mask(canid_mask, ui->mask_en_checkBox->isChecked());
   }
   else
   {
-    can_driver_obj->set_msg_canid_mask(0xFFFF, ui->mask_en_checkBox->isChecked());
+    can_driver_model::set_msg_canid_mask(0xFFFF, ui->mask_en_checkBox->isChecked());
   }
 }
 
@@ -876,11 +898,11 @@ void more_window::on_mask_en_checkBox_clicked(bool checked)
   quint32 canid_mask = ui->display_mask_lineEdit->text().toUInt(&ok, 16);
   if(ok)
   {
-    can_driver_obj->set_msg_canid_mask(canid_mask, checked);
+    can_driver_model::set_msg_canid_mask(canid_mask, checked);
   }
   else
   {
-    can_driver_obj->set_msg_canid_mask(0xFFFF, checked);
+    can_driver_model::set_msg_canid_mask(0xFFFF, checked);
   }
 }
 

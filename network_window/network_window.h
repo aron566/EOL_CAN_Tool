@@ -132,6 +132,16 @@ private:
   void timer_init();
 
   /**
+   * @brief save_cfg
+   */
+  void save_cfg();
+
+  /**
+   * @brief read_cfg
+   */
+  void read_cfg();
+
+  /**
    * @brief update_show_msg
    * @param text_edit_widget
    * @param pList

@@ -24,6 +24,7 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QWheelEvent>
+#include <QSettings>
 /** Private includes ---------------------------------------------------------*/
 #include "network_window.h"
 #include "ui_network_window.h"
@@ -37,6 +38,8 @@
 
 #define SHOW_LINE_CHAR_NUM_MAX    (1024U)                 /**< 一行最大显示多少字符 */
 #define SHOW_CHAR_TIMEOUT_MS_MAX  (1000U)                 /**< 最大等待无换行符时间ms */
+
+#define CONFIG_VER_STR            "0.0.3"                 /**< 配置文件版本 */
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
@@ -101,10 +104,16 @@ network_window::network_window(QString title, QWidget *parent) :
 
   /* 设置悬浮提示 */
   ui->display_str_id_limit_lineEdit->setToolTip(tr("255.255.255.255 show all network str msg"));
+
+  /* 读取参数 */
+  read_cfg();
 }
 
 network_window::~network_window()
 {
+  /* 保存参数 */
+  save_cfg();
+
   /* 关闭 */
   for(qint32 i = 0; i < (qint32)NETWORK_DEIVCE_MAX; i++)
   {
@@ -238,6 +247,50 @@ void network_window::wheelEvent(QWheelEvent *event)
   QWidget::wheelEvent(event);
 }
 
+void network_window::save_cfg()
+{
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
+  /* addr */
+  setting.setValue("network_window_v" CONFIG_VER_STR "/ip_addr", ui->ip_lineEdit->text());
+  /* 端口 */
+  setting.setValue("network_window_v" CONFIG_VER_STR "/port", ui->port_lineEdit->text());
+  /* 数据 */
+  QString plaintext = ui->hex_lineEdit->text();
+  plaintext.replace(' ', ',');;
+  setting.setValue("network_window_v" CONFIG_VER_STR "/hexdata_edit", plaintext);
+  setting.setValue("network_window_v" CONFIG_VER_STR "/strdata_edit", ui->str_lineEdit->text());
+  setting.sync();
+}
+
+void network_window::read_cfg()
+{
+  QFile file("./eol_tool_cfg.ini");
+  if(false == file.exists())
+  {
+    return;
+  }
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
+  if(false == setting.contains("network_window_v" CONFIG_VER_STR "/ip_addr"))
+  {
+    qDebug() << "err network_window config not exist";
+    return;
+  }
+
+  /* addr */
+  ui->ip_lineEdit->setText(setting.value("network_window_v" CONFIG_VER_STR "/ip_addr").toString());
+  /* 端口 */
+  ui->port_lineEdit->setText(setting.value("network_window_v" CONFIG_VER_STR "/port").toString());
+  /* hex数据 */
+  QString plaintext = setting.value("network_window_v" CONFIG_VER_STR "/hexdata_edit").toString();
+  QString data_str = plaintext.replace(',', ' ');
+  ui->hex_lineEdit->setText(data_str);
+  /* str数据 */
+  plaintext = setting.value("network_window_v" CONFIG_VER_STR "/strdata_edit").toString();
+  ui->str_lineEdit->setText(plaintext);
+  setting.sync();
+}
 
 void network_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag)
 {
