@@ -66,6 +66,24 @@ qint32 network_driver_udp::repeat_check(const QString &ip, const QQueue<network_
   }
   return -1;
 }
+
+qint32 network_driver_udp::get_peer_port(const QString &ip)
+{
+  for(qint32 i = 0; i < server_rec_msg_list.size(); i++)
+  {
+    if(true == server_rec_msg_list.value(i).peer_addr.contains(ip))
+    {
+      QStringList info = server_rec_msg_list.value(i).peer_addr.split(":");
+      if(2 > info.size())
+      {
+        return -1;
+      }
+      return info.value(1).toUInt();
+    }
+  }
+  return -1;
+}
+
 /** Public application code --------------------------------------------------*/
 /*******************************************************************************
 *
@@ -315,12 +333,6 @@ bool network_driver_udp::network_send_data(const quint8 *data, quint32 len, cons
 
   sockaddr_u peeraddr;
   memset(&peeraddr, 0, sizeof(peeraddr));
-  qint32 ret = sockaddr_set_ipport(&peeraddr, ip.toUtf8().data(), port.toInt());
-  if (ret != 0)
-  {
-    qDebug("unknown peer_addr %s", ip.toUtf8().data());
-    return false;
-  }
 
   QString tips;
   QString addr = QString(ip + ":" + port);
@@ -337,10 +349,18 @@ bool network_driver_udp::network_send_data(const quint8 *data, quint32 len, cons
           return false;
         }
         tips = "[UDP SERVER]";
+        qint32 peer_port = get_peer_port(ip);
+        qint32 ret = sockaddr_set_ipport(&peeraddr, ip.toUtf8().data(), peer_port);
+        if (ret != 0 || -1 == peer_port)
+        {
+          tips += tr("send data failed! unknown peer_addr %1").arg(ip);
+          this->show_message(tips, 1U, 0U);
+          return false;
+        }
         if(0 > server->sendto(data, len, &peeraddr.sa))
         {
-          tips += tr("send data failed! to addr:%1").arg(addr);
-          this->show_message(tips, 1U, 0xFFU);
+          tips += tr("send data failed! to addr:%1").arg(ip + ":" + QString::number(get_peer_port(ip)));
+          this->show_message(tips, 1U, 0U);
           return false;
         }
       }
@@ -356,10 +376,17 @@ bool network_driver_udp::network_send_data(const quint8 *data, quint32 len, cons
           return false;
         }
         tips = "[UDP CLIENT]";
+        qint32 ret = sockaddr_set_ipport(&peeraddr, ip.toUtf8().data(), port.toInt());
+        if (ret != 0)
+        {
+          tips += tr("send data failed! unknown peer_addr %1").arg(ip);
+          this->show_message(tips, 0U, 0U);
+          return false;
+        }
         if(0 > client->sendto(data, len, &peeraddr.sa))
         {
           tips = tr("send data failed! to addr:%1").arg(addr);
-          this->show_message(tips, 0U, 0xFFU);
+          this->show_message(tips, 0U, 0U);
           return false;
         }
       }

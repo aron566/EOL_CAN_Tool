@@ -92,7 +92,7 @@ can_driver_model::can_driver_model(QObject *parent)
 {
   /* 创建访问资源锁2个 */
   cq_sem.release(1);
-
+  tx_sem.release(1);
   cq_obj = new CircularQueue(CircularQueue::UINT8_DATA_BUF, CircularQueue::CQ_BUF_1M, this);
   if(nullptr == cq_obj)
   {
@@ -190,12 +190,14 @@ void can_driver_model::send(const CHANNEL_STATE_Typedef_t &channel_state)
    */
 bool can_driver_model::send_data()
 {
+  QReadLocker locker(&tx_msg_rw_lock);
+
   /* 检查是否有发送任务 */
   if(true == send_msg_list.isEmpty())
   {
     return false;
   }
-  QCoreApplication::processEvents();
+
   SEND_MSG_Typedef_t msg = send_msg_list.dequeue();
   qint32 channel_index = msg.channel_num;
   CHANNEL_STATE_Typedef_t channel_state;
@@ -208,7 +210,9 @@ bool can_driver_model::send_data()
       frame_type_index_ = (quint32)msg.frame_type;
       protocol_index_ = (quint32)msg.protocol;
       id_ = QString::number(msg.id, 16);
+      tx_sem.tryAcquire();
       send(channel_state);
+      tx_sem.release();
       return true;
     }
   }
@@ -256,7 +260,9 @@ bool can_driver_model::send(const quint8 *data, quint8 size, quint32 id, FRAME_T
     if((channel_num == channel_state.channel_num || 0xFFU == channel_num) \
         && true == channel_state.channel_en)
     {
+      tx_sem.tryAcquire();
       ret = send(channel_state, data, size, id, frame_type, protocol);
+      tx_sem.release();
       break;
     }
   }
@@ -474,7 +480,8 @@ void can_driver_model::send(quint8 channel_index)
       msg.frame_type = (FRAME_TYPE_Typedef_t)frame_type_index_;
       msg.protocol = (PROTOCOL_TYPE_Typedef_t)protocol_index_;
       msg.id = id_.toUInt(nullptr, 16);
-      send_msg_list.append(msg);
+      QWriteLocker locker(&tx_msg_rw_lock);
+      send_msg_list.enqueue(msg);
     }
   }
 }

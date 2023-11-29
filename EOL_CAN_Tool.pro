@@ -77,6 +77,9 @@ include(ini_parse/ini_parse.pri)
 # EOL协议
 include(eol_protocol/eol_protocol.pri)
 
+# RTS协议
+include(rts_protocol/rts_protocol.pri)
+
 # 实用工具
 include(utilities/utilities.pri)
 

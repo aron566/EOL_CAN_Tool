@@ -420,14 +420,14 @@ bool network_driver_tcp::network_send_data(const quint8 *data, quint32 len, cons
         if(0xFFFFFFFFU == id)
         {
           tips += tr("send data failed! to addr:%1 ip err").arg(addr);
-          this->show_message(tips, 1U, 0xFFU);
+          this->show_message(tips, 1U, 0U);
           return false;
         }
         auto pchannel = server->getChannelById(id);
         if(0 > pchannel->write(data, len))
         {
           tips += tr("send data failed! to addr:%1").arg(addr);
-          this->show_message(tips, 1U, 0xFFU);
+          this->show_message(tips, 1U, 0U);
           return false;
         }
       }
@@ -446,7 +446,7 @@ bool network_driver_tcp::network_send_data(const quint8 *data, quint32 len, cons
         if(0 > client->send(data, len))
         {
           tips += tr("send data failed! to addr:%1").arg(addr);
-          this->show_message(tips, 0U, 0xFFU);
+          this->show_message(tips, 0U, 0U);
           return false;
         }
       }

@@ -38,6 +38,7 @@
 #include <QThread>
 #include <QRunnable>
 #include <QSemaphore>
+#include <QReadWriteLock>
 #include <QDebug>
 #include "circularqueue.h"
 #include "utility.h"
@@ -123,6 +124,16 @@ public:
     quint8 data_len;
   }CAN_MSG_DISPLAY_Typedef_t;
 
+  /* 异步消息发送数据结构 */
+  typedef struct
+  {
+    QString data;
+    quint32 id;
+    FRAME_TYPE_Typedef_t frame_type;
+    PROTOCOL_TYPE_Typedef_t protocol;
+    quint8 channel_num;
+  }SEND_MSG_Typedef_t;
+
   /* 数据缓冲队列 */
   static CircularQueue *cq_obj;
   static bool device_opened_;
@@ -167,6 +178,7 @@ public:
   static bool can_id_mask_en_;
   static QList<CHANNEL_STATE_Typedef_t>channel_state_list;
 
+  QQueue<SEND_MSG_Typedef_t>send_msg_list;
   /* 消息过滤器 */
   typedef struct
   {
@@ -178,17 +190,9 @@ public:
   QList<MSG_FILTER_Typedef_t>msg_filter_list;
 
   QSemaphore cq_sem;
+  QSemaphore tx_sem;
 
-  /* 异步消息发送数据结构 */
-  typedef struct
-  {
-    QString data;
-    quint32 id;
-    FRAME_TYPE_Typedef_t frame_type;
-    PROTOCOL_TYPE_Typedef_t protocol;
-    quint8 channel_num;
-  }SEND_MSG_Typedef_t;
-  QQueue<SEND_MSG_Typedef_t>send_msg_list;
+  QReadWriteLock tx_msg_rw_lock;
 
   /* 功能显示控制 */
   typedef struct
@@ -326,6 +330,7 @@ public:
       receive_data();
       /* 刷新界面 */
       emit signal_show_can_msg();
+      QThread::msleep(0);
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << "can driver task end";
     thread_run_state = false;

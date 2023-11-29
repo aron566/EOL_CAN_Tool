@@ -100,6 +100,12 @@ private:
    */
   qint32 repeat_check(const QString &ip, const QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t> &msg_list);
 
+  /**
+   * @brief get_peer_port 获取对端地址端口信息
+   * @param ip ip
+   * @return -1失败，端口
+   */
+  qint32 get_peer_port(const QString &ip);
 private:
 
   hv::UdpServer *server = nullptr;/**< udp服务端 */

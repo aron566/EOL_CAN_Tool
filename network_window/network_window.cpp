@@ -500,6 +500,18 @@ bool network_window::char2str(const quint8 *data, quint32 data_len, QString &msg
   return true;
 }
 
+qint32 network_window::get_device_obj(NETWORK_DEVICE_Typedef_t devie_type)
+{
+  for(qint32 i = 0; i < network_device_list.size(); i++)
+  {
+    if(network_device_list.value(i).devie_type == devie_type)
+    {
+      return i;
+    }
+  }
+  return -1;
+}
+
 /** Public application code --------------------------------------------------*/
 /*******************************************************************************
 *
@@ -519,6 +531,7 @@ void network_window::set_network_par(const QString &ip, const QString &port,
   network_info.role = role;
   network_info.net_type = net_type;
   network_info.devie_type = devie_type;
+  network_info.network_driver_obj = nullptr;
 
   /* 查重 */
   NETWORK_DEVICE_INFO_Typedef_t t;
@@ -552,102 +565,66 @@ void network_window::set_network_par(const QString &ip, const QString &port,
 
 bool network_window::network_start(NETWORK_DEVICE_Typedef_t devie_type)
 {
-  NETWORK_DEVICE_INFO_Typedef_t t;
-  for(qint32 i = 0; i < network_device_list.size(); i++)
+  qint32 index = get_device_obj(devie_type);
+  if(-1 == index)
   {
-    t = network_device_list.value(i);
-    if(devie_type == t.devie_type)
-    {
-      goto _start_network;
-    }
+    return false;
   }
-  return false;
 
-_start_network:
+  NETWORK_DEVICE_INFO_Typedef_t t = network_device_list.value(index);
+
   /* udp */
   if(t.net_type == network_driver_model::NETWORK_UDP_TYPE)
   {
-    if(nullptr == network_driver_udp_obj)
+    if(nullptr == t.network_driver_obj)
     {
-      network_driver_udp_obj = new network_driver_udp(this);
-      connect(network_driver_udp_obj, &network_driver_model::signal_show_message, this, &network_window::slot_show_message);
-      connect(network_driver_udp_obj, &network_driver_model::signal_show_thread_message, this, &network_window::slot_show_message_block, Qt::BlockingQueuedConnection);
-      connect(network_driver_udp_obj, &network_driver_model::signal_show_message_bytes, this, &network_window::slot_show_message_bytes);
+      t.network_driver_obj = new network_driver_udp(this);
     }
-    if(false == network_driver_udp_obj->network_init(t.ip, t.port, t.role, t.net_type))
-    {
-      return false;
-    }
-    if(false == network_driver_udp_obj->network_start())
-    {
-      return false;
-    }
-    return true;
   }
   /* tcp */
   else if(t.net_type == network_driver_model::NETWORK_TCP_TYPE)
   {
-    if(nullptr == network_driver_tcp_obj)
+    if(nullptr == t.network_driver_obj)
     {
-      network_driver_tcp_obj = new network_driver_tcp(this);
-      connect(network_driver_tcp_obj, &network_driver_model::signal_show_message, this, &network_window::slot_show_message);
-      connect(network_driver_tcp_obj, &network_driver_model::signal_show_thread_message, this, &network_window::slot_show_message_block, Qt::BlockingQueuedConnection);
-      connect(network_driver_tcp_obj, &network_driver_model::signal_show_message_bytes, this, &network_window::slot_show_message_bytes);
+      t.network_driver_obj = new network_driver_tcp(this);
     }
-    if(false == network_driver_tcp_obj->network_init(t.ip, t.port, t.role, t.net_type))
-    {
-      return false;
-    }
-    if(false == network_driver_tcp_obj->network_start())
-    {
-      return false;
-    }
-    return true;
   }
   else
   {
     /* to do nothing */
+    return false;
   }
-  return false;
+  /* 修改配置 */
+  network_device_list.replace(index, t);
+  connect(t.network_driver_obj, &network_driver_model::signal_show_message, this, &network_window::slot_show_message);
+  connect(t.network_driver_obj, &network_driver_model::signal_show_thread_message, this, &network_window::slot_show_message_block, Qt::BlockingQueuedConnection);
+  connect(t.network_driver_obj, &network_driver_model::signal_show_message_bytes, this, &network_window::slot_show_message_bytes);
+  if(false == t.network_driver_obj->network_init(t.ip, t.port, t.role, t.net_type))
+  {
+    return false;
+  }
+  if(false == t.network_driver_obj->network_start())
+  {
+    return false;
+  }
+  return true;
 }
 
 bool network_window::network_stop(NETWORK_DEVICE_Typedef_t devie_type)
 {
-  NETWORK_DEVICE_INFO_Typedef_t t;
-  for(qint32 i = 0; i < network_device_list.size(); i++)
+  qint32 index = get_device_obj(devie_type);
+  if(-1 == index)
   {
-    t = network_device_list.value(i);
-    if(devie_type == t.devie_type)
-    {
-      goto _stop_network;
-    }
+    return false;
   }
-  return false;
 
-_stop_network:
-  /* udp */
-  if(t.net_type == network_driver_model::NETWORK_UDP_TYPE)
+  NETWORK_DEVICE_INFO_Typedef_t t = network_device_list.value(index);
+
+  if(nullptr == t.network_driver_obj)
   {
-    if(nullptr == network_driver_udp_obj)
-    {
-      return false;
-    }
-    return network_driver_udp_obj->network_stop();
+    return false;
   }
-  /* tcp */
-  else if(t.net_type == network_driver_model::NETWORK_TCP_TYPE)
-  {
-    if(nullptr == network_driver_tcp_obj)
-    {
-      return false;
-    }
-    return network_driver_tcp_obj->network_stop();
-  }
-  else
-  {
-    /* to do nothing */
-  }
-  return false;
+  return t.network_driver_obj->network_stop();
 }
 
 void network_window::slot_show_message(const QString &message, quint32 channel_num, \
@@ -850,15 +827,16 @@ void network_window::on_send_pushButton_clicked()
   qint32 send_type = ui->send_type_comboBox->currentIndex();
   network_driver_model::NETWORK_WORK_ROLE_Typedef_t role = (network_driver_model::NETWORK_WORK_ROLE_Typedef_t)ui->role_comboBox->currentIndex();
   network_driver_model::NETWORK_TYPE_Typedef_t net_type = (network_driver_model::NETWORK_TYPE_Typedef_t)ui->net_type_comboBox->currentIndex();
-  network_driver_model *pobj = nullptr;
-  if(network_driver_model::NETWORK_UDP_TYPE == net_type)
+  NETWORK_DEVICE_Typedef_t device_type = (NETWORK_DEVICE_Typedef_t)ui->device_comboBox->currentIndex();
+  qint32 index = get_device_obj(device_type);
+  if(-1 == index)
   {
-    pobj = network_driver_udp_obj;
+    return;
   }
-  if(network_driver_model::NETWORK_TCP_TYPE == net_type)
-  {
-    pobj = network_driver_tcp_obj;
-  }
+
+  NETWORK_DEVICE_INFO_Typedef_t t = network_device_list.value(index);
+  network_driver_model *pobj = t.network_driver_obj;
+
   if(nullptr == pobj)
   {
     return;

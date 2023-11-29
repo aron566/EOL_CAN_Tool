@@ -446,6 +446,20 @@
       <item row="0" column="0" colspan="6">
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
+         <widget class="QComboBox" name="device_comboBox">
+          <item>
+           <property name="text">
+            <string>RTS</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>PLC</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="host_label">
           <property name="text">
            <string>Address：</string>

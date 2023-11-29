@@ -119,40 +119,21 @@ void frame_diagnosis::frame_translation(uint16_t id, const quint8 *data, quint32
   /* 转换can to canfd */
   if(ui->frame_translation_comboBox->currentText() == "CAN2CANFD" && 0U == protocol_type)
   {
-    /* 设置发送的canid */
-    can_driver_obj->set_message_id(QString::number(id, 16));
-    /* 设置发送协议类型 */
-    can_driver_obj->set_protocol_type((quint32)1U);
-    /* 设置发送帧类型 */
-    can_driver_obj->set_frame_type((quint32)0U);
-
-    QString data_str = utility::array2hexstr(data, len, " ");
-    /* 设置消息数据 */
-    can_driver_obj->set_message_data(data_str);
-    /* 发送 */
-    can_driver_obj->send((quint8)channel_num);
+    can_driver_obj->send(data, (quint8)(len),
+                         id,
+                         can_driver_model::STD_FRAME_TYPE,
+                         can_driver_model::CANFD_PROTOCOL_TYPE,
+                         (quint8)channel_num);
   }
   /* 转换 canfd to can */
   else if(ui->frame_translation_comboBox->currentText() == "CANFD2CAN" && 1U == protocol_type)
   {
-    /* 设置发送的canid */
-    can_driver_obj->set_message_id(QString::number(id, 16));
-    /* 设置发送协议类型 */
-    can_driver_obj->set_protocol_type((quint32)0U);
-    /* 设置发送帧类型 */
-    can_driver_obj->set_frame_type((quint32)0U);
-
     quint32 index = 0;
     quint32 loop_time = (len + 7U) / 8U;
     for(quint32 i = 0; i < loop_time; i++)
     {
       if((index + 8U) > len)
       {
-        QString data_str = utility::array2hexstr(data + index, (quint32)len - index, " ");
-        /* 设置消息数据 */
-        can_driver_obj->set_message_data(data_str);
-        /* 发送 */
-//        can_driver_obj->send((quint8)channel_num);
         can_driver_obj->send(data + index, (quint8)(len - index),
                              id,
                              can_driver_model::STD_FRAME_TYPE,
@@ -162,11 +143,6 @@ void frame_diagnosis::frame_translation(uint16_t id, const quint8 *data, quint32
       }
       else
       {
-        QString data_str = utility::array2hexstr(data + index, 8U, " ");
-        /* 设置消息数据 */
-        can_driver_obj->set_message_data(data_str);
-        /* 发送 */
-//        can_driver_obj->send((quint8)channel_num);
         can_driver_obj->send(data + index, 8U,
                              id,
                              can_driver_model::STD_FRAME_TYPE,

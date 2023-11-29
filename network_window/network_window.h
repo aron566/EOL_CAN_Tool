@@ -122,6 +122,7 @@ private:
     network_driver_model::NETWORK_WORK_ROLE_Typedef_t role;
     network_driver_model::NETWORK_TYPE_Typedef_t net_type;
     NETWORK_DEVICE_Typedef_t devie_type;
+    network_driver_model *network_driver_obj;/**< 网络驱动 */
   }NETWORK_DEVICE_INFO_Typedef_t;
 
 private:
@@ -183,6 +184,13 @@ private:
    * @brief show_txt
    */
   void show_txt();
+
+  /**
+   * @brief get_device_obj
+   * @param devie_type
+   * @return 返回对象信息所在index
+   */
+  qint32 get_device_obj(NETWORK_DEVICE_Typedef_t devie_type);
 
 public slots:
   /**
@@ -266,8 +274,6 @@ private:
   quint64 current_show_line_str_time_ms = 0;
 
   QList<NETWORK_DEVICE_INFO_Typedef_t>network_device_list;
-  network_driver_model *network_driver_tcp_obj = nullptr;/**< 网络驱动 */
-  network_driver_model *network_driver_udp_obj = nullptr;/**< 网络驱动 */
 };
 
 #endif // NETWORK_WINDOW_H
