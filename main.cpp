@@ -81,6 +81,7 @@
  *  <tr><td>2023-11-16 <td>v1.2.5  <td>aron566 <td>修复ts未发出canfd报文问题
  *  <tr><td>2023-11-21 <td>v1.2.6  <td>aron566 <td>增加网络接口及调试页面，修复打开设备导致消息框清空问题，报文诊断页面增加转译功能
  *  <tr><td>2023-11-29 <td>v1.2.7  <td>aron566 <td>修复can发送数据参数无法恢复问题，优化初始化网络设备支持多协议，优化打印
+ *  <tr><td>2023-11-30 <td>v1.2.8  <td>aron566 <td>主界面网络设置优化避免歧义
  *  </table>
  */
 #include "mainwindow.h"
@@ -88,7 +89,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.7"
+#define PC_SOFTWARE_VERSION       "1.2.8"
 
 int main(int argc, char *argv[])
 {

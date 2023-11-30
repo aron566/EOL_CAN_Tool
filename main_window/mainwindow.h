@@ -168,5 +168,7 @@ private slots:
   void on_plc_start_pushButton_clicked();
   void on_plc_stop_pushButton_clicked();
   void on_rts_stop_pushButton_clicked();
+  void on_rts_role_comboBox_currentIndexChanged(int index);
+  void on_plc_role_comboBox_currentIndexChanged(int index);
 };
 #endif // MAINWINDOW_H

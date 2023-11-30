@@ -78,6 +78,9 @@ network_window::network_window(QString title, QWidget *parent) :
   /* 启动定时器 */
   timer_init();
 
+  /* 禁用端口输入 */
+  ui->port_lineEdit->setEnabled(false);
+
   ui->client_plainTextEdit->setVisible(true);
   ui->server_plainTextEdit->setVisible(true);
   ui->client_plainTextEdit->setUndoRedoEnabled(false);
@@ -776,6 +779,7 @@ void network_window::slot_timeout()
     on_send_pushButton_clicked();
   }
 
+  show_line_str_force = true;/* 强制输出字符 */
   current_show_line_str_time_ms++;
   /* 检查没有换行符的字符显示 */
   if((current_show_line_str_time_ms - last_show_line_str_time_ms) > SHOW_CHAR_TIMEOUT_MS_MAX || (quint32)show_line_str.size() > SHOW_LINE_CHAR_NUM_MAX)
@@ -1004,6 +1008,43 @@ void network_window::on_crc_pushButton_clicked()
     default:
       break;
   }
+}
+
+void network_window::on_role_comboBox_currentIndexChanged(int index)
+{
+  switch (index)
+  {
+    /* 服务器 */
+    case 0:
+      {
+        ui->port_lineEdit->setEnabled(false);
+        ui->ip_lineEdit->setEnabled(true);
+      }
+      break;
+
+    /* 客户端 */
+    case 1:
+      {
+        if(ui->net_type_comboBox->currentText() == "TCP")
+        {
+          ui->ip_lineEdit->setEnabled(false);
+          ui->port_lineEdit->setEnabled(false);
+        }
+        else
+        {
+          ui->port_lineEdit->setEnabled(true);
+        }
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+void network_window::on_net_type_comboBox_currentIndexChanged(int index)
+{
+  Q_UNUSED(index)
+  on_role_comboBox_currentIndexChanged(ui->role_comboBox->currentIndex());
 }
 
 /******************************** End of file *********************************/

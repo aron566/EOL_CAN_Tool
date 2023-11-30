@@ -238,6 +238,10 @@ private slots:
 
   void on_crc_pushButton_clicked();
 
+  void on_role_comboBox_currentIndexChanged(int index);
+
+  void on_net_type_comboBox_currentIndexChanged(int index);
+
 private:
   Ui::network_window *ui;
 

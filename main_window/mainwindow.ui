@@ -985,14 +985,14 @@
                </widget>
               </item>
               <item row="1" column="0">
-               <widget class="QLabel" name="rts_remote_ip_label">
+               <widget class="QLabel" name="rts_com_ip_label">
                 <property name="text">
-                 <string>服务器IP：</string>
+                 <string>通讯IP：</string>
                 </property>
                </widget>
               </item>
               <item row="1" column="1" colspan="2">
-               <widget class="QLineEdit" name="rts_remote_ip_lineEdit">
+               <widget class="QLineEdit" name="rts_com_ip_lineEdit">
                 <property name="text">
                  <string>192.168.3.176</string>
                 </property>
@@ -1103,14 +1103,14 @@
                </widget>
               </item>
               <item row="1" column="0">
-               <widget class="QLabel" name="plc_remote_ip_label">
+               <widget class="QLabel" name="plc_com_ip_label">
                 <property name="text">
-                 <string>服务器IP：</string>
+                 <string>通讯IP：</string>
                 </property>
                </widget>
               </item>
               <item row="1" column="1" colspan="2">
-               <widget class="QLineEdit" name="plc_remote_ip_lineEdit">
+               <widget class="QLineEdit" name="plc_com_ip_lineEdit">
                 <property name="text">
                  <string>192.168.3.176</string>
                 </property>
