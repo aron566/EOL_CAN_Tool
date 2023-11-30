@@ -79,8 +79,11 @@ class CircularQueue : public QObject
   CircularQueue(DATA_TYPE_Typedef_t type, CQ_BUF_SIZE_ENUM_TypeDef size, QObject *parent = nullptr);
   ~CircularQueue()
   {
-    delete[] CQ_Handle->Buffer.data64Buffer; /**< 删除缓冲区 */
-    delete CQ_Handle;                        /**< 删除句柄 */
+    if(nullptr != CQ_Handle)
+    {
+      delete[] CQ_Handle->Buffer.data64Buffer; /**< 删除缓冲区 */
+      delete CQ_Handle;                        /**< 删除句柄 */
+    }
   }
 
   public:

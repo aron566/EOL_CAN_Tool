@@ -1008,7 +1008,7 @@
               <item row="1" column="4" colspan="2">
                <widget class="QLineEdit" name="rts_remote_port_lineEdit">
                 <property name="text">
-                 <string>8000</string>
+                 <string>12000</string>
                 </property>
                </widget>
               </item>
@@ -1022,7 +1022,7 @@
               <item row="1" column="7">
                <widget class="QLineEdit" name="rts_local_port_lineEdit">
                 <property name="text">
-                 <string>1080</string>
+                 <string>12000</string>
                 </property>
                </widget>
               </item>
@@ -1126,7 +1126,7 @@
               <item row="1" column="4" colspan="2">
                <widget class="QLineEdit" name="plc_remote_port_lineEdit">
                 <property name="text">
-                 <string>8000</string>
+                 <string>502</string>
                 </property>
                </widget>
               </item>
@@ -1140,7 +1140,7 @@
               <item row="1" column="7">
                <widget class="QLineEdit" name="plc_local_port_lineEdit">
                 <property name="text">
-                 <string>1080</string>
+                 <string>502</string>
                 </property>
                </widget>
               </item>

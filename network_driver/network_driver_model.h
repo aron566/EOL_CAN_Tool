@@ -34,7 +34,7 @@
 #include <QObject>
 #include <QQueue>
 #include <QDebug>
-
+#include "utilities/circularqueue.h"
 /** Private defines ----------------------------------------------------------*/
 /** Exported typedefines -----------------------------------------------------*/
 /** Exported constants -------------------------------------------------------*/
@@ -70,20 +70,17 @@ public:
     QString peer_addr;
     quint32 id;/**< for tcp */
     NETWORK_TYPE_Typedef_t net_type;
-    QQueue<quint8>queue;
+    quint8 buffer[512U];
+    CircularQueue::CQ_handleTypeDef cq;
+    CircularQueue::CQ_handleTypeDef *pcq_obj;
   }NETWORK_PEER_INFO_Typedef_t;
 
-signals:
+public:
 
-  /**
-   * @brief 发送数据接收信号
-   * @param data 数据
-   * @param len 数据长度
-   * @param ip ip
-   * @param role 角色 @ref NETWORK_WORK_ROLE_Typedef_t
-   * @param net_type 网络类型 @ref NETWORK_TYPE_Typedef_t
-   */
-  void signal_rec_data(const quint8 *data, quint32 len, QString &ip, quint8 role, quint8 net_type);
+  QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t>client_rec_msg_list;/**< 客户端接收服务器消息列表 */
+  QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t>server_rec_msg_list;/**< 服务器接收客户端消息列表 */
+
+signals:
 
   /**
    * @brief 发送信号显示当前消息
@@ -135,6 +132,14 @@ public:
    * @return
    */
   virtual bool network_send_data(const quint8 *data, quint32 len, const QString &ip, const QString &port, NETWORK_WORK_ROLE_Typedef_t role = NETWORK_CLIENT_ROLE, NETWORK_TYPE_Typedef_t net_type = NETWORK_UDP_TYPE) = 0;
+
+  /**
+   * @brief network_get_rec_data 获取网络数据
+   * @param ip ip地址
+   * @param role 角色 0服务器 1客户端
+   * @return
+   */
+  virtual CircularQueue::CQ_handleTypeDef *network_get_rec_data(const QString &ip, NETWORK_WORK_ROLE_Typedef_t role = NETWORK_CLIENT_ROLE) = 0;
 
 public:
   /**

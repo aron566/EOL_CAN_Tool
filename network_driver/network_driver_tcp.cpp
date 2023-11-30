@@ -55,11 +55,11 @@ network_driver_tcp::~network_driver_tcp()
   network_stop();
 }
 
-qint32 network_driver_tcp::repeat_check(const QString &ip, quint32 id, const QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t> &msg_list)
+qint32 network_driver_tcp::repeat_check(const QString &ip, const QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t> &msg_list)
 {
   for(qint32 i = 0; i < msg_list.size(); i++)
   {
-    if(true == msg_list.value(i).peer_addr.contains(ip) && msg_list.value(i).id == id)
+    if(true == msg_list.value(i).peer_addr.contains(ip))
     {
       return i;
     }
@@ -133,28 +133,37 @@ bool network_driver_tcp::network_init(QString &ip, QString &port, NETWORK_WORK_R
           peer_data.id = channel->id();
 
           /* 地址查询 */
-          qint32 index = repeat_check(peer_data.peer_addr, peer_data.id, server_rec_msg_list);
+          QStringList info = peer_data.peer_addr.split(":");
+          if(2 > info.size())
+          {
+            return;
+          }
+          qint32 index = repeat_check(info.value(0), server_rec_msg_list);
           if(-1 != index)
           {
             peer_data = server_rec_msg_list.value(index);
-            /* 对方数据 */
-            for(quint32 i = 0U; i < buf->size(); i++)
+            /* 判断是否是重连，更新对方地址信息 */
+            if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
             {
-              peer_data.queue.append((quint8)buf->base[i]);
+              peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
             }
+            /* 对方数据 */
+            peer_data.pcq_obj = &peer_data.cq;
+            CircularQueue::CQ_putData(&peer_data.cq, (quint8 *)buf->base, buf->size());
             server_rec_msg_list.replace(index, peer_data);
+            goto _show_server_rx_msg;
           }
 
           /* 对方网络类型 */
           peer_data.net_type = NETWORK_TCP_TYPE;
 
           /* 对方数据 */
-          for(quint32 i = 0U; i < buf->size(); i++)
-          {
-            peer_data.queue.append((quint8)buf->base[i]);
-          }
+          peer_data.pcq_obj = &peer_data.cq;
+          CircularQueue::CQ_init(&peer_data.cq, (quint8 *)peer_data.buffer, sizeof(peer_data.buffer));
+          CircularQueue::CQ_putData(&peer_data.cq, (quint8 *)buf->base, buf->size());
           server_rec_msg_list.append(peer_data);
 
+_show_server_rx_msg:
           QString tips;
           tips = QString::asprintf("[TCP SERVER]Rx ADDR:%s LEN:%llu DATA:", channel->peeraddr().c_str(), buf->size());
           for(quint32 i = 0; i < buf->size(); ++i)
@@ -174,20 +183,25 @@ bool network_driver_tcp::network_init(QString &ip, QString &port, NETWORK_WORK_R
           peer_data.id = channel->id();
           peer_data.net_type = NETWORK_TCP_TYPE;
 
+          QStringList info = peer_data.peer_addr.split(":");
+          if(2 > info.size())
+          {
+            return;
+          }
+
           QString tips;
           if(true == channel->isConnected())
           {
-            qint32 index = repeat_check(peer_data.peer_addr, peer_data.id, server_rec_msg_list);
+            qint32 index = repeat_check(info.value(0), server_rec_msg_list);
             if(-1 == index)
             {
-              qDebug() << "add" << channel->peeraddr().c_str() << peer_data.id;
               server_rec_msg_list.append(peer_data);
             }
             tips = QString::asprintf("tcp server addr:%s connfd=%d connected!", channel->peeraddr().c_str(), channel->fd());
           }
           else
           {
-            qint32 index = repeat_check(peer_data.peer_addr, peer_data.id, server_rec_msg_list);
+            qint32 index = repeat_check(info.value(0), server_rec_msg_list);
             if(-1 != index)
             {
               server_rec_msg_list.removeAt(index);
@@ -242,10 +256,16 @@ bool network_driver_tcp::network_init(QString &ip, QString &port, NETWORK_WORK_R
           peer_data.id = channel->id();
           peer_data.net_type = NETWORK_TCP_TYPE;
 
+          QStringList info = peer_data.peer_addr.split(":");
+          if(2 > info.size())
+          {
+            return;
+          }
+
           QString tips;
           if(true == channel->isConnected())
           {
-            qint32 index = repeat_check(peer_data.peer_addr, peer_data.id, client_rec_msg_list);
+            qint32 index = repeat_check(info.value(0), client_rec_msg_list);
             if(-1 == index)
             {
               client_rec_msg_list.append(peer_data);
@@ -254,7 +274,7 @@ bool network_driver_tcp::network_init(QString &ip, QString &port, NETWORK_WORK_R
           }
           else
           {
-            qint32 index = repeat_check(peer_data.peer_addr, peer_data.id, client_rec_msg_list);
+            qint32 index = repeat_check(info.value(0), client_rec_msg_list);
             if(-1 != index)
             {
               client_rec_msg_list.removeAt(index);
@@ -272,29 +292,39 @@ bool network_driver_tcp::network_init(QString &ip, QString &port, NETWORK_WORK_R
           peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
           peer_data.id = channel->id();
 
+          QStringList info = peer_data.peer_addr.split(":");
+          if(2 > info.size())
+          {
+            return;
+          }
+
           /* 地址查询 */
-          qint32 index = repeat_check(peer_data.peer_addr, peer_data.id, client_rec_msg_list);
+          qint32 index = repeat_check(info.value(0), client_rec_msg_list);
           if(-1 != index)
           {
             peer_data = client_rec_msg_list.value(index);
-            /* 对方数据 */
-            for(quint32 i = 0U; i < buf->size(); i++)
+            /* 判断是否是重连，更新对方地址信息 */
+            if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
             {
-              peer_data.queue.append((quint8)buf->base[i]);
+              peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
             }
+            /* 对方数据 */
+            peer_data.pcq_obj = &peer_data.cq;
+            CircularQueue::CQ_putData(&peer_data.cq, (quint8 *)buf->base, buf->size());
             client_rec_msg_list.replace(index, peer_data);
+            goto _show_client_rx_msg;
           }
 
           /* 对方网络类型 */
           peer_data.net_type = NETWORK_TCP_TYPE;
 
           /* 对方数据 */
-          for(quint32 i = 0U; i < buf->size(); i++)
-          {
-            peer_data.queue.append((quint8)buf->base[i]);
-          }
+          peer_data.pcq_obj = &peer_data.cq;
+          CircularQueue::CQ_init(&peer_data.cq, (quint8 *)peer_data.buffer, sizeof(peer_data.buffer));
+          CircularQueue::CQ_putData(&peer_data.cq, (quint8 *)buf->base, buf->size());
           client_rec_msg_list.append(peer_data);
 
+_show_client_rx_msg:
           QString tips;
           tips = QString::asprintf("[TCP CLIENT]Rx ADDR:%s LEN:%llu DATA:", peer_data.peer_addr.toStdString().data(), buf->size());
           for(quint32 i = 0; i < buf->size(); ++i)
@@ -456,6 +486,43 @@ bool network_driver_tcp::network_send_data(const quint8 *data, quint32 len, cons
       return false;
   }
   return true;
+}
+
+
+/**
+   * @brief network_get_rec_data 获取网络数据
+   * @param ip ip地址
+   * @param role 角色 0服务器 1客户端
+   * @return
+   */
+CircularQueue::CQ_handleTypeDef *network_driver_tcp::network_get_rec_data(const QString &ip, NETWORK_WORK_ROLE_Typedef_t role)
+{
+  /* 地址查询 */
+  qint32 index = -1;
+  network_driver_model::NETWORK_PEER_INFO_Typedef_t peer_data;
+
+  switch(role)
+  {
+    case NETWORK_SERVER_ROLE:
+      repeat_check(ip, server_rec_msg_list);
+      if(-1 != index)
+      {
+        peer_data = server_rec_msg_list.value(index);
+        return peer_data.pcq_obj;
+      }
+      break;
+    case NETWORK_CLIENT_ROLE:
+      repeat_check(ip, client_rec_msg_list);
+      if(-1 != index)
+      {
+        peer_data = client_rec_msg_list.value(index);
+        return peer_data.pcq_obj;
+      }
+      break;
+    default:
+      return nullptr;
+  }
+  return nullptr;
 }
 
 /******************************** End of file *********************************/

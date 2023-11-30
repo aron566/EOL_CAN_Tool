@@ -7,6 +7,8 @@ QT       += svg
 QT       += xml
 QT       += network
 QT       += concurrent
+# modbus / can driver
+QT       += serialbus
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 CONFIG += c++11

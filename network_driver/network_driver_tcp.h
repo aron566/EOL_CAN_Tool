@@ -84,22 +84,24 @@ public:
    * @param net_type 本机网络类型
    * @return
    */
-  virtual bool network_send_data(const quint8 *data, quint32 len, const QString &ip, const QString &port, NETWORK_WORK_ROLE_Typedef_t role = NETWORK_CLIENT_ROLE, NETWORK_TYPE_Typedef_t net_type = NETWORK_UDP_TYPE);
+  virtual bool network_send_data(const quint8 *data, quint32 len, const QString &ip, const QString &port, NETWORK_WORK_ROLE_Typedef_t role = NETWORK_CLIENT_ROLE, NETWORK_TYPE_Typedef_t net_type = NETWORK_UDP_TYPE) override;
 
-public:
-
-  QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t>client_rec_msg_list;/**< 客户端接收服务器消息列表 */
-  QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t>server_rec_msg_list;/**< 服务器接收客户端消息列表 */
+  /**
+   * @brief network_get_rec_data 获取网络数据
+   * @param ip ip地址
+   * @param role 角色 0服务器 1客户端
+   * @return
+   */
+  virtual CircularQueue::CQ_handleTypeDef *network_get_rec_data(const QString &ip, NETWORK_WORK_ROLE_Typedef_t role = NETWORK_CLIENT_ROLE) override;
 
 private:
   /**
    * @brief repeat_check 重复检测
    * @param ip 地址
-   * @param id 通讯唯一id
    * @param msg_list 消息列表
    * @return -1不重复 重复所在index
    */
-  qint32 repeat_check(const QString &ip, quint32 id, const QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t> &msg_list);
+  qint32 repeat_check(const QString &ip, const QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t> &msg_list);
 
   /**
    * @brief get_msg_id
