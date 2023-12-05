@@ -310,6 +310,7 @@ public:
     EOL_CAN_HW = 0,       /**< can发送数据 */
     EOL_SERIAL_HW,        /**< 串口发送数据 */
     EOL_ETH_HW,           /**< 网络发送数据 */
+    EOL_LIN_HW,           /**< LIN端口发送数据 */
   }EOL_SEND_HW_Typedef_t;
 
   typedef struct EOL_TASK_LIST_

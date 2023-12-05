@@ -15,6 +15,9 @@
 #include "eol_calibration_window.h"
 #include "eol_angle_calibration_window/eol_angle_calibration_window.h"
 #include "debug_window/debug_window.h"
+#include "rts_ctrl_window/rts_ctrl_window.h"
+#include "rts_protocol/rts_protocol.h"
+#include "network_driver/network_driver_model.h"
 
 namespace Ui {
 class eol_window;
@@ -42,6 +45,19 @@ public:
    * @param can_driver_obj
    */
   void set_can_driver_obj(can_driver_model *can_driver_obj);
+
+  /**
+   * @brief 设置rts网络驱动接口
+   * @param network_driver_send_obj 发送
+   * @param network_driver_rec_obj 接收
+   */
+  void set_rts_driver_obj(network_driver_model *network_driver_send_obj, network_driver_model *network_driver_rec_obj);
+
+  /**
+   * @brief 设置rts网络驱动接口
+   * @param can_driver_obj
+   */
+//  void set_plc_driver_obj(network_driver_model *network_driver_obj);
 
   /**
    * @brief eol协议窗口线程启动
@@ -170,6 +186,25 @@ private slots:
    * @brief eol协议栈已启动
    */
   void slot_eol_protol_is_start();
+
+
+  /**
+   * @brief 协议栈无回复超时
+   * @param sec 秒
+   */
+  void slot_rts_protocol_timeout(quint32 sec);
+
+  /**
+   * @brief 从机返回错误消息
+   * @param error_msg 错误消息
+   */
+  void slot_rts_protocol_error_occur(quint8 error_msg);
+
+  /**
+   * @brief signal_protocol_rw_err 读写错误信号
+   * @param cmd 命令
+   */
+  void slot_rts_protocol_rw_err(QString cmd);
 private:
   quint32 time_cnt = 0;
 
@@ -210,6 +245,10 @@ private:
   eol_calibration_window *eol_calibration_window_obj = nullptr;
   eol_angle_calibration_window *eol_2dfft_calibration_window_obj = nullptr;
   debug_window *debug_window_window_obj = nullptr;
+  rts_protocol *rts_protocol_obj = nullptr;
+  rts_ctrl_window *rts_ctrl_window_obj = nullptr;
+  network_driver_model *rts_network_driver_send_obj = nullptr;
+  network_driver_model *rts_network_driver_rec_obj = nullptr;
 
   bool thread_run_state = false;
 
@@ -293,10 +332,23 @@ private:
   void eol_debug_window_init(QString title);
 
   /**
+   * @brief RTS控制页面初始化
+   * @param title 窗口标题
+   */
+  void rts_ctrl_window_init(QString title);
+
+  /**
    * @brief eol协议栈初始化
    * @param can_driver_obj can驱动接口
    */
   void eol_protocol_init(can_driver_model *can_driver_obj);
+
+  /**
+   * @brief rts协议栈初始化
+   * @param network_driver_send_obj 网络驱动send接口
+   * @param network_driver_rec_obj 网络驱动rec接口
+   */
+  void rts_protocol_init(network_driver_model *network_driver_send_obj, network_driver_model *network_driver_rec_obj);
 
   /**
    * @brief 保存配置
@@ -417,6 +469,10 @@ private slots:
   void on_vcom_config_lineEdit_textChanged(const QString &arg1);
   void on_dev_addr_lineEdit_textChanged(const QString &arg1);
   void on_export_all_pushButton_clicked();
+  void on_rts_crl_pushButton_clicked();
+  void on_open_rts_pushButton_clicked();
+  void on_close_rts_pushButton_clicked();
+  void on_rts_addr_lineEdit_editingFinished();
 };
 
 #endif // EOL_WINDOW_H

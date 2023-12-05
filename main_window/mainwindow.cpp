@@ -103,10 +103,10 @@ MainWindow::MainWindow(QWidget *parent)
   /* 设置提示值 */
   ui->rts_com_ip_lineEdit->setPlaceholderText("0.0.0.0");
   ui->plc_com_ip_lineEdit->setPlaceholderText("0.0.0.0");
-  ui->rts_remote_port_lineEdit->setPlaceholderText("12000");
-  ui->plc_remote_port_lineEdit->setPlaceholderText("12000");
-  ui->rts_local_port_lineEdit->setPlaceholderText("12003");
-  ui->plc_local_port_lineEdit->setPlaceholderText("12003");
+  ui->rts_remote_port_lineEdit->setPlaceholderText("12002");
+  ui->plc_remote_port_lineEdit->setPlaceholderText("503");
+  ui->rts_local_port_lineEdit->setPlaceholderText("12001");
+  ui->plc_local_port_lineEdit->setPlaceholderText("503");
 
   /* 设置悬浮提示 */
   ui->rts_com_ip_lineEdit->setToolTip(tr("0.0.0.0 listen any ip port, 127.0.0.1 local host for local test"));

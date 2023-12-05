@@ -42,9 +42,19 @@ eol_window::eol_window(QString title, QWidget *parent) :
   ui->ant_calibration_func_pushButton->setEnabled(false);
   ui->rcs_calibration_func_pushButton->setEnabled(false);
 
+  /* 关闭按钮显示 */
+  ui->rts_crl_pushButton->setVisible(false);
+  ui->open_rts_pushButton->setVisible(false);
+  ui->close_rts_pushButton->setVisible(false);
+  ui->plc_crl_pushButton->setVisible(false);
+  ui->open_plc_pushButton->setVisible(false);
+  ui->close_plc_pushButton->setVisible(false);
+
   /* 设置提示值 */
   ui->com_config_lineEdit->setPlaceholderText("0 or 1 or 255");
   ui->dev_addr_lineEdit->setPlaceholderText("85 or 4 5 6 7");
+  ui->rts_addr_lineEdit->setPlaceholderText("192.168.3.181:12001");
+  ui->plc_addr_lineEdit->setPlaceholderText("192.168.3.182:503");
 
   /* 设置悬浮提示 */
   ui->com_hw_comboBox->setToolTip(tr("eol hw select"));
@@ -70,6 +80,9 @@ eol_window::eol_window(QString title, QWidget *parent) :
 
   /* 调试参数初始化 */
   eol_debug_window_init(tr("EOL CAN Tool - Debug Par"));
+
+  /* rts手动控制窗口初始化 */
+  rts_ctrl_window_init(tr("EOL CAN Tool - RTS CTL"));
 
   /* 设置临时文件模板名称 */
   QString strFileName = QDir::tempPath() + QDir::separator() +
@@ -107,6 +120,9 @@ eol_window::~eol_window()
 
   delete debug_window_window_obj;
   qDebug() << "del debug_window_window_obj";
+
+  delete rts_ctrl_window_obj;
+  qDebug() << "del rts_ctrl_window_obj";
 
   delete ui;
   qDebug() << "del eol_window";
@@ -177,6 +193,32 @@ void eol_window::eol_debug_window_init(QString title)
   connect(debug_window_window_obj, &debug_window::signal_send_command_char, this, &eol_window::slot_send_command_char);
 }
 
+void eol_window::rts_ctrl_window_init(QString title)
+{
+  rts_ctrl_window_obj = new rts_ctrl_window(title);
+  connect(rts_ctrl_window_obj, &rts_ctrl_window::signal_window_closed, this, &eol_window::slot_show_this_window);
+}
+
+void eol_window::set_rts_driver_obj(network_driver_model *network_driver_send_obj, network_driver_model *network_driver_rec_obj)
+{
+  /* 初始化rts协议栈 */
+  rts_protocol_init(network_driver_send_obj, network_driver_rec_obj);
+
+  /* 接收网络驱动断开信号 */
+  connect(network_driver_send_obj, &network_driver_model::signal_network_is_closed, this, [this]{
+    this->rts_protocol_obj->stop_task();
+    /* 关闭按钮显示 */
+    ui->rts_crl_pushButton->setVisible(false);
+    ui->open_rts_pushButton->setVisible(false);
+    ui->close_rts_pushButton->setVisible(false);
+  });
+
+  /* 显示按钮 */
+  ui->rts_crl_pushButton->setVisible(true);
+  ui->open_rts_pushButton->setVisible(true);
+  ui->close_rts_pushButton->setVisible(true);
+}
+
 void eol_window::set_can_driver_obj(can_driver_model *can_driver_obj)
 {
   /* 接收can驱动断开信号 */
@@ -232,6 +274,21 @@ void eol_window::eol_protocol_init(can_driver_model *can_driver_obj)
   read_cfg();
 }
 
+void eol_window::rts_protocol_init(network_driver_model *network_driver_send_obj, network_driver_model *network_driver_rec_obj)
+{
+  rts_network_driver_send_obj = network_driver_send_obj;
+  rts_network_driver_rec_obj = network_driver_rec_obj;
+  /* rts协议栈初始化 */
+  rts_protocol_obj = new rts_protocol(this);
+
+  /* 设置rts通讯地址 */
+  rts_protocol_obj->set_network_device(rts_network_driver_send_obj, rts_network_driver_rec_obj, ui->rts_addr_lineEdit->text());
+
+  connect(rts_protocol_obj, &rts_protocol::signal_protocol_error_occur, this, &eol_window::slot_rts_protocol_error_occur);
+  connect(rts_protocol_obj, &rts_protocol::signal_protocol_timeout, this, &eol_window::slot_rts_protocol_timeout);
+  connect(rts_protocol_obj, &rts_protocol::signal_protocol_rw_err, this, &eol_window::slot_rts_protocol_rw_err);
+}
+
 void eol_window::timer_init()
 {
   timer_obj = new QTimer(this);
@@ -250,6 +307,10 @@ void eol_window::save_cfg()
   setting.setValue("eol_window_v" CONFIG_VER_STR "/eol_com_channel", ui->com_config_lineEdit->text());
   setting.setValue("eol_window_v" CONFIG_VER_STR "/eol_vcom_channel", ui->vcom_config_lineEdit->text());
   setting.setValue("eol_window_v" CONFIG_VER_STR "/eol_dev_addr", ui->dev_addr_lineEdit->text());
+  /* rts */
+  setting.setValue("eol_window_v" CONFIG_VER_STR "/rts_dev_addr", ui->rts_addr_lineEdit->text());
+  /* plc */
+  setting.setValue("eol_window_v" CONFIG_VER_STR "/plc_dev_addr", ui->plc_addr_lineEdit->text());
   setting.sync();
 }
 
@@ -273,6 +334,11 @@ void eol_window::read_cfg()
   ui->com_config_lineEdit->setText(setting.value("eol_window_v" CONFIG_VER_STR "/eol_com_channel").toString());
   ui->vcom_config_lineEdit->setText(setting.value("eol_window_v" CONFIG_VER_STR "/eol_vcom_channel").toString());
   ui->dev_addr_lineEdit->setText(setting.value("eol_window_v" CONFIG_VER_STR "/eol_dev_addr").toString());
+
+  /* rts */
+  ui->rts_addr_lineEdit->setText(setting.value("eol_window_v" CONFIG_VER_STR "/rts_dev_addr").toString());
+  /* plc */
+  ui->plc_addr_lineEdit->setText(setting.value("eol_window_v" CONFIG_VER_STR "/plc_dev_addr").toString());
   setting.sync();
 }
 
@@ -1851,6 +1917,10 @@ void eol_window::slot_recv_eol_data_complete()
 
 void eol_window::on_entry_produce_mode_pushButton_clicked()
 {
+  if(nullptr == eol_protocol_obj)
+  {
+    return;
+  }
   /* 是否正在执行任务 */
   if(TASK_RUNNING == current_task_complete_state)
   {
@@ -2121,6 +2191,10 @@ void eol_window::on_rcs_calibration_func_pushButton_clicked()
 
 void eol_window::on_reboot_pushButton_clicked()
 {
+  if(nullptr == eol_protocol_obj)
+  {
+    return;
+  }
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
   task.param = nullptr;
   task.reg = EOL_W_DEVICE_REBOOT_REG;
@@ -2221,3 +2295,88 @@ void eol_window::on_export_all_pushButton_clicked()
   /* 启动计时 */
   timer_obj->start();
 }
+
+void eol_window::on_rts_crl_pushButton_clicked()
+{
+  rts_ctrl_window_obj->show();
+  connect(rts_protocol_obj, &rts_protocol::signal_protocol_error_occur, rts_ctrl_window_obj, &rts_ctrl_window::slot_protocol_error_occur);
+  connect(rts_protocol_obj, &rts_protocol::signal_protocol_timeout, rts_ctrl_window_obj, &rts_ctrl_window::slot_protocol_timeout);
+  connect(rts_protocol_obj, &rts_protocol::signal_protocol_rw_err, rts_ctrl_window_obj, &rts_ctrl_window::slot_protocol_rw_err);
+}
+
+void eol_window::on_open_rts_pushButton_clicked()
+{
+  rts_protocol::RTS_TASK_LIST_Typedef_t task;
+
+  /* 连接 */
+  task.cmd = RTS_CONNECT;
+  rts_protocol_obj->rts_master_common_rw_device(task);
+
+  /* 打开 */
+  task.cmd = RTS_OPEN_DEVICE;
+  rts_protocol_obj->rts_master_common_rw_device(task);
+
+  /* 启动协议栈 */
+  rts_protocol_obj->start_task();
+}
+
+void eol_window::on_close_rts_pushButton_clicked()
+{
+  rts_protocol::RTS_TASK_LIST_Typedef_t task;
+
+  /* 关闭 */
+  task.cmd = RTS_CLOSE_DEVICE;
+  rts_protocol_obj->rts_master_common_rw_device(task);
+
+  /* 关闭连接 */
+  task.cmd = RTS_DISCONNECT;
+  rts_protocol_obj->rts_master_common_rw_device(task);
+
+  /* 启动协议栈 */
+  rts_protocol_obj->start_task();
+}
+
+
+/**
+   * @brief 协议栈无回复超时
+   * @param sec 秒
+   */
+void eol_window::slot_rts_protocol_timeout(quint32 sec)
+{
+  ui->msg_str_label->setText(tr("rts:timeout %1 sec").arg(sec));
+}
+
+/**
+   * @brief 从机返回错误消息
+   * @param error_msg 错误消息
+   */
+void eol_window::slot_rts_protocol_error_occur(quint8 error_msg)
+{
+  if(0U == error_msg)
+  {
+    ui->msg_str_label->setText("rts:ok");
+  }
+  else
+  {
+    ui->msg_str_label->setText("rts:err");
+  }
+}
+
+/**
+   * @brief signal_protocol_rw_err 读写错误信号
+   * @param cmd 命令
+   */
+void eol_window::slot_rts_protocol_rw_err(QString cmd)
+{
+  ui->msg_str_label->setText(tr("rts:cmd [%1] retry err").arg(cmd));
+}
+
+void eol_window::on_rts_addr_lineEdit_editingFinished()
+{
+  if(rts_protocol_obj != nullptr)
+  {
+    /* 更新rts通讯地址 */
+    rts_protocol_obj->set_network_device(rts_network_driver_send_obj, rts_network_driver_rec_obj, ui->rts_addr_lineEdit->text());
+  }
+}
+

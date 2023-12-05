@@ -86,14 +86,6 @@ public:
    */
   virtual bool network_send_data(const quint8 *data, quint32 len, const QString &ip, const QString &port, NETWORK_WORK_ROLE_Typedef_t role = NETWORK_CLIENT_ROLE, NETWORK_TYPE_Typedef_t net_type = NETWORK_UDP_TYPE) override;
 
-  /**
-   * @brief network_get_rec_data 获取网络数据
-   * @param ip ip地址
-   * @param role 角色 0服务器 1客户端
-   * @return
-   */
-  virtual CircularQueue::CQ_handleTypeDef *network_get_rec_data(const QString &ip, NETWORK_WORK_ROLE_Typedef_t role = NETWORK_CLIENT_ROLE) override;
-
 private:
   /**
    * @brief repeat_check 重复检测

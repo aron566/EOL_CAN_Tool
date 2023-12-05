@@ -58,6 +58,7 @@ public:
   explicit network_window(QString title, QWidget *parent = nullptr);
   ~network_window();
 
+  /* 网络设备类型 */
   typedef enum
   {
     RTS_NETWORK_DEVICE = 0,
@@ -65,6 +66,18 @@ public:
     EXTERN_NETWORK_DEVICE,
     NETWORK_DEIVCE_MAX,
   }NETWORK_DEVICE_Typedef_t;
+
+  /* 网络设备信息 */
+  typedef struct
+  {
+    QString ip;
+    QString port;
+    network_driver_model::NETWORK_WORK_ROLE_Typedef_t role;
+    network_driver_model::NETWORK_TYPE_Typedef_t net_type;
+    NETWORK_DEVICE_Typedef_t device_type;
+    network_driver_model *network_driver_obj;/**< 网络驱动sernd */
+    network_driver_model *network_driver_rec_obj;/**< 网络驱动receive for rts */
+  }NETWORK_DEVICE_INFO_Typedef_t;
 
   /**
    * @brief set_network_par 设置网络参数加入列表
@@ -77,21 +90,48 @@ public:
   void set_network_par(const QString &ip, const QString &port,
                        network_driver_model::NETWORK_WORK_ROLE_Typedef_t role,
                        network_driver_model::NETWORK_TYPE_Typedef_t net_type,
-                       NETWORK_DEVICE_Typedef_t devie_type);
+                       NETWORK_DEVICE_Typedef_t device_type);
 
   /**
    * @brief network_start 启动网络
-   * @param devie_type 设备类型
+   * @param device_type 设备类型
    * @return true成功
    */
-  bool network_start(NETWORK_DEVICE_Typedef_t devie_type);
+  bool network_start(NETWORK_DEVICE_Typedef_t device_type);
 
   /**
    * @brief network_stop 停止网络
-   * @param devie_type 设备类型
+   * @param device_type 设备类型
    * @return true成功
    */
-  bool network_stop(NETWORK_DEVICE_Typedef_t devie_type);
+  bool network_stop(NETWORK_DEVICE_Typedef_t device_type);
+
+  /**
+   * @brief get_device_obj_info 获取网络驱动信息
+   * @param device_type 设备类型
+   * @param ok 是否ok
+   * @return 网络驱动信息
+   */
+  NETWORK_DEVICE_INFO_Typedef_t get_device_obj_info(NETWORK_DEVICE_Typedef_t device_type, bool *ok = nullptr)
+  {
+    NETWORK_DEVICE_INFO_Typedef_t t;
+    t.network_driver_obj = nullptr;
+    t.network_driver_rec_obj = nullptr;
+    qint32 index = get_device_obj(device_type);
+    if(-1 != index)
+    {
+      if(nullptr != ok)
+      {
+        *ok = true;
+      }
+      return network_device_list.value(index);
+    }
+    if(nullptr != ok)
+    {
+      *ok = false;
+    }
+    return t;
+  }
 protected:
 
   /**
@@ -106,6 +146,18 @@ signals:
    * @brief 发送窗口关闭信号
    */
   void signal_window_closed();
+
+  /**
+   * @brief signal_network_start
+   * @param device_type
+   */
+  void signal_network_start(NETWORK_DEVICE_Typedef_t device_type);
+
+  /**
+   * @brief signal_network_stop
+   * @param device_type
+   */
+  void signal_network_stop(NETWORK_DEVICE_Typedef_t device_type);
 private:
   /* 消息框显示 */
   typedef struct
@@ -114,16 +166,6 @@ private:
     quint32 channel_num;
     quint8 direct;
   }SHOW_MSG_Typedef_t;
-
-  typedef struct
-  {
-    QString ip;
-    QString port;
-    network_driver_model::NETWORK_WORK_ROLE_Typedef_t role;
-    network_driver_model::NETWORK_TYPE_Typedef_t net_type;
-    NETWORK_DEVICE_Typedef_t devie_type;
-    network_driver_model *network_driver_obj;/**< 网络驱动 */
-  }NETWORK_DEVICE_INFO_Typedef_t;
 
 private:
 
@@ -187,10 +229,10 @@ private:
 
   /**
    * @brief get_device_obj
-   * @param devie_type
+   * @param device_type
    * @return 返回对象信息所在index
    */
-  qint32 get_device_obj(NETWORK_DEVICE_Typedef_t devie_type);
+  qint32 get_device_obj(NETWORK_DEVICE_Typedef_t device_type);
 
 public slots:
   /**

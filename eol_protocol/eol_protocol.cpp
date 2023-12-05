@@ -142,6 +142,7 @@ eol_protocol::eol_protocol(QObject *parent)
   /* 创建访问资源锁1个 */
   sem.release(1);
 
+  /* 创建接收缓冲 */
   cq_obj = new CircularQueue(CircularQueue::UINT8_DATA_BUF, CircularQueue::CQ_BUF_4K, this);
   if(nullptr == cq_obj)
   {
@@ -239,6 +240,12 @@ bool eol_protocol::eol_send_data_port(const uint8_t *data, uint16_t data_len, \
       break;
 
     case EOL_ETH_HW:           /**< 网络发送数据 */
+      break;
+
+    case EOL_LIN_HW:
+      break;
+
+    default:
       break;
   }
 

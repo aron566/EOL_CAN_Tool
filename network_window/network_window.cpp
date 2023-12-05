@@ -17,6 +17,7 @@
  *  <table>
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2023-11-24 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2023-12-01 <td>v0.0.2  <td>aron566 <td>rts增加接收端口
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -503,11 +504,11 @@ bool network_window::char2str(const quint8 *data, quint32 data_len, QString &msg
   return true;
 }
 
-qint32 network_window::get_device_obj(NETWORK_DEVICE_Typedef_t devie_type)
+qint32 network_window::get_device_obj(NETWORK_DEVICE_Typedef_t device_type)
 {
   for(qint32 i = 0; i < network_device_list.size(); i++)
   {
-    if(network_device_list.value(i).devie_type == devie_type)
+    if(network_device_list.value(i).device_type == device_type)
     {
       return i;
     }
@@ -526,15 +527,16 @@ qint32 network_window::get_device_obj(NETWORK_DEVICE_Typedef_t devie_type)
 void network_window::set_network_par(const QString &ip, const QString &port,
                                      network_driver_model::NETWORK_WORK_ROLE_Typedef_t role,
                                      network_driver_model::NETWORK_TYPE_Typedef_t net_type,
-                                     NETWORK_DEVICE_Typedef_t devie_type)
+                                     NETWORK_DEVICE_Typedef_t device_type)
 {
   NETWORK_DEVICE_INFO_Typedef_t network_info;
   network_info.ip = ip;
   network_info.port = port;
   network_info.role = role;
   network_info.net_type = net_type;
-  network_info.devie_type = devie_type;
+  network_info.device_type = device_type;
   network_info.network_driver_obj = nullptr;
+  network_info.network_driver_rec_obj = nullptr;
 
   /* 查重 */
   NETWORK_DEVICE_INFO_Typedef_t t;
@@ -543,16 +545,16 @@ void network_window::set_network_par(const QString &ip, const QString &port,
   for(qint32 i = 0; i < network_device_list.size(); i++)
   {
     t = network_device_list.value(i);
-    qDebug() << "[" << i << "]" << ip << port << role << net_type << devie_type;
+    qDebug() << "[" << i << "]" << ip << port << role << net_type << device_type;
   }
 
   for(qint32 i = 0; i < network_device_list.size(); i++)
   {
     t = network_device_list.value(i);
-    if(t.devie_type == devie_type)
+    if(t.device_type == device_type)
     {
       /* 先关闭网络 */
-      if(false == network_stop(t.devie_type))
+      if(false == network_stop(t.device_type))
       {
         qDebug() << "switch network failed";
         return;
@@ -566,9 +568,9 @@ void network_window::set_network_par(const QString &ip, const QString &port,
   network_device_list.append(network_info);
 }
 
-bool network_window::network_start(NETWORK_DEVICE_Typedef_t devie_type)
+bool network_window::network_start(NETWORK_DEVICE_Typedef_t device_type)
 {
-  qint32 index = get_device_obj(devie_type);
+  qint32 index = get_device_obj(device_type);
   if(-1 == index)
   {
     return false;
@@ -582,6 +584,27 @@ bool network_window::network_start(NETWORK_DEVICE_Typedef_t devie_type)
     if(nullptr == t.network_driver_obj)
     {
       t.network_driver_obj = new network_driver_udp(this);
+    }
+    /* rts需要设置作为服务器接收端口 */
+    if(RTS_NETWORK_DEVICE == device_type)
+    {
+      if(nullptr == t.network_driver_rec_obj)
+      {
+        t.network_driver_rec_obj = new network_driver_udp(this);
+      }
+      connect(t.network_driver_rec_obj, &network_driver_model::signal_show_message, this, &network_window::slot_show_message);
+      connect(t.network_driver_rec_obj, &network_driver_model::signal_show_thread_message, this, &network_window::slot_show_message_block, Qt::BlockingQueuedConnection);
+      connect(t.network_driver_rec_obj, &network_driver_model::signal_show_message_bytes, this, &network_window::slot_show_message_bytes);
+      QString rec_ip_str = "0.0.0.0";
+      QString rec_port_str = QString::number(t.port.toInt() + 1);
+      if(false == t.network_driver_rec_obj->network_init(rec_ip_str, rec_port_str, network_driver_model::NETWORK_SERVER_ROLE, t.net_type))
+      {
+        return false;
+      }
+      if(false == t.network_driver_rec_obj->network_start())
+      {
+        return false;
+      }
     }
   }
   /* tcp */
@@ -610,12 +633,15 @@ bool network_window::network_start(NETWORK_DEVICE_Typedef_t devie_type)
   {
     return false;
   }
+
+  /* 发送启动信号 */
+  emit signal_network_start(device_type);
   return true;
 }
 
-bool network_window::network_stop(NETWORK_DEVICE_Typedef_t devie_type)
+bool network_window::network_stop(NETWORK_DEVICE_Typedef_t device_type)
 {
-  qint32 index = get_device_obj(devie_type);
+  qint32 index = get_device_obj(device_type);
   if(-1 == index)
   {
     return false;
@@ -627,6 +653,18 @@ bool network_window::network_stop(NETWORK_DEVICE_Typedef_t devie_type)
   {
     return false;
   }
+
+  /* RTS需关闭服务器接收端口 */
+  if(RTS_NETWORK_DEVICE == device_type)
+  {
+    if(nullptr != t.network_driver_rec_obj)
+    {
+      t.network_driver_rec_obj->network_stop();
+    }
+  }
+
+  /* 发送停止信号 */
+  emit signal_network_stop(device_type);
   return t.network_driver_obj->network_stop();
 }
 

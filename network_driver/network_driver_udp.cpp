@@ -69,11 +69,11 @@ qint32 network_driver_udp::repeat_check(const QString &ip, const QQueue<network_
 
 qint32 network_driver_udp::get_peer_port(const QString &ip)
 {
-  for(qint32 i = 0; i < server_rec_msg_list.size(); i++)
+  for(qint32 i = 0; i < com_info_list.size(); i++)
   {
-    if(true == server_rec_msg_list.value(i).peer_addr.contains(ip))
+    if(true == com_info_list.value(i).peer_addr.contains(ip))
     {
-      QStringList info = server_rec_msg_list.value(i).peer_addr.split(":");
+      QStringList info = com_info_list.value(i).peer_addr.split(":");
       if(2 > info.size())
       {
         return -1;
@@ -115,7 +115,7 @@ bool network_driver_udp::network_init(QString &ip, QString &port, NETWORK_WORK_R
         {
           return false;
         }
-        server_rec_msg_list.clear();
+        com_info_list.clear();
         /* 服务器 */
         server = new hv::UdpServer;
         int bindfd = server->createsocket(port.toInt(), ip.toUtf8().data());
@@ -137,39 +137,33 @@ bool network_driver_udp::network_init(QString &ip, QString &port, NETWORK_WORK_R
           {
             return;
           }
-          qint32 index = repeat_check(info.value(0), server_rec_msg_list);
+          qint32 index = repeat_check(info.value(0), com_info_list);
           if(-1 != index)
           {
-            peer_data = server_rec_msg_list.value(index);
+            peer_data = com_info_list.value(index);
             /* 判断是否是重连，更新对方地址信息 */
             if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
             {
               peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
             }
-            /* 对方数据 */
-            peer_data.pcq_obj = &peer_data.cq;
-            CircularQueue::CQ_putData(&peer_data.cq, (quint8 *)buf->base, buf->size());
-            server_rec_msg_list.replace(index, peer_data);
+            com_info_list.replace(index, peer_data);
             goto _show_server_rx_msg;
           }
 
           /* 对方网络类型 */
           peer_data.net_type = NETWORK_UDP_TYPE;
-
-          /* 对方数据 */
-          peer_data.pcq_obj = &peer_data.cq;
-          CircularQueue::CQ_init(&peer_data.cq, (quint8 *)peer_data.buffer, sizeof(peer_data.buffer));
-          CircularQueue::CQ_putData(&peer_data.cq, (quint8 *)buf->base, buf->size());
-          server_rec_msg_list.append(peer_data);
+          com_info_list.append(peer_data);
 
 _show_server_rx_msg:
+          /* 加入数据到缓冲区 */
+          network_put_data((const quint8 *)buf->base, buf->size(), info.value(0));
           QString tips;
           tips = QString::asprintf("[UDP SERVER]Rx ADDR:%s LEN:%llu DATA:", peer_data.peer_addr.toStdString().data(), buf->size());
           for(quint32 i = 0; i < buf->size(); ++i)
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 1U, 1U, (const quint8 *)buf->base, buf->size(), true, peer_data.peer_addr);
+          this->show_message(tips, 1U, 1U, (const quint8 *)buf->base, buf->size(), true, info.value(0));
           this->show_message_bytes(buf->size(), 1U, 1U);
         };
 
@@ -198,7 +192,7 @@ _show_server_rx_msg:
         {
           return false;
         }
-        client_rec_msg_list.clear();
+        com_info_list.clear();
         /* 客户端 */
         client = new hv::UdpClient;
         int bindfd = client->createsocket(port.toInt(), ip.toUtf8().data());
@@ -220,39 +214,33 @@ _show_server_rx_msg:
           {
             return;
           }
-          qint32 index = repeat_check(info.value(0), client_rec_msg_list);
+          qint32 index = repeat_check(info.value(0), com_info_list);
           if(-1 != index)
           {
-            peer_data = client_rec_msg_list.value(index);
+            peer_data = com_info_list.value(index);
             /* 判断是否是重连，更新对方地址信息 */
             if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
             {
               peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
             }
-            /* 对方数据 */
-            peer_data.pcq_obj = &peer_data.cq;
-            CircularQueue::CQ_putData(&peer_data.cq, (quint8 *)buf->base, buf->size());
-            client_rec_msg_list.replace(index, peer_data);
+            com_info_list.replace(index, peer_data);
             goto _show_client_rx_msg;
           }
 
           /* 对方网络类型 */
           peer_data.net_type = NETWORK_UDP_TYPE;
-
-          /* 对方数据 */
-          peer_data.pcq_obj = &peer_data.cq;
-          CircularQueue::CQ_init(&peer_data.cq, (quint8 *)peer_data.buffer, sizeof(peer_data.buffer));
-          CircularQueue::CQ_putData(&peer_data.cq, (quint8 *)buf->base, buf->size());
-          client_rec_msg_list.append(peer_data);
+          com_info_list.append(peer_data);
 
 _show_client_rx_msg:
+          /* 加入数据到缓冲区 */
+          network_put_data((const quint8 *)buf->base, buf->size(), info.value(0));
           QString tips;
           tips = QString::asprintf("[UDP CLIENT]Rx ADDR:%s LEN:%llu DATA:", peer_data.peer_addr.toStdString().data(), buf->size());
           for(quint32 i = 0; i < buf->size(); ++i)
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 0U, 1U, (const quint8 *)buf->base, buf->size(), true, peer_data.peer_addr);
+          this->show_message(tips, 0U, 1U, (const quint8 *)buf->base, buf->size(), true, info.value(0));
           this->show_message_bytes(buf->size(), 0U, 1U);
         };
 
@@ -329,6 +317,7 @@ bool network_driver_udp::network_stop()
 
   SAFE_DELETE(server);
   SAFE_DELETE(client);
+  emit signal_network_is_closed();
   return true;
 }
 
@@ -416,39 +405,4 @@ bool network_driver_udp::network_send_data(const quint8 *data, quint32 len, cons
   return true;
 }
 
-/**
-   * @brief network_get_rec_data 获取网络数据
-   * @param ip ip地址
-   * @param role 角色 0服务器 1客户端
-   * @return
-   */
-CircularQueue::CQ_handleTypeDef *network_driver_udp::network_get_rec_data(const QString &ip, NETWORK_WORK_ROLE_Typedef_t role)
-{
-  /* 地址查询 */
-  qint32 index = -1;
-  network_driver_model::NETWORK_PEER_INFO_Typedef_t peer_data;
-
-  switch(role)
-  {
-    case NETWORK_SERVER_ROLE:
-      repeat_check(ip, server_rec_msg_list);
-      if(-1 != index)
-      {
-        peer_data = server_rec_msg_list.value(index);
-        return peer_data.pcq_obj;
-      }
-      break;
-    case NETWORK_CLIENT_ROLE:
-      repeat_check(ip, client_rec_msg_list);
-      if(-1 != index)
-      {
-        peer_data = client_rec_msg_list.value(index);
-        return peer_data.pcq_obj;
-      }
-      break;
-    default:
-      return nullptr;
-  }
-  return nullptr;
-}
 /******************************** End of file *********************************/

@@ -112,6 +112,7 @@ SOURCES += \
     main_window/mainwindow.cpp \
     more_window/more_window.cpp \
     network_window/network_window.cpp \
+    rts_ctrl_window/rts_ctrl_window.cpp \
     tool_window/tool_window.cpp \
     updater_window/updater_window.cpp
 
@@ -127,6 +128,7 @@ HEADERS += \
     main_window/mainwindow.h \
     more_window/more_window.h \
     network_window/network_window.h \
+    rts_ctrl_window/rts_ctrl_window.h \
     tool_window/tool_window.h \
     updater_window/updater_window.h
 
@@ -142,6 +144,7 @@ FORMS += \
     main_window/mainwindow.ui \
     more_window/more_window.ui \
     network_window/network_window.ui \
+    rts_ctrl_window/rts_ctrl_window.ui \
     tool_window/tool_window.ui \
     updater_window/updater_window.ui
 

@@ -67,18 +67,21 @@ public:
   /* 对方通讯信息 */
   typedef struct
   {
-    QString peer_addr;
+    QString peer_addr;        /**< 对方地址信息 ip:端口 */
     quint32 id;/**< for tcp */
     NETWORK_TYPE_Typedef_t net_type;
-    quint8 buffer[512U];
-    CircularQueue::CQ_handleTypeDef cq;
-    CircularQueue::CQ_handleTypeDef *pcq_obj;
   }NETWORK_PEER_INFO_Typedef_t;
+
+  typedef struct
+  {
+    QString ip;             /**< 消息来自ip */
+    CircularQueue *cq_obj;  /**< 消息缓冲区 */
+  }NETWORK_MSG_FILTER_Typedef_t;
 
 public:
 
-  QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t>client_rec_msg_list;/**< 客户端接收服务器消息列表 */
-  QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t>server_rec_msg_list;/**< 服务器接收客户端消息列表 */
+  QQueue<NETWORK_PEER_INFO_Typedef_t>com_info_list; /**< 通讯列表 */
+  QQueue<NETWORK_MSG_FILTER_Typedef_t>rec_msg_list; /**< 接收消息列表 */
 
 signals:
 
@@ -97,6 +100,12 @@ signals:
    * @param direct 消息方向，0发送（红色） or 1接收（白色） 0xFF状态消息
    */
   void signal_show_message_bytes(quint32 bytes, quint32 channel_num, quint8 direct);
+
+  /**
+   * @brief 网络已经关闭
+   */
+  void signal_network_is_closed();
+
 public:
 
   /**
@@ -129,19 +138,41 @@ public:
    * @param port 对方端口号
    * @param role 本机角色
    * @param net_type 本机网络类型
-   * @return
+   * @return true 发送成功
    */
   virtual bool network_send_data(const quint8 *data, quint32 len, const QString &ip, const QString &port, NETWORK_WORK_ROLE_Typedef_t role = NETWORK_CLIENT_ROLE, NETWORK_TYPE_Typedef_t net_type = NETWORK_UDP_TYPE) = 0;
 
-  /**
-   * @brief network_get_rec_data 获取网络数据
-   * @param ip ip地址
-   * @param role 角色 0服务器 1客户端
-   * @return
-   */
-  virtual CircularQueue::CQ_handleTypeDef *network_get_rec_data(const QString &ip, NETWORK_WORK_ROLE_Typedef_t role = NETWORK_CLIENT_ROLE) = 0;
-
 public:
+
+  /**
+   * @brief set_rec_ip_mask 设置接收掩码
+   * @param mask
+   * @return 设置前的掩码
+   */
+  static QString set_rec_ip_mask(const QString &mask = "255.255.255.255")
+  {
+    QString msk_temp = rec_ip_mask;
+    rec_ip_mask = mask;
+    return msk_temp;
+  }
+
+  /**
+   * @brief network_register_rec_msg 注册接收消息
+   * @param ip 指定消息源
+   * @param cq 缓冲地址
+   * @return true 成功
+   */
+  bool network_register_rec_msg(QString ip, CircularQueue *cq);
+
+  /**
+   * @brief network_put_data 加入数据到缓冲区
+   * @param data 数据
+   * @param len 数据长度
+   * @param ip ip地址
+   * @return 成功加入的数据长度
+   */
+  quint32 network_put_data(const quint8 *data, quint32 len, const QString ip);
+
   /**
    * @brief 显示消息
    * @param str 消息数据
@@ -163,6 +194,8 @@ public:
   void show_message_bytes(quint32 bytes, quint32 channel_num, quint8 direct);
 
 private:
+
+  static QString rec_ip_mask;
 };
 
 #endif // NETWORK_DRIVER_MODEL_H

@@ -117,6 +117,20 @@ void more_window::network_window_init(QString titile)
   connect(network_window_obj, &network_window::signal_window_closed, this, [=]{
     this->show();
   });
+
+  connect(network_window_obj, &network_window::signal_network_start, this, [=](network_window::NETWORK_DEVICE_Typedef_t device_type){
+    bool ok;
+    network_window::NETWORK_DEVICE_INFO_Typedef_t t;
+
+    if(network_window::RTS_NETWORK_DEVICE == device_type)
+    {
+      t = network_window_obj->get_device_obj_info(network_window::RTS_NETWORK_DEVICE, &ok);
+      if(true == ok)
+      {
+        eol_window_obj->set_rts_driver_obj(t.network_driver_obj, t.network_driver_rec_obj);
+      }
+    }
+  });
 }
 
 /* 工具集子窗口 */
