@@ -318,6 +318,13 @@ public:
 
   explicit can_driver_model(QObject *parent = nullptr);
 
+  virtual ~can_driver_model()
+  {
+    /* 删除cq */
+    delete cq_obj;
+    qDebug() << "del base class can_driver_model";
+  }
+
   /**
    * @brief can线程启动
    */

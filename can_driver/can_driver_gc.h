@@ -50,7 +50,7 @@ class can_driver_gc : public can_driver_model
 public:
   explicit can_driver_gc(QObject *parent = nullptr);
 
-  ~can_driver_gc()
+  virtual ~can_driver_gc()
   {
     /* 关闭设备 */
     close();
@@ -61,8 +61,6 @@ public:
       utility::delay_ms(1);
     }
 
-    /* 删除cq */
-    delete cq_obj;
     qDebug() << "del can_driver model";
   }
 

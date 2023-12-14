@@ -5,6 +5,24 @@
 #include <QDateTime>
 #include <QMessageBox>
 
+/* 显示过滤 */
+#define SHOW_RANGE_FILTER_SET     0.2f
+#define SHOW_AZI_FILTER_SET       2.0f
+#define SHOW_ELE_FILTER_SET       2.0f
+#define SHOW_VEL_FILTER_SET       1.0f
+#define SHOW_RCS_FILTER_SET       5.0f
+#define SHOW_SNR_FILTER_SET       5.0f
+#define SHOW_MAG_FILTER_SET       5.0f
+
+/* 统计过滤 */
+#define CNT_RANGE_FILTER_SET      2.0f
+#define CNT_AZI_FILTER_SET        5.0f
+#define CNT_ELE_FILTER_SET        5.0f
+#define CNT_VEL_FILTER_SET        2.0f
+#define CNT_RCS_FILTER_SET        5.0f
+#define CNT_SNR_FILTER_SET        5.0f
+#define CNT_MAG_FILTER_SET        5.0f
+
 eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   QWidget(parent),
   ui(new Ui::eol_calibration_window)
@@ -32,13 +50,21 @@ eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   ui->snr_threshold_min_lineEdit->setPlaceholderText("20m45 - 50m30");
   ui->rts_lineEdit->setPlaceholderText("15 - 25 - 35");
 
-  ui->target_total_range_lineEdit->setPlaceholderText("-100 100m ±2");
-  ui->target_total_azi_lineEdit->setPlaceholderText("-80 80deg ±5");
-  ui->target_total_ele_lineEdit->setPlaceholderText("-20 20deg ±5");
-  ui->target_total_velocity_lineEdit->setPlaceholderText("-10 10km/h ±2");
-  ui->target_total_rcs_lineEdit->setPlaceholderText("10 20dB ±5");
-  ui->target_total_snr_lineEdit->setPlaceholderText("-10 10dB ±5");
-  ui->target_total_mag_lineEdit->setPlaceholderText("-10 10dB ±5");
+  ui->target_total_range_lineEdit->setPlaceholderText(tr("-100 100m ±%1").arg(CNT_RANGE_FILTER_SET));
+  ui->target_total_azi_lineEdit->setPlaceholderText(tr("-80 80deg ±%1").arg(CNT_AZI_FILTER_SET));
+  ui->target_total_ele_lineEdit->setPlaceholderText(tr("-20 20deg ±%1").arg(CNT_ELE_FILTER_SET));
+  ui->target_total_velocity_lineEdit->setPlaceholderText(tr("-10 10km/h ±%1").arg(CNT_VEL_FILTER_SET));
+  ui->target_total_rcs_lineEdit->setPlaceholderText(tr("10 20dB ±%1").arg(CNT_RCS_FILTER_SET));
+  ui->target_total_snr_lineEdit->setPlaceholderText(tr("-10 10dB ±%1").arg(CNT_SNR_FILTER_SET));
+  ui->target_total_mag_lineEdit->setPlaceholderText(tr("-10 10dB ±%1").arg(CNT_MAG_FILTER_SET));
+
+  ui->target_filter_range_lineEdit->setPlaceholderText(tr("-100 100m ±%1").arg(SHOW_RANGE_FILTER_SET));
+  ui->target_filter_azi_lineEdit->setPlaceholderText(tr("-80 80deg ±%1").arg(SHOW_AZI_FILTER_SET));
+  ui->target_filter_ele_lineEdit->setPlaceholderText(tr("-20 20deg ±%1").arg(SHOW_ELE_FILTER_SET));
+  ui->target_filter_velocity_lineEdit->setPlaceholderText(tr("-10 10km/h ±%1").arg(SHOW_VEL_FILTER_SET));
+  ui->target_filter_rcs_lineEdit->setPlaceholderText(tr("10 20dB ±%1").arg(SHOW_RCS_FILTER_SET));
+  ui->target_filter_snr_lineEdit->setPlaceholderText(tr("-10 10dB ±%1").arg(SHOW_SNR_FILTER_SET));
+  ui->target_filter_mag_lineEdit->setPlaceholderText(tr("-10 10dB ±%1").arg(SHOW_MAG_FILTER_SET));
 
   /* 设置悬浮提示 */
   ui->target_total_range_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
@@ -48,6 +74,14 @@ eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   ui->target_total_rcs_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
   ui->target_total_snr_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
   ui->target_total_mag_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+
+  ui->target_filter_range_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_filter_azi_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_filter_ele_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_filter_velocity_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_filter_rcs_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_filter_snr_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
+  ui->target_filter_mag_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
 
   /* 设置表格 */
 //  ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -143,6 +177,88 @@ void eol_calibration_window::set_eol_protocol_obj(eol_protocol *obj)
 }
 
 /**
+   * @brief 目标显示过滤
+   * @param target 目标信息
+   * @return true 需要过滤
+   */
+bool eol_calibration_window::obj_show_filter_check(TARGET_CNT_LIST_Typedef_t &target)
+{
+  /* 检查筛选设置项是否为空，不为空则有效 */
+
+  /* 距离 */
+  if(false == ui->target_filter_range_lineEdit->text().isEmpty())
+  {
+    float val = ui->target_filter_range_lineEdit->text().toFloat();
+    if(abs((float)val - target.distance) > SHOW_RANGE_FILTER_SET)
+    {
+      return true;
+    }
+  }
+
+  /* 方位 */
+  if(false == ui->target_filter_azi_lineEdit->text().isEmpty())
+  {
+    float val = ui->target_filter_azi_lineEdit->text().toFloat();
+    if(abs((float)val - target.azi_angle) > SHOW_AZI_FILTER_SET)
+    {
+      return true;
+    }
+  }
+
+  /* 俯仰 */
+  if(false == ui->target_filter_ele_lineEdit->text().isEmpty())
+  {
+    float val = ui->target_filter_ele_lineEdit->text().toFloat();
+    if(abs((float)val - target.ele_angle) > SHOW_ELE_FILTER_SET)
+    {
+      return true;
+    }
+  }
+
+  /* 速度 */
+  if(false == ui->target_filter_velocity_lineEdit->text().isEmpty())
+  {
+    float val = ui->target_filter_velocity_lineEdit->text().toFloat();
+    if(abs((float)val - target.speed) > SHOW_VEL_FILTER_SET)
+    {
+      return true;
+    }
+  }
+
+  /* rcs */
+  if(false == ui->target_filter_rcs_lineEdit->text().isEmpty())
+  {
+    float val = ui->target_filter_rcs_lineEdit->text().toFloat();
+    if(abs((float)val - target.rcs) > SHOW_RCS_FILTER_SET)
+    {
+      return true;
+    }
+  }
+
+  /* snr */
+  if(false == ui->target_filter_snr_lineEdit->text().isEmpty())
+  {
+    float val = ui->target_filter_snr_lineEdit->text().toFloat();
+    if(abs((float)val - target.snr) > SHOW_SNR_FILTER_SET)
+    {
+      return true;
+    }
+  }
+
+  /* mag */
+  if(false == ui->target_filter_mag_lineEdit->text().isEmpty())
+  {
+    float val = ui->target_filter_mag_lineEdit->text().toFloat();
+    if(abs((float)val - target.mag) > SHOW_MAG_FILTER_SET)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
    * @brief 目标统计信息过滤
    * @param target 目标信息
    * @return true 需要过滤
@@ -154,8 +270,8 @@ bool eol_calibration_window::obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &tar
   /* 距离 */
   if(false == ui->target_total_range_lineEdit->text().isEmpty())
   {
-    qint32 val = ui->target_total_range_lineEdit->text().toInt();
-    if(abs((float)val - target.distance) > 2.0)
+    float val = ui->target_total_range_lineEdit->text().toFloat();
+    if(abs((float)val - target.distance) > CNT_RANGE_FILTER_SET)
     {
       return true;
     }
@@ -164,8 +280,8 @@ bool eol_calibration_window::obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &tar
   /* 方位 */
   if(false == ui->target_total_azi_lineEdit->text().isEmpty())
   {
-    qint32 val = ui->target_total_azi_lineEdit->text().toInt();
-    if(abs((float)val - target.azi_angle) > 5.0)
+    float val = ui->target_total_azi_lineEdit->text().toFloat();
+    if(abs((float)val - target.azi_angle) > CNT_AZI_FILTER_SET)
     {
       return true;
     }
@@ -174,8 +290,8 @@ bool eol_calibration_window::obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &tar
   /* 俯仰 */
   if(false == ui->target_total_ele_lineEdit->text().isEmpty())
   {
-    qint32 val = ui->target_total_ele_lineEdit->text().toInt();
-    if(abs((float)val - target.ele_angle) > 5.0)
+    float val = ui->target_total_ele_lineEdit->text().toFloat();
+    if(abs((float)val - target.ele_angle) > CNT_ELE_FILTER_SET)
     {
       return true;
     }
@@ -184,8 +300,8 @@ bool eol_calibration_window::obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &tar
   /* 速度 */
   if(false == ui->target_total_velocity_lineEdit->text().isEmpty())
   {
-    qint32 val = ui->target_total_velocity_lineEdit->text().toInt();
-    if(abs((float)val - target.speed) > 2.0)
+    float val = ui->target_total_velocity_lineEdit->text().toFloat();
+    if(abs((float)val - target.speed) > CNT_VEL_FILTER_SET)
     {
       return true;
     }
@@ -194,8 +310,8 @@ bool eol_calibration_window::obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &tar
   /* rcs */
   if(false == ui->target_total_rcs_lineEdit->text().isEmpty())
   {
-    qint32 val = ui->target_total_rcs_lineEdit->text().toInt();
-    if(abs((float)val - target.rcs) > 5.0)
+    float val = ui->target_total_rcs_lineEdit->text().toFloat();
+    if(abs((float)val - target.rcs) > CNT_RCS_FILTER_SET)
     {
       return true;
     }
@@ -204,8 +320,8 @@ bool eol_calibration_window::obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &tar
   /* snr */
   if(false == ui->target_total_snr_lineEdit->text().isEmpty())
   {
-    qint32 val = ui->target_total_snr_lineEdit->text().toInt();
-    if(abs((float)val - target.snr) > 5.0)
+    float val = ui->target_total_snr_lineEdit->text().toFloat();
+    if(abs((float)val - target.snr) > CNT_SNR_FILTER_SET)
     {
       return true;
     }
@@ -214,8 +330,8 @@ bool eol_calibration_window::obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &tar
   /* mag */
   if(false == ui->target_total_mag_lineEdit->text().isEmpty())
   {
-    qint32 val = ui->target_total_mag_lineEdit->text().toInt();
-    if(abs((float)val - target.mag) > 5.0)
+    float val = ui->target_total_mag_lineEdit->text().toFloat();
+    if(abs((float)val - target.mag) > CNT_MAG_FILTER_SET)
     {
       return true;
     }
@@ -342,6 +458,11 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
     target.rcs = (float)rcs * 0.1f;
     target.snr = (float)snr * 0.1f;
     target.ele_angle = (float)ele_angle * 0.01f;
+
+    if(true == obj_show_filter_check(target))
+    {
+      continue;
+    }
 
     ui->tableWidget->setItem(i, 0, new QTableWidgetItem(QString::number(target.profile_id)));
     ui->tableWidget->setItem(i, 1, new QTableWidgetItem(QString::number(target.distance)));

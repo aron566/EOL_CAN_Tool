@@ -31,9 +31,10 @@
 /** Private typedef ----------------------------------------------------------*/
 
 /** Private constants --------------------------------------------------------*/
-static QString updater_url = "https://raw.githubusercontent.com/"
+static QString Xupdater_url = "https://raw.githubusercontent.com/"
                              "aron566/EOL_CAN_Tool_Package/master/packge_release/"
                              "updates.json";
+static QString updater_url = "http://ctnas.chengtech.net:30000/aron566/eol_can_tool/-/raw/master/packge_release/updates.json";
 /** Public variables ---------------------------------------------------------*/
 /** Private variables --------------------------------------------------------*/
 

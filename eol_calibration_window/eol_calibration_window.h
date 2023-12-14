@@ -176,6 +176,14 @@ private:
    * @return true 需要过滤
    */
   bool obj_cnt_filter_check(TARGET_CNT_LIST_Typedef_t &target);
+
+  /**
+   * @brief 目标显示信息过滤
+   * @param target 目标信息
+   * @return true 需要过滤
+   */
+  bool obj_show_filter_check(TARGET_CNT_LIST_Typedef_t &target);
+
 };
 
 #endif // EOL_CALIBRATION_WINDOW_H
