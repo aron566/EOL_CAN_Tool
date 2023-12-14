@@ -252,7 +252,7 @@ private:
 
   bool thread_run_state = false;
 
-  quint8 num_buf[25 * 1024];
+  quint8 *num_buf = nullptr;
 
   typedef struct
   {

@@ -427,6 +427,17 @@ bool eol_window::csv_data_analysis(QByteArray &data, quint64 line_num, int table
     return false;
   }
 
+  /* 申请内存 */
+  if(nullptr != num_buf)
+  {
+    delete[] num_buf;
+  }
+  num_buf = new uint8_t[num_str_list.size() * utility::num_type_to_bytes((utility::NUM_TYPE_Typedef_t)data_type)];
+  if(nullptr == num_buf)
+  {
+    return false;
+  }
+
   switch((eol_protocol::TABLE_CLASS_Typedef_t)table_type_index)
   {
     /* 方位导向矢量表数据传输 */
@@ -832,7 +843,6 @@ bool eol_window::csv_analysis(QString &file_path, CSV_INFO_Typedef_t &csv, int c
         {
           /* 清空记录表 */
           memset(&common_table_info, 0, sizeof(common_table_info));
-          memset(num_buf, 0, sizeof(num_buf));
           if(true == QString(line_data).split(",").value(0).contains("table "))
           {
             qDebug() << "find header :" << QString(line_data);
@@ -905,7 +915,7 @@ bool eol_window::csv_analysis(QString &file_path, CSV_INFO_Typedef_t &csv, int c
 
             continue;
           }
-          qDebug() << "read table data start send task";
+          qDebug() << "table data send task start";
           csv_decode_step = CSV_HEADER_COMMENT_DECODE;
 
           /* 添加到eol发送数据任务 */
@@ -924,6 +934,12 @@ bool eol_window::csv_analysis(QString &file_path, CSV_INFO_Typedef_t &csv, int c
             /* 启动发送数据线程 */
             eol_protocol_obj->start_task();
             QThread::msleep(1);
+          }
+
+          /* 释放 */
+          if(nullptr != num_buf)
+          {
+            delete[] num_buf;
           }
 
           QString str;
