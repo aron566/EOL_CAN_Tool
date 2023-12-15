@@ -7,7 +7,7 @@
 #include <QWheelEvent>
 
 #define SHOW_MSG_SAVE_NUM_MAX     200U                    /**< 最大显示消息数 */
-#define SHOW_MSG_ONE_SCORLL       (5U)                    /**< 上翻每次刷新列表数 */
+#define SHOW_MSG_ONE_SCORLL       (1U)                    /**< 上翻每次刷新列表数 */
 #define SAVE_MSG_BUF_MAX          (1024U*512U*1U)         /**< 最大缓存消息数 */
 
 #define SHOW_LINE_CHAR_NUM_MAX    (1024U)                 /**< 一行最大显示多少字符 */
@@ -219,7 +219,7 @@ void more_window::wheelEvent(QWheelEvent *event)
       }
       *pchx_scroll_cnt = (*pchx_scroll_cnt) + 1;
       quint32 bottom_index = (*pchx_scroll_cnt) - 1;
-
+      // qDebug() << " down" << bottom_index;
       /* 刷新当前消息到尾部 */
       update_show_msg(text_edit_widget, pList, bottom_index, true);
     }
@@ -250,7 +250,7 @@ void more_window::wheelEvent(QWheelEvent *event)
 //        qDebug() << " up top_index" << top_index;
         return;
       }
-
+      // qDebug() << " UP" << top_index;
       /* 刷新当前消息到尾部 */
       update_show_msg(text_edit_widget, pList, top_index, false);
     }
@@ -327,10 +327,10 @@ bool more_window::ch2_show_msg_is_empty()
   return false;
 }
 
-quint32 more_window::get_show_index(quint32 current_show_index, quint32 totaol_size)
+quint32 more_window::get_show_index(quint32 current_show_index, quint32 total_size)
 {
   quint32 index = 0;
-  quint32 remain = totaol_size - current_show_index;
+  quint32 remain = total_size - current_show_index;
   if(SAVE_MSG_BUF_MAX <= current_show_index)
   {
     index = SAVE_MSG_BUF_MAX - remain;
@@ -376,35 +376,37 @@ void more_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_M
   /* 下翻 */
   if(downward_flag)
   {
-    text_edit_widget->moveCursor(QTextCursor::End);
-    QTextCursor cursor = text_edit_widget->textCursor();
-    cursor.insertText(show_messagex.str + '\n');
-    text_edit_widget->setTextCursor(cursor);
+    /* 设置了行数限制，无需手动删除 */
+    text_edit_widget->appendPlainText(show_messagex.str);
 
-    text_edit_widget->moveCursor(QTextCursor::Start);
-    text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
-    text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-//    qDebug() << "sel1 :" << text_edit_widget->textCursor().selectedText();
-    text_edit_widget->textCursor().removeSelectedText();
-    text_edit_widget->moveCursor(QTextCursor::End);
+    /* 手动删除方式 */
+    // text_edit_widget->moveCursor(QTextCursor::End);
+    // QTextCursor cursor = text_edit_widget->textCursor();
+    // cursor.insertText(show_messagex.str + '\n');
+    // text_edit_widget->setTextCursor(cursor);
+
+//     text_edit_widget->moveCursor(QTextCursor::Start);
+//     text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+//     text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+// //    qDebug() << "sel1 :" << text_edit_widget->textCursor().selectedText();
+//     text_edit_widget->textCursor().removeSelectedText();
+//     text_edit_widget->moveCursor(QTextCursor::End);
   }
   /* 上翻 */
   else
   {
-    text_edit_widget->moveCursor(QTextCursor::Start);
-    QTextCursor cursor = text_edit_widget->textCursor();
-    cursor.insertText(show_messagex.str + '\n');
-    text_edit_widget->setTextCursor(cursor);
-
-    /* 删除尾部行数据 */
+    /* 先手动删除尾部行数据，否则因行数限制写入不了 */
     text_edit_widget->moveCursor(QTextCursor::End);
     text_edit_widget->moveCursor(QTextCursor::PreviousBlock, QTextCursor::KeepAnchor);
     text_edit_widget->moveCursor(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
     //    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
     text_edit_widget->textCursor().removeSelectedText();
 
-    /* 回到头部显示 */
+    /* 回到头部显示插入数据 */
     text_edit_widget->moveCursor(QTextCursor::Start);
+    QTextCursor cursor = text_edit_widget->textCursor();
+    cursor.insertText(show_messagex.str + '\n');
+    text_edit_widget->setTextCursor(cursor);
   }
 }
 

@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QTimer>
 #include <QTextEdit>
-
+#include <QAtomicInt>
 #include "eol_window.h"
 #include "can_driver_model.h"
 #include "frame_diagnosis_window/frame_diagnosis.h"
@@ -124,10 +124,10 @@ private:
   /**
    * @brief 获取显示的索引
    * @param current_show_index
-   * @param totaol_size
+   * @param total_size
    * @return 显示索引
    */
-  quint32 get_show_index(quint32 current_show_index, quint32 totaol_size);
+  quint32 get_show_index(quint32 current_show_index, quint32 total_size);
 
   /**
    * @brief 字符转字符串

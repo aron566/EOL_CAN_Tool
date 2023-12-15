@@ -84,6 +84,7 @@
  *  <tr><td>2023-11-30 <td>v1.2.8  <td>aron566 <td>主界面网络设置优化避免歧义，优化网络数据流转，修复客户端断开连接，服务端无法发送数据问题
  *  <tr><td>2023-12-04 <td>v1.2.9  <td>aron566 <td>增加rts手动控制页面，增加注册消息机制，完善rts控制协议，优化EOL界面显示
  *  <tr><td>2023-12-14 <td>v1.2.10 <td>aron566 <td>刷新目标增加过滤功能，取消发送表数据长度限制
+ *  <tr><td>2023-12-15 <td>v1.2.11 <td>aron566 <td>修复翻页数据显示丢失问题，排列问题
  *  </table>
  */
 #include "mainwindow.h"
@@ -91,7 +92,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.10"
+#define PC_SOFTWARE_VERSION       "1.2.11"
 
 int main(int argc, char *argv[])
 {

@@ -303,26 +303,24 @@ void network_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHO
   /* 下翻 */
   if(downward_flag)
   {
-    text_edit_widget->moveCursor(QTextCursor::End);
-    QTextCursor cursor = text_edit_widget->textCursor();
-    cursor.insertText(show_messagex.str + '\n');
-    text_edit_widget->setTextCursor(cursor);
+    /* 插入到底部，行限制下自动删行 */
+    text_edit_widget->appendPlainText(show_messagex.str);
 
-    text_edit_widget->moveCursor(QTextCursor::Start);
-    text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
-    text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-    //    qDebug() << "sel1 :" << text_edit_widget->textCursor().selectedText();
-    text_edit_widget->textCursor().removeSelectedText();
-    text_edit_widget->moveCursor(QTextCursor::End);
+    // text_edit_widget->moveCursor(QTextCursor::End);
+    // QTextCursor cursor = text_edit_widget->textCursor();
+    // cursor.insertText(show_messagex.str + '\n');
+    // text_edit_widget->setTextCursor(cursor);
+
+    // text_edit_widget->moveCursor(QTextCursor::Start);
+    // text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+    // text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+    // //    qDebug() << "sel1 :" << text_edit_widget->textCursor().selectedText();
+    // text_edit_widget->textCursor().removeSelectedText();
+    // text_edit_widget->moveCursor(QTextCursor::End);
   }
   /* 上翻 */
   else
   {
-    text_edit_widget->moveCursor(QTextCursor::Start);
-    QTextCursor cursor = text_edit_widget->textCursor();
-    cursor.insertText(show_messagex.str + '\n');
-    text_edit_widget->setTextCursor(cursor);
-
     /* 删除尾部行数据 */
     text_edit_widget->moveCursor(QTextCursor::End);
     text_edit_widget->moveCursor(QTextCursor::PreviousBlock, QTextCursor::KeepAnchor);
@@ -330,8 +328,11 @@ void network_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHO
     //    qDebug() << "sel2 :" << text_edit_widget->textCursor().selectedText();
     text_edit_widget->textCursor().removeSelectedText();
 
-    /* 回到头部显示 */
+    /* 回到头部显示，并插入数据 */
     text_edit_widget->moveCursor(QTextCursor::Start);
+    QTextCursor cursor = text_edit_widget->textCursor();
+    cursor.insertText(show_messagex.str + '\n');
+    text_edit_widget->setTextCursor(cursor);
   }
 }
 
