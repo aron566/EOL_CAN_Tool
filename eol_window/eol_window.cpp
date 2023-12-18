@@ -278,8 +278,12 @@ void eol_window::rts_protocol_init(network_driver_model *network_driver_send_obj
 {
   rts_network_driver_send_obj = network_driver_send_obj;
   rts_network_driver_rec_obj = network_driver_rec_obj;
+
   /* rts协议栈初始化 */
   rts_protocol_obj = new rts_protocol(this);
+
+  /* 禁止线程完成后执行析构对象 */
+  rts_protocol_obj->setAutoDelete(false);
 
   /* 设置rts通讯地址 */
   rts_protocol_obj->set_network_device(rts_network_driver_send_obj, rts_network_driver_rec_obj, ui->rts_addr_lineEdit->text());

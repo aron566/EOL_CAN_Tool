@@ -20,6 +20,7 @@
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
+#include <QDateTime>
 /** Private includes ---------------------------------------------------------*/
 #include "rts_protocol.h"
 
@@ -71,16 +72,8 @@ rts_protocol::rts_protocol(QObject *parent)
     qDebug() << "rts create cq faild";
   }
 
-  /* 初始化定时器 */
-  timer_init();
-}
-
-void rts_protocol::timer_init()
-{
-  timer_obj = new QTimer(this);
-  timer_obj->setInterval(1);
-  connect(timer_obj, &QTimer::timeout, this, &rts_protocol::slot_timeout);
-  timer_obj->start();
+  /* 启动计时器 */
+  timer_obj.start();
 }
 
 /**
@@ -134,7 +127,7 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_create_task(con
     return RETURN_ERROR;
   }
   rts_protocol::WAIT_RESPONSE_LIST_Typedef_t wait;
-  wait.start_time = static_cast<uint32_t>(current_time_sec);
+  wait.start_time = static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch());
   wait.cmd = cmd;
   wait_response_list.append(wait);
 
@@ -151,7 +144,10 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_create_task(con
 
   /* 解析 */
   RETURN_TYPE_Typedef_t ret = RETURN_ERROR;
-  while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state);
+  while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state)
+  {
+    /* todo nothing */
+  }
   return ret;
 }
 
@@ -272,7 +268,7 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_wait_reply_star
 
 void rts_protocol::rts_protocol_clear()
 {
-  qDebug() << "---rts_protocol_clear---";
+  // qDebug() << "---rts_protocol_clear---";
   wait_response_list.clear();
   CircularQueue::CQ_emptyData(cq_obj->CQ_getCQHandle());
 }
@@ -280,7 +276,7 @@ void rts_protocol::rts_protocol_clear()
 /* 响应超时检测 */
 bool rts_protocol::response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait)
 {
-  if((current_time_sec - wait.start_time) >= FRAME_TIME_OUT)
+  if((QDateTime::currentSecsSinceEpoch() - wait.start_time) >= FRAME_TIME_OUT)
   {
     return true;
   }
@@ -391,17 +387,6 @@ __set_device_err:
 *
 ********************************************************************************
 */
-
-void rts_protocol::slot_timeout()
-{
-  current_time_ms++;
-  if(current_time_ms == 1000)
-  {
-    current_time_ms = 0;
-    current_time_sec++;
-  }
-}
-
 
 /* 添加读写任务 */
 bool rts_protocol::rts_master_common_rw_device(RTS_TASK_LIST_Typedef_t &task, bool check_repeat)

@@ -168,7 +168,7 @@ void eol_protocol::set_can_driver_obj(can_driver_model *can_driver_)
 
 void eol_protocol::eol_protocol_clear()
 {
-  qDebug() << "---eol_protocol_clear---";
+  // qDebug() << "---eol_protocol_clear---";
   wait_response_list.clear();
   CircularQueue::CQ_emptyData(cq_obj->CQ_getCQHandle());
 }
@@ -302,7 +302,7 @@ eol_protocol::SNED_CHECK_STATUS_Typedef_t eol_protocol::check_wait_send_task(boo
 /* 响应超时检测 */
 bool eol_protocol::response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait)
 {
-  if((current_time_sec - wait.start_time) >= FRAME_TIME_OUT)
+  if((static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch()) - wait.start_time) >= FRAME_TIME_OUT)
   {
     return true;
   }
@@ -406,7 +406,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
   }
   eol_protocol::WAIT_RESPONSE_LIST_Typedef_t wait;
   wait.reg_addr = reg_addr;
-  wait.start_time = static_cast<uint32_t>(current_time_sec);
+  wait.start_time = static_cast<uint64_t>(QDateTime::currentSecsSinceEpoch());
   wait.command = (quint8)command;
   wait.channel_num = channel_num;
   wait.com_hw = com_hw;
@@ -501,7 +501,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
     return ret;
   }
 #endif
-  qDebug() << "------direct send-------" << QDateTime::currentMSecsSinceEpoch();
+  // qDebug() << "------direct send-------" << QDateTime::currentMSecsSinceEpoch();
 
   /* 发送 */
   bool ok = eol_send_data_port(reinterpret_cast<const quint8 *>(send_buf), \
@@ -560,7 +560,7 @@ eol_protocol::EOL_OPT_STATUS_Typedef_t eol_protocol::decode_ack_frame(quint8 reg
   {
     case EOL_RW_TABLE_DATA_REG:
     default:
-      qDebug() << msg_str << ":" << msg;
+      // qDebug() << msg_str << ":" << msg;
       break;
   }
 
@@ -1007,7 +1007,7 @@ bool eol_protocol::common_rw_device_task(void *param_)
   /* 设置消息过滤器 */
   can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)param->channel_num.toUShort());
 
-  qDebug("step1 rw device cmd %u reg 0x%02X len %u", param->command, param->reg, param->len);
+  // qDebug("step1 rw device cmd %u reg 0x%02X len %u", param->command, param->reg, param->len);
 
   do
   {
@@ -1024,7 +1024,7 @@ bool eol_protocol::common_rw_device_task(void *param_)
     break;
   }while(run_state);
 
-  qDebug() << "rw_device_task exit ok";
+  // qDebug() << "rw_device_task exit ok";
 
   /* 恢复数据接收显示 */
   can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);

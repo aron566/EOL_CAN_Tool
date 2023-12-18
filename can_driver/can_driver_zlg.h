@@ -52,7 +52,7 @@ public:
   virtual ~can_driver_zlg()
   {
     /* 关闭设备 */
-    close();
+    can_driver_zlg::close();
 
     /* 等待线程结束 */
     while(thread_run_state)

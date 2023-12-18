@@ -101,7 +101,7 @@ void network_driver_model::show_message(const QString &str, quint32 channel_num,
   {
     QStringList mask = rec_ip_mask.split(".");
     QStringList source_ip = ip.split(".");
-    if(4 == ip.size() && 4 == source_ip.size())
+    if(4 == mask.size() && 4 == source_ip.size())
     {
       /* 检查接收ip */
       quint32 mask0 = mask.value(0).toUInt();

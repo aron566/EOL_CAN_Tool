@@ -52,7 +52,7 @@ network_driver_tcp::network_driver_tcp(QObject *parent)
 
 network_driver_tcp::~network_driver_tcp()
 {
-  network_stop();
+  network_driver_tcp::network_stop();
 }
 
 qint32 network_driver_tcp::repeat_check(const QString &ip, const QQueue<network_driver_model::NETWORK_PEER_INFO_Typedef_t> &msg_list)

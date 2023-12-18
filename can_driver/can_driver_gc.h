@@ -53,7 +53,7 @@ public:
   virtual ~can_driver_gc()
   {
     /* 关闭设备 */
-    close();
+    can_driver_gc::close();
 
     /* 等待线程结束 */
     while(thread_run_state)

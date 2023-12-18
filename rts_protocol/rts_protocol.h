@@ -32,6 +32,7 @@
 //#include <setjmp.h> /**< need jmp_buf buf setjmp(buf); longjmp(buf,1) */
 /** Private includes ---------------------------------------------------------*/
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QThread>
 #include <QThreadPool>
 #include <QRunnable>
@@ -91,7 +92,7 @@ public:
   /* 响应队列 */
   typedef struct
   {
-    uint32_t start_time;    /**< 等待相应的起始时间 */
+    uint64_t start_time;    /**< 等待相应的起始时间 */
     QString peer_addr;      /**< 通讯硬件端口:192.168.3.181:12001 */
     QString cmd;            /**< 请求的命令 */
   }WAIT_RESPONSE_LIST_Typedef_t;
@@ -216,14 +217,8 @@ signals:
 
 private slots:
 
-  /**
-   * @brief slot_timeout
-   */
-  void slot_timeout();
-
 private:
-  QTimer *timer_obj = nullptr;/**< 定时器 */
-
+  QElapsedTimer timer_obj;
   bool run_state = false;
   bool thread_run_state = false;
   bool listen_run_state = false;
@@ -235,9 +230,6 @@ private:
   network_driver_model *network_device_obj = nullptr;
   network_driver_model *network_rec_device_obj = nullptr;
   QString peer_addr;
-
-  quint64 current_time_sec = 0;
-  quint64 current_time_ms = 0;
 
   /* 错误统计 */
   quint32 acc_error_cnt = 0;
@@ -258,11 +250,6 @@ public:
   bool rts_master_common_rw_device(RTS_TASK_LIST_Typedef_t &task, bool check_repeat = true);
 
 private:
-
-  /**
-   * @brief 定时器初始化
-   */
-  void timer_init();
 
   /**
    * @brief common_rw_device_task 读写任务

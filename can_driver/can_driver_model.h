@@ -337,7 +337,7 @@ public:
       receive_data();
       /* 刷新界面 */
       emit signal_show_can_msg();
-      QThread::msleep(0);
+      QThread::usleep(0);
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << "can driver task end";
     thread_run_state = false;

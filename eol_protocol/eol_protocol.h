@@ -342,7 +342,7 @@ private:
   typedef struct
   {
     uint16_t reg_addr;      /**< 等待响应的寄存器地址 */
-    uint32_t start_time;    /**< 等待相应的起始时间 */
+    uint64_t start_time;    /**< 等待相应的起始时间 */
     uint8_t command;        /**< 等待的命令类型 */
     EOL_SEND_HW_Typedef_t com_hw; /**< 通讯硬件选择 */
     QString channel_num;          /**< 通讯硬件端口 */
