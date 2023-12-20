@@ -451,6 +451,16 @@ public:
   }
 
   /**
+   * @brief 清空任务
+   */
+  void clear_task()
+  {
+    sem.tryAcquire();
+    eol_task_list.clear();
+    sem.release();
+  }
+
+  /**
    * @brief 设置线程池
    * @param g_thread_pool_
    */

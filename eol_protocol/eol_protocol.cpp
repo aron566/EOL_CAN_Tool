@@ -211,9 +211,6 @@ void eol_protocol::run_eol_task()
     /* 执行主线程 */
     QThread::usleep(0);
   }
-  // sem.tryAcquire();
-  // eol_task_list.clear();
-  // sem.release();
   qDebug() << "eol_task end";
 }
 

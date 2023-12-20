@@ -103,6 +103,9 @@ void eol_calibration_window::closeEvent(QCloseEvent *event)
 {
   Q_UNUSED(event)
 
+  /* 清空任务 */
+  eol_protocol_obj->clear_task();
+
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
   task.param = nullptr;
 
