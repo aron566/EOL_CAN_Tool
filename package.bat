@@ -12,7 +12,7 @@ set extra_libs=zlgcan ECanVci64 ECANFDVCI64 GCANUSB_x64 libcrypto-1_1-x64 libhv 
 REM 设置作者
 set author=aron566
 REM 设置版本
-set version=v1.2.9
+set version=v1.2.13
 REM 设置文件图标
 set icon_file=D:/QT_Workspace/EOL_CAN_Tool/resource/icons/exe_icon.ico
 REM 安装文件图标

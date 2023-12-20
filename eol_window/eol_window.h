@@ -407,9 +407,10 @@ private:
    * @brief 一键导出所有表
    * @param frame_num 帧计数
    * @param data 数据
+   * @param is_table_header 是表头
    * @return 导出成功
    */
-  bool one_key_rec_all_table_data_silent(quint16 frame_num, const QByteArray &data);
+  bool one_key_rec_all_table_data_silent(quint16 frame_num, const QByteArray &data, bool is_table_header = false);
 
   /**
    * @brief 执行eol文件解析任务

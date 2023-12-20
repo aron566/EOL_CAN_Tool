@@ -466,19 +466,19 @@ void MainWindow::on_open_device_pushButton_clicked()
   switch((can_driver_model::CAN_BRAND_Typedef_t)ui->brand_comboBox->currentIndex())
   {
     case can_driver_model::ZLG_CAN_BRAND:      /**< 周立功 */
-      can_driver_obj = new can_driver_zlg(this);
+      can_driver_obj = new can_driver_zlg();
       break;
 
     case can_driver_model::GC_CAN_BRAND:       /**< 广成 */
-      can_driver_obj = new can_driver_gc(this);
+      can_driver_obj = new can_driver_gc();
       break;
 
     case can_driver_model::TS_CAN_BRAND:       /**< 同星 */
-      can_driver_obj = new can_driver_ts(this);
+      can_driver_obj = new can_driver_ts();
       break;
 
     case can_driver_model::KVASER_BRAND:       /**< kvaser */
-      can_driver_obj = new can_driver_kvaser(this);
+      can_driver_obj = new can_driver_kvaser();
       break;
 
     default:

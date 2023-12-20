@@ -106,7 +106,7 @@ PS：
 #define FRAME_TIME_OUT                3U      /**< 1s超时检测 */
 #define NO_RESPONSE_TIMES             0U      /**< 允许超时无响应次数，发出无响应信号 */
 
-#define RETRY_NUM_MAX                 3U      /**< 无法发出数据，超时重试次数 */
+#define RETRY_NUM_MAX                 3U      /**< 失败重试次数，超时重试次数（包含首次发送） */
 #define NOT_FULL_TIMEOUT_SEC_MAX      15U     /**< 允许帧不全超时时间 */
 #define WAIT_SEND_HW_ERR_TIMES        3U      /**< 硬件发送失败3次 */
 
@@ -211,9 +211,9 @@ void eol_protocol::run_eol_task()
     /* 执行主线程 */
     QThread::usleep(0);
   }
-  sem.tryAcquire();
-  eol_task_list.clear();
-  sem.release();
+  // sem.tryAcquire();
+  // eol_task_list.clear();
+  // sem.release();
   qDebug() << "eol_task end";
 }
 
@@ -497,7 +497,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
       emit signal_send_rec_one_frame(false);
     }
 
-//    eol_protocol_clear();
+    eol_protocol_clear();
     return ret;
   }
 #endif
@@ -537,7 +537,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
     emit signal_send_rec_one_frame(false);
   }
 
-//  eol_protocol_clear();
+  eol_protocol_clear();
   return ret;
 }
 
@@ -783,7 +783,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         {
           qDebug() << "crc err package_len " << package_len;
           utility::debug_print(temp_buf, package_len);
-          break;
+          return RETURN_CRC_ERROR;
         }
 
         /* 移除等待队列 */
@@ -934,10 +934,11 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
   {
     qDebug() << "get_eol_table_data_task step 2";
     /* 丢帧检测 */
-    if(RETURN_LOST_FRAME == ret)
+    if(RETURN_LOST_FRAME == ret || RETURN_CRC_ERROR == ret)
     {
-      data_buf[0] = (quint8)data_record.frame_num;
-      data_buf[1] = (quint8)(data_record.frame_num >> 8);
+      data_buf[0] = (quint8)(data_record.frame_num + 1U);
+      data_buf[1] = (quint8)((data_record.frame_num + 1U) >> 8);
+      qDebug() << "get_eol_table_data_task step 2 lost" << (data_record.frame_num + 1U);
       ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_W_TABLE_DATA_SEL_REG, data_buf, 2, paramx->com_hw, paramx->channel_num);
     }
     else
@@ -955,9 +956,11 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
       }
       goto __get_eol_table_data_err;
     }
-
-    /* 清空错误统计 */
-    error_cnt = 0;
+    else
+    {
+      /* 清空错误统计 */
+      error_cnt = 0;
+    }
 
     /* 数据帧未结束 */
     if(0xFFFF > data_record.frame_num)
@@ -1111,26 +1114,26 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
   }
 
   /* 清空错误统计 */
-  error_cnt = 0;
+  error_cnt = 0U;
   qDebug() << "step2 send table data ";
   /* 发送表数据，每包256Bytes，不足只发送剩余部分 */
-  for(quint32 i = 0; i < param->head_data.Common_Info.Data_Size;)
+  for(quint32 i = 0U; i < param->head_data.Common_Info.Data_Size;)
   {
     frame_num++;
     index = 0;
     data_buf[index++] = frame_num;
-    data_buf[index++] = (quint8)(frame_num >> 8);
+    data_buf[index++] = (quint8)(frame_num >> 8U);
 
-    if((i + 256) > param->head_data.Common_Info.Data_Size)
+    if((i + 256U) > param->head_data.Common_Info.Data_Size)
     {
-      memset(&data_buf[index], 0, 256);
+      memset(&data_buf[index], 0, 256U);
       memcpy(&data_buf[index], param->data + i, param->head_data.Common_Info.Data_Size - i);
       index += (param->head_data.Common_Info.Data_Size - i);
     }
     else
     {
-      memcpy(&data_buf[index], param->data + i, 256);
-      index += 256;
+      memcpy(&data_buf[index], param->data + i, 256U);
+      index += 256U;
     }
 
     /* 发送表数据 */

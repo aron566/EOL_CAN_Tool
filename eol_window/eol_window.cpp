@@ -9,7 +9,12 @@
 #include "utility.h"
 
 #define CONFIG_VER_STR            "0.0.2"                 /**< 配置文件版本 */
-#define USE_TEMP_FILE_TO_SAVE 0 /**< 使用临时文件存储 */
+#define USE_TEMP_FILE_TO_SAVE     0                       /**< 使用临时文件存储 */
+#define SET_CURRENT_TASK_RUN_STATE(set_val) \
+  do{ \
+    current_task_complete_state = set_val; \
+    qDebug() << "[" << __FUNCTION__ << "]" << "SET VAL" << set_val; \
+  }while(0)
 
 eol_window::eol_window(QString title, QWidget *parent) :
   QWidget(parent),
@@ -435,6 +440,7 @@ bool eol_window::csv_data_analysis(QByteArray &data, quint64 line_num, int table
   if(nullptr != num_buf)
   {
     delete[] num_buf;
+    num_buf = nullptr;
   }
   num_buf = new uint8_t[num_str_list.size() * utility::num_type_to_bytes((utility::NUM_TYPE_Typedef_t)data_type)];
   if(nullptr == num_buf)
@@ -927,12 +933,12 @@ bool eol_window::csv_analysis(QString &file_path, CSV_INFO_Typedef_t &csv, int c
           if(false == ret)
           {
             qDebug() << "add task error";
-            current_task_complete_state = TASK_ERROR;
+            SET_CURRENT_TASK_RUN_STATE(TASK_ERROR);
             continue;
           }
 
           /* 设置当前任务状态 */
-          current_task_complete_state = TASK_RUNNING;
+          SET_CURRENT_TASK_RUN_STATE(TASK_RUNNING);
           while(current_task_complete_state == TASK_RUNNING && run_state)
           {
             /* 启动发送数据线程 */
@@ -944,6 +950,7 @@ bool eol_window::csv_analysis(QString &file_path, CSV_INFO_Typedef_t &csv, int c
           if(nullptr != num_buf)
           {
             delete[] num_buf;
+            num_buf = nullptr;
           }
 
           QString str;
@@ -1070,20 +1077,13 @@ void eol_window::run_eol_window_export_task()
     eol_protocol_obj->eol_master_get_table_data(table_type);
 
     /* 设置当前任务状态 */
-    current_task_complete_state = TASK_RUNNING;
+    SET_CURRENT_TASK_RUN_STATE(TASK_RUNNING);
     while(current_task_complete_state == TASK_RUNNING && run_state)
     {
       /* 启动接收数据线程 */
       eol_protocol_obj->start_task();
       QThread::msleep(1);
     }
-
-    if(TASK_COMPLETE == current_task_complete_state)
-    {
-      /* 换行 */
-      all_table_file.write("\n");
-    }
-    run_state = true;
   }
 
 _end_task:
@@ -1313,13 +1313,7 @@ void eol_window::slot_protocol_no_response()
     eol_protocol_obj->stop_task();
 
     /* 设置错误状态 */
-    current_task_complete_state = TASK_ERROR;
-
-    /* 传输列表检测为空则是上载报错立即停止 */
-    if(csv_list.isEmpty())
-    {
-      run_state = false;
-    }
+    SET_CURRENT_TASK_RUN_STATE(TASK_ERROR);
 
     /* 本按钮可用 */
     if(csv_list.size() > 0)
@@ -1376,15 +1370,20 @@ void eol_window::slot_protocol_error_occur(quint8 error_msg)
    * @param data 数据
    * @return 导出成功
    */
-bool eol_window::one_key_rec_all_table_data_silent(quint16 frame_num, const QByteArray &data)
+bool eol_window::one_key_rec_all_table_data_silent(quint16 frame_num, const QByteArray &data, bool is_table_header)
 {
-  Q_UNUSED(frame_num)
   if(true == all_table_file_name.isEmpty())
   {
     return false;
   }
 
   all_table_file.seek(all_table_file.pos());
+
+  if(0U == frame_num && is_table_header && 0 < all_table_file.pos())
+  {
+    /* 数据尾部添加换行 */
+    all_table_file.write("\r\n");
+  }
 
   /* 写入文件 */
   all_table_file.write(data);
@@ -1666,7 +1665,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
         return;
     }
 
-    if(true == one_key_rec_all_table_data_silent(frame_num, csv_header.toUtf8()))
+    if(true == one_key_rec_all_table_data_silent(frame_num, csv_header.toUtf8(), true))
     {
       one_key_rec_all_table_data_silent(frame_num, str.toUtf8());
       return;
@@ -1769,7 +1768,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 
     /* 写入数据 */
 
-    qDebug() << "get pack num: " << frame_num;
+    qDebug() << "get pack num:" << frame_num << "ok";
 //    recv_file.seek((frame_num - 1) * 256);
 //    recv_file.write((const char *)data, data_len);
 
@@ -1881,7 +1880,7 @@ void eol_window::slot_send_progress(quint32 current_size, quint32 total_size)
 void eol_window::slot_send_eol_data_complete()
 {
   /* 设置完成状态 */
-  current_task_complete_state = TASK_COMPLETE;
+  SET_CURRENT_TASK_RUN_STATE(TASK_COMPLETE);
   /* 本按钮可用 */
   if(csv_list.size() > 0)
   {
@@ -1901,11 +1900,8 @@ void eol_window::slot_send_eol_data_complete()
  */
 void eol_window::slot_recv_eol_data_complete()
 {
-  /* 停止运行 */
-  run_state = false;
-
   /* 设置完成状态 */
-  current_task_complete_state = TASK_COMPLETE;
+  SET_CURRENT_TASK_RUN_STATE(TASK_COMPLETE);
 
   /* 检测接收任务是否全部完成 */
   if(false == all_table_file_name.isEmpty())
@@ -1975,12 +1971,12 @@ __TASK_STATE_CHANGE:
   {
     /* 重置帧计数 */
     reset_base_ui_info();
-    current_task_complete_state = TASK_RUNNING;
+    SET_CURRENT_TASK_RUN_STATE(TASK_RUNNING);
     eol_protocol_obj->start_task();
   }
   else
   {
-    current_task_complete_state = TASK_ERROR;
+    SET_CURRENT_TASK_RUN_STATE(TASK_ERROR);
   }
 }
 
@@ -2056,7 +2052,7 @@ void eol_window::slot_device_mode(const void *pass_data)
     ui->debug_pushButton->setEnabled(false);
     ui->entry_produce_mode_pushButton->setText(tr("entry mode"));
   }
-  current_task_complete_state = TASK_COMPLETE;
+  SET_CURRENT_TASK_RUN_STATE(TASK_COMPLETE);
   /* 显示设备信息 */
   emit signal_clear_profile_info();
 
@@ -2132,7 +2128,7 @@ void eol_window::slot_protocol_rw_err(quint8 reg, quint8 command)
     case EOL_R_PROFILE_NUM_CH_NUM:
       tips = tr("set mode err");
       /* 设置错误状态 */
-      current_task_complete_state = TASK_ERROR;
+      SET_CURRENT_TASK_RUN_STATE(TASK_ERROR);
       break;
 
     default:
@@ -2166,7 +2162,7 @@ void eol_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 data_
     case EOL_R_PROFILE_NUM_CH_NUM:
       {
         tips = tr("rw ok");
-        current_task_complete_state = TASK_COMPLETE;
+        SET_CURRENT_TASK_RUN_STATE(TASK_COMPLETE);
       }
       break;
 

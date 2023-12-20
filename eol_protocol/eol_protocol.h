@@ -334,6 +334,7 @@ private:
     RETURN_TIMEOUT,
     RETURN_WAITTING,              /**< 等待中 */
     RETURN_UPLOAD_END,            /**< 升级结束 */
+    RETURN_CRC_ERROR,             /**< crc错误 */
     RETURN_ERROR,
     RETURN_LOST_FRAME,            /**< 丢帧 */
   }RETURN_TYPE_Typedef_t;
@@ -417,28 +418,27 @@ public:
   /**
    * @brief start_task
    * @param listen_cs 设置eol监听使能，true使能 false失能
+   * @return bool true成功
    */
-  void start_task(bool listen_cs = false)
+  bool start_task(bool listen_cs = false)
   {
+    bool ret = false;
     /* 原子操作 */
     if(thread_run_statex.testAndSetRelaxed(0, 1))
     {
-
+      ret = true;
     }
     else
     {
-      qDebug() << "eol protocol is running";
-      return;
+      ret = false;
+      // qDebug() << "eol protocol is running";
+      return ret;
     }
 
     listen_run_state = listen_cs;
-    if(thread_run_state)
-    {
-      qDebug() << "eol protocol is running";
-      return;
-    }
     eol_protocol_clear();
     g_thread_pool->start(this);
+    return ret;
   }
 
   /**

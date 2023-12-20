@@ -37,6 +37,9 @@ debug_window::debug_window(QString title, QWidget *parent) :
   ui->shell_textEdit->setHtml("<body bgcolor=\"#000000\"></body>");
   ui->shell_textEdit->ensureCursorVisible();
 
+  /* 关闭全局上下文菜单 */
+  this->setContextMenuPolicy(Qt::ContextMenuPolicy::NoContextMenu);
+
   /* 恢复配置 */
   read_cfg();
 
@@ -83,8 +86,8 @@ void debug_window::showEvent(QShowEvent *event)
   ui->shell_textEdit->setAttribute(Qt::WA_InputMethodEnabled, false);
 }
 
-//void debug_window::contextMenuEvent(QContextMenuEvent *event)
-//{
+// void debug_window::contextMenuEvent(QContextMenuEvent *event)
+// {
 //    QMenu *menu = ui->shell_textEdit->createStandardContextMenu();
 //    QAction *pasteAction = menu->addAction("Paste");
 //    QAction *selectedAction = menu->exec(event->globalPos());
@@ -96,7 +99,29 @@ void debug_window::showEvent(QShowEvent *event)
 //        qDebug() << "Right-click paste event detected!";
 //        qDebug() << "Pasted text: " << text;
 //    }
-//}
+// }
+
+// void debug_window::mousePressEvent(QMouseEvent *event)
+// {
+//   if (event->button() == Qt::RightButton)
+//   {
+//     qDebug() << "Right button clicked";
+//     /* 创建一个 QClipboard 对象 */
+//     QClipboard *clipboard = QApplication::clipboard();
+
+//     /* 检测剪贴板中是否有文本 */
+//     if (clipboard->text().isEmpty())
+//     {
+//       qDebug() << "Clipboard is empty";
+//     }
+//     else
+//     {
+//       qDebug() << "Clipboard contains text: " << clipboard->text();
+//       clipboard->clear();
+//     }
+//     event->ignore();
+//   }
+// }
 
 bool debug_window::eventFilter(QObject *target, QEvent *event)
 {
@@ -104,6 +129,36 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
   if(target != ui->shell_textEdit)
   {
     return QWidget::eventFilter(target, event);
+  }
+
+  /* 鼠标按键事件 */
+  if(event->type() == QEvent::MouseButtonPress)
+  {
+    QMouseEvent *k = static_cast<QMouseEvent *>(event);
+    if (k->button() == Qt::RightButton)
+    {
+      /* 创建一个 QClipboard 对象 */
+      QClipboard *clipboard = QApplication::clipboard();
+
+      /* 检测剪贴板中是否有文本 */
+      if (clipboard->text().isEmpty())
+      {
+        // qDebug() << "AA Clipboard is empty";
+        ui->shell_textEdit->setContextMenuPolicy(Qt::ContextMenuPolicy::DefaultContextMenu);
+      }
+      else
+      {
+        // qDebug() << "AA Clipboard contains text: " << clipboard->text();
+
+        /* 发送 */
+        emit signal_send_command(clipboard->text());
+
+        ui->shell_textEdit->setContextMenuPolicy(Qt::ContextMenuPolicy::NoContextMenu);
+        /* 清空粘贴板 */
+        clipboard->clear();
+      }
+      return true;
+    }
   }
 
   /* 检测是否是输入事件 */

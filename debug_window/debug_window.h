@@ -23,7 +23,8 @@ protected:
      */
     virtual void closeEvent(QCloseEvent *event) override;
     virtual void showEvent(QShowEvent *event) override;
-//    virtual void contextMenuEvent(QContextMenuEvent *event) override;
+    // virtual void contextMenuEvent(QContextMenuEvent *event) override;
+    // virtual void mousePressEvent(QMouseEvent *event) override;
 private:
   signals:
     /**
