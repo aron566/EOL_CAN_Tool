@@ -72,7 +72,7 @@ eol_window::eol_window(QString title, QWidget *parent) :
 
   /* 本窗口子线程更新传输列表动作 */
   connect(this, &eol_window::signal_update_show_table_list, this, &eol_window::slot_update_show_table_list);
-  connect(this, &eol_window::signal_export_table_task_ok, this, &eol_window::slot_recv_eol_data_complete);
+  connect(this, &eol_window::signal_upload_all_table_task_ok, this, &eol_window::slot_recv_eol_data_complete);
 
   /* 设备信息读写窗口初始化 */
   eol_sub_window_init(tr("EOL CAN Tool - Device Info RW"));
@@ -1046,6 +1046,25 @@ void eol_window::run_eol_window_file_decode_task()
   ui->export_all_pushButton->setEnabled(true);
 }
 
+void eol_window::run_eol_window_export_one_table_task()
+{
+  /* 启动线程 */
+  eol_protocol::TABLE_Typedef_t table_type = (eol_protocol::TABLE_Typedef_t)ui->table_type_comboBox->currentIndex();
+  eol_protocol_obj->eol_master_get_table_data(table_type);
+
+  /* 设置当前任务状态 */
+  SET_CURRENT_TASK_RUN_STATE(TASK_RUNNING);
+  while(current_task_complete_state == TASK_RUNNING && run_state)
+  {
+    /* 启动接收数据线程 */
+    eol_protocol_obj->start_task();
+    QThread::msleep(1);
+  }
+
+  /* 等待任务结束 */
+  run_state = false;
+}
+
 void eol_window::run_eol_window_export_task()
 {
   /* 检测导出文件名是否为空 */
@@ -1101,7 +1120,7 @@ _end_task:
   }
 
   /* 任务完成 */
-  emit signal_export_table_task_ok();
+  emit signal_upload_all_table_task_ok();
 }
 
 void eol_window::on_file_sel_pushButton_clicked()
@@ -1155,11 +1174,11 @@ void eol_window::on_file_sel_pushButton_clicked()
 
 void eol_window::on_upload_pushButton_clicked()
 {
-  eol_protocol::TABLE_Typedef_t table_type = (eol_protocol::TABLE_Typedef_t)ui->table_type_comboBox->currentIndex();
-  eol_protocol_obj->eol_master_get_table_data(table_type);
-
   /* 清空更新表 */
   csv_list.clear();
+
+  /* 清空一键导出 */
+  all_table_file_name.clear();
 
   /* 更新显示列表 */
   emit signal_update_show_table_list();
@@ -1173,19 +1192,31 @@ void eol_window::on_upload_pushButton_clicked()
   /* 重置计时 */
   time_cnt = 0;
 
-  /* 启动状态 */
-  run_state = true;
-
-  /* 启动计时 */
-  timer_obj->start();
-
-  /* 启动接收数据线程 */
-  eol_protocol_obj->start_task();
-
   /* 本按钮不可用 */
   ui->upload_pushButton->setEnabled(false);
   ui->add_list_pushButton->setEnabled(false);
   ui->export_all_pushButton->setEnabled(false);
+
+  /* 设置线程任务 */
+  current_running_task = UPLOAD_TABLE_TASK;
+
+  /* 启动线程 */
+  run_state = true;
+
+  /* 原子操作 */
+  if(thread_run_statex.testAndSetRelaxed(0, 1))
+  {
+    /* 启动任务线程 */
+    g_thread_pool->start(this);
+  }
+  else
+  {
+    qDebug() << "eol window task is running";
+    return;
+  }
+
+  /* 启动计时 */
+  timer_obj->start();
 }
 
 void eol_window::on_update_pushButton_clicked()
@@ -2291,7 +2322,7 @@ void eol_window::on_export_all_pushButton_clicked()
   ui->export_all_pushButton->setEnabled(false);
 
   /* 设置线程任务 */
-  current_running_task = EXPORT_TABLE_TASK;
+  current_running_task = UPLOAD_ALL_TABLE_TASK;
 
   /* 启动线程 */
   run_state = true;

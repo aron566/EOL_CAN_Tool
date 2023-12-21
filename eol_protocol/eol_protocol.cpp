@@ -488,13 +488,17 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
       while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state);
     }
 
+    /* 移除等待队列 */
+    if(false == wait_response_list.isEmpty())
+    {
+      wait_response_list.removeFirst();
+    }
+
     if(ret == RETURN_OK && (EOL_READ_CMD == command || EOL_META_CMD == command))
     {
       /* 接收一帧 */
       emit signal_send_rec_one_frame(false);
     }
-
-    eol_protocol_clear();
     return ret;
   }
 #endif
@@ -528,13 +532,17 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
     while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state);
   }
 
+  /* 移除等待队列 */
+  if(false == wait_response_list.isEmpty())
+  {
+    wait_response_list.removeFirst();
+  }
+
   if(ret == RETURN_OK && (EOL_READ_CMD == command || EOL_META_CMD == command))
   {
     /* 接收一帧 */
     emit signal_send_rec_one_frame(false);
   }
-
-  eol_protocol_clear();
   return ret;
 }
 
@@ -690,6 +698,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
   uint32_t len = 0;
   uint8_t reg = 0;
   uint8_t cmd = 0;
+  RETURN_TYPE_Typedef_t ret = RETURN_OK;
 
   /* 非线程模式，事件处理循环 */
 //  QCoreApplication::processEvents();
@@ -721,10 +730,9 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
     /* 检测响应帧超时 */
     if(response_is_timeout(wait) == true && false == listen_mode)
     {
-      /* 移除等待队列-清空缓冲区 */
-      wait_response_list.removeFirst();
+      /* 清空缓冲区 */
       CircularQueue::CQ_emptyData(cq);
-      qDebug() << "clear wait one";
+      qDebug() << "clear cq buf";
       acc_error_cnt++;
       if(acc_error_cnt > NO_RESPONSE_TIMES)
       {
@@ -780,28 +788,27 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         {
           qDebug() << "crc err package_len " << package_len;
           utility::debug_print(temp_buf, package_len);
-          return RETURN_CRC_ERROR;
+          CircularQueue::CQ_manualOffsetInc(cq, 1);
+          ret = RETURN_CRC_ERROR;
+          break;
         }
 
-        /* 移除等待队列 */
-        if(false == wait_response_list.isEmpty() && false == listen_mode)
-        {
-          wait_response_list.removeFirst();
-        }
-
+        /* 移除报文 */
         CircularQueue::CQ_manualOffsetInc(cq, package_len);
 
         /* 处理ack */
-        EOL_OPT_STATUS_Typedef_t ret = decode_ack_frame(reg, temp_buf);
-        if(EOL_OPT_OK != ret)
+        EOL_OPT_STATUS_Typedef_t ack_ret = decode_ack_frame(reg, temp_buf);
+        if(EOL_OPT_OK != ack_ret)
         {
           qDebug() << "signal_protocol_error_occur";
-          emit signal_protocol_error_occur((quint8)ret);
-          return RETURN_ERROR;
+          emit signal_protocol_error_occur((quint8)ack_ret);
+          ret = RETURN_ERROR;
+          break;
         }
 
         acc_error_cnt = 0;
-        return RETURN_OK;
+        ret = RETURN_OK;
+        break;
       }
 
       /* 主机读取，从机回复报文 */
@@ -814,38 +821,38 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
 
         if(len < package_len)
         {
-          return RETURN_WAITTING;
+          ret = RETURN_WAITTING;
+          break;
         }
         CircularQueue::CQ_manualGetDataTemp(cq, temp_buf, package_len);
         if(utility::get_modbus_crc16_rsl_with_tab(temp_buf, static_cast<uint16_t>(package_len - 2)) == false)
         {
           qDebug() << "crc err package_len " << package_len << "data len " << data_len;
           utility::debug_print(temp_buf, package_len);
+
+          /* 清空一次 */
+          CircularQueue::CQ_manualOffsetInc(cq, len);
+          ret = RETURN_CRC_ERROR;
           break;
         }
 
         /* 处理数据 */
-        RETURN_TYPE_Typedef_t ret = decode_data_frame(reg, temp_buf + 5, data_len);
+        ret = decode_data_frame(reg, temp_buf + 5, data_len);
 
-        /* 移除等待队列 */
-        if(false == wait_response_list.isEmpty() && false == listen_mode)
-        {
-          wait_response_list.removeFirst();
-        }
-
+        /* 移除报文 */
         CircularQueue::CQ_manualOffsetInc(cq, package_len);
 
         acc_error_cnt = 0;
-        return ret;
+        break;
       }
 
       default:
         /* TODO */
         CircularQueue::CQ_manualOffsetInc(cq, 1);
-        return RETURN_WAITTING;
+        ret = RETURN_WAITTING;
+        break;
     }
-    CircularQueue::CQ_manualOffsetInc(cq, 1);
-    return RETURN_ERROR;
+    return ret;
 
 __META_CMD_DECDE:
     /* 取出数据 */
@@ -859,11 +866,6 @@ __META_CMD_DECDE:
     switch(wait.reg_addr)
     {
       default:
-        /* 正常-->移除等待队列 */
-        if(false == wait_response_list.isEmpty() && false == listen_mode)
-        {
-          wait_response_list.removeFirst();
-        }
         CircularQueue::CQ_manualOffsetInc(cq, meta_len);
 
         acc_error_cnt = 0;

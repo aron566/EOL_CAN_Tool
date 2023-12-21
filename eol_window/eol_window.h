@@ -73,8 +73,11 @@ public:
         case UPDATE_TABLE_TASK:
           run_eol_window_file_decode_task();
           break;
-        case EXPORT_TABLE_TASK:
+        case UPLOAD_ALL_TABLE_TASK:
           run_eol_window_export_task();
+          break;
+        case UPLOAD_TABLE_TASK:
+          run_eol_window_export_one_table_task();
           break;
         case NO_TASK_RUNNING:
         default:
@@ -299,9 +302,10 @@ private:
 
   typedef enum
   {
-    UPDATE_TABLE_TASK = 0,
-    EXPORT_TABLE_TASK,
-    NO_TASK_RUNNING,
+    UPDATE_TABLE_TASK = 0,  /**< 写入表 */
+    UPLOAD_TABLE_TASK,      /**< 读取表 */
+    UPLOAD_ALL_TABLE_TASK,      /**< 读取全部表 */
+    NO_TASK_RUNNING,        /**< 空闲 */
   }EOL_WINDOW_TASK_Typedef_t;
 
   EOL_WINDOW_TASK_Typedef_t current_running_task = NO_TASK_RUNNING;
@@ -418,6 +422,11 @@ private:
   void run_eol_window_file_decode_task();
 
   /**
+   * @brief 执行eol单个导出任务
+   */
+  void run_eol_window_export_one_table_task();
+
+  /**
    * @brief 执行eol导出任务
    */
   void run_eol_window_export_task();
@@ -444,7 +453,7 @@ signals:
   /**
    * @brief 导出表任务完成
    */
-  void signal_export_table_task_ok();
+  void signal_upload_all_table_task_ok();
 
 private slots:
   void slot_show_this_window();

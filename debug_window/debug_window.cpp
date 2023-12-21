@@ -37,6 +37,9 @@ debug_window::debug_window(QString title, QWidget *parent) :
   ui->shell_textEdit->setHtml("<body bgcolor=\"#000000\"></body>");
   ui->shell_textEdit->ensureCursorVisible();
 
+  /* 清空粘贴板 */
+  QApplication::clipboard()->clear();
+
   /* 关闭全局上下文菜单 */
   this->setContextMenuPolicy(Qt::ContextMenuPolicy::NoContextMenu);
 
