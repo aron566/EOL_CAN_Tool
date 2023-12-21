@@ -220,7 +220,7 @@ _show_server_rx_msg:
           this->show_message(tips, 1U, 0U);
         };
 
-        tips = "tcp server init ok!";
+        tips = tr("tcp server init ok! listen addr:%1,listen port:%2").arg(ip, port);
       }
       break;
 
@@ -338,7 +338,7 @@ _show_client_rx_msg:
           this->show_message(tips, 0U, 0U);
         };
 
-        tips = "tcp client init ok!";
+        tips = tr("tcp client init ok! host addr:%1,remote port:%2").arg(ip, port);
       }
       break;
 

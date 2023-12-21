@@ -122,6 +122,8 @@ bool network_driver_udp::network_init(QString &ip, QString &port, NETWORK_WORK_R
         if (0 > bindfd)
         {
           tips = tr("udp server init failed!");
+          /* 发送提示信息 */
+          show_message(tips);
           return false;
         }
         /* 注册消息回调 */
@@ -182,7 +184,7 @@ _show_server_rx_msg:
           this->show_message(tips, 1U, 0U);
         };
 
-        tips = tr("udp server init ok!");
+        tips = tr("udp server init ok! listen addr:%1,listen port:%2").arg(ip, port);
       }
       break;
 
@@ -199,6 +201,8 @@ _show_server_rx_msg:
         if (0 > bindfd)
         {
           tips = tr("udp client init failed!");
+          /* 发送提示信息 */
+          show_message(tips);
           return false;
         }
         /* 注册消息回调 */
@@ -259,7 +263,7 @@ _show_client_rx_msg:
           this->show_message(tips, 0U, 0U);
         };
 
-        tips = tr("udp client init ok!");
+        tips = tr("udp client init ok! host addr:%1,remote port:%2").arg(ip, port);
       }
       break;
 

@@ -88,6 +88,7 @@
  *  <tr><td>2023-12-18 <td>v1.2.12 <td>aron566 <td>优化派生类析构可能虚函数调用错误问题，优化开启刷新目标时rts协议栈超时检测卡顿问题，修复网络掩码显示逻辑错误
  *  <tr><td>2023-12-19 <td>v1.2.13 <td>aron566 <td>优化表传输一键导出，优化命令行输入支持复制粘贴，修复重复析构问题，修复rcs页面退出目标会继续刷新问题
  *  <tr><td>2023-12-21 <td>v1.2.14 <td>aron566 <td>优化eol协议栈，优化单次导出表数据功能
+ *  <tr><td>2023-12-22 <td>v1.2.15 <td>aron566 <td>优化网络协议启动增加提示信息
  *  </table>
  */
 #include "mainwindow.h"
@@ -95,7 +96,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.14"
+#define PC_SOFTWARE_VERSION       "1.2.15"
 
 int main(int argc, char *argv[])
 {
