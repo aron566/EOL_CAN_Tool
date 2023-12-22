@@ -72,6 +72,7 @@ public:
   {
     QString ip;
     QString port;
+    QString _port;/**< 网络驱动receive for rts */
     network_driver_model::NETWORK_WORK_ROLE_Typedef_t role;
     network_driver_model::NETWORK_TYPE_Typedef_t net_type;
     NETWORK_DEVICE_Typedef_t device_type;
@@ -90,7 +91,7 @@ public:
   void set_network_par(const QString &ip, const QString &port,
                        network_driver_model::NETWORK_WORK_ROLE_Typedef_t role,
                        network_driver_model::NETWORK_TYPE_Typedef_t net_type,
-                       NETWORK_DEVICE_Typedef_t device_type);
+                       NETWORK_DEVICE_Typedef_t device_type, const QString &_port = "12003");
 
   /**
    * @brief network_start 启动网络

@@ -528,11 +528,12 @@ qint32 network_window::get_device_obj(NETWORK_DEVICE_Typedef_t device_type)
 void network_window::set_network_par(const QString &ip, const QString &port,
                                      network_driver_model::NETWORK_WORK_ROLE_Typedef_t role,
                                      network_driver_model::NETWORK_TYPE_Typedef_t net_type,
-                                     NETWORK_DEVICE_Typedef_t device_type)
+                                     NETWORK_DEVICE_Typedef_t device_type, const QString &_port)
 {
   NETWORK_DEVICE_INFO_Typedef_t network_info;
   network_info.ip = ip;
   network_info.port = port;
+  network_info._port = _port;
   network_info.role = role;
   network_info.net_type = net_type;
   network_info.device_type = device_type;
@@ -597,7 +598,7 @@ bool network_window::network_start(NETWORK_DEVICE_Typedef_t device_type)
       connect(t.network_driver_rec_obj, &network_driver_model::signal_show_thread_message, this, &network_window::slot_show_message_block, Qt::BlockingQueuedConnection);
       connect(t.network_driver_rec_obj, &network_driver_model::signal_show_message_bytes, this, &network_window::slot_show_message_bytes);
       QString rec_ip_str = "0.0.0.0";
-      QString rec_port_str = QString::number(t.port.toInt() + 1);
+      QString rec_port_str = QString::number(t._port.toInt());
       if(false == t.network_driver_rec_obj->network_init(rec_ip_str, rec_port_str, network_driver_model::NETWORK_SERVER_ROLE, t.net_type))
       {
         return false;

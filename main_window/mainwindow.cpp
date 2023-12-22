@@ -800,7 +800,7 @@ void MainWindow::on_rts_start_pushButton_clicked()
                             ui->rts_local_port_lineEdit->text(),
                             (network_driver_model::NETWORK_WORK_ROLE_Typedef_t)ui->rts_role_comboBox->currentIndex(),
                             (network_driver_model::NETWORK_TYPE_Typedef_t)ui->rts_net_type_comboBox->currentIndex(),
-                            network_window::RTS_NETWORK_DEVICE);
+                            network_window::RTS_NETWORK_DEVICE, ui->rts_remote_port_lineEdit->text());
       break;
 
     /* 服务端：设定自己的端口 */
