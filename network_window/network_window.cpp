@@ -694,6 +694,12 @@ void network_window::slot_show_message(const QString &message, quint32 channel_n
       {
         return;
       }
+      /* 是否需要转发图表 */
+      if(ui->net_wave_checkBox->isChecked())
+      {
+        QByteArray a = QByteArray((const char *)data, data_len);
+        emit signal_net_wave_msg(a);
+      }
       if(false == char2str(data, data_len, show_message))
       {
         return;

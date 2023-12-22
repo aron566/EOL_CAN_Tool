@@ -141,6 +141,7 @@ private:
 signals:
     void signal_more_window_closed();
 
+    void signal_can_wave_msg(QByteArray data);
 private slots:
     void on_frame_type_comboBox_currentIndexChanged(int index);
 

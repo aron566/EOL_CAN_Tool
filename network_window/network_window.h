@@ -158,6 +158,12 @@ signals:
    * @param device_type
    */
   void signal_network_stop(NETWORK_DEVICE_Typedef_t device_type);
+
+  /**
+   * @brief signal_net_wave_msg
+   * @param data
+   */
+  void signal_net_wave_msg(QByteArray data);
 private:
   /* 消息框显示 */
   typedef struct

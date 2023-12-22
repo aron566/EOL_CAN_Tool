@@ -131,12 +131,15 @@ void more_window::network_window_init(QString titile)
       }
     }
   });
+
+  connect(network_window_obj, &network_window::signal_net_wave_msg, tool_window_obj, &tool_window::slot_wave_data);
 }
 
 /* 工具集子窗口 */
 void more_window::tool_window_init(QString titile)
 {
   tool_window_obj = new tool_window(titile);
+  connect(this, &more_window::signal_can_wave_msg, tool_window_obj, &tool_window::slot_wave_data);
 }
 
 void more_window::timer_init()
@@ -583,6 +586,12 @@ void more_window::slot_show_message(const QString &message, quint32 channel_num,
       {
         return;
       }
+      /* 是否需要转发图表 */
+      if(ui->can_wave_checkBox->isChecked())
+      {
+        QByteArray a = QByteArray((const char *)data, data_len);
+        emit signal_can_wave_msg(a);
+      }
       if(false == char2str(data, data_len, show_message))
       {
         return;
@@ -653,6 +662,12 @@ void more_window::slot_show_message_block(const QString &message, quint32 channe
           && limit_str_canid != can_id)
       {
         return;
+      }
+      /* 是否需要转发图表 */
+      if(ui->can_wave_checkBox->isChecked())
+      {
+        QByteArray a = QByteArray((const char *)data, data_len);
+        emit signal_can_wave_msg(a);
       }
       if(false == char2str(data, data_len, show_message))
       {

@@ -55,6 +55,9 @@ public:
     explicit serial_port_plotter(QWidget *parent = nullptr);
     ~serial_port_plotter();
 
+public slots:
+    void read_wave_data(QByteArray data);                                                       // Slot for inside can net port
+
 private slots:
     void on_comboPort_currentIndexChanged(const QString &arg1);                           // Slot displays message on status bar
     void portOpenedSuccess();                                                             // Called when port opens OK
@@ -66,7 +69,6 @@ private slots:
     void on_spinAxesMin_valueChanged(int arg1);                                           // Changing lower limit for the plot
     void on_spinAxesMax_valueChanged(int arg1);                                           // Changing upper limit for the plot
     void readData();                                                                      // Slot for inside serial port
-    void readData(QByteArray data);                                                       // Slot for inside can net port
     //void on_comboAxes_currentIndexChanged(int index);                                     // Display number of axes and colors in status bar
     void on_spinYStep_valueChanged(int arg1);                                             // Spin box for changing Y axis tick step
     void on_savePNGButton_clicked();                                                      // Button for saving JPG
@@ -98,8 +100,6 @@ private slots:
     void on_pushButton_clicked();
 
     void on_actionExit_Window_triggered();
-
-    void on_comboBox_currentTextChanged(const QString &arg1);
 
   signals:
     void portOpenFail();                                                                  // Emitted when cannot open port

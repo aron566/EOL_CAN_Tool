@@ -29,10 +29,18 @@ tool_window::~tool_window()
 
 void tool_window::serial_port_plotter_init()
 {
-    serial_port_plotter_win = new serial_port_plotter();
+  serial_port_plotter_win = new serial_port_plotter();
+
+  connect(this, &tool_window::signal_wave_data, serial_port_plotter_win, &serial_port_plotter::read_wave_data);
 }
 
 void tool_window::on_data_wave_pushButton_clicked()
 {
   serial_port_plotter_win->show();
+}
+
+
+void tool_window::slot_wave_data(QByteArray data)
+{
+  emit signal_wave_data(data);
 }

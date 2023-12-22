@@ -130,19 +130,22 @@ serial_port_plotter::~serial_port_plotter()
 void serial_port_plotter::createUI()
 {
     /* Check if there are any ports at all; if not, disable controls and return */
-    if (QSerialPortInfo::availablePorts().size() == 0)
-      {
-        enable_com_controls (false);
-        ui->statusBar->showMessage ("No ports detected.");
-        ui->savePNGButton->setEnabled (false);
-        return;
-      }
+    // if (QSerialPortInfo::availablePorts().size() == 0)
+      // {
+      //   enable_com_controls (false);
+      //   ui->statusBar->showMessage ("No ports detected.");
+      //   ui->savePNGButton->setEnabled (false);
+      //   return;
+      // }
 
     /* List all available serial ports and populate ports combo box */
     for (QSerialPortInfo port : QSerialPortInfo::availablePorts())
       {
         ui->comboPort->addItem (port.portName());
       }
+
+    /* 增加虚拟com */
+    ui->comboPort->addItem ("vcom");
 
     /* Populate baud rate combo box with standard rates */
     ui->comboBaud->addItem ("1200");
@@ -290,6 +293,13 @@ void serial_port_plotter::openPort (QSerialPortInfo portInfo, int baudRate, QSer
     connect (serialPort, SIGNAL(readyRead()), this, SLOT(readData()));
 
     connect (this, SIGNAL(newData(QStringList)), this, SLOT(saveStream(QStringList)));
+
+    /* 是否打开的是虚拟com口 */
+    if(ui->comboPort->currentText() == "vcom")
+    {
+      emit portOpenOK();
+      return;
+    }
 
     if (serialPort->open (QIODevice::ReadWrite))
       {
@@ -533,8 +543,9 @@ void serial_port_plotter::readData()
  * @brief Read data for inside can net port
  * @param data
  */
-void serial_port_plotter::readData(QByteArray data)
+void serial_port_plotter::read_wave_data(QByteArray data)
 {
+  qDebug() << "plot" << data;
     if(!data.isEmpty()) {                                                             // If the byte array is not empty
         char *temp = data.data();                                                     // Get a '\0'-terminated char* to the data
 
@@ -826,7 +837,12 @@ void serial_port_plotter::on_actionDisconnect_triggered()
 {
   if (connected)
     {
-      serialPort->close();                                                              // Close serial port
+      /* 是否打开的是虚拟com口 */
+      if(ui->comboPort->currentText() != "vcom")
+      {
+        serialPort->close();
+      }
+      // serialPort->close();                                                              // Close serial port
       emit portClosed();                                                                // Notify application
       delete serialPort;                                                                // Delete the pointer
       serialPort = nullptr;                                                                // Assign NULL to dangling pointer
@@ -992,12 +1008,3 @@ void serial_port_plotter::on_pushButton_clicked()
         ui->comboPort->addItem (port.portName());
     }
 }
-
-void serial_port_plotter::on_comboBox_currentTextChanged(const QString &arg1)
-{
-    if(arg1 == "Serial_Port")
-    {
-
-    }
-}
-
