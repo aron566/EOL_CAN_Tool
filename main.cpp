@@ -89,6 +89,8 @@
  *  <tr><td>2023-12-19 <td>v1.2.13 <td>aron566 <td>优化表传输一键导出，优化命令行输入支持复制粘贴，修复重复析构问题，修复rcs页面退出目标会继续刷新问题
  *  <tr><td>2023-12-21 <td>v1.2.14 <td>aron566 <td>优化eol协议栈，优化单次导出表数据功能
  *  <tr><td>2023-12-22 <td>v1.2.15 <td>aron566 <td>优化网络协议启动增加提示信息，支持数据流转到曲线图表显示，支持rts接收端口设定12003 12001客户端发
+ *  <tr><td>2023-12-25 <td>v1.2.16 <td>aron566 <td>修复设置rts失败问题，优化rts协议栈
+ *  <tr><td>2023-12-26 <td>v1.2.17 <td>aron566 <td>手动发送支持队列，方便发送唤醒报文
  *  </table>
  */
 #include "mainwindow.h"
@@ -96,7 +98,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.15"
+#define PC_SOFTWARE_VERSION       "1.2.17"
 
 int main(int argc, char *argv[])
 {

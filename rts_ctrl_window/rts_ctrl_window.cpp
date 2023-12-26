@@ -97,8 +97,11 @@ void rts_ctrl_window::on_set_pushButton_clicked()
   rts_protocol::RTS_TASK_LIST_Typedef_t task;
 
   /* 设置频率 */
-  task.cmd = RTS_SET_FREQUENCY_PORT(ui->freq_lineEdit->text().toUtf8().data());
-  rts_protocol_obj->rts_master_common_rw_device(task);
+  if(false == ui->freq_lineEdit->text().isEmpty())
+  {
+    task.cmd = RTS_SET_FREQUENCY_PORT(ui->freq_lineEdit->text());
+    rts_protocol_obj->rts_master_common_rw_device(task);
+  }
 
   /* 设置距离、速度 、rcs */
   task.cmd = RTS_SET_TARGET_PORT(ui->range_lineEdit->text().toUtf8().data(),

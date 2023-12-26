@@ -222,6 +222,9 @@ void eol_window::set_rts_driver_obj(network_driver_model *network_driver_send_ob
   ui->rts_crl_pushButton->setVisible(true);
   ui->open_rts_pushButton->setVisible(true);
   ui->close_rts_pushButton->setVisible(true);
+
+  /* 设置手动控制界面驱动接口 */
+  rts_ctrl_window_obj->set_rts_protocol_obj(rts_protocol_obj);
 }
 
 void eol_window::set_can_driver_obj(can_driver_model *can_driver_obj)
@@ -239,7 +242,7 @@ void eol_window::set_can_driver_obj(can_driver_model *can_driver_obj)
 void eol_window::eol_protocol_init(can_driver_model *can_driver_obj)
 {
   /* eol协议栈初始化 */
-  eol_protocol_obj = new eol_protocol(this);
+  eol_protocol_obj = new eol_protocol(can_driver_obj);
 
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_error_occur, this, &eol_window::slot_protocol_error_occur, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_no_response, this, &eol_window::slot_protocol_no_response, Qt::BlockingQueuedConnection);
@@ -285,7 +288,10 @@ void eol_window::rts_protocol_init(network_driver_model *network_driver_send_obj
   rts_network_driver_rec_obj = network_driver_rec_obj;
 
   /* rts协议栈初始化 */
-  rts_protocol_obj = new rts_protocol(this);
+  if(nullptr == rts_protocol_obj)
+  {
+    rts_protocol_obj = new rts_protocol(this);
+  }
 
   /* 禁止线程完成后执行析构对象 */
   rts_protocol_obj->setAutoDelete(false);
@@ -296,6 +302,7 @@ void eol_window::rts_protocol_init(network_driver_model *network_driver_send_obj
   connect(rts_protocol_obj, &rts_protocol::signal_protocol_error_occur, this, &eol_window::slot_rts_protocol_error_occur);
   connect(rts_protocol_obj, &rts_protocol::signal_protocol_timeout, this, &eol_window::slot_rts_protocol_timeout);
   connect(rts_protocol_obj, &rts_protocol::signal_protocol_rw_err, this, &eol_window::slot_rts_protocol_rw_err);
+  connect(rts_protocol_obj, &rts_protocol::signal_protocol_rw_ok, this, &eol_window::slot_rts_protocol_rw_ok);
 }
 
 void eol_window::timer_init()
@@ -2427,3 +2434,14 @@ void eol_window::on_rts_addr_lineEdit_editingFinished()
   }
 }
 
+void eol_window::slot_rts_protocol_rw_ok(QString cmd)
+{
+  ui->msg_str_label->setText("rts:ok");
+  if(RTS_OPEN_DEVICE != cmd && RTS_CLOSE_DEVICE != cmd)
+  {
+    return;
+  }
+  QString tips = QString("set RTS:%1 ok").arg(cmd);
+  QMessageBox message(QMessageBox::Information, tr("Info"), tips, QMessageBox::Yes, nullptr);
+  message.exec();
+}

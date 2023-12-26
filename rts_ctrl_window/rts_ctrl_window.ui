@@ -30,7 +30,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="freq_lineEdit"/>
+      <widget class="QLineEdit" name="freq_lineEdit">
+       <property name="text">
+        <string>76.05</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QLabel" name="label_5">
@@ -69,6 +73,9 @@
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="text">
+        <string>20</string>
        </property>
       </widget>
      </item>
@@ -109,7 +116,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="speed_lineEdit"/>
+      <widget class="QLineEdit" name="speed_lineEdit">
+       <property name="text">
+        <string>10</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QLabel" name="label_7">
@@ -142,7 +153,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="rcs_lineEdit"/>
+      <widget class="QLineEdit" name="rcs_lineEdit">
+       <property name="text">
+        <string>10</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QLabel" name="label_8">

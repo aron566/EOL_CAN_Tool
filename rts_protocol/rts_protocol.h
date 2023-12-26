@@ -50,9 +50,9 @@
 #define RTS_OPEN_DEVICE   "VRTS:Open"                         /**< 打开模拟器 */
 #define RTS_GET_STATUS    "VRTS:Status?"                      /**< 回复字符串长度≥5 内容为: A(空格)B(空格)C B为VRTS连接状态，1为连接其他字符为未连接 当B不为1且C不为1时，则为VRTS报错 */
 #define RTS_SET_FREQUENCY "VRTS:Radar 76.300"                 /**< 设置中心频率 */
-#define RTS_SET_FREQUENCY_PORT(freq) (QString::asprintf("VRTS:Radar %s", freq))
+#define RTS_SET_FREQUENCY_PORT(freq) (QString("VRTS:Radar %1").arg(freq))
 #define RTS_SET_TARGET    "VRTS:Targets 20.000 0.000 10.000"  /**< r m v m/s rcs dBsm */
-#define RTS_SET_TARGET_PORT(range,speed,dBsm) (QString::asprintf("VRTS:Targets %s %s %s", range, speed, dBsm))
+#define RTS_SET_TARGET_PORT(range,speed,dBsm) (QString("VRTS:Targets %1 %2 %3").arg(range, speed, dBsm))
 #define RTS_CLOSE_DEVICE  "VRTS:Close"                        /**< 关闭模拟器 */
 #define RTS_DISCONNECT    "System:Interaction:Local"          /**< 关闭远程连接 */
 /** Exported variables -------------------------------------------------------*/
@@ -214,6 +214,12 @@ signals:
    * @param cmd 命令
    */
   void signal_protocol_rw_err(QString cmd);
+
+  /**
+   * @brief signal_protocol_rw_ok 读写ok信号
+   * @param cmd 命令
+   */
+  void signal_protocol_rw_ok(QString cmd);
 
 private slots:
 

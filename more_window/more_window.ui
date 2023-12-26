@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>922</width>
-    <height>890</height>
+    <height>926</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -446,6 +446,12 @@
              </item>
              <item>
               <widget class="QLabel" name="id_label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
                 <string>ID（0x）:</string>
                </property>
@@ -453,6 +459,12 @@
              </item>
              <item>
               <widget class="QLineEdit" name="id_lineEdit">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -460,6 +472,12 @@
              </item>
              <item>
               <widget class="QLabel" name="frame_type_label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
                 <string>帧类型：</string>
                </property>
@@ -481,6 +499,12 @@
              </item>
              <item>
               <widget class="QLabel" name="protocol_label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
                 <string>协议：</string>
                </property>
@@ -502,6 +526,12 @@
              </item>
              <item>
               <widget class="QLabel" name="canfd_pluse_label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
                 <string>CANFD加速：</string>
                </property>
@@ -604,6 +634,32 @@
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="send_timer_cnt_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>定时发帧数：</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="send_timer_cnt_lineEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="timer_checkBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -613,6 +669,32 @@
             </property>
             <property name="text">
              <string>定时发送</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="add_send_timer_pushButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>添加到定时发送列表</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="clear_send_timer_pushButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>清空定时发送</string>
             </property>
            </widget>
           </item>

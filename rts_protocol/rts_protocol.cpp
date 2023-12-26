@@ -17,6 +17,7 @@
  *  <table>
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2023-12-01 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2023-12-25 <td>v0.0.2  <td>aron566 <td>优化协议栈
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -114,9 +115,6 @@ void rts_protocol::run_rts_task()
     /* 执行主线程 */
     QThread::usleep(0);
   }
-  sem.tryAcquire();
-  rts_task_list.clear();
-  sem.release();
   qDebug() << "rts_task end";
 }
 
@@ -148,6 +146,13 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_create_task(con
   {
     /* todo nothing */
   }
+
+  /* 移除等待队列 */
+  if(false == wait_response_list.isEmpty())
+  {
+    wait_response_list.removeFirst();
+  }
+
   return ret;
 }
 
@@ -186,10 +191,8 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_wait_reply_star
     /* 检测响应帧超时 */
     if(response_is_timeout(wait) == true && false == listen_mode)
     {
-      /* 移除等待队列-清空缓冲区 */
-      wait_response_list.removeFirst();
+      /* 清空缓冲区 */
       CircularQueue::CQ_emptyData(cq);
-      qDebug() << "clear wait one";
       acc_error_cnt++;
       if(acc_error_cnt > NO_RESPONSE_TIMES)
       {
@@ -216,13 +219,6 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_wait_reply_star
       /* 写入应答完成 */
       CircularQueue::CQ_manualGetDataTemp(cq, temp_buf, package_len);
 
-
-      /* 移除等待队列 */
-      if(false == wait_response_list.isEmpty() && false == listen_mode)
-      {
-        wait_response_list.removeFirst();
-      }
-
       /* 清空缓冲区 */
       CircularQueue::CQ_manualOffsetInc(cq, len);
 
@@ -234,6 +230,9 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_wait_reply_star
         emit signal_protocol_error_occur((quint8)ret);
         return RETURN_ERROR;
       }
+
+      /* 发送成功信号 */
+      emit signal_protocol_rw_ok(wait.cmd);
 
       acc_error_cnt = 0;
       return RETURN_OK;
@@ -251,11 +250,15 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_wait_reply_star
 
       /* 处理数据 */
       RETURN_TYPE_Typedef_t ret = decode_data_frame(temp_buf, data_len);
-
-      /* 移除等待队列 */
-      if(false == wait_response_list.isEmpty() && false == listen_mode)
+      if(RETURN_OK == ret)
       {
-        wait_response_list.removeFirst();
+        /* 发送成功信号 */
+        emit signal_protocol_rw_ok(wait.cmd);
+      }
+      else
+      {
+        /* 发送错误状态 */
+        emit signal_protocol_error_occur((quint8)ret);
       }
 
       CircularQueue::CQ_manualOffsetInc(cq, len);

@@ -462,6 +462,13 @@ void MainWindow::slot_get_dev_auto_send_list_can_use(bool can_use)
 
 void MainWindow::on_open_device_pushButton_clicked()
 {
+  /* 删除设备驱动 */
+  if(nullptr != can_driver_obj)
+  {
+    delete can_driver_obj;
+    can_driver_obj = nullptr;
+  }
+
   /* 打开设备 */
   switch((can_driver_model::CAN_BRAND_Typedef_t)ui->brand_comboBox->currentIndex())
   {
@@ -590,6 +597,7 @@ void MainWindow::on_close_device_pushButton_clicked()
   }
   /* 关闭设备 */
   can_driver_obj->close();
+
   /* 禁用打开设备按钮 */
   ui->open_device_pushButton->setEnabled(true);
 }

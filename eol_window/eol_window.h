@@ -208,6 +208,12 @@ private slots:
    * @param cmd 命令
    */
   void slot_rts_protocol_rw_err(QString cmd);
+
+  /**
+   * @brief slot_rts_protocol_rw_ok
+   * @param cmd
+   */
+  void slot_rts_protocol_rw_ok(QString cmd);
 private:
   quint32 time_cnt = 0;
 
