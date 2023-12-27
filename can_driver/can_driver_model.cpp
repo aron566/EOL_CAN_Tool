@@ -193,14 +193,75 @@ bool can_driver_model::send_data()
 {
   // QReadLocker locker(&tx_msg_rw_lock);
 
-  /* 检查是否有发送任务 */
-  if(true == send_msg_list.isEmpty())
+  /* 定时发送 */
+  if(false == period_send_msg_list.isEmpty())
+  {
+    PERIOD_SEND_MSG_Typedef_t send_task;
+    for(qint32 i = 0; i < period_send_msg_list.size(); i++)
+    {
+      send_task = period_send_msg_list.value(i);
+      quint64 current_time = static_cast<quint64>(QDateTime::currentMSecsSinceEpoch());
+      /* 检测周期、发送帧数 */
+      if((current_time - send_task.last_send_time) >= send_task.period_time
+          && (0 < send_task.send_cnt || -1 == send_task.send_cnt))
+      {
+        /* 更新时间 */
+        send_task.last_send_time = current_time;
+
+        /* 可允许发送次数减小 */
+        if(0 < send_task.send_cnt)
+        {
+          send_task.send_cnt--;
+        }
+
+        /* 设置发送的canid */
+        can_driver_model::set_message_id(QString::number(send_task.can_id, 16));
+        /* 设置canfd加速 */
+        can_driver_model::set_can_fd_exp(send_task.can_fd_exp);
+        /* 设置发送协议类型 */
+        can_driver_model::set_protocol_type(send_task.protocol_type);
+        /* 设置发送帧类型 */
+        can_driver_model::set_frame_type(send_task.frame_type);
+        /* 设置消息数据 */
+        can_driver_model::set_message_data(send_task.data);
+        /* 发送 */
+        send(send_task.channel_num);
+
+        /* 更新记录 */
+        period_send_msg_list.replace(i, send_task);
+      }
+    }
+
+    /* 删除发送次数为0的 */
+    QList<PERIOD_SEND_MSG_Typedef_t>::iterator it = period_send_msg_list.begin();
+    while(0 < period_send_msg_list.size() && it != period_send_msg_list.end())
+    {
+      if(0 == (*it).send_cnt)
+      {
+        it = period_send_msg_list.erase(it);
+      }
+      else
+      {
+        ++it;
+      }
+    }
+  }
+
+  if(false == tx_msg_sem.tryAcquire())
   {
     return false;
   }
-  tx_msg_sem.acquire();
-  SEND_MSG_Typedef_t msg = send_msg_list.dequeue();
+
+  /* 检查是否有发送任务 */
+  if(true == send_msg_list.isEmpty())
+  {
+    tx_msg_sem.release();
+    return false;
+  }
+  SEND_MSG_Typedef_t msg = send_msg_list.takeFirst();
+
   tx_msg_sem.release();
+
   qint32 channel_index = msg.channel_num;
   CHANNEL_STATE_Typedef_t channel_state;
   for(qint32 i = 0; i < channel_state_list.size(); i++)
@@ -463,6 +524,8 @@ void can_driver_model::send(quint8 channel_index)
     return;
   }
 
+  tx_msg_sem.acquire();
+
   SEND_MSG_Typedef_t msg;
 
   CHANNEL_STATE_Typedef_t channel_state;
@@ -478,11 +541,43 @@ void can_driver_model::send(quint8 channel_index)
       msg.protocol = (PROTOCOL_TYPE_Typedef_t)protocol_index_;
       msg.id = id_.toUInt(nullptr, 16);
       // QWriteLocker locker(&tx_msg_rw_lock);
-      tx_msg_sem.acquire();
-      send_msg_list.enqueue(msg);
-      tx_msg_sem.release();
+      send_msg_list.append(msg);
     }
   }
+
+  tx_msg_sem.release();
 }
 
+void can_driver_model::period_send_set(quint32 id, QString data, quint32 period_time,
+                                       qint32 send_cnt, quint8 channel_num,
+                                       FRAME_TYPE_Typedef_t frame_type,
+                                       PROTOCOL_TYPE_Typedef_t protocol_type,
+                                       quint32 can_fd_exp)
+{
+  /* 建立发送任务 */
+  PERIOD_SEND_MSG_Typedef_t send_task;
+
+  /* 周期 */
+  send_task.period_time = period_time;
+
+  /* 上次发送时间 */
+  send_task.last_send_time = static_cast<quint64>(QDateTime::currentMSecsSinceEpoch());
+
+  /* 发送帧数 */
+  send_task.send_cnt = send_cnt;
+
+  /* canid */
+  send_task.can_id = id;
+  /* 发送通道 */
+  send_task.channel_num = channel_num;
+  /* 协议类型 */
+  send_task.protocol_type = protocol_type;
+  /* 帧类型 */
+  send_task.frame_type = frame_type;
+  /* canfd加速 */
+  send_task.can_fd_exp = can_fd_exp;
+  /* 数据 */
+  send_task.data = data;
+  period_send_msg_list.append(send_task);
+}
 /******************************** End of file *********************************/

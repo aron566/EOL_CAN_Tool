@@ -178,7 +178,24 @@ public:
   static bool can_id_mask_en_;
   static QList<CHANNEL_STATE_Typedef_t>channel_state_list;
 
-  QQueue<SEND_MSG_Typedef_t>send_msg_list;
+  QList<SEND_MSG_Typedef_t>send_msg_list;
+
+  /* 周期发送 */
+  typedef struct
+  {
+    QString data;           /**< 发送数据 */
+    quint8 channel_num;     /**< 发送通道 */
+    quint32 can_id;         /**< canid */
+    qint32 can_fd_exp;      /**< 是否加速 */
+    quint32 period_time;    /**< 周期时间 >= 1ms */
+    qint32 send_cnt;        /**< 发送总数，为-1永久发送，否则发送指定次数 */
+    quint64 last_send_time; /**< 记录上次发送时间 */
+    can_driver_model::PROTOCOL_TYPE_Typedef_t protocol_type;
+    can_driver_model::FRAME_TYPE_Typedef_t frame_type;
+  }PERIOD_SEND_MSG_Typedef_t;
+
+  QList<PERIOD_SEND_MSG_Typedef_t>period_send_msg_list;
+
   /* 消息过滤器 */
   typedef struct
   {
@@ -714,6 +731,37 @@ public:
    * @param 通道号
    */
   void send(quint8 channel_index = 0);
+
+  /**
+   * @brief period_send_set 周期发送设置
+   * @param id
+   * @param data
+   * @param period_time 周期时间
+   * @param send_cnt 发送次数 -1不限制
+   * @param channel_num
+   * @param frame_type
+   * @param protocol_type
+   * @param can_fd_exp
+   */
+  void period_send_set(quint32 id, QString data, quint32 period_time,
+                                         qint32 send_cnt, quint8 channel_num,
+                                         FRAME_TYPE_Typedef_t frame_type,
+                                         PROTOCOL_TYPE_Typedef_t protocol_type,
+                                         quint32 can_fd_exp);
+
+  /**
+   * @brief 获取周期发送列表长度
+   * @return 长度
+   */
+  qint32 get_period_send_list_size()
+  {
+    return period_send_msg_list.size();
+  }
+
+  void period_send_list_clear()
+  {
+    period_send_msg_list.clear();
+  }
 
   /**
    * @brief send 发送数据

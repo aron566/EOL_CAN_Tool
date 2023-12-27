@@ -24,19 +24,6 @@ public:
   explicit more_window(QString title, QWidget *parent = nullptr);
   ~more_window();
 
-  typedef struct
-  {
-    QString data;           /**< 发送数据 */
-    quint8 channel_num;     /**< 发送通道 */
-    quint32 can_id;         /**< canid */
-    qint32 can_fd_exp;      /**< 是否加速 */
-    quint32 period_time;    /**< 周期时间 >= 1ms */
-    qint32 send_cnt;        /**< 发送总数，为-1永久发送，否则发送指定次数 */
-    quint64 last_send_time; /**< 记录上次发送时间 */
-    can_driver_model::PROTOCOL_TYPE_Typedef_t protocol_type;
-    can_driver_model::FRAME_TYPE_Typedef_t frame_type;
-  }PERIOD_SEND_MSG_Typedef_t;
-
   /**
    * @brief 设置can驱动
    * @param can_driver_
@@ -234,8 +221,6 @@ private:
     can_driver_model *can_driver_obj = nullptr;
     frame_diagnosis *frame_diagnosis_obj = nullptr;
     QTimer *timer_obj = nullptr;
-
-    QList<PERIOD_SEND_MSG_Typedef_t>period_send_msg_list;
 
     quint32 rx_frame_cnt = 0;
     quint32 tx_frame_cnt = 0;

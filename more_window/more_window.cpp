@@ -757,7 +757,7 @@ void more_window::slot_show_can_msg()
   }
   quint32 msg_len = len / sizeof(can_driver_model::CAN_MSG_DISPLAY_Typedef_t);
 //  qDebug() << "msg" << msg_len;
-  msg_len = msg_len > 64U ? 64U : msg_len;
+  // msg_len = msg_len > 64U ? 64U : msg_len;
   can_driver_model::CAN_MSG_DISPLAY_Typedef_t msg;
   for(quint32 i = 0; i < msg_len; i++)
   {
@@ -873,66 +873,16 @@ void more_window::on_send_pushButton_clicked()
 
 void more_window::slot_timeout()
 {
-  /* 定时发送 */
-  if(false == period_send_msg_list.isEmpty())
+  if(nullptr != can_driver_obj)
   {
-    PERIOD_SEND_MSG_Typedef_t send_task;
-    for(qint32 i = 0; i < period_send_msg_list.size(); i++)
+    if(0 < can_driver_obj->get_period_send_list_size())
     {
-      send_task = period_send_msg_list.value(i);
-      quint64 current_time = static_cast<quint64>(QDateTime::currentMSecsSinceEpoch());
-      /* 检测周期、发送帧数 */
-      if((current_time - send_task.last_send_time) >= send_task.period_time
-          && (0 < send_task.send_cnt || -1 == send_task.send_cnt))
-      {
-        /* 更新时间 */
-        send_task.last_send_time = current_time;
-
-        /* 可允许发送次数减小 */
-        if(0 < send_task.send_cnt)
-        {
-          send_task.send_cnt--;
-        }
-
-        if(nullptr == can_driver_obj)
-        {
-          break;
-        }
-        /* 设置发送的canid */
-        can_driver_model::set_message_id(QString::number(send_task.can_id, 16));
-        /* 设置canfd加速 */
-        can_driver_model::set_can_fd_exp(send_task.can_fd_exp);
-        /* 设置发送协议类型 */
-        can_driver_model::set_protocol_type(send_task.protocol_type);
-        /* 设置发送帧类型 */
-        can_driver_model::set_frame_type(send_task.frame_type);
-        /* 设置消息数据 */
-        can_driver_model::set_message_data(send_task.data);
-        /* 发送 */
-        can_driver_obj->send(send_task.channel_num);
-
-        /* 更新记录 */
-        period_send_msg_list.replace(i, send_task);
-      }
+      ui->clear_send_timer_pushButton->setVisible(true);
     }
-
-    /* 删除发送次数为0的 */
-    QList<PERIOD_SEND_MSG_Typedef_t>::iterator it = period_send_msg_list.begin();
-    while(0 < period_send_msg_list.size() && it != period_send_msg_list.end())
+    else
     {
-      if(0 == (*it).send_cnt)
-      {
-        it = period_send_msg_list.erase(it);
-      }
-      else
-      {
-        ++it;
-      }
+      ui->clear_send_timer_pushButton->setVisible(false);
     }
-  }
-  else
-  {
-    ui->clear_send_timer_pushButton->setVisible(false);
   }
 
   current_show_line_str_time_ms++;
@@ -1137,53 +1087,49 @@ void more_window::on_add_send_timer_pushButton_clicked()
   ui->clear_send_timer_pushButton->setVisible(true);
 
   /* 建立发送任务 */
-  PERIOD_SEND_MSG_Typedef_t send_task;
 
   /* 周期 */
+  quint32 period_time = 1U;
   if(true == ui->period_lineEdit->text().isEmpty())
   {
-    send_task.period_time = 1U;
+    period_time = 1U;
   }
   else
   {
-    send_task.period_time = ui->period_lineEdit->text().toUInt();
+    period_time = ui->period_lineEdit->text().toUInt();
   }
-  /* 上次发送时间 */
-  send_task.last_send_time = static_cast<quint64>(QDateTime::currentMSecsSinceEpoch());
 
   /* 发送帧数 */
+  qint32 send_cnt = -1;
   if(true == ui->send_timer_cnt_lineEdit->text().isEmpty())
   {
-    send_task.send_cnt = -1;
+    send_cnt = -1;
   }
   else
   {
-    send_task.send_cnt = ui->send_timer_cnt_lineEdit->text().toInt();
+    send_cnt = ui->send_timer_cnt_lineEdit->text().toInt();
   }
-  /* canid */
-  bool ok;
-  send_task.can_id = ui->id_lineEdit->text().toUInt(&ok, 16);
-  /* 发送通道 */
-  send_task.channel_num = (quint8)ui->channel_num_comboBox->currentIndex();
-  /* 协议类型 */
-  send_task.protocol_type = (can_driver_model::PROTOCOL_TYPE_Typedef_t)ui->protocol_comboBox->currentIndex();
-  /* 帧类型 */
-  send_task.frame_type = (can_driver_model::FRAME_TYPE_Typedef_t)ui->frame_type_comboBox->currentIndex();
-  /* canfd加速 */
-  send_task.can_fd_exp = (quint32)ui->canfd_pluse_comboBox->currentIndex();
-  /* 数据 */
-  if(true == ui->data_lineEdit->text().isEmpty())
+  if(nullptr == can_driver_obj)
   {
     return;
   }
-  send_task.data = utility::line_data2split(ui->data_lineEdit->text());
-  period_send_msg_list.append(send_task);
+  bool ok;
+  can_driver_obj->period_send_set(ui->id_lineEdit->text().toUInt(&ok, 16),
+                                  utility::line_data2split(ui->data_lineEdit->text()), period_time,
+                                  send_cnt, (quint8)ui->channel_num_comboBox->currentIndex(),
+                                  (can_driver_model::FRAME_TYPE_Typedef_t)ui->frame_type_comboBox->currentIndex(),
+                                  (can_driver_model::PROTOCOL_TYPE_Typedef_t)ui->protocol_comboBox->currentIndex(),
+                                  (quint32)ui->canfd_pluse_comboBox->currentIndex());
 }
 
 
 void more_window::on_clear_send_timer_pushButton_clicked()
 {
-  period_send_msg_list.clear();
+  if(nullptr == can_driver_obj)
+  {
+    return;
+  }
+  can_driver_obj->period_send_list_clear();
 }
 
 void more_window::on_timer_checkBox_clicked(bool checked)
@@ -1197,7 +1143,7 @@ void more_window::on_timer_checkBox_clicked(bool checked)
     ui->add_send_timer_pushButton->setVisible(false);
   }
   /* 定时发送列表是否为空 */
-  if(true == period_send_msg_list.isEmpty())
+  if(0 >= can_driver_obj->get_period_send_list_size())
   {
     ui->clear_send_timer_pushButton->setVisible(false);
   }
