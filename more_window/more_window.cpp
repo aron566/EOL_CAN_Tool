@@ -930,6 +930,10 @@ void more_window::slot_timeout()
       }
     }
   }
+  else
+  {
+    ui->clear_send_timer_pushButton->setVisible(false);
+  }
 
   current_show_line_str_time_ms++;
   /* 检查没有换行符的字符显示 */

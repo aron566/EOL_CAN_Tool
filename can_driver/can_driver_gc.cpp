@@ -903,7 +903,7 @@ bool can_driver_gc::send(const CHANNEL_STATE_Typedef_t &channel_state, \
                    data, size);
 
   QString csText;
-  csText = QString::asprintf(tr("send num:%d, sucess num:%d").toUtf8().data(), nSendCount, result);
+  csText = QString("send num:%1, sucess num:%2").arg(nSendCount).arg(result);
   QString result_info_str;
   if(result != nSendCount)
   {

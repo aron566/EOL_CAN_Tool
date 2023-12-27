@@ -191,7 +191,7 @@ public:
 
   QSemaphore cq_sem;
   QSemaphore tx_sem;
-
+  QSemaphore tx_msg_sem;
   QReadWriteLock tx_msg_rw_lock;
 
   /* 功能显示控制 */
