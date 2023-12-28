@@ -114,6 +114,11 @@ void Downloader::startDownload(const QUrl &url)
    QNetworkRequest request(url);
 
    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+   
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
+   /* 10s timeout */
+   request.setTransferTimeout(10000);
+#endif
 
    if (!m_userAgentString.isEmpty())
       request.setRawHeader("User-Agent", m_userAgentString.toUtf8());
@@ -161,6 +166,12 @@ void Downloader::setUserAgentString(const QString &agent)
 
 void Downloader::finished()
 {
+   if (m_reply->error() != QNetworkReply::NoError)
+   {
+      QFile::remove(m_downloadDir.filePath(m_fileName + PARTIAL_DOWN));
+      return;
+   }
+
    /* Rename file */
    QFile::rename(m_downloadDir.filePath(m_fileName + PARTIAL_DOWN), m_downloadDir.filePath(m_fileName));
 
@@ -340,7 +351,8 @@ void Downloader::calculateSizes(qint64 received, qint64 total)
 /**
  * Get response filename.
  */
-void Downloader::metaDataChanged() {
+void Downloader::metaDataChanged() 
+{
    QString  filename = "";
    QVariant variant = m_reply->header( QNetworkRequest::ContentDispositionHeader );
    if ( variant.isValid() ) {
