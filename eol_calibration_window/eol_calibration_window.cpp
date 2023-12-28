@@ -711,7 +711,7 @@ void eol_calibration_window::slot_protocol_rw_err(quint8 reg, quint8 command)
         task.reg = EOL_RW_TX_WAVE_MODE_REG;
         task.command = eol_protocol::EOL_WRITE_CMD;
         task.buf[0] = 0;
-        task.len = 1;
+        task.len = 1U;
         eol_protocol_obj->eol_master_common_rw_device(task);
       }
       break;
@@ -727,7 +727,7 @@ void eol_calibration_window::slot_protocol_rw_err(quint8 reg, quint8 command)
           return;
         }
         err_cnt++;
-        if(err_cnt > 10)
+        if(10U < err_cnt)
         {
           time_ms = 0;
           time_s = 0;

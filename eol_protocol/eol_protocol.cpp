@@ -737,7 +737,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
       if(acc_error_cnt > NO_RESPONSE_TIMES)
       {
         qDebug() << "response_is_timeout > " << \
-          (NO_RESPONSE_TIMES + 1) * FRAME_TIME_OUT << "s -> signal_protocol_timeout";
+          (NO_RESPONSE_TIMES + 1U) * FRAME_TIME_OUT << "s -> signal_protocol_timeout";
         emit signal_protocol_timeout(acc_error_cnt * FRAME_TIME_OUT);
         acc_error_cnt = 0;
       }
@@ -769,9 +769,9 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
     }
 
     /* 判断帧类型 */
-    reg = CircularQueue::CQ_manualGetOffsetData(cq, 2);
-    cmd = reg & 0x01;
-    reg >>= 1;
+    reg = CircularQueue::CQ_manualGetOffsetData(cq, 2U);
+    cmd = reg & 0x01U;
+    reg >>= 1U;
 
     switch((EOL_CMD_Typedef_t)cmd)
     {
@@ -784,11 +784,11 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         CircularQueue::CQ_manualGetDataTemp(cq, temp_buf, package_len);
 
         /* 校验CRC */
-        if(utility::get_modbus_crc16_rsl_with_tab(temp_buf, static_cast<uint16_t>(package_len - 2)) == false)
+        if(utility::get_modbus_crc16_rsl_with_tab(temp_buf, static_cast<uint16_t>(package_len - 2U)) == false)
         {
           qDebug() << "crc err package_len " << package_len;
           utility::debug_print(temp_buf, package_len);
-          CircularQueue::CQ_manualOffsetInc(cq, 1);
+          CircularQueue::CQ_manualOffsetInc(cq, 1U);
           ret = RETURN_CRC_ERROR;
           break;
         }
@@ -814,9 +814,9 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
       /* 主机读取，从机回复报文 */
       case EOL_READ_CMD:
       {
-        data_len = static_cast<uint16_t>(CircularQueue::CQ_manualGetOffsetData(cq, 4) << 8);
-        data_len += CircularQueue::CQ_manualGetOffsetData(cq, 3);
-        package_len = 7 + data_len;
+        data_len = static_cast<uint16_t>(CircularQueue::CQ_manualGetOffsetData(cq, 4U) << 8U);
+        data_len += CircularQueue::CQ_manualGetOffsetData(cq, 3U);
+        package_len = 7U + data_len;
         package_len = (package_len > FRAME_TEMP_BUF_SIZE) ? FRAME_TEMP_BUF_SIZE : package_len;
 
         if(len < package_len)
@@ -825,7 +825,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
           break;
         }
         CircularQueue::CQ_manualGetDataTemp(cq, temp_buf, package_len);
-        if(utility::get_modbus_crc16_rsl_with_tab(temp_buf, static_cast<uint16_t>(package_len - 2)) == false)
+        if(utility::get_modbus_crc16_rsl_with_tab(temp_buf, static_cast<uint16_t>(package_len - 2U)) == false)
         {
           qDebug() << "crc err package_len " << package_len << "data len " << data_len;
           utility::debug_print(temp_buf, package_len);
@@ -837,7 +837,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         }
 
         /* 处理数据 */
-        ret = decode_data_frame(reg, temp_buf + 5, data_len);
+        ret = decode_data_frame(reg, temp_buf + 5U, data_len);
 
         /* 移除报文 */
         CircularQueue::CQ_manualOffsetInc(cq, package_len);
@@ -848,7 +848,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
 
       default:
         /* TODO */
-        CircularQueue::CQ_manualOffsetInc(cq, 1);
+        CircularQueue::CQ_manualOffsetInc(cq, 1U);
         ret = RETURN_WAITTING;
         break;
     }
@@ -871,7 +871,7 @@ __META_CMD_DECDE:
         acc_error_cnt = 0;
         return RETURN_OK;
     }
-    CircularQueue::CQ_manualOffsetInc(cq, 1);
+    CircularQueue::CQ_manualOffsetInc(cq, 1U);
     return RETURN_ERROR;
   }
   return RETURN_ERROR;
