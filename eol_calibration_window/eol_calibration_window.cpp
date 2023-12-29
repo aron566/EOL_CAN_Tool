@@ -597,6 +597,12 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
         refresh_obj_list_info(profile_id, obj_num, data + 3);
         err_cnt = 0;
 
+        /* 检测是否停止状态 */
+        if(false == timer_obj->isActive())
+        {
+          break;
+        }
+
         /* 再次更新 */
         eol_protocol::EOL_TASK_LIST_Typedef_t task;
         task.param = nullptr;

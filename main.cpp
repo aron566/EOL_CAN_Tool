@@ -91,6 +91,7 @@
  *  <tr><td>2023-12-22 <td>v1.2.15 <td>aron566 <td>优化网络协议启动增加提示信息，支持数据流转到曲线图表显示，支持rts接收端口设定12003 12001客户端发
  *  <tr><td>2023-12-25 <td>v1.2.16 <td>aron566 <td>修复设置rts失败问题，优化rts协议栈
  *  <tr><td>2023-12-26 <td>v1.2.17 <td>aron566 <td>手动发送支持队列，方便发送唤醒报文，优化定时发送
+ *  <tr><td>2023-12-29 <td>v1.2.18 <td>aron566 <td>修复进入看目标页面，再使用shell会使目标持续刷新问题
  *  </table>
  */
 #include "mainwindow.h"
@@ -98,7 +99,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.17"
+#define PC_SOFTWARE_VERSION       "1.2.18"
 
 int main(int argc, char *argv[])
 {

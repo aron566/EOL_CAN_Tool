@@ -84,7 +84,10 @@ void debug_window::closeEvent(QCloseEvent *event)
 void debug_window::showEvent(QShowEvent *event)
 {
   Q_UNUSED(event)
+
+  /* 聚焦 */
   ui->shell_textEdit->setFocus();
+
   /* 设置输入法为英文 */
   ui->shell_textEdit->setAttribute(Qt::WA_InputMethodEnabled, false);
 }
