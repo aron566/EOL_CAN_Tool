@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>922</width>
+    <width>942</width>
     <height>926</height>
    </rect>
   </property>
@@ -416,6 +416,12 @@
    </item>
    <item row="1" column="1">
     <widget class="QGroupBox" name="send_data_groupBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string>数据发送</string>
      </property>
