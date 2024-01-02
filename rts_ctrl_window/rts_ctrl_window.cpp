@@ -17,6 +17,7 @@
  *  <table>
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2023-12-04 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2024-01-02 <td>v0.0.2  <td>aron566 <td>增加带宽设置
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -70,6 +71,11 @@ rts_ctrl_window::rts_ctrl_window(QString title, QWidget *parent) :
   ui->range_lineEdit->setPlaceholderText("20.000");
   ui->speed_lineEdit->setPlaceholderText("0.000");
   ui->rcs_lineEdit->setPlaceholderText("10.000");
+
+  ui->freqband_lineEdit->setPlaceholderText("77.000");
+  ui->freq_mid_lineEdit->setPlaceholderText("76.500");
+  ui->bandwidth_lineEdit->setPlaceholderText("1.000");
+  ui->distance_lineEdit->setPlaceholderText("2.200");
 }
 
 rts_ctrl_window::~rts_ctrl_window()
@@ -96,17 +102,56 @@ void rts_ctrl_window::on_set_pushButton_clicked()
 {
   rts_protocol::RTS_TASK_LIST_Typedef_t task;
 
-  /* 设置频率 */
-  if(false == ui->freq_lineEdit->text().isEmpty())
+  if(0 == ui->rts_set_tabWidget->currentIndex())
   {
-    task.cmd = RTS_SET_FREQUENCY_PORT(ui->freq_lineEdit->text());
-    rts_protocol_obj->rts_master_common_rw_device(task);
+    if(false == ui->freqband_lineEdit->text().isEmpty() &&
+        false == ui->freq_mid_lineEdit->text().isEmpty() &&
+        false == ui->bandwidth_lineEdit->text().isEmpty() &&
+        false == ui->distance_lineEdit->text().isEmpty() )
+    {
+      /* 设置频带 */
+      /* 设置中心频率 */
+      /* 设置带宽 */
+      /* 设置距离 */
+      task.cmd = RTS_SET_PARAMETER_PORT(ui->freqband_lineEdit->text(),
+                                        ui->freq_mid_lineEdit->text(),
+                                        ui->bandwidth_lineEdit->text(),
+                                        ui->distance_lineEdit->text());
+      rts_protocol_obj->rts_master_common_rw_device(task);
+
+      /* 启动协议栈 */
+      rts_protocol_obj->start_task();
+    }
+    return;
   }
 
-  /* 设置距离、速度 、rcs */
-  task.cmd = RTS_SET_TARGET_PORT(ui->range_lineEdit->text().toUtf8().data(),
-                                 ui->speed_lineEdit->text().toUtf8().data(),
-                                 ui->rcs_lineEdit->text().toUtf8().data());
+  if(1 == ui->rts_set_tabWidget->currentIndex())
+  {
+    /* 设置频率 */
+    if(false == ui->freq_lineEdit->text().isEmpty())
+    {
+      task.cmd = RTS_SET_FREQUENCY_PORT(ui->freq_lineEdit->text());
+      rts_protocol_obj->rts_master_common_rw_device(task);
+    }
+
+    /* 设置距离、速度 、rcs */
+    task.cmd = RTS_SET_TARGET_PORT(ui->range_lineEdit->text().toUtf8().data(),
+                                   ui->speed_lineEdit->text().toUtf8().data(),
+                                   ui->rcs_lineEdit->text().toUtf8().data());
+    rts_protocol_obj->rts_master_common_rw_device(task);
+
+    /* 启动协议栈 */
+    rts_protocol_obj->start_task();
+    return;
+  }
+}
+
+void rts_ctrl_window::on_read_pushButton_clicked()
+{
+  rts_protocol::RTS_TASK_LIST_Typedef_t task;
+
+  /* 读取状态 */
+  task.cmd = RTS_GET_STATUS;
   rts_protocol_obj->rts_master_common_rw_device(task);
 
   /* 启动协议栈 */
@@ -146,8 +191,5 @@ void rts_ctrl_window::slot_protocol_rw_err(QString cmd)
 {
   ui->result_label->setText(tr("result:cmd [%1] retry err").arg(cmd));
 }
+
 /******************************** End of file *********************************/
-
-
-
-

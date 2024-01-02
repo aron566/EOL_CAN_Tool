@@ -99,6 +99,9 @@ public slots:
    */
   void slot_protocol_rw_err(QString cmd);
 
+private slots:
+  void on_read_pushButton_clicked();
+
 private:
   Ui::rts_ctrl_window *ui;
 

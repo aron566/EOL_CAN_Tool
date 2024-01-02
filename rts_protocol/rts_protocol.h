@@ -49,6 +49,8 @@
 #define RTS_CONNECT       "System:Interaction:Remote"         /**< 开启远程连接 */
 #define RTS_OPEN_DEVICE   "VRTS:Open"                         /**< 打开模拟器 */
 #define RTS_GET_STATUS    "VRTS:Status?"                      /**< 回复字符串长度≥5 内容为: A(空格)B(空格)C B为VRTS连接状态，1为连接其他字符为未连接 当B不为1且C不为1时，则为VRTS报错 */
+#define RTS_SET_PARAMETER "VRTS:Parameters 77.000/24.000 76.500 1.000 40.000(EIRPTX) 2.200(模拟器到雷达之间距离)"
+#define RTS_SET_PARAMETER_PORT(freqband,freq,bandwidth,distance) (QString("VRTS:Parameters %1 %2 %3 40.000 %4").arg(freqband, freq, bandwidth, distance))
 #define RTS_SET_FREQUENCY "VRTS:Radar 76.300"                 /**< 设置中心频率 */
 #define RTS_SET_FREQUENCY_PORT(freq) (QString("VRTS:Radar %1").arg(freq))
 #define RTS_SET_TARGET    "VRTS:Targets 20.000 0.000 10.000"  /**< r m v m/s rcs dBsm */
