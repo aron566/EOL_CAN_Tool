@@ -875,7 +875,7 @@ void more_window::slot_timeout()
 {
   if(nullptr != can_driver_obj)
   {
-    if(0 < can_driver_obj->get_period_send_list_size())
+    if(0 < can_driver_obj->get_period_send_list_size() && true == ui->timer_checkBox->isChecked())
     {
       ui->clear_send_timer_pushButton->setVisible(true);
     }

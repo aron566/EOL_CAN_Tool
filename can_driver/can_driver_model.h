@@ -42,6 +42,7 @@
 #include <QDebug>
 #include "circularqueue.h"
 #include "utility.h"
+// #include "can_driver_sender.h"
 /** Private defines ----------------------------------------------------------*/
 /** Exported typedefines -----------------------------------------------------*/
 /** Exported constants -------------------------------------------------------*/
@@ -49,6 +50,8 @@
 /** Exported macros ----------------------------------------------------------*/
 /** Exported variables -------------------------------------------------------*/
 /** Exported functions prototypes --------------------------------------------*/
+
+class can_driver_sender;
 
 class can_driver_model : public QObject, public QRunnable
 {
@@ -195,6 +198,7 @@ public:
   }PERIOD_SEND_MSG_Typedef_t;
 
   QList<PERIOD_SEND_MSG_Typedef_t>period_send_msg_list;
+  can_driver_sender *sender_obj = nullptr;
 
   /* 消息过滤器 */
   typedef struct
@@ -361,6 +365,7 @@ public:
   }
 
 public:
+  void clear_send_data();
 
   /**
    * @brief delay_send_can_use_update
@@ -753,15 +758,9 @@ public:
    * @brief 获取周期发送列表长度
    * @return 长度
    */
-  qint32 get_period_send_list_size()
-  {
-    return period_send_msg_list.size();
-  }
+  qint32 get_period_send_list_size();
 
-  void period_send_list_clear()
-  {
-    period_send_msg_list.clear();
-  }
+  void period_send_list_clear();
 
   /**
    * @brief send 发送数据

@@ -17,6 +17,7 @@
  *  <table>
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2023-11-27 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2024-01-08 <td>v0.0.2  <td>aron566 <td>优化报文转发接口
  *
  *  </table>
  */
@@ -119,11 +120,20 @@ void frame_diagnosis::frame_translation(uint16_t id, const quint8 *data, quint32
   /* 转换can to canfd */
   if(ui->frame_translation_comboBox->currentText() == "CAN2CANFD" && 0U == protocol_type)
   {
-    can_driver_obj->send(data, (quint8)(len),
-                         id,
-                         can_driver_model::STD_FRAME_TYPE,
-                         can_driver_model::CANFD_PROTOCOL_TYPE,
-                         (quint8)channel_num);
+    /* 立即发送 */
+    // can_driver_obj->send(data, (quint8)(len),
+    //                      id,
+    //                      can_driver_model::STD_FRAME_TYPE,
+    //                      can_driver_model::CANFD_PROTOCOL_TYPE,
+    //                      (quint8)channel_num);
+
+
+    can_driver_obj->period_send_set(id,
+                                    utility::array2hexstr(data, len, " "), 1U,
+                                    1U, (quint8)channel_num,
+                                    can_driver_model::STD_FRAME_TYPE,
+                                    can_driver_model::CANFD_PROTOCOL_TYPE,
+                                    0U);
   }
   /* 转换 canfd to can */
   else if(ui->frame_translation_comboBox->currentText() == "CANFD2CAN" && 1U == protocol_type)
@@ -134,20 +144,32 @@ void frame_diagnosis::frame_translation(uint16_t id, const quint8 *data, quint32
     {
       if((index + 8U) > len)
       {
-        can_driver_obj->send(data + index, (quint8)(len - index),
-                             id,
-                             can_driver_model::STD_FRAME_TYPE,
-                             can_driver_model::CAN_PROTOCOL_TYPE,
-                             (quint8)channel_num);
+        // can_driver_obj->send(data + index, (quint8)(len - index),
+        //                      id,
+        //                      can_driver_model::STD_FRAME_TYPE,
+        //                      can_driver_model::CAN_PROTOCOL_TYPE,
+        //                      (quint8)channel_num);
+        can_driver_obj->period_send_set(id,
+                                        utility::array2hexstr(data + index, len - index, " "), 1U,
+                                        1U, (quint8)channel_num,
+                                        can_driver_model::STD_FRAME_TYPE,
+                                        can_driver_model::CAN_PROTOCOL_TYPE,
+                                        0U);
         return;
       }
       else
       {
-        can_driver_obj->send(data + index, 8U,
-                             id,
-                             can_driver_model::STD_FRAME_TYPE,
-                             can_driver_model::CAN_PROTOCOL_TYPE,
-                             (quint8)channel_num);
+        // can_driver_obj->send(data + index, 8U,
+        //                      id,
+        //                      can_driver_model::STD_FRAME_TYPE,
+        //                      can_driver_model::CAN_PROTOCOL_TYPE,
+        //                      (quint8)channel_num);
+        can_driver_obj->period_send_set(id,
+                                        utility::array2hexstr(data + index, 8U, " "), 1U,
+                                        1U, (quint8)channel_num,
+                                        can_driver_model::STD_FRAME_TYPE,
+                                        can_driver_model::CAN_PROTOCOL_TYPE,
+                                        0U);
       }
       index += 8U;
     }

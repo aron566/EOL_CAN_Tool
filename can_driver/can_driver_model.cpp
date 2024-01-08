@@ -23,6 +23,7 @@
 /** Private includes ---------------------------------------------------------*/
 #include "can_driver_model.h"
 #include <QDateTime>
+#include "can_driver_sender.h"
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
@@ -99,6 +100,25 @@ can_driver_model::can_driver_model(QObject *parent)
   {
     qDebug() << "create cq failed";
   }
+
+  /* 创建发送任务 */
+  sender_obj = new can_driver_sender(this, this);
+}
+
+void can_driver_model::clear_send_data()
+{
+  send_msg_list.clear();
+  sender_obj->stop_task();
+}
+
+qint32 can_driver_model::get_period_send_list_size()
+{
+  return sender_obj->get_period_send_list_size();
+}
+
+void can_driver_model::period_send_list_clear()
+{
+  sender_obj->period_send_list_clear();
 }
 
 void can_driver_model::show_message(const QString &str, quint32 channel_num, \
@@ -197,7 +217,8 @@ bool can_driver_model::send_data()
   if(false == period_send_msg_list.isEmpty())
   {
     PERIOD_SEND_MSG_Typedef_t send_task;
-    for(qint32 i = 0; i < period_send_msg_list.size(); i++)
+    qint32 size = period_send_msg_list.size();
+    for(qint32 i = 0; i < size; i++)
     {
       send_task = period_send_msg_list.value(i);
       quint64 current_time = static_cast<quint64>(QDateTime::currentMSecsSinceEpoch());
@@ -578,6 +599,8 @@ void can_driver_model::period_send_set(quint32 id, QString data, quint32 period_
   send_task.can_fd_exp = can_fd_exp;
   /* 数据 */
   send_task.data = data;
-  period_send_msg_list.append(send_task);
+  // period_send_msg_list.append(send_task);
+  sender_obj->period_send_set(send_task);
+  sender_obj->start_task();
 }
 /******************************** End of file *********************************/
