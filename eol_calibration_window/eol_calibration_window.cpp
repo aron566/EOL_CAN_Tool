@@ -659,13 +659,15 @@ void eol_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quint8 *da
         {
           /* 读取 */
           quint32 index = 0;
-          quint8 profile_num = data[index++];
+          quint8 profile_num = data[index];
+          index++;
           qint8 cali_mode = 0;
           quint8 profile_id = 0;
           QString tips_str;
           for(quint8 i = 0; i < profile_num; i++)
           {
-            profile_id = data[index++];
+            profile_id = data[index];
+            index++;
             memcpy(&cali_mode, data + index, sizeof(cali_mode));
             index += sizeof(cali_mode);
             /* 更新显示 */
