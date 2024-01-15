@@ -49,7 +49,7 @@ public:
   ~can_driver_sender()
   {
     start_ = false;
-    period_send_msg_list.clear();
+    clear_flag = true;
   }
 public:
   /**
@@ -77,7 +77,7 @@ public:
 
   void stop_task()
   {
-    period_send_msg_list.clear();
+    period_send_list_clear();
     start_ = false;
     qDebug() << "can driver sender stop_task";
   }

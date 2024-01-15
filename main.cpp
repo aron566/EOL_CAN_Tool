@@ -94,6 +94,7 @@
  *  <tr><td>2023-12-29 <td>v1.2.18 <td>aron566 <td>修复进入看目标页面，再使用shell会使目标持续刷新问题
  *  <tr><td>2024-01-02 <td>v1.2.19 <td>aron566 <td>完善rts设置，支持带宽设置
  *  <tr><td>2024-01-08 <td>v1.2.20 <td>aron566 <td>完善报文转发，避免大量数据转发卡死界面
+ *  <tr><td>2024-01-15 <td>v1.2.21 <td>aron566 <td>刷新显示改为异步
  *  </table>
  */
 #include "mainwindow.h"
@@ -101,7 +102,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.20"
+#define PC_SOFTWARE_VERSION       "1.2.21"
 
 int main(int argc, char *argv[])
 {

@@ -40,7 +40,7 @@ public:
     /* 线程同步 */
     connect(can_driver_obj, &can_driver_model::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::QueuedConnection);
 
-    connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
+    connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg);//, Qt::BlockingQueuedConnection);
     connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
 
     /* 设置帧诊断can驱动 */
