@@ -59,7 +59,7 @@ public:
   {
     CALTERAH_CFX_28BIT_DATA_TYPE = 0, /**< 加特兰CFX 28位数据格式 */
     COMPLEX_FLOAT_DATA_TYPE,          /**< 浮点类型 */
-    COMPLEX_INT16_DATA_TYPE,          /**< 16位整型复 */
+    COMPLEX_INT16_DATA_TYPE,          /**< 16位整型复数 */
     FLOAT32_DATA_TYPE,                /**< 32位浮点类型 */
     INT32_DATA_TYPE,                  /**< 整型32位 */
     INT16_DAYA_TYPE,                  /**< 整型16位 */
@@ -69,6 +69,7 @@ public:
     UINT8_DATA_TYPE,                  /**< 无符号整型8位 */
     FLOAT32_BIN_DATA_TYPE,            /**< 32位浮点数二进制类型 */
     CALTERAH_CFL_32BIT_DATA_TYPE,     /**< 加特兰CFL 32位数据格式 */
+    COMPLEX_INT32_DATA_TYPE,          /**< 32位整型复数 */
     UNKNOW_DATA_TYPE = 0xFF,          /**< 未知数据类型 */
   }NUM_TYPE_Typedef_t;
 
@@ -86,6 +87,12 @@ public:
     qint16 real;
     qint16 image;
   }Complex_I16_t;
+  /* 复数 */
+  typedef struct
+  {
+    qint32 real;
+    qint32 image;
+  }Complex_I32_t;
 
   /* 键值映射 */
   typedef struct
@@ -122,6 +129,14 @@ public:
    * @param 转换相应类型数据的数量，两个浮点字符串转为复数浮点，则返回1
    */
   static quint32 str2num(void *buf, const QStringList &num_str_list, NUM_TYPE_Typedef_t Type = INT32_DATA_TYPE, quint8 *unit_bytes = nullptr);
+
+  /**
+   * @brief 数据转为转换后的字符串
+   * @param data 数据
+   * @param Type 数据类型
+   * @return 字符串
+   */
+  static QString data2str(const quint8 *data, NUM_TYPE_Typedef_t Type = INT32_DATA_TYPE);
 
   /**
    * @brief 验证数据crc是否正确

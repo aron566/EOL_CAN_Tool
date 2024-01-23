@@ -208,7 +208,7 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
     switch(reg)
     {
       case EOL_RW_VERSION_REG :
-        ui->ver_test_lineEdit->setText(ui->ver_test_lineEdit->text() + tr("write version ok"));
+        ui->ver_test_lineEdit->setText(ui->ver_test_lineEdit->text() + tr("write version ok "));
         break;
 
       /* VCAN测试 */
@@ -217,7 +217,7 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
         break;
 
       case EOL_RW_SN_REG      :
-        ui->sn_write_lineEdit->setText(ui->sn_write_lineEdit->text() + tr("write sn ok"));
+        ui->sn_write_lineEdit->setText(ui->sn_write_lineEdit->text() + tr("write sn ok "));
         break;
 
       case EOL_W_WDG_REG      :
@@ -330,10 +330,16 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
       case EOL_RW_SN_REG      :
         {
           str.clear();
-          for(quint16 i = 0; i < 24; i++)
+          for(quint16 i = 0; i < data_len; i++)
           {
-            str += QString::asprintf("%02X", data[i]);
+            if(0U == data[i])
+            {
+              qDebug() << str << "sn true len" << i;
+              break;
+            }
+            str += QString::asprintf("%c", data[i]);
           }
+          qDebug() << str << "sn len" << data_len;
           ui->sn_number_lineEdit->setText(str);
           ui->sn_read_lineEdit->setText(tr("read sn ok "));
 
@@ -494,6 +500,19 @@ void eol_sub_window::on_write_pushButton_clicked()
     memcpy(version_info + 8, &ver, sizeof(ver));
     memcpy(task.buf, version_info, sizeof(version_info));
     task.len = sizeof(version_info);
+    eol_protocol_obj->eol_master_common_rw_device(task);
+  }
+
+  if(false == ui->sn_number_lineEdit->text().isEmpty())
+  {
+    write_en_flag = true;
+    /* 写入SN */
+    task.reg = EOL_RW_SN_REG;
+    task.command = eol_protocol::EOL_WRITE_CMD;
+    char *p_sn = ui->sn_number_lineEdit->text().toLatin1().data();
+    qDebug() << p_sn << ui->sn_number_lineEdit->text().size();
+    memcpy(task.buf, p_sn, ui->sn_number_lineEdit->text().size());
+    task.len = ui->sn_number_lineEdit->text().size();
     eol_protocol_obj->eol_master_common_rw_device(task);
   }
 

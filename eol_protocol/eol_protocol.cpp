@@ -494,7 +494,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
       wait_response_list.removeFirst();
     }
 
-    if(ret == RETURN_OK && (EOL_READ_CMD == command || EOL_META_CMD == command))
+    if((RETURN_OK == ret || RETURN_ACK_ERROR == ret) && (EOL_READ_CMD == command || EOL_META_CMD == command))
     {
       /* 接收一帧 */
       emit signal_send_rec_one_frame(false);
@@ -538,7 +538,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
     wait_response_list.removeFirst();
   }
 
-  if(ret == RETURN_OK && (EOL_READ_CMD == command || EOL_META_CMD == command))
+  if((RETURN_OK == ret || RETURN_ACK_ERROR == ret) && (EOL_READ_CMD == command || EOL_META_CMD == command))
   {
     /* 接收一帧 */
     emit signal_send_rec_one_frame(false);
@@ -802,7 +802,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
         {
           qDebug() << "signal_protocol_error_occur";
           emit signal_protocol_error_occur((quint8)ack_ret);
-          ret = RETURN_ERROR;
+          ret = RETURN_ACK_ERROR;
           break;
         }
 
@@ -909,6 +909,12 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
     ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_W_TABLE_SEL_REG, data_buf, index, paramx->com_hw, paramx->channel_num);
     if(RETURN_OK != ret)
     {
+      /* ack回复错误，不重发 */
+      if(RETURN_ACK_ERROR == ret)
+      {
+        goto __get_eol_table_data_err;
+      }
+      
       error_cnt++;
       if(RETRY_NUM_MAX > error_cnt)
       {
@@ -936,18 +942,24 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
     if(RETURN_LOST_FRAME == ret || RETURN_CRC_ERROR == ret)
     {
       data_buf[0] = (quint8)(data_record.frame_num + 1U);
-      data_buf[1] = (quint8)((data_record.frame_num + 1U) >> 8);
+      data_buf[1] = (quint8)((data_record.frame_num + 1U) >> 8U);
       qDebug() << "get_eol_table_data_task step 2 lost" << (data_record.frame_num + 1U);
-      ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_W_TABLE_DATA_SEL_REG, data_buf, 2, paramx->com_hw, paramx->channel_num);
+      ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_W_TABLE_DATA_SEL_REG, data_buf, 2U, paramx->com_hw, paramx->channel_num);
     }
     else
     {
       /* 读数据帧 */
-      ret = protocol_stack_create_task(EOL_READ_CMD, EOL_RW_TABLE_DATA_REG, nullptr, 0, paramx->com_hw, paramx->channel_num);
+      ret = protocol_stack_create_task(EOL_READ_CMD, EOL_RW_TABLE_DATA_REG, nullptr, 0U, paramx->com_hw, paramx->channel_num);
     }
 
     if(RETURN_OK != ret)
     {
+      /* ack回复错误，不重发 */
+      if(RETURN_ACK_ERROR == ret)
+      {
+        goto __get_eol_table_data_err;
+      }
+
       error_cnt++;
       if(RETRY_NUM_MAX > error_cnt)
       {
@@ -1096,6 +1108,12 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
     ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index, paramx->com_hw, paramx->channel_num);
     if(RETURN_OK != ret)
     {
+      /* ack回复错误，不重发 */
+      if(RETURN_ACK_ERROR == ret)
+      {
+        goto __send_eol_table_data_err;
+      }
+
       error_cnt++;
       if(RETRY_NUM_MAX > error_cnt)
       {
@@ -1141,6 +1159,12 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
       ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index, paramx->com_hw, paramx->channel_num);
       if(RETURN_OK != ret)
       {
+        /* ack回复错误，不重发 */
+        if(RETURN_ACK_ERROR == ret)
+        {
+          goto __send_eol_table_data_err;
+        }
+
         error_cnt++;
         if(RETRY_NUM_MAX > error_cnt)
         {
@@ -1178,6 +1202,12 @@ bool eol_protocol::send_eol_table_data_task(void *param_)
     ret = protocol_stack_create_task(EOL_WRITE_CMD, EOL_RW_TABLE_DATA_REG, data_buf, index, paramx->com_hw, paramx->channel_num);
     if(RETURN_OK != ret)
     {
+      /* ack回复错误，不重发 */
+      if(RETURN_ACK_ERROR == ret)
+      {
+        goto __send_eol_table_data_err;
+      }
+
       error_cnt++;
       if(RETRY_NUM_MAX > error_cnt)
       {

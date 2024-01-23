@@ -164,6 +164,7 @@ public:
     UINT8_DATA_TYPE,                      /**< 无符号整型8位 */
     FLOAT32_BIN_DATA_TYPE,                /**< 32位浮点数二进制类型 */
     CALTERAH_CFL_32BIT_DATA_TYPE,         /**< 加特兰CFX 32位数据格式 CFL(14, 1, s, 4, s) */
+    COMPLEX_INT32_DATA_TYPE,              /**< 32位整型复数 @ref Complex_I32_Typedef_t */
     UNKNOW_DATA_TYPE = 0xFF,              /**< 未知数据类型 */
   }DATA_Typedef_t;
 
@@ -335,6 +336,7 @@ private:
     RETURN_WAITTING,              /**< 等待中 */
     RETURN_UPLOAD_END,            /**< 升级结束 */
     RETURN_CRC_ERROR,             /**< crc错误 */
+    RETURN_ACK_ERROR,             /**< ack错误 */
     RETURN_ERROR,
     RETURN_LOST_FRAME,            /**< 丢帧 */
   }RETURN_TYPE_Typedef_t;
@@ -394,7 +396,7 @@ public:
     thread_run_state = true;
     run_eol_task();
     thread_run_state = false;
-    run_state = false;    
+    run_state = false;
     qDebug() << "[thread]" << QThread::currentThreadId() << "eol protocol end";
 
     /* 原子操作 */

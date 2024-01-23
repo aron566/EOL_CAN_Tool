@@ -304,6 +304,11 @@ quint32 utility::num_type_to_bytes(utility::NUM_TYPE_Typedef_t Type)
       unit_bytes = sizeof(Complex_I16_t);
       break;
     }
+    case COMPLEX_INT32_DATA_TYPE:
+      {
+        unit_bytes = sizeof(Complex_I32_t);
+        break;
+      }
     case FLOAT32_DATA_TYPE:
     {
       unit_bytes = sizeof(float);
@@ -340,6 +345,88 @@ quint32 utility::num_type_to_bytes(utility::NUM_TYPE_Typedef_t Type)
       break;
   }
   return unit_bytes;
+}
+
+QString utility::data2str(const quint8 *data, NUM_TYPE_Typedef_t Type)
+{
+  if(nullptr == data)
+  {
+    return QString("0");
+  }
+
+  switch(Type)
+  {
+    case CALTERAH_CFX_28BIT_DATA_TYPE:
+    case CALTERAH_CFL_32BIT_DATA_TYPE:
+    case UINT32_DATA_TYPE:
+      {
+        quint32 val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case COMPLEX_FLOAT_DATA_TYPE:
+      {
+        float val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case COMPLEX_INT16_DATA_TYPE:
+      {
+        qint16 val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case COMPLEX_INT32_DATA_TYPE:
+      {
+        qint32 val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case FLOAT32_DATA_TYPE:
+      {
+        float val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case INT16_DAYA_TYPE:
+      {
+        qint16 val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case INT8_DATA_TYPE:
+      {
+        qint8 val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case INT32_DATA_TYPE:
+      {
+        qint32 val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case FLOAT32_BIN_DATA_TYPE:
+      {
+        float val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case UINT16_DAYA_TYPE:
+      {
+        quint16 val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    case UINT8_DATA_TYPE:
+      {
+        quint8 val = 0;
+        memcpy(&val, data, sizeof(val));
+        return QString::number(val);
+      }
+    default:
+      return QString("0");
+  }
 }
 
 quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NUM_TYPE_Typedef_t Type, quint8 *unit_bytes)
@@ -401,6 +488,21 @@ quint32 utility::str2num(void *buf, const QStringList &num_str_list, utility::NU
         *unit_bytes = sizeof(Complex_I16_t);
         break;
       }
+      case COMPLEX_INT32_DATA_TYPE:
+        {
+          Complex_I32_t *ptr = (Complex_I32_t *)buf;
+          ptr[num_size].real = num_str_list.value(i).toInt(&ok);
+          ptr[num_size].image = num_str_list.value(i + 1).toInt(&ok);
+          i += 2;
+          if(false == ok)
+          {
+            continue;
+          }
+
+          num_size += 1;
+          *unit_bytes = sizeof(Complex_I32_t);
+          break;
+        }
       case FLOAT32_DATA_TYPE:
       {
         float *ptr = (float *)buf;

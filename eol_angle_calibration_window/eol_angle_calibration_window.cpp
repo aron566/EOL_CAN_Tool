@@ -320,16 +320,16 @@ void eol_angle_calibration_window::on_start_pushButton_clicked()
  */
 bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint16 size)
 {
-  if(6U > size)
+  if(11U > size)
   {
     return false;
   }
 
-  if(0xFF == data[0] && 0xFF == data[1] \
-     && 0 == data[2] \
-     && 0 == data[3] \
-     && 0 == data[4] \
-     && 0 == data[5])
+  if(0xFF == data[5] && 0xFF == data[6] \
+     && 0 == data[7] \
+     && 0 == data[8] \
+     && 0 == data[9] \
+     && 0 == data[10])
   {
     return false;
   }
@@ -339,23 +339,36 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
   time_ms_e = dt.toMSecsSinceEpoch();
 
   /* 返回<所有配置>下的2dfft数据
-   * DATA[0]：配置ID
-   * DATA[1]：通道数（1 - 32~max~）
+   * DATA[0]：数据类型
+   * 12：代表*int32位数据格式复数（实部int32、虚部int32每个数据占8Bytes）
+   * 数据放大系数n int32
+   * DATA[1]：Byte0(最低位)
+   * DATA[2]：Byte1
+   * DATA[3]：Byte2
+   * DATA[4]：Byte3(最高位)
+   *
+   * DATA[5]：配置ID
+   * DATA[6]：通道数（1 - 32~max~）
    * TX发波次序：
-   * DATA[2]：TX0的发波次序，0代表未启用
-   * DATA[3]：TX1的发波次序
-   * DATA[4]：TX2的发波次序
-   * DATA[5]：TX3的发波次序
-   * 通道0的2DFFT数据，数值放大1024倍后int32，实部虚部顺序排列：
-   * 实部： DATA[6]：Byte0(最低位) DATA[7]：Byte1 DATA[8]：Byte2 DATA[9]：Byte3(最高位)
-   * 虚部： DATA[10]：Byte0(最低位) DATA[11]：Byte1 DATA[12]：Byte2 DATA[13]：Byte3(最高位) */
-  quint16 index = 0;
+   * DATA[7]：TX0的发波次序，0代表未启用
+   * DATA[8]：TX1的发波次序
+   * DATA[9]：TX2的发波次序
+   * DATA[10]：TX3的发波次序
+   * 通道0的2DFFT数据，数值放大n倍后，实部虚部顺序排列：
+   * 实部：
+   * 虚部： */
+  quint16 index = 5;
   quint8 profile_id = 0;
   quint8 channel_num = 0;
   quint32 bit_tx_order = 0;
-  qint32 real = 0;
-  qint32 image = 0;
   QStringList profile_fft_list;
+
+  /* 数据类型 */
+  fft_data_type = data[0];
+  utility::NUM_TYPE_Typedef_t data_type = (utility::NUM_TYPE_Typedef_t)fft_data_type;
+
+  /* 放大系数 */
+  memcpy(&fft_data_factor, &data[1], sizeof(fft_data_factor));
 
   FFT_REQUEST_CONDITION_Typedef_t condition = fft_request_list.value(angle_position_index);
   memset(condition.bit_tx_order, 0, sizeof(condition.bit_tx_order));
@@ -383,7 +396,7 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
     bit_tx_order |= tx0;
 
     /* 过程合法性检查 */
-    if(size < (index + channel_num * 8U))
+    if(size < (index + channel_num * utility::num_type_to_bytes((data_type))))
     {
       return false;
     }
@@ -399,18 +412,18 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
     profile_fft_list.append(QString("channel_num:%1").arg(channel_num));
     /* 添加配置下所有通道fft */
     for(quint8 ch = 0; ch < channel_num; ch++)
-    {
-      memcpy(&real, data + index, sizeof(real));
-      index += sizeof(real);
-      profile_fft_list.append(QString::number(real));
+    {     
+      QString real = utility::data2str(data + index, data_type);
+      index += (utility::num_type_to_bytes(data_type) / 2U);
+      profile_fft_list.append(real);
 
-      memcpy(&image, data + index, sizeof(image));
-      index += sizeof(image);
-      profile_fft_list.append(QString::number(image));
+      QString image = utility::data2str(data + index, data_type);
+      index += (utility::num_type_to_bytes(data_type) / 2U);
+      profile_fft_list.append(image);
 
       /* 存储该配置下所有通道2dfft数据 */
-      condition.fft_data[i][ch].real = real;
-      condition.fft_data[i][ch].image = image;
+      condition.fft_data[i][ch].real = real.toFloat();
+      condition.fft_data[i][ch].image = image.toFloat();
     }
     qint64 time_ms = time_ms_e - time_ms_s;
     ui->tableWidget->setItem(angle_position_index, 8, new QTableWidgetItem(QString("ok,%1ms").arg(time_ms)));
@@ -527,15 +540,15 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
 
       /* 写入标题内容 */
       str.clear();
-      str = QString::asprintf("%d,%d,%d,%d,%d,%d,%d,%d,%u,%u,%u,%u,%u,%u,%u,%u\r\n",
+      str = QString::asprintf("%d,%u,%u,%.1f,%.1f,%.f,%.f,%d,%u,%u,%u,%u,%u,%u,%u,%u\r\n",
                     (int)condition.direction, \
-                    65536, \
-                    4, \
-                    (int)condition.azi_ele_angle, \
-                    (int)condition.s_angle, \
-                    (int)condition.e_angle, \
-                    (int)condition.step_angle, \
-                    1024, \
+                    fft_data_version, \
+                    fft_data_type, \
+                    condition.azi_ele_angle, \
+                    condition.s_angle, \
+                    condition.e_angle, \
+                    condition.step_angle, \
+                    fft_data_factor, \
                     get_profile_channel_num(0), \
                     get_profile_channel_num(1), \
                     get_profile_channel_num(2), \
@@ -607,22 +620,22 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
 
       /* 写入标题内容 */
       str.clear();
-      str = QString::asprintf("%d,%d,%d,%d,%d,%d,%d,%d,%u,%u,%u,%u,%u,%u,%u,%u\r\n",
-                    (int)condition.direction, \
-                    65536, \
-                    4, \
-                    (int)condition.azi_ele_angle, \
-                    (int)condition.s_angle, \
-                    (int)condition.e_angle, \
-                    (int)condition.step_angle, \
-                    1, \
-                    get_profile_channel_num(0), \
-                    get_profile_channel_num(1), \
-                    get_profile_channel_num(2), \
-                    get_profile_channel_num(3), \
-                    condition.bit_tx_order[0], \
-                    condition.bit_tx_order[1], \
-                    condition.bit_tx_order[2], \
+      str = QString::asprintf("%d,%u,%u,%.1f,%.1f,%.f,%.f,%d,%u,%u,%u,%u,%u,%u,%u,%u\r\n",
+                    (int)condition.direction,
+                    fft_data_version,
+                    fft_data_type,
+                    condition.azi_ele_angle,
+                    condition.s_angle,
+                    condition.e_angle,
+                    condition.step_angle,
+                    1,
+                    get_profile_channel_num(0),
+                    get_profile_channel_num(1),
+                    get_profile_channel_num(2),
+                    get_profile_channel_num(3),
+                    condition.bit_tx_order[0],
+                    condition.bit_tx_order[1],
+                    condition.bit_tx_order[2],
                     condition.bit_tx_order[3]);
       fft_csv_file_origin.write(str.toUtf8());
       last_direction = condition.direction;
@@ -640,8 +653,8 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
       {
         for(quint8 ch = 0; ch < calibration_profile_info_list.value(i).channel_num; ch++)
         {
-          data.append(QString::asprintf("%f", (float)condition.fft_data[i][ch].real / 1024.f));
-          data.append(QString::asprintf("%f", (float)condition.fft_data[i][ch].image / 1024.f));
+          data.append(QString::asprintf("%f", (float)condition.fft_data[i][ch].real / (float)fft_data_factor));
+          data.append(QString::asprintf("%f", (float)condition.fft_data[i][ch].image / (float)fft_data_factor));
         }
       }
       str = data.join(",");

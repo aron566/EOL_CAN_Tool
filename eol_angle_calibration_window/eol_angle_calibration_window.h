@@ -147,6 +147,16 @@ private:
   }FFT_REQUEST_CONDITION_Typedef_t;
 
   QList<FFT_REQUEST_CONDITION_Typedef_t> fft_request_list;
+
+  /* 版本:低字节byte0主版本号 v0 - 255 byte1：副版本号 0 - 255 byte2：修订版本号 0 - 255 */
+  quint32 fft_data_version = 1;
+
+  /* FFT数据类型 @ref DATA_Typedef_t */
+  quint8 fft_data_type = 0;
+
+  /* 数据系数 */
+  qint32 fft_data_factor = 1024;
+
   /* rts */
   float rts_range = 0;
   float rts_velocity = 0;
