@@ -63,6 +63,7 @@ void can_driver_sender::send_data_task()
     {
       if(true == clear_flag)
       {
+        clear_flag = false;
         period_send_msg_list.clear();
         return;
       }
