@@ -509,9 +509,8 @@ void eol_sub_window::on_write_pushButton_clicked()
     /* 写入SN */
     task.reg = EOL_RW_SN_REG;
     task.command = eol_protocol::EOL_WRITE_CMD;
-    char *p_sn = ui->sn_number_lineEdit->text().toLatin1().data();
-    qDebug() << p_sn << ui->sn_number_lineEdit->text().size();
-    memcpy(task.buf, p_sn, ui->sn_number_lineEdit->text().size());
+    QByteArray p_sn = ui->sn_number_lineEdit->text().toLatin1();
+    memcpy(task.buf, p_sn.data(), ui->sn_number_lineEdit->text().size());
     task.len = ui->sn_number_lineEdit->text().size();
     eol_protocol_obj->eol_master_common_rw_device(task);
   }
@@ -529,7 +528,6 @@ void eol_sub_window::on_write_pushButton_clicked()
     eol_protocol_obj->start_task();
   }
 }
-
 
 void eol_sub_window::on_more_pushButton_clicked()
 {
