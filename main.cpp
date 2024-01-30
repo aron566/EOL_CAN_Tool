@@ -99,6 +99,7 @@
  *  <tr><td>2024-01-19 <td>v1.2.23 <td>aron566 <td>优化EOL协议栈，ack回复错误后不触发重发机制加快协议栈传输响应，增加写入sn功能
  *  <tr><td>2024-01-23 <td>v1.2.24 <td>aron566 <td>修复清楚发送队列数据后无法再次添加定时发送问题
  *  <tr><td>2024-01-25 <td>v1.2.25 <td>aron566 <td>修复SN写入可能数据不对问题
+ *  <tr><td>2024-01-30 <td>v1.2.26 <td>aron566 <td>去除2D数据显示，优化时间耗时统计
  *  </table>
  */
 #include "mainwindow.h"
@@ -106,7 +107,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.25"
+#define PC_SOFTWARE_VERSION       "1.2.26"
 
 int main(int argc, char *argv[])
 {

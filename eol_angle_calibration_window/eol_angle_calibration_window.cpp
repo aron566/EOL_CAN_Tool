@@ -68,7 +68,7 @@ void eol_angle_calibration_window::set_eol_protocol_obj(eol_protocol *obj)
   }
   eol_protocol_obj = obj;
   /* 数据接收 */
-//  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok);
+  // connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_angle_calibration_window::slot_rw_device_ok);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_angle_calibration_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_angle_calibration_window::slot_rw_device_ok, Qt::BlockingQueuedConnection);
 }
@@ -243,9 +243,6 @@ void eol_angle_calibration_window::on_add_config_pushButton_clicked()
     ui->tableWidget->setItem(i, column++, new QTableWidgetItem(QString::number(condition.rts_range)));
     ui->tableWidget->setItem(i, column++, new QTableWidgetItem(QString::number(condition.rts_velocity)));
     ui->tableWidget->setItem(i, column++, new QTableWidgetItem(QString::number(condition.current_angle)));
-
-    /* 2dfft数据 */
-    ui->tableWidget->setItem(i, column++, new QTableWidgetItem(QString("")));
   }
 }
 
@@ -281,17 +278,13 @@ void eol_angle_calibration_window::on_start_pushButton_clicked()
 
   ui->start_pushButton->setText(tr("stop"));
 
-  /* 记录起始时间 */
-  QDateTime dt = QDateTime::currentDateTime();
-  time_ms_s = dt.toMSecsSinceEpoch();
-
   /* 设置转台条件 */
   FFT_REQUEST_CONDITION_Typedef_t condition;
   angle_position_index = 0;
   condition = fft_request_list.value(angle_position_index);
 
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
-  task.param = nullptr;
+  task.param = &time_ms_s;
 
   /* 设置转台后读取2DFFT */
   task.reg = EOL_W_2DFFT_CONDITION_REG;
@@ -304,6 +297,15 @@ void eol_angle_calibration_window::on_start_pushButton_clicked()
   task.buf[3] = (quint8)rts_velocity;
   task.len = 4;
   eol_protocol_obj->eol_master_common_rw_device(task);
+
+#if 0
+  /* 设置转台后读取2DFFT */
+  task.reg = EOL_R_2DFFT_DATA_REG;
+  task.command = eol_protocol::EOL_READ_CMD;
+  task.buf[0] = 0;
+  task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+#endif
 
   /* 启动轮询定时器 */
 //  timer_obj->stop();
@@ -426,7 +428,8 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
       condition.fft_data[i][ch].image = image.toFloat();
     }
     qint64 time_ms = time_ms_e - time_ms_s;
-    ui->tableWidget->setItem(angle_position_index, 8, new QTableWidgetItem(QString("ok,%1ms").arg(time_ms)));
+    QString str_time = QString("ok,%1ms").arg(time_ms);
+    ui->tableWidget->setItem(angle_position_index, 8, new QTableWidgetItem(str_time));
     QTableWidgetItem *item = ui->tableWidget->item(angle_position_index, 8);
     if(100 < time_ms)
     {
@@ -437,8 +440,6 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
       item->setForeground(QBrush(Qt::white));
     }
   }
-  QString fft_data_str = profile_fft_list.join(",");
-  ui->tableWidget->setItem(angle_position_index, 9, new QTableWidgetItem(fft_data_str));
 
   /* 更新结果到队列 */
   fft_request_list.replace(angle_position_index, condition);
@@ -675,15 +676,6 @@ void eol_angle_calibration_window::slot_timeout()
   {
     return;
   }
-
-  /* 检测是否刷新 */
-  if(true == eol_protocol_obj->task_is_runing())
-  {
-    return;
-  }
-
-  /* 启动eol线程 */
-  eol_protocol_obj->start_task();
 }
 
 /**
@@ -702,10 +694,7 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
     /* 角度校准 */
     case EOL_W_2DFFT_CONDITION_REG:
       {
-        /* 记录起始时间 */
-        QDateTime dt = QDateTime::currentDateTime();
-        time_ms_s = dt.toMSecsSinceEpoch();
-
+#if 1
         eol_protocol::EOL_TASK_LIST_Typedef_t task;
         task.param = nullptr;
 
@@ -715,6 +704,10 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
         task.buf[0] = 0;
         task.len = 0;
         eol_protocol_obj->eol_master_common_rw_device(task);
+
+        /* 启动eol线程 */
+        eol_protocol_obj->start_task();
+#endif
       }
       break;
 
@@ -733,6 +726,9 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
           task.buf[0] = 0;
           task.len = 0;
           eol_protocol_obj->eol_master_common_rw_device(task);
+
+          /* 启动eol线程 */
+          eol_protocol_obj->start_task();
           return;
         }
 
@@ -753,7 +749,7 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
         condition = fft_request_list.value(angle_position_index);
 
         eol_protocol::EOL_TASK_LIST_Typedef_t task;
-        task.param = nullptr;
+        task.param = &time_ms_s;
 
         /* 设置转台条件 */
         task.reg = EOL_W_2DFFT_CONDITION_REG;
@@ -766,6 +762,17 @@ void eol_angle_calibration_window::slot_rw_device_ok(quint8 reg_addr, const quin
         task.buf[3] = (quint8)rts_velocity;
         task.len = 4;
         eol_protocol_obj->eol_master_common_rw_device(task);
+#if 0
+        /* 设置转台后读取2DFFT */
+        task.reg = EOL_R_2DFFT_DATA_REG;
+        task.command = eol_protocol::EOL_READ_CMD;
+        task.buf[0] = 0;
+        task.len = 0;
+        eol_protocol_obj->eol_master_common_rw_device(task);
+#endif
+
+        /* 启动eol线程 */
+        eol_protocol_obj->start_task();
       }
       break;
 

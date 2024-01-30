@@ -79,7 +79,7 @@ PS：
 总帧长为：7Bytes + 数据长度
 */
 #define ENABLE_SEND_DELAY             1       /**< 为1开启分包发送 */
-#define ENABLE_SEND_DELAY_MS          1U      /**< 分包发送间隔ms >1ms */
+#define ENABLE_SEND_DELAY_MS          0U      /**< 分包发送间隔ms >1ms */
 #define ENABLE_SEND_DELAY_LIMIT_SIZE  64U     /**< >64Bytes时开启发送 */
 #define SEND_ONE_PACKET_SIZE_MAX      64U     /**< 每包发送大小 */
 
@@ -1022,6 +1022,23 @@ bool eol_protocol::common_rw_device_task(void *param_)
   can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)param->channel_num.toUShort());
 
   // qDebug("step1 rw device cmd %u reg 0x%02X len %u", param->command, param->reg, param->len);
+
+  if(nullptr != param->param)
+  {
+    switch(param->reg)
+    {
+      case EOL_W_2DFFT_CONDITION_REG:
+        {
+          /* 记录起始时间 */
+          QDateTime dt = QDateTime::currentDateTime();
+          qint64 *p_time_ms_s = (qint64 *)param->param;
+          *p_time_ms_s = dt.toMSecsSinceEpoch();
+        }
+        break;
+      default:
+        break;
+    }
+  }
 
   do
   {

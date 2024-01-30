@@ -467,11 +467,6 @@
           <string>获取2DFFT是否成功</string>
          </property>
         </column>
-        <column>
-         <property name="text">
-          <string>各配置下所有通道2DFFT数据</string>
-         </property>
-        </column>
        </widget>
       </item>
      </layout>
