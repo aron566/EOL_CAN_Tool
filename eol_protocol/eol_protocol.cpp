@@ -79,7 +79,7 @@ PS：
 总帧长为：7Bytes + 数据长度
 */
 #define ENABLE_SEND_DELAY             1       /**< 为1开启分包发送 */
-#define ENABLE_SEND_DELAY_MS          0U      /**< 分包发送间隔ms >1ms */
+#define ENABLE_SEND_DELAY_MS          1U      /**< 分包发送间隔ms >1ms */
 #define ENABLE_SEND_DELAY_LIMIT_SIZE  64U     /**< >64Bytes时开启发送 */
 #define SEND_ONE_PACKET_SIZE_MAX      64U     /**< 每包发送大小 */
 
