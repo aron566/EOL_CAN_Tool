@@ -2095,7 +2095,7 @@ void eol_window::slot_device_mode(const void *pass_data)
   emit signal_clear_profile_info();
 
   QString msg;
-  msg += QString("<font size='5' color='green'><div align='legt'>profile num:</div> <div align='right'>%1</div> </font>").arg(profile_num);
+  msg += QString("<font size='5' color='green'><div align='legt'>profile num:%1</div> </font>").arg(profile_num);
 
   for(quint8 i = 0; i < profile_num; i++)
   {
@@ -2106,14 +2106,14 @@ void eol_window::slot_device_mode(const void *pass_data)
     memcpy(info.tx_order, data_ptr + index, sizeof(info.tx_order));
     index += sizeof(info.tx_order);
 
-    msg += QString("<font size='5' color='green'><div align='legt'>profile id:</div> <div align='right'>%1</div> </font>").arg(info.profile_id);
-    msg += QString("<font size='5' color='green'><div align='legt'>channel num:</div> <div align='right'>%1</div> </font>").arg(info.channel_num);
-    msg += QString("<font size='5' color='green'><div align='legt'>tx order:</div> </font>");
+    msg += QString("<font size='5' color='green'><div align='legt'>profile id:%1</div> </font>").arg(info.profile_id);
+    msg += QString("<font size='5' color='green'><div align='legt'>channel num:%1</div> </font>").arg(info.channel_num);
+    msg += QString("<font size='5' color='green'><div align='legt'>tx order:");
     for(quint8 t = 0; t < sizeof(info.tx_order); t++)
     {
-      msg += QString("<font size='5' color='green'><div align='legt'>[%1]:</div> <div align='right'>%2</div> </font>").arg(t).arg(info.tx_order[t]);
+      msg += QString("[%1]:%2").arg(t).arg(info.tx_order[t]);
     }
-
+    msg += QString("</div> </font>");
     emit signal_profile_info_update(info);
   }
   QMessageBox message(QMessageBox::Information, tr("device info"), msg, \

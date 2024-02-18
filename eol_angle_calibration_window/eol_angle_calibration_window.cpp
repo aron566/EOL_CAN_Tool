@@ -375,6 +375,10 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
   FFT_REQUEST_CONDITION_Typedef_t condition = fft_request_list.value(angle_position_index);
   memset(condition.bit_tx_order, 0, sizeof(condition.bit_tx_order));
   profile_fft_list.clear();
+
+  QStringList bit_tx_order_str;
+  QStringList channel_num_str;
+
   for(quint16 i = 0; i < calibration_profile_info_list.size(); i++)
   {
     /* 过程合法性检查 */
@@ -407,8 +411,8 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
     condition.bit_tx_order[i] = bit_tx_order;
 
     /* 维度 TX配置x 配置ID 通道数x 辅助角 rts距离 rts速度 当前角度 获取2D是否成功 */
-    ui->tableWidget->setItem(angle_position_index, 1, new QTableWidgetItem(QString::asprintf("%08X", bit_tx_order)));
-    ui->tableWidget->setItem(angle_position_index, 3, new QTableWidgetItem(QString::number(channel_num)));
+    bit_tx_order_str.append(QString::asprintf("%08X", bit_tx_order));
+    channel_num_str.append(QString::number(channel_num));
 
     profile_fft_list.append(QString("profile:%1").arg(profile_id));
     profile_fft_list.append(QString("channel_num:%1").arg(channel_num));
@@ -440,6 +444,11 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
       item->setForeground(QBrush(Qt::white));
     }
   }
+
+  QString str = bit_tx_order_str.join(",");
+  ui->tableWidget->setItem(angle_position_index, 1, new QTableWidgetItem(str));
+  str = channel_num_str.join(",");
+  ui->tableWidget->setItem(angle_position_index, 3, new QTableWidgetItem(str));
 
   /* 更新结果到队列 */
   fft_request_list.replace(angle_position_index, condition);

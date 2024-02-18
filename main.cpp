@@ -100,6 +100,7 @@
  *  <tr><td>2024-01-23 <td>v1.2.24 <td>aron566 <td>修复清楚发送队列数据后无法再次添加定时发送问题
  *  <tr><td>2024-01-25 <td>v1.2.25 <td>aron566 <td>修复SN写入可能数据不对问题
  *  <tr><td>2024-01-30 <td>v1.2.26 <td>aron566 <td>去除2D数据显示，优化时间耗时统计
+ *  <tr><td>2024-02-18 <td>v1.2.27 <td>aron566 <td>修复多配置获取2D数据未显示多配置下的通道数与tx order，优化配置显示
  *  </table>
  */
 #include "mainwindow.h"
@@ -107,7 +108,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.26"
+#define PC_SOFTWARE_VERSION       "1.2.27"
 
 int main(int argc, char *argv[])
 {
