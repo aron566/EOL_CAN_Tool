@@ -724,7 +724,7 @@ void more_window::show_can_msg(can_driver_model::CAN_MSG_DISPLAY_Typedef_t &msg)
   QString item;
   if(msg.direction == can_driver_model::CAN_TX_DIRECT || msg.direction == can_driver_model::CAN_RX_DIRECT)
   {
-      item = QString::asprintf(tr("[%u]%sx CAN%s ID:%08X %s %s LEN:%d DATA:").toUtf8().data(), \
+      item = QString::asprintf(tr("[%u]%sx CAN%s ID: %08X %s %s LEN: %d DATA: ").toUtf8().data(), \
       msg.channel_num, \
       msg.direction == can_driver_model::CAN_TX_DIRECT ? "T" : "R",\
       msg.can_protocol == can_driver_model::CANFD_PROTOCOL_TYPE ? "FD" : "", \
