@@ -38,6 +38,9 @@ more_window::more_window(QString title, QWidget *parent) :
   /* 网络调试窗口初始化 */
   network_window_init(tr("EOL CAN Tool - Network"));
 
+  /* 更新固件窗口初始化 */
+  updatefw_window_init(tr("EOL CAN Tool - Update Firmware"));
+
   /* 工具窗口初始化 */
   tool_window_init(tr("EOL CAN Tool - TOOL"));
 
@@ -97,6 +100,9 @@ more_window::~more_window()
   delete network_window_obj;
   qDebug() << "del network_window_obj";
 
+  delete updatefw_window_obj;
+  qDebug() << "del updatefw_window_obj";
+
   delete ui;
   qDebug() << "del more_window";
 }
@@ -135,15 +141,28 @@ void more_window::network_window_init(QString titile)
       }
     }
   });
-
-  connect(network_window_obj, &network_window::signal_net_wave_msg, tool_window_obj, &tool_window::slot_wave_data);
 }
+
+void more_window::updatefw_window_init(QString titile)
+{
+  updatefw_window_obj = new updatefw_window(titile);
+  connect(updatefw_window_obj, &updatefw_window::signal_window_closed, this, [=]{
+    this->show();
+  });
+}
+
 
 /* 工具集子窗口 */
 void more_window::tool_window_init(QString titile)
 {
   tool_window_obj = new tool_window(titile);
   connect(this, &more_window::signal_can_wave_msg, tool_window_obj, &tool_window::slot_wave_data);
+
+  if(nullptr == network_window_obj || nullptr == tool_window_obj)
+  {
+    return;
+  }
+  connect(network_window_obj, &network_window::signal_net_wave_msg, tool_window_obj, &tool_window::slot_wave_data);
 }
 
 void more_window::timer_init()
@@ -281,6 +300,8 @@ void more_window::save_cfg()
   setting.setIniCodec("UTF-8");
   /* can id */
   setting.setValue("more_window_v" CONFIG_VER_STR "/can_id", ui->id_lineEdit->text());
+  /* crc */
+  setting.setValue("more_window_v" CONFIG_VER_STR "/crc_sel", ui->crc_comboBox->currentIndex());
   /* 数据 */
   QString plaintext = ui->data_lineEdit->text();
   plaintext.replace(' ', ',');;
@@ -309,6 +330,8 @@ void more_window::read_cfg()
   }
   /* can id */
   ui->id_lineEdit->setText(setting.value("more_window_v" CONFIG_VER_STR "/can_id").toString());
+  /* crc */
+  ui->crc_comboBox->setCurrentIndex((can_driver_model::CAN_BRAND_Typedef_t)setting.value("more_window_v" CONFIG_VER_STR "/crc_sel").toInt());
   /* 数据 */
   QString plaintext = setting.value("more_window_v" CONFIG_VER_STR "/data_edit").toString();
   QString data_str = plaintext.replace(',', ' ');
@@ -1052,10 +1075,33 @@ void more_window::on_crc_pushButton_clicked()
         ui->data_lineEdit->setText(data_list.join(" "));
       }
       break;
+
     case 3:
       {
         quint8 crc = utility::get_data_sum(temp_data, len);
         data_list.append(QString::asprintf("%02X", crc & 0xFF));
+        ui->data_lineEdit->setText(data_list.join(" "));
+      }
+      break;
+
+    case 4:
+      {
+        quint32 crc = utility::get_crc32_with_tab1(temp_data, len);
+        data_list.append(QString::asprintf("%02X", crc & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 8) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 16) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 24) & 0xFF));
+        ui->data_lineEdit->setText(data_list.join(" "));
+      }
+      break;
+
+    case 5:
+      {
+        quint32 crc = utility::get_crc32_with_tab2(temp_data, len);
+        data_list.append(QString::asprintf("%02X", crc & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 8) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 16) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 24) & 0xFF));
         ui->data_lineEdit->setText(data_list.join(" "));
       }
       break;
@@ -1153,3 +1199,7 @@ void more_window::on_timer_checkBox_clicked(bool checked)
   }
 }
 
+void more_window::on_update_pushButton_clicked()
+{
+  updatefw_window_obj->show();
+}

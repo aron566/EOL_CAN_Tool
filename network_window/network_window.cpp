@@ -1043,10 +1043,33 @@ void network_window::on_crc_pushButton_clicked()
         ui->hex_lineEdit->setText(data_list.join(" "));
       }
       break;
+
     case 3:
       {
         quint8 crc = utility::get_data_sum(temp_data, len);
         data_list.append(QString::asprintf("%02X", crc & 0xFF));
+        ui->hex_lineEdit->setText(data_list.join(" "));
+      }
+      break;
+
+    case 4:
+      {
+        quint32 crc = utility::get_crc32_with_tab1(temp_data, len);
+        data_list.append(QString::asprintf("%02X", crc & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 8) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 16) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 24) & 0xFF));
+        ui->hex_lineEdit->setText(data_list.join(" "));
+      }
+      break;
+
+    case 5:
+      {
+        quint32 crc = utility::get_crc32_with_tab2(temp_data, len);
+        data_list.append(QString::asprintf("%02X", crc & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 8) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 16) & 0xFF));
+        data_list.append(QString::asprintf("%02X", (crc >> 24) & 0xFF));
         ui->hex_lineEdit->setText(data_list.join(" "));
       }
       break;

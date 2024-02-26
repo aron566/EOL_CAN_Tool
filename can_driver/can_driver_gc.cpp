@@ -691,9 +691,6 @@ bool can_driver_gc::close()
       break;
   }
 
-  /* 发送can关闭状态 */
-  emit signal_can_is_closed();
-
   device_opened_ = false;
   return true;
 }

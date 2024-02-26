@@ -495,9 +495,6 @@ bool can_driver_ts::close()
   /* 关闭设备 */
   /* todo nothing */
 
-  /* 发送can关闭状态 */
-  emit signal_can_is_closed();
-
   device_opened_ = false;
   return true;
 }

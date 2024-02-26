@@ -102,7 +102,7 @@ public:
     }
 
     start_ = true;
-    QThreadPool::globalInstance()->start(this);
+    // QThreadPool::globalInstance()->start(this);
     return ret;
   }
 
@@ -137,8 +137,7 @@ private:
   QAtomicInt thread_run_statex;
 signals:
 
-private:
-
+public:
   /**
    * @brief send_data_task
    */

@@ -360,11 +360,22 @@ public:
       emit signal_show_can_msg();
       QThread::usleep(0);
     }
+    /* 发送can关闭状态 */
+    emit signal_can_is_closed();
     qDebug() << "[thread]" << QThread::currentThreadId() << "can driver task end";
     thread_run_state = false;
   }
 
 public:
+
+  /**
+   * @brief close_driver
+   */
+  void close_driver()
+  {
+    start_ = false;
+  }
+
   void clear_send_data();
 
   /**

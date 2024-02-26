@@ -10,6 +10,7 @@
 #include "frame_diagnosis_window/frame_diagnosis.h"
 #include "tool_window/tool_window.h"
 #include "network_window/network_window.h"
+#include "updatefw_window/updatefw_window.h"
 #include "utilities/line_highlighter.h"
 
 namespace Ui {
@@ -33,15 +34,27 @@ public:
     can_driver_obj = can_driver_;
     /* 设置can驱动 after */
     eol_window_obj->set_can_driver_obj(can_driver_obj);
+    updatefw_window_obj->set_can_driver_obj(can_driver_obj);
 
-    connect(can_driver_obj, &can_driver_model::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
-    connect(can_driver_obj, &can_driver_model::signal_show_message, this, &more_window::slot_show_message);
+    if(nullptr == can_driver_obj)
+    {
+      disconnect(can_driver_obj, &can_driver_model::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
+      disconnect(can_driver_obj, &can_driver_model::signal_show_message, this, &more_window::slot_show_message);
+      disconnect(can_driver_obj, &can_driver_model::signal_show_thread_message, this, &more_window::slot_show_message_block);
+      disconnect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg);
+      disconnect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
+    }
+    else
+    {
+      connect(can_driver_obj, &can_driver_model::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
+      connect(can_driver_obj, &can_driver_model::signal_show_message, this, &more_window::slot_show_message);
 
-    /* 线程同步 */
-    connect(can_driver_obj, &can_driver_model::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::QueuedConnection);
+      /* 线程同步 */
+      connect(can_driver_obj, &can_driver_model::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::QueuedConnection);
 
-    connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg);//, Qt::BlockingQueuedConnection);
-    connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
+      connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg);//, Qt::BlockingQueuedConnection);
+      connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
+    }
 
     /* 设置帧诊断can驱动 */
     frame_diagnosis_obj->set_can_driver_obj(can_driver_);
@@ -87,6 +100,12 @@ private:
    * @param titile
    */
   void network_window_init(QString titile);
+
+  /**
+   * @brief 更新固件窗口初始化
+   * @param titile
+   */
+  void updatefw_window_init(QString titile);
 
   /**
    * @brief 工具子窗口
@@ -211,15 +230,18 @@ private slots:
 
     void on_timer_checkBox_clicked(bool checked);
 
+    void on_update_pushButton_clicked();
+
   private:
     Ui::more_window *ui;
     eol_window *eol_window_obj = nullptr;
     network_window *network_window_obj = nullptr;
     tool_window *tool_window_obj = nullptr;
-
+    updatefw_window *updatefw_window_obj = nullptr;
 private:
     can_driver_model *can_driver_obj = nullptr;
     frame_diagnosis *frame_diagnosis_obj = nullptr;
+
     QTimer *timer_obj = nullptr;
 
     quint32 rx_frame_cnt = 0;

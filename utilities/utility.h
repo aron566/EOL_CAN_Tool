@@ -115,6 +115,13 @@ public:
   static void delay_ms(int ms);
 
   /**
+   * @brief 字节序翻转
+   * @param array
+   * @param len
+   */
+  static void bytes_invert(quint8 *array, quint32 len);
+
+  /**
    * @brief 数据类型转字节数
    * @param Type 类型
    * @return 字节数
@@ -161,6 +168,9 @@ public:
    * @return crc结果
    */
   static quint32 get_crc32_with_tab(const quint8 *data_blk_ptr, quint32 data_blk_size, quint32 crc_accum = 0);
+  static quint32 get_crc32_with_tab1(const quint8 *data_blk_ptr, quint32 data_blk_size, quint32 crc_accum = 0);
+  static quint32 get_crc32_with_tab2(const quint8 *data_blk_ptr, quint32 data_blk_size, quint32 crc_accum = 0);
+  static quint32 get_crc32_with_tab2_for_upfw(const quint8 *data_blk_ptr, quint32 data_blk_size, quint32 crc_accum = 0xFFFFFFFFU, bool end = false);
 
   /**
    * @brief 验证数据crc是否正确

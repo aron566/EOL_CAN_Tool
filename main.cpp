@@ -101,6 +101,7 @@
  *  <tr><td>2024-01-25 <td>v1.2.25 <td>aron566 <td>修复SN写入可能数据不对问题
  *  <tr><td>2024-01-30 <td>v1.2.26 <td>aron566 <td>去除2D数据显示，优化时间耗时统计
  *  <tr><td>2024-02-18 <td>v1.2.27 <td>aron566 <td>修复多配置获取2D数据未显示多配置下的通道数与tx order，优化配置显示
+ *  <tr><td>2024-02-26 <td>v1.3.1  <td>aron566 <td>增加固件更新功能，修复正在发送数据时关闭can导致崩溃问题
  *  </table>
  */
 #include "mainwindow.h"
@@ -108,7 +109,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.2.27"
+#define PC_SOFTWARE_VERSION       "1.3.1"
 
 int main(int argc, char *argv[])
 {

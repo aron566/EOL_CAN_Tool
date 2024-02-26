@@ -213,6 +213,8 @@ bool can_driver_model::send_data()
 {
   // QReadLocker locker(&tx_msg_rw_lock);
 
+  sender_obj->send_data_task();
+
   /* 定时发送 */
   if(false == period_send_msg_list.isEmpty())
   {
@@ -283,6 +285,7 @@ bool can_driver_model::send_data()
 
   tx_msg_sem.release();
 
+  tx_sem.acquire();
   qint32 channel_index = msg.channel_num;
   CHANNEL_STATE_Typedef_t channel_state;
   for(qint32 i = 0; i < channel_state_list.size(); i++)
@@ -294,12 +297,13 @@ bool can_driver_model::send_data()
       frame_type_index_ = (quint32)msg.frame_type;
       protocol_index_ = (quint32)msg.protocol;
       id_ = QString::number(msg.id, 16);
-      tx_sem.acquire();
       send(channel_state);
       tx_sem.release();
       return true;
     }
   }
+
+  tx_sem.release();
   return false;
 }
 
@@ -315,7 +319,7 @@ bool can_driver_model::receive_data()
     channel_state = channel_state_list.value(i);
     if(true == channel_state.channel_en)
     {
-      receive_data(channel_state);
+      receive_data(channel_state); 
     }
   }
   return true;
@@ -336,6 +340,8 @@ bool can_driver_model::send(const quint8 *data, quint8 size, quint32 id, FRAME_T
     return false;
   }
 
+  tx_sem.acquire();
+
   bool ret = false;
   CHANNEL_STATE_Typedef_t channel_state;
   for(qint32 i = 0; i < channel_state_list.size(); i++)
@@ -344,13 +350,12 @@ bool can_driver_model::send(const quint8 *data, quint8 size, quint32 id, FRAME_T
     if((channel_num == channel_state.channel_num || 0xFFU == channel_num) \
         && true == channel_state.channel_en)
     {
-      tx_sem.acquire();
       ret = send(channel_state, data, size, id, frame_type, protocol);
-      tx_sem.release();
       break;
     }
   }
 
+  tx_sem.release();
   return ret;
 }
 

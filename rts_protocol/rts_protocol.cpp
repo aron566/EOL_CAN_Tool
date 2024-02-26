@@ -72,9 +72,6 @@ rts_protocol::rts_protocol(QObject *parent)
   {
     qDebug() << "rts create cq faild";
   }
-
-  /* 启动计时器 */
-  timer_obj.start();
 }
 
 /**

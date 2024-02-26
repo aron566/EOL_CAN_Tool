@@ -23,7 +23,7 @@
        </property>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="2" column="0">
-         <widget class="QPushButton" name="update_pushButton_2">
+         <widget class="QPushButton" name="update_pushButton">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -598,6 +598,16 @@
             <item>
              <property name="text">
               <string>SUM</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CRC32_1</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>CRC32_2</string>
              </property>
             </item>
            </widget>

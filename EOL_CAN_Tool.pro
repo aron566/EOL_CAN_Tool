@@ -82,6 +82,9 @@ include(eol_protocol/eol_protocol.pri)
 # RTS协议
 include(rts_protocol/rts_protocol.pri)
 
+# 更新fw协议
+include(updatefw_protocol/updatefw_protocol.pri)
+
 # 实用工具
 include(utilities/utilities.pri)
 
@@ -114,6 +117,7 @@ SOURCES += \
     network_window/network_window.cpp \
     rts_ctrl_window/rts_ctrl_window.cpp \
     tool_window/tool_window.cpp \
+    updatefw_window/updatefw_window.cpp \
     updater_window/updater_window.cpp
 
 HEADERS += \
@@ -130,6 +134,7 @@ HEADERS += \
     network_window/network_window.h \
     rts_ctrl_window/rts_ctrl_window.h \
     tool_window/tool_window.h \
+    updatefw_window/updatefw_window.h \
     updater_window/updater_window.h
 
 FORMS += \
@@ -146,6 +151,7 @@ FORMS += \
     network_window/network_window.ui \
     rts_ctrl_window/rts_ctrl_window.ui \
     tool_window/tool_window.ui \
+    updatefw_window/updatefw_window.ui \
     updater_window/updater_window.ui
 
 # 包含路径
@@ -155,7 +161,8 @@ INCLUDEPATH += \
     eol_window \
     eol_sub_window \
     eol_calibration_window \
-    updater_window
+    updater_window \
+    updatefw_window
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
