@@ -76,6 +76,12 @@ public slots:
     void slot_send_progress(quint32 current_size, quint32 total_size);
 
     /**
+     * @brief 协议栈运行状态信息
+     * @param msg 信息
+     */
+    void slot_protocol_run_step_msg(QString msg);
+
+    /**
      * @brief 读写错误信号
      * @param cmd 命令
      */

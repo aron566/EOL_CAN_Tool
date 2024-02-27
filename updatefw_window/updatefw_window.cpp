@@ -115,6 +115,7 @@ void updatefw_window::set_can_driver_obj(can_driver_model *can_driver_obj)
   connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_error_occur, this, &updatefw_window::slot_send_data_timeout_occured);
   connect(protocol_stack_obj, &updatefw_protocol::signal_send_progress, this, &updatefw_window::slot_send_progress, Qt::BlockingQueuedConnection);
   connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_rw_err, this, &updatefw_window::slot_protocol_rw_err);
+  connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_run_step_msg, this, &updatefw_window::slot_protocol_run_step_msg);
 
   /* 禁止线程完成后执行析构对象 */
   protocol_stack_obj->setAutoDelete(false);
@@ -203,6 +204,11 @@ void updatefw_window::slot_protocol_rw_err(QString cmd)
 {
   Q_UNUSED(cmd)
   run_state = false;
+}
+
+void updatefw_window::slot_protocol_run_step_msg(QString msg)
+{
+  ui->run_info_msg->setText("run_info:"+msg);
 }
 
 void updatefw_window::slot_send_progress(quint32 current_size, quint32 total_size)

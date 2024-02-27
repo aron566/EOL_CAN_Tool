@@ -210,6 +210,12 @@ signals:
   void signal_protocol_error_occur(quint8 error_msg);
 
   /**
+   * @brief 协议栈运行状态信息
+   * @param msg 信息
+   */
+  void signal_protocol_run_step_msg(QString msg);
+
+  /**
    * @brief signal_protocol_rw_err 读写错误信号
    * @param cmd 命令
    */

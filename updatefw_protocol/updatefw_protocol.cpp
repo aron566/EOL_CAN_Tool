@@ -400,13 +400,13 @@ bool updatefw_protocol::update_device_app_task(void *param_)
   quint32 last_canid_mask = 0;
   bool last_canid_mask_en = false;
   can_driver_obj->set_msg_canid_mask(0x200U, true, &last_canid_mask, &last_canid_mask_en);
+  can_driver_obj->set_msg_show_en(false);
 
   /* 清空 */
   updatefw_protocol_clear();
 
   /* 设置消息过滤器 */
   can_driver_obj->add_msg_filter(0x200U, cq_obj, (quint8)channel_num.toUShort());
-
 
   QFile file(param->fw_file_name);
   quint8 sequence_num = 0;
@@ -419,7 +419,9 @@ bool updatefw_protocol::update_device_app_task(void *param_)
   quint32 write_fw_len_cnt = 0;
   quint32 crc_val = 0xFFFFFFFFU;
 
-  qDebug() << "step1 disable device all";
+  QString run_step_msg;
+  run_step_msg = "step1 disable device all";
+  emit signal_protocol_run_step_msg(run_step_msg);
   send_data[0] = (1 << 7U) | sequence_num;
   send_data[1] = UPDATE_FW_TO_BOOT_CMD;   /**< BOOT2_CMD_toBoot_01 */
   send_data[2] = 1;   /**< 2boot 1app 3force */
@@ -440,7 +442,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     break;
   }while(run_state);
 
-  qDebug() << "step2 erase device flash";
+  run_step_msg = "step2 erase device flash";
+  emit signal_protocol_run_step_msg(run_step_msg);
   send_data[1] = UPDATE_FW_TO_EARSE_CMD; /**< BOOT2_CMD_code_erase */
   /* 启动地址 */
   quint32 start_addr = param->start_addr;
@@ -485,7 +488,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     goto __set_device_err;
   }
 
-  qDebug() << "step3 send fw data";
+  run_step_msg = "step3 send fw data";
+  emit signal_protocol_run_step_msg(run_step_msg);
 
   /* 打开文件句柄 */
   if(file.fileName().isEmpty() == true)
@@ -557,7 +561,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     /* 已发数据长度检验 */
     if(i >= check_fw_len)
     {
-      qDebug() << "step3.1 check fw data len";
+      // qDebug() << "step3.1 check fw data len";
       sequence_num_get_len = sequence_num_get_len > 0x7FU ? 0U : sequence_num_get_len;
       send_data[0] = (1 << 7U) | sequence_num_get_len;
       send_data[1] = UPDATE_FW_TO_GET_LEN_CMD;/**< BOOT2_CMD_getLen_07 */
@@ -605,7 +609,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     /* 已发数据写入 */
     if(i >= write_fw_len)
     {
-      qDebug() << "step3.2 write fw data len";
+      // qDebug() << "step3.2 write fw data len";
       sequence_num_write_flash = sequence_num_write_flash > 0x7FU ? 0U : sequence_num_write_flash;
       send_data[0] = (1 << 7U) | sequence_num_write_flash;
       send_data[1] = UPDATE_FW_TO_SAVE_CMD;/**< BOOT2_CMD_code_pro_flash */
@@ -661,10 +665,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     goto __set_device_err;
   }
 
-  /* 恢复数据接收显示 */
-  can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
-
-  qDebug() << "step4 check fw all data len";
+  run_step_msg = "step4 check fw all data len";
+  emit signal_protocol_run_step_msg(run_step_msg);
   send_data[0] = (1 << 7U) | sequence_num;
   send_data[1] = UPDATE_FW_TO_GET_ALL_LEN_CMD;/**< BOOT2_CMD_len_03 */
   // send_data[2] = (write_fw_len >> 24U) & 0xFFU;
@@ -705,7 +707,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     goto __set_device_err;
   }
 
-  qDebug() << "step5 check fw data crc";
+  run_step_msg = "step5 check fw data crc";
+  emit signal_protocol_run_step_msg(run_step_msg);
   send_data[0] = (1 << 7U) | sequence_num;
   send_data[1] = UPDATE_FW_TO_GET_CRC_CMD;/**< BOOT2_CMD_crc_04 */
   send_data[2] = (crc_val >> 24U) & 0xFFU;
@@ -742,8 +745,12 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     goto __set_device_err;
   }
 
-  qDebug() << "step6 wait update fw ok";
+  /* 恢复数据接收显示 */
+  can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
+  can_driver_obj->set_msg_show_en(true);
 
+  run_step_msg = "step6 wait update fw ok";
+  emit signal_protocol_run_step_msg(run_step_msg);
   if(file.isOpen() == true)
   {
     file.close();
@@ -754,6 +761,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
 __set_device_err:
   /* 恢复数据接收显示 */
   can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
+  can_driver_obj->set_msg_show_en(true);
 
   if(file.isOpen() == true)
   {

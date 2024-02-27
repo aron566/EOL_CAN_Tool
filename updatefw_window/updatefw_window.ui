@@ -506,6 +506,13 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QLabel" name="run_info_msg">
+       <property name="text">
+        <string>run_info:msg</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item row="1" column="1" rowspan="2">

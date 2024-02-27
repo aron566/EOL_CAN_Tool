@@ -74,6 +74,7 @@ bool can_driver_model::support_get_send_mode_ = false;         //设备是否支
 bool can_driver_model::thread_run_state = false;
 quint32 can_driver_model::can_id_mask_ = 0xFFFF;
 bool can_driver_model::can_id_mask_en_ = false;
+bool can_driver_model::can_msg_show_en_ = true;
 QList<can_driver_model::CHANNEL_STATE_Typedef_t>can_driver_model::channel_state_list;
 
 /** Private function prototypes ----------------------------------------------*/
@@ -519,6 +520,12 @@ void can_driver_model::msg_to_ui_cq_buf(quint32 can_id, quint8 channel_num, CAN_
                                       FRAME_DATA_TYPE_Typedef_t frame_data_type, \
                                       const quint8 *data, quint8 data_len)
 {
+  /* 检查消息显示是否使能 */
+  if(false == can_msg_show_en_)
+  {
+    return;
+  }
+
   quint32 id_temp;
   id_temp = (can_id & can_id_mask_);
 

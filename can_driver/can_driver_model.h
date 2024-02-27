@@ -179,6 +179,7 @@ public:
   static bool thread_run_state;
   static quint32 can_id_mask_;
   static bool can_id_mask_en_;
+  static bool can_msg_show_en_;
   static QList<CHANNEL_STATE_Typedef_t>channel_state_list;
 
   QList<SEND_MSG_Typedef_t>send_msg_list;
@@ -712,6 +713,15 @@ public:
     }
     can_id_mask_en_ = en;
     can_id_mask_ = can_id_mask;
+  }
+
+  /**
+   * @brief 设置显示canlog
+   * @param en true显示
+   */
+  static void set_msg_show_en(bool en = true)
+  {
+    can_msg_show_en_ = en;
   }
 
   /**
