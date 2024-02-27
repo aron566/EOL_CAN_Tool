@@ -103,6 +103,22 @@ can_driver_model::can_driver_model(QObject *parent)
 
   /* 创建发送任务 */
   sender_obj = new can_driver_sender(this, this);
+
+  /* 禁止线程完成后执行析构对象 */
+  sender_obj->setAutoDelete(false);
+
+  /* 接收can驱动断开信号 */
+  connect(this, &can_driver_model::signal_can_driver_reset, this, [this]{
+    this->sender_obj->stop_task();
+  });
+  connect(this, &can_driver_model::signal_can_is_closed, this, [this]{
+    this->sender_obj->stop_task();
+  });
+}
+
+bool can_driver_model::sender_task_is_running()
+{
+  return sender_obj->task_is_running();
 }
 
 void can_driver_model::clear_send_data()
@@ -212,8 +228,6 @@ void can_driver_model::send(const CHANNEL_STATE_Typedef_t &channel_state)
 bool can_driver_model::send_data()
 {
   // QReadLocker locker(&tx_msg_rw_lock);
-
-  sender_obj->send_data_task();
 
   /* 定时发送 */
   if(false == period_send_msg_list.isEmpty())
@@ -351,6 +365,8 @@ bool can_driver_model::send(const quint8 *data, quint8 size, quint32 id, FRAME_T
         && true == channel_state.channel_en)
     {
       ret = send(channel_state, data, size, id, frame_type, protocol);
+      /* 刷新界面 */
+      emit signal_show_can_msg();
       break;
     }
   }
@@ -580,6 +596,11 @@ void can_driver_model::period_send_set(quint32 id, QString data, quint32 period_
                                        PROTOCOL_TYPE_Typedef_t protocol_type,
                                        quint32 can_fd_exp)
 {
+  if(false == start_)
+  {
+    return;
+  }
+
   /* 建立发送任务 */
   PERIOD_SEND_MSG_Typedef_t send_task;
 

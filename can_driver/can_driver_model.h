@@ -360,8 +360,14 @@ public:
       emit signal_show_can_msg();
       QThread::usleep(0);
     }
-    /* 发送can关闭状态 */
-    emit signal_can_is_closed();
+    /* 清空关闭发送 */
+    clear_send_data();
+
+    /* 等待完全关闭 */
+    while(sender_task_is_running())
+    {
+      QThread::msleep(1);
+    }
     qDebug() << "[thread]" << QThread::currentThreadId() << "can driver task end";
     thread_run_state = false;
   }
@@ -369,14 +375,48 @@ public:
 public:
 
   /**
-   * @brief close_driver
+   * @brief reset_driver
    */
-  void close_driver()
+  bool reset_driver()
   {
     start_ = false;
+    /* 等待完全关闭 */
+    while(thread_run_state)
+    {
+      QCoreApplication::processEvents();
+      QThread::msleep(1);
+    }
+    bool ret = reset();
+    /* 发送can复位状态 */
+    emit signal_can_driver_reset();
+    return ret;
+  }
+
+  /**
+   * @brief close_driver
+   */
+  bool close_driver()
+  {
+    start_ = false;
+    /* 等待完全关闭 */
+    while(thread_run_state)
+    {
+      QCoreApplication::processEvents();
+      QThread::msleep(1);
+    }
+    bool ret = close();
+    /* 发送can关闭状态 */
+    emit signal_can_is_closed();
+    return ret;
   }
 
   void clear_send_data();
+
+  /**
+   * @brief sender_task_is_running
+   * @return true正运行
+   */
+  bool sender_task_is_running();
 
   /**
    * @brief delay_send_can_use_update

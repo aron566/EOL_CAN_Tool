@@ -104,12 +104,10 @@ void updatefw_window::set_can_driver_obj(can_driver_model *can_driver_obj)
   connect(can_driver_obj, &can_driver_model::signal_can_driver_reset, this, [this]{
     this->protocol_stack_obj->stop_task();
     run_state = false;
-    protocol_stack_obj = nullptr;
   });
   connect(can_driver_obj, &can_driver_model::signal_can_is_closed, this, [this]{
     this->protocol_stack_obj->stop_task();
     run_state = false;
-    protocol_stack_obj = nullptr;
   });
 
   /* 创建协议栈 */

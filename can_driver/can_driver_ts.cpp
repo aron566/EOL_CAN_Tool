@@ -450,7 +450,6 @@ bool can_driver_ts::reset()
   bool ret = false;
   ts_init_flag = false;
   start_ = false;
-  clear_send_data();
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     if(false == channel_state_list.value(i).channel_en)
@@ -459,8 +458,6 @@ bool can_driver_ts::reset()
     }
     ret = reset(channel_state_list.value(i));
   }
-
-  emit signal_can_driver_reset();
   return ret;
 }
 
@@ -480,7 +477,7 @@ bool can_driver_ts::close()
   }
   ts_init_flag = false;
   start_ = false;
-  clear_send_data();
+
   /* 关闭对应通道号 */
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {

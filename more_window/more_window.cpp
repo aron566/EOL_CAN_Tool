@@ -1178,6 +1178,19 @@ void more_window::on_clear_send_timer_pushButton_clicked()
   can_driver_obj->period_send_list_clear();
 }
 
+void more_window::slot_check_send_timer()
+{
+  /* 定时发送列表是否为空 */
+  if(0 >= can_driver_obj->get_period_send_list_size())
+  {
+    ui->clear_send_timer_pushButton->setVisible(false);
+  }
+  else
+  {
+    ui->clear_send_timer_pushButton->setVisible(true);
+  }
+}
+
 void more_window::on_timer_checkBox_clicked(bool checked)
 {
   if(checked)
@@ -1188,15 +1201,7 @@ void more_window::on_timer_checkBox_clicked(bool checked)
   {
     ui->add_send_timer_pushButton->setVisible(false);
   }
-  /* 定时发送列表是否为空 */
-  if(0 >= can_driver_obj->get_period_send_list_size())
-  {
-    ui->clear_send_timer_pushButton->setVisible(false);
-  }
-  else
-  {
-    ui->clear_send_timer_pushButton->setVisible(true);
-  }
+  slot_check_send_timer();
 }
 
 void more_window::on_update_pushButton_clicked()

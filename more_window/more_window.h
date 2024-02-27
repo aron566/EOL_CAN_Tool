@@ -36,25 +36,18 @@ public:
     eol_window_obj->set_can_driver_obj(can_driver_obj);
     updatefw_window_obj->set_can_driver_obj(can_driver_obj);
 
-    if(nullptr == can_driver_obj)
-    {
-      disconnect(can_driver_obj, &can_driver_model::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
-      disconnect(can_driver_obj, &can_driver_model::signal_show_message, this, &more_window::slot_show_message);
-      disconnect(can_driver_obj, &can_driver_model::signal_show_thread_message, this, &more_window::slot_show_message_block);
-      disconnect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg);
-      disconnect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
-    }
-    else
-    {
-      connect(can_driver_obj, &can_driver_model::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
-      connect(can_driver_obj, &can_driver_model::signal_show_message, this, &more_window::slot_show_message);
+    /* 接收can驱动断开信号 */
+    connect(can_driver_obj, &can_driver_model::signal_can_driver_reset, this, &more_window::slot_check_send_timer);
+    connect(can_driver_obj, &can_driver_model::signal_can_is_closed, this, &more_window::slot_check_send_timer);
 
-      /* 线程同步 */
-      connect(can_driver_obj, &can_driver_model::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::QueuedConnection);
+    connect(can_driver_obj, &can_driver_model::signal_show_message_bytes, this, &more_window::slot_show_message_bytes);
+    connect(can_driver_obj, &can_driver_model::signal_show_message, this, &more_window::slot_show_message);
 
-      connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg);//, Qt::BlockingQueuedConnection);
-      connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
-    }
+    /* 线程同步 */
+    connect(can_driver_obj, &can_driver_model::signal_show_thread_message, this, &more_window::slot_show_message_block, Qt::QueuedConnection);
+
+    connect(can_driver_obj, &can_driver_model::signal_show_can_msg, this, &more_window::slot_show_can_msg, Qt::BlockingQueuedConnection);
+    connect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
 
     /* 设置帧诊断can驱动 */
     frame_diagnosis_obj->set_can_driver_obj(can_driver_);
@@ -207,6 +200,11 @@ private slots:
      * @brief 刷新显示can消息
      */
     void slot_show_can_msg();
+
+    /**
+   * @brief 检测定时发送队列
+   */
+    void slot_check_send_timer();
 
     void on_frame_diagnosis_pushButton_clicked();
 

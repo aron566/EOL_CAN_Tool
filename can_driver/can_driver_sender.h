@@ -50,6 +50,7 @@ public:
   {
     start_ = false;
     clear_flag = true;
+    qDebug() << "can driver sender del";
   }
 public:
   /**
@@ -57,6 +58,7 @@ public:
    */
   virtual void run() override
   {
+    thread_run_state = true;
     while(start_)
     {
       send_data_task();
@@ -73,13 +75,23 @@ public:
     {
       // qDebug() << "thread_run_statex was not updated.";
     }
+    period_send_msg_list.clear();
+    thread_run_state = false;
   }
 
   void stop_task()
   {
-    period_send_list_clear();
     start_ = false;
     qDebug() << "can driver sender stop_task";
+  }
+
+  /**
+   * @brief task_is_running
+   * @return true正在运行
+   */
+  bool task_is_running()
+  {
+    return thread_run_state;
   }
 
   /**
@@ -102,7 +114,7 @@ public:
     }
 
     start_ = true;
-    // QThreadPool::globalInstance()->start(this);
+    QThreadPool::globalInstance()->start(this);
     return ret;
   }
 
@@ -132,6 +144,7 @@ public:
 private:
   bool start_ = false;
   bool clear_flag = false;
+  bool thread_run_state = false;
   can_driver_model *can_driver_obj = nullptr;
   QList<can_driver_model::PERIOD_SEND_MSG_Typedef_t>period_send_msg_list;
   QAtomicInt thread_run_statex;

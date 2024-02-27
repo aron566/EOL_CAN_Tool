@@ -334,13 +334,6 @@ void MainWindow::slot_can_is_closed(void)
   ui->start_can_pushButton->setEnabled(true);
   ui->init_can_pushButton->setEnabled(true);
   ui->device_info_pushButton->setEnabled(false);
-
-  /* 关闭句柄 */
-  if(nullptr == can_driver_obj)
-  {
-    return;
-  }
-  can_driver_obj->close();
 }
 
 void MainWindow::slot_work_mode_can_use(bool can_use)
@@ -588,7 +581,7 @@ void MainWindow::on_reset_device_pushButton_clicked()
     return;
   }
   /* 复位设备 */
-  if(false == can_driver_obj->reset())
+  if(false == can_driver_obj->reset_driver())
   {
     return;
   }
@@ -605,7 +598,7 @@ void MainWindow::on_close_device_pushButton_clicked()
   /* 关闭设备 */
   can_driver_obj->close_driver();
 
-  /* 禁用打开设备按钮 */
+  /* 打开设备按钮 */
   ui->open_device_pushButton->setEnabled(true);
 }
 

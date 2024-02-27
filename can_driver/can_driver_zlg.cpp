@@ -596,7 +596,6 @@ bool can_driver_zlg::reset()
   bool ret = false;
 
   start_ = false;
-  clear_send_data();
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     if(false == channel_state_list.value(i).channel_en)
@@ -605,8 +604,6 @@ bool can_driver_zlg::reset()
     }
     ret = reset(channel_state_list.value(i));
   }
-
-  emit signal_can_driver_reset();
   return ret;
 }
 
@@ -626,7 +623,7 @@ bool can_driver_zlg::close()
   }
 
   start_ = false;
-  clear_send_data();
+
   /* 关闭对应通道号 */
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
