@@ -181,18 +181,18 @@ void eol_sub_window::on_test_pushButton_clicked()
   task.len = 0;
   eol_protocol_obj->eol_master_common_rw_device(task);
 
-  /* 看门狗测试 */
-  task.reg = EOL_W_WDG_REG;
-  task.command = eol_protocol::EOL_WRITE_CMD;
-  task.buf[0] = (quint8)ui->wdg_opt_comboBox->currentIndex();
-  task.len = 1;
-  eol_protocol_obj->eol_master_common_rw_device(task);
-
   /* 读取dtc错误码 */
   task.reg = EOL_RW_DTC_REG;
   task.command = eol_protocol::EOL_READ_CMD;
   task.buf[0] = 0;
   task.len = 0;
+  eol_protocol_obj->eol_master_common_rw_device(task);
+
+  /* 看门狗测试 */
+  task.reg = EOL_W_WDG_REG;
+  task.command = eol_protocol::EOL_WRITE_CMD;
+  task.buf[0] = (quint8)ui->wdg_opt_comboBox->currentIndex();
+  task.len = 1;
   eol_protocol_obj->eol_master_common_rw_device(task);
 
   /* 启动eol线程 */
