@@ -440,8 +440,15 @@ void updatefw_window::on_start_update_button_clicked()
   ui->frimware_sel_button->setEnabled(false);
   ui->start_update_button->setEnabled(false);
 
+  /* 获取文件信息 */
+  QFileInfo info(file.fileName());
+  filesize = info.size();
+
   /* 更新进度条 */
   ui->upgrade_progressBar->setMaximum(static_cast<int>(filesize));
+
+  /* 更新文件大小 */
+  ui->file_size->setText(QString("%1").arg(filesize));
 
   /* 设置更新分区 */
   // protocol_stack_obj->protocol_stack_stop();
