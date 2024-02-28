@@ -356,6 +356,7 @@ public:
     while(start_)
     {
       send_data();
+
       receive_data();
       /* 刷新界面 */
       emit signal_show_can_msg();

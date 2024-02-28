@@ -382,9 +382,6 @@ void eol_protocol::slot_timer_timeout()
     current_time_ms = 0;
     current_time_sec++;
   }
-
-  /* 检测发送任务 */
-  check_wait_send_task();
 }
 
 eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
@@ -727,6 +724,12 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
 
   while(run_state)
   {
+    /* 检测发送任务 */
+    if(true == check_wait_send_task())
+    {
+      continue;
+    }
+
     /* 检测响应帧超时 */
     if(response_is_timeout(wait) == true && false == listen_mode)
     {
