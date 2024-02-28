@@ -440,7 +440,11 @@
              </widget>
             </item>
             <item alignment="Qt::AlignLeft">
-             <widget class="QLCDNumber" name="package_lcdNumber"/>
+             <widget class="QLCDNumber" name="package_lcdNumber">
+              <property name="digitCount">
+               <number>7</number>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QLabel" name="package_symbol_label">
