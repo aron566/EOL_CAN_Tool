@@ -795,6 +795,7 @@ quint32 can_driver_gc::gc_can_send(const CHANNEL_STATE_Typedef_t &channel_state,
 
               /* 计算分包数 */
               nSendCount = (size + 7) / 8;
+
               if(nSendCount > 0)
               {
                 GC_CAN_OBJ *pData = new GC_CAN_OBJ[nSendCount];
@@ -889,6 +890,19 @@ bool can_driver_gc::send(const CHANNEL_STATE_Typedef_t &channel_state, \
 
   result = gc_can_send(channel_state, data, size, id, frame_type, protocol);
 
+  QString csText;
+  if(GC_USBCAN2 == kDeviceType[device_type_index_].device_type
+      && CANFD_PROTOCOL_TYPE == protocol)
+  {
+    protocol = CAN_PROTOCOL_TYPE;
+    nSendCount = (size + 7U) / 8U;
+    csText = QString("send num:%1, sucess num:%2").arg(nSendCount).arg(result);
+  }
+  else
+  {
+    csText = QString("send num:%1, sucess num:%2").arg(nSendCount).arg(result);
+  }
+
   /* 消息分发到UI显示cq */
   msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, CAN_TX_DIRECT, \
                    protocol, \
@@ -896,8 +910,6 @@ bool can_driver_gc::send(const CHANNEL_STATE_Typedef_t &channel_state, \
                    DATA_FRAME_TYPE, \
                    data, size);
 
-  QString csText;
-  csText = QString("send num:%1, sucess num:%2").arg(nSendCount).arg(result);
   QString result_info_str;
   if(result != nSendCount)
   {
