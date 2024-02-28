@@ -400,7 +400,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
   quint32 last_canid_mask = 0;
   bool last_canid_mask_en = false;
   can_driver_obj->set_msg_canid_mask(0x200U, true, &last_canid_mask, &last_canid_mask_en);
-  can_driver_obj->set_msg_show_en(false);
+  can_driver_obj->set_msg_show_en();
 
   /* 清空 */
   updatefw_protocol_clear();
@@ -409,9 +409,9 @@ bool updatefw_protocol::update_device_app_task(void *param_)
   can_driver_obj->add_msg_filter(0x200U, cq_obj, (quint8)channel_num.toUShort());
 
   QFile file(param->fw_file_name);
-  quint8 sequence_num = 0;
-  quint8 sequence_num_get_len = 0;
-  quint8 sequence_num_write_flash = 0;
+  quint8 sequence_num = (quint8)QDateTime::currentSecsSinceEpoch() & 0x07;
+  quint8 sequence_num_get_len = (quint8)QDateTime::currentSecsSinceEpoch() & 0x0F;
+  quint8 sequence_num_write_flash = (quint8)QDateTime::currentSecsSinceEpoch() & 0x0F;
 
   quint8 send_data[8] = {0};
   quint32 check_fw_len = 7U * 128U;
@@ -442,7 +442,11 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     break;
   }while(run_state);
 
-  run_step_msg = "step2 erase device flash";
+  /* 获取文件信息 */
+  QFileInfo info(param->fw_file_name);
+  quint32 fw_size_kb = (quint32)__HAL_GET_ALIGN(info.size(), 4096U) / 1024U;
+
+  run_step_msg = QString("step2 erase device flash %1 KB").arg(fw_size_kb);
   emit signal_protocol_run_step_msg(run_step_msg);
   send_data[1] = UPDATE_FW_TO_EARSE_CMD; /**< BOOT2_CMD_code_erase */
   /* 启动地址 */
@@ -452,10 +456,6 @@ bool updatefw_protocol::update_device_app_task(void *param_)
   send_data[4] = (start_addr >> 8U) & 0xFFU;
   send_data[5] = start_addr & 0xFFU;
   /* 擦除大小KB */
-  /* 获取文件信息 */
-  QFileInfo info(param->fw_file_name);
-  quint32 fw_size_kb = (quint32)__HAL_GET_ALIGN(info.size(), 4096U) / 1024U;
-  fw_size_kb = fw_size_kb < 68U ? 68U : fw_size_kb;
   send_data[6] = (fw_size_kb >> 8U) & 0xFFU;
   send_data[7] = fw_size_kb & 0xFFU;
 
@@ -505,12 +505,15 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     qDebug() << "open file failed";
     goto __set_device_err;
   }
+
   /* 发送数据，每包7Bytes，不足只发送剩余部分 */
+  /* 重置序号 */
+  sequence_num = 0;
   for(quint32 i = 0U; i < (quint32)info.size();)
   {
     sequence_num = sequence_num > 7U ? 0U : sequence_num;
     send_data[0] = (0 << 7U) | sequence_num;
-    if((i + 7U) > (quint32)info.size())
+    if((i + 7U) >= (quint32)info.size())
     {
       memset(&send_data[1], 0, 7U);
       file.read((char *)&send_data[1], (quint32)info.size() - i);
@@ -530,12 +533,10 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       i += 7U;
     }
 
-    /* 翻转发送字节序 */
-    // utility::bytes_invert(&send_data[1], 7U);
-
     /* 发送数据 */
     do
     {
+      can_driver_obj->set_msg_show_en(false);
       /* 直接发送 */
       if(true != send_data_port(0x200U, send_data, 8U, channel_num))
       {
@@ -573,6 +574,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       send_data[7] = 0x00;
       do
       {
+        // can_driver_obj->set_msg_show_en();
         set_timeout(1U);
         ret = protocol_stack_create_task(0x200U, send_data, 8U);
         if(RETURN_OK != ret)
@@ -598,6 +600,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       {
         goto __set_device_err;
       }
+      can_driver_obj->set_msg_show_en(false);
       sequence_num_get_len++;
       check_fw_len += (7U * 128U);
       check_fw_len = check_fw_len > (quint32)info.size() ? (quint32)info.size() : check_fw_len;
@@ -622,6 +625,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       send_data[7] = write_fw_len_cnt & 0xFFU;
       do
       {
+        // can_driver_obj->set_msg_show_en();
         set_timeout(1U);
         ret = protocol_stack_create_task(0x200U, send_data, 8U);
         if(RETURN_OK != ret)
@@ -647,6 +651,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       {
         goto __set_device_err;
       }
+      can_driver_obj->set_msg_show_en(false);
       sequence_num_write_flash++;
       write_fw_len_cnt = 0;
       write_fw_len += (7U * 512U);
@@ -678,6 +683,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
   send_data[7] = 0x00;
   do
   {
+    can_driver_obj->set_msg_show_en();
     set_timeout(1U);
     ret = protocol_stack_create_task(0x200U, send_data, 8U);
     if(RETURN_OK != ret)
@@ -747,7 +753,6 @@ bool updatefw_protocol::update_device_app_task(void *param_)
 
   /* 恢复数据接收显示 */
   can_driver_obj->set_msg_canid_mask(last_canid_mask, last_canid_mask_en);
-  can_driver_obj->set_msg_show_en(true);
 
   run_step_msg = "step6 wait update fw ok";
   emit signal_protocol_run_step_msg(run_step_msg);

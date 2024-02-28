@@ -22,6 +22,7 @@
 /** Includes -----------------------------------------------------------------*/
 #include <QDebug>
 #include <QMessageBox>
+#include <QSettings>
 /** Private includes ---------------------------------------------------------*/
 #include "updatefw_window.h"
 #include "ui_updatefw_window.h"
@@ -64,30 +65,33 @@ updatefw_window::updatefw_window(QString title, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::updatefw_window)
 {
-    ui->setupUi(this);
+  ui->setupUi(this);
 
-    this->setWindowTitle(title);
+  this->setWindowTitle(title);
 
-    /* 应用样式主题 */
-    QFile file(":/qdarkstyle/dark/style.qss");
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-      this->setStyleSheet(file.readAll());
-      file.close();
-    }
+  /* 应用样式主题 */
+  QFile file(":/qdarkstyle/dark/style.qss");
+  if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+  {
+    this->setStyleSheet(file.readAll());
+    file.close();
+  }
 
-    timer = new QTimer(this);
-    timer->setInterval(1000);
-    connect(timer, &QTimer::timeout, this, &updatefw_window::slot_timer_timeout);
+  timer = new QTimer(this);
+  timer->setInterval(1000);
+  connect(timer, &QTimer::timeout, this, &updatefw_window::slot_timer_timeout);
 
-    /* 设置临时文件模板名称 */
-    QString strFileName = QDir::tempPath() + QDir::separator() +
-                QCoreApplication::applicationName() + "_XXXXXX." + "htpkgtmp";
+  /* 设置临时文件模板名称 */
+  QString strFileName = QDir::tempPath() + QDir::separator() +
+              QCoreApplication::applicationName() + "_XXXXXX." + "htpkgtmp";
 
-    tmpFile.setFileTemplate(strFileName);
+  tmpFile.setFileTemplate(strFileName);
 
-    /* 设置为自动删除 */
-    tmpFile.setAutoRemove(true);
+  /* 设置为自动删除 */
+  tmpFile.setAutoRemove(true);
+
+  /* 恢复参数 */
+  read_cfg();
 }
 
 /**
@@ -95,7 +99,38 @@ updatefw_window::updatefw_window(QString title, QWidget *parent) :
  */
 updatefw_window::~updatefw_window()
 {
+  /* 保存参数 */
+  save_cfg();
+
   delete ui;
+}
+
+void updatefw_window::save_cfg()
+{
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
+  /* last_fw_dir */
+  setting.setValue("updatefw_window/last_fw_dir", last_file_path);
+  setting.sync();
+}
+
+void updatefw_window::read_cfg()
+{
+  QFile file("./eol_tool_cfg.ini");
+  if(false == file.exists())
+  {
+    return;
+  }
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
+  if(false == setting.contains("updatefw_window/last_fw_dir"))
+  {
+    qDebug() << "err updatefw_window config not exist";
+    return;
+  }
+  /* last_fw_dir */
+  last_file_path = setting.value("updatefw_window/last_fw_dir").toString();
+  setting.sync();
 }
 
 void updatefw_window::set_can_driver_obj(can_driver_model *can_driver_obj)
@@ -113,7 +148,7 @@ void updatefw_window::set_can_driver_obj(can_driver_model *can_driver_obj)
   /* 创建协议栈 */
   protocol_stack_obj = new updatefw_protocol(can_driver_obj);
   connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_error_occur, this, &updatefw_window::slot_send_data_timeout_occured);
-  connect(protocol_stack_obj, &updatefw_protocol::signal_send_progress, this, &updatefw_window::slot_send_progress, Qt::BlockingQueuedConnection);
+  connect(protocol_stack_obj, &updatefw_protocol::signal_send_progress, this, &updatefw_window::slot_send_progress, Qt::QueuedConnection);
   connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_rw_err, this, &updatefw_window::slot_protocol_rw_err);
   connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_run_step_msg, this, &updatefw_window::slot_protocol_run_step_msg);
 
@@ -328,7 +363,8 @@ void updatefw_window::on_frimware_sel_button_clicked()
   }
 
   /* 选择文件 */
-  QString filepath = QFileDialog::getOpenFileName(this, tr("Open Update File"), "../", tr("BIN (*.bin);;HEX (*.hex);;HTPKG (*.htpkg)"));
+
+  QString filepath = QFileDialog::getOpenFileName(this, tr("Open Update File"), last_file_path, tr("BIN (*.bin);;HEX (*.hex);;HTPKG (*.htpkg)"));
   if(filepath.isEmpty() == true)
   {
     qDebug() << "打开文件错误！62";
@@ -340,6 +376,9 @@ void updatefw_window::on_frimware_sel_button_clicked()
   QFileInfo info(filepath);
   filename = info.fileName();
   filesize = info.size();
+
+  /* 更新最近路径信息 */
+  last_file_path = info.absolutePath();
 
   /* 检查非法空格字段 */
   // filename.replace(QChar(' '), QChar('_'));

@@ -55,6 +55,15 @@ private:
     /*重置接收信息*/
     inline void reset_recv_info();
 
+    /**
+     * @brief read_cfg
+     */
+    void read_cfg();
+
+    /**
+     * @brief save_cfg
+     */
+    void save_cfg();
 signals:
     void signal_window_closed();
 
@@ -130,6 +139,7 @@ private:
     quint8 right_now_update = 1;
     quint8 download_app_partition = 0;
     bool run_state = false;
+    QString last_file_path = "../";
 private:
     QTimer *timer = nullptr;
     qint32 current_sec = 0;
