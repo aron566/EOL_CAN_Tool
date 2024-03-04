@@ -60,9 +60,9 @@ debug_window::~debug_window()
 
 void debug_window::timer_init(void)
 {
-  timer_obj = new QTimer(this);
-  timer_obj->setInterval(1);
-  connect(timer_obj, &QTimer::timeout, this, &debug_window::slot_time_out);
+  // timer_obj = new QTimer(this);
+  // timer_obj->setInterval(1);
+  // connect(timer_obj, &QTimer::timeout, this, &debug_window::slot_time_out);
 }
 
 /**

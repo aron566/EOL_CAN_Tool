@@ -105,6 +105,7 @@
  *  <tr><td>2024-02-27 <td>v1.3.2  <td>aron566 <td>定时发送，界面刷新，安全性优化
  *  <tr><td>2024-02-27 <td>v1.3.3  <td>aron566 <td>优化升级速度慢问题，取消can log刷新显示避免卡顿
  *  <tr><td>2024-02-28 <td>v1.3.4  <td>aron566 <td>修复刷写中断后因序号问题再次刷写无法运行问题，优化看门狗测试逻辑（放最后避免后面测试项因复位无法回复）修复gc caneol发送问题，再次更新进度条不对问题,修复延时发送导致死锁问题
+ *  <tr><td>2024-03-04 <td>v1.3.5  <td>aron566 <td>优化更新表数据未全部清楚状态问题
  *  </table>
  */
 #include "mainwindow.h"
@@ -112,7 +113,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.3.4"
+#define PC_SOFTWARE_VERSION       "1.3.5"
 
 int main(int argc, char *argv[])
 {

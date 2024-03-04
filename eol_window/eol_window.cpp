@@ -71,7 +71,7 @@ eol_window::eol_window(QString title, QWidget *parent) :
   reset_base_ui_info();
 
   /* 本窗口子线程更新传输列表动作 */
-  connect(this, &eol_window::signal_update_show_table_list, this, &eol_window::slot_update_show_table_list);
+  connect(this, &eol_window::signal_update_show_table_list, this, &eol_window::slot_update_show_table_list, Qt::BlockingQueuedConnection);
   connect(this, &eol_window::signal_upload_all_table_task_ok, this, &eol_window::slot_recv_eol_data_complete);
 
   /* 设备信息读写窗口初始化 */
@@ -1026,10 +1026,16 @@ void eol_window::run_eol_window_file_decode_task()
       table.show_info = str;
       csv.table_list.replace(y, table);
       csv_list.replace(i, csv);
-
-      /* 更新显示列表 */
-      emit signal_update_show_table_list();
     }
+  }
+
+  /* 更新显示列表 */
+  emit signal_update_show_table_list();
+
+  /* csv列表循环 */
+  for(int i = 0; i < csv_list.size(); i++)
+  {
+    CSV_INFO_Typedef_t csv = csv_list.value(i);
 
     /* 设置传输的文件 */
     current_file_path = csv.file_path;
@@ -1188,7 +1194,7 @@ void eol_window::on_upload_pushButton_clicked()
   all_table_file_name.clear();
 
   /* 更新显示列表 */
-  emit signal_update_show_table_list();
+  update_show_table_list();
 
   /* 重置界面 */
   reset_base_ui_info();
@@ -2312,7 +2318,7 @@ void eol_window::on_export_all_pushButton_clicked()
   csv_list.clear();
 
   /* 更新显示列表 */
-  emit signal_update_show_table_list();
+  update_show_table_list();
 
   /* 重置界面 */
   reset_base_ui_info();
