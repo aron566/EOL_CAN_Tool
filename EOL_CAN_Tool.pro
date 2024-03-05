@@ -103,6 +103,7 @@ include(middleware/serial_port_plotter/serial_port_plotter.pri)
 include(middleware/Updater/QSimpleUpdater/QSimpleUpdater.pri)
 
 SOURCES += \
+    can_log_sender_window/can_log_sender_window.cpp \
     debug_window/debug_window.cpp \
     eol_angle_calibration_window/eol_angle_calibration_window.cpp \
     eol_calibration_window/eol_calibration_window.cpp \
@@ -121,6 +122,7 @@ SOURCES += \
     updater_window/updater_window.cpp
 
 HEADERS += \
+    can_log_sender_window/can_log_sender_window.h \
     debug_window/debug_window.h \
     eol_angle_calibration_window/eol_angle_calibration_window.h \
     eol_calibration_window/eol_calibration_window.h \
@@ -138,6 +140,7 @@ HEADERS += \
     updater_window/updater_window.h
 
 FORMS += \
+    can_log_sender_window/can_log_sender_window.ui \
     debug_window/debug_window.ui \
     eol_angle_calibration_window/eol_angle_calibration_window.ui \
     eol_calibration_window/eol_calibration_window.ui \
@@ -162,7 +165,8 @@ INCLUDEPATH += \
     eol_sub_window \
     eol_calibration_window \
     updater_window \
-    updatefw_window
+    updatefw_window \
+    can_log_sender_window
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

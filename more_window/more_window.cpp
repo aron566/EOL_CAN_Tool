@@ -47,6 +47,9 @@ more_window::more_window(QString title, QWidget *parent) :
   /* 帧诊断调试窗口初始化 */
   frame_diagnosis_window_init(tr("EOL CAN Tool - Frame Diagnosis"));
 
+  /* can log发送窗口 */
+  can_log_sender_window_init(tr("EOL CAN Tool - CAN Log Sender"));
+
   /* 初始化定时器 */
   timer_init();
 
@@ -102,6 +105,9 @@ more_window::~more_window()
 
   delete updatefw_window_obj;
   qDebug() << "del updatefw_window_obj";
+
+  delete can_log_sender_window_obj;
+  qDebug() << "del can_log_sender_window_obj";
 
   delete ui;
   qDebug() << "del more_window";
@@ -445,6 +451,13 @@ void more_window::frame_diagnosis_window_init(QString title)
   frame_diagnosis_obj = new frame_diagnosis(title);
 
   connect(frame_diagnosis_obj, &frame_diagnosis::signal_window_closed, this, &more_window::slot_show_window);
+}
+
+void more_window::can_log_sender_window_init(QString title)
+{
+  can_log_sender_window_obj = new can_log_sender_window(title);
+
+  connect(can_log_sender_window_obj, &can_log_sender_window::signal_window_closed, this, &more_window::slot_show_window);
 }
 
 void more_window::slot_show_window()
@@ -1168,7 +1181,6 @@ void more_window::on_add_send_timer_pushButton_clicked()
                                   (quint32)ui->canfd_pluse_comboBox->currentIndex());
 }
 
-
 void more_window::on_clear_send_timer_pushButton_clicked()
 {
   if(nullptr == can_driver_obj)
@@ -1208,3 +1220,9 @@ void more_window::on_update_pushButton_clicked()
 {
   updatefw_window_obj->show();
 }
+
+void more_window::on_log_send_pushButton_clicked()
+{
+  can_log_sender_window_obj->show();
+}
+

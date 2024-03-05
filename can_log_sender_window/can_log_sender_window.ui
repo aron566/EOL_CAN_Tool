@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>can_log_sender</class>
+ <widget class="QWidget" name="can_log_sender">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>530</width>
+    <height>439</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="0" colspan="3">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="s_index_label">
+         <property name="text">
+          <string>数据起始索引</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="bytes_label">
+         <property name="text">
+          <string>连续字段数</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="can_id_index_label">
+         <property name="text">
+          <string>CAN ID索引</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="permissable_can_id_label">
+         <property name="text">
+          <string>允许发送CAN ID列表</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="send_channel_label">
+         <property name="text">
+          <string>发送通道</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="send_delay_ms_label">
+         <property name="text">
+          <string>帧间延时ms</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="response_can_id_label">
+         <property name="text">
+          <string>特殊等待CAN ID列表</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="response_can_data_label">
+         <property name="text">
+          <string>特殊等待数据列表</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="wait_can_data_index_label">
+         <property name="text">
+          <string>特殊等待数据索引</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="wait_response_ms_label">
+         <property name="text">
+          <string>等待时间ms</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLineEdit" name="s_index_lineEdit">
+         <property name="text">
+          <string>3</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="bytes_lineEdit">
+         <property name="text">
+          <string>8</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="can_id_index_lineEdit">
+         <property name="text">
+          <string>1</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="permissable_can_id_lineEdit">
+         <property name="text">
+          <string>154</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="send_channel_lineEdit">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="send_delay_ms_lineEdit">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="response_can_id_lineEdit">
+         <property name="text">
+          <string>254</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="response_can_data_lineEdit">
+         <property name="text">
+          <string>8D 81 8C 84</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="wait_can_data_index_lineEdit">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="wait_response_ms_lineEdit">
+         <property name="text">
+          <string>300</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <widget class="QPushButton" name="set_file_pushButton">
+     <property name="text">
+      <string>选择文件</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QLineEdit" name="file_name_lineEdit">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="3">
+    <widget class="QProgressBar" name="send_progressBar">
+     <property name="value">
+      <number>0</number>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="3">
+    <widget class="QPushButton" name="start_pushButton">
+     <property name="text">
+      <string>启动发送</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

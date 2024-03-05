@@ -624,6 +624,13 @@
         <item>
          <layout class="QHBoxLayout" name="timer_horizontalLayout_2">
           <item>
+           <widget class="QPushButton" name="log_send_pushButton">
+            <property name="text">
+             <string>回灌设置</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="period_label">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">

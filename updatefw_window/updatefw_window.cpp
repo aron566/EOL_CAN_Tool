@@ -363,7 +363,6 @@ void updatefw_window::on_frimware_sel_button_clicked()
   }
 
   /* 选择文件 */
-
   QString filepath = QFileDialog::getOpenFileName(this, tr("Open Update File"), last_file_path, tr("BIN (*.bin);;HEX (*.hex);;HTPKG (*.htpkg)"));
   if(filepath.isEmpty() == true)
   {

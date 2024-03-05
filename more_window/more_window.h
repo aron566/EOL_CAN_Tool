@@ -12,6 +12,7 @@
 #include "network_window/network_window.h"
 #include "updatefw_window/updatefw_window.h"
 #include "utilities/line_highlighter.h"
+#include "can_log_sender_window/can_log_sender_window.h"
 
 namespace Ui {
 class more_window;
@@ -35,6 +36,7 @@ public:
     /* 设置can驱动 after */
     eol_window_obj->set_can_driver_obj(can_driver_obj);
     updatefw_window_obj->set_can_driver_obj(can_driver_obj);
+    can_log_sender_window_obj->set_can_driver_obj(can_driver_obj);
 
     /* 接收can驱动断开信号 */
     connect(can_driver_obj, &can_driver_model::signal_can_driver_reset, this, &more_window::slot_check_send_timer);
@@ -230,12 +232,15 @@ private slots:
 
     void on_update_pushButton_clicked();
 
+    void on_log_send_pushButton_clicked();
+
   private:
     Ui::more_window *ui;
     eol_window *eol_window_obj = nullptr;
     network_window *network_window_obj = nullptr;
     tool_window *tool_window_obj = nullptr;
     updatefw_window *updatefw_window_obj = nullptr;
+    can_log_sender_window *can_log_sender_window_obj = nullptr;
 private:
     can_driver_model *can_driver_obj = nullptr;
     frame_diagnosis *frame_diagnosis_obj = nullptr;
@@ -283,6 +288,12 @@ private:
      * @param title 窗口标题
      */
     void frame_diagnosis_window_init(QString title);
+
+    /**
+     * @brief can log文件发送窗口初始化
+     * @param title 窗口标题
+     */
+    void can_log_sender_window_init(QString title);
 
     /**
      * @brief 显示can消息
