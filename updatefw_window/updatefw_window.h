@@ -48,6 +48,11 @@ public:
      */
     void set_can_driver_obj(can_driver_model *can_driver_obj);
 
+    /**
+     * @brief set_channel_num
+     * @param channel_num
+     */
+    void set_channel_num(quint8 channel_num);
 private:
     /*重置发送信息*/
     inline void reset_send_info();

@@ -223,6 +223,7 @@ void can_log_sender_window::can_log_sender_task()
       data_str.append(data_list.value(strindex));
     }
     QString data = data_str.join(" ");
+
     if(nullptr == can_driver_obj)
     {
       continue;

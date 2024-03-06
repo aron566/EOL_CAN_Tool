@@ -107,6 +107,7 @@
  *  <tr><td>2024-02-28 <td>v1.3.4  <td>aron566 <td>修复刷写中断后因序号问题再次刷写无法运行问题，优化看门狗测试逻辑（放最后避免后面测试项因复位无法回复）修复gc caneol发送问题，再次更新进度条不对问题,修复延时发送导致死锁问题
  *  <tr><td>2024-03-04 <td>v1.3.5  <td>aron566 <td>优化更新表数据未全部清楚状态问题
  *  <tr><td>2024-03-04 <td>v1.4.0  <td>aron566 <td>增加can log回灌功能
+ *  <tr><td>2024-03-06 <td>v1.4.1  <td>aron566 <td>支持升级可选择can通道
  *  </table>
  */
 #include "mainwindow.h"
@@ -114,7 +115,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.4.0"
+#define PC_SOFTWARE_VERSION       "1.4.1"
 
 int main(int argc, char *argv[])
 {

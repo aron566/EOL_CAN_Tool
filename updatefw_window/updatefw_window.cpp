@@ -49,14 +49,6 @@
 ********************************************************************************
 */
 
-/** Public application code --------------------------------------------------*/
-/*******************************************************************************
-*
-*       Public code
-*
-********************************************************************************
-*/
-
 /**
  * @brief updatefw_window::updatefw_window
  * @param parent
@@ -83,7 +75,7 @@ updatefw_window::updatefw_window(QString title, QWidget *parent) :
 
   /* 设置临时文件模板名称 */
   QString strFileName = QDir::tempPath() + QDir::separator() +
-              QCoreApplication::applicationName() + "_XXXXXX." + "htpkgtmp";
+                        QCoreApplication::applicationName() + "_XXXXXX." + "htpkgtmp";
 
   tmpFile.setFileTemplate(strFileName);
 
@@ -225,6 +217,24 @@ void updatefw_window::reset_recv_info()
   /*重置错误统计*/
   ui->error_cnt_label->setNum(0);
 }
+
+void updatefw_window::set_channel_num(quint8 channel_num)
+{
+  /* 根据所选设备类型，更新通道数量 */
+  ui->update_ch_comboBox->clear();
+  for(quint8 i = 0; i < channel_num; i++)
+  {
+    ui->update_ch_comboBox->addItem(QString("CH%1").arg(i));
+  }
+}
+
+/** Public application code --------------------------------------------------*/
+/*******************************************************************************
+*
+*       Public code
+*
+********************************************************************************
+*/
 
 /**
  * @brief updatefw_window::slot_send_data_timeout_occured
@@ -458,6 +468,9 @@ void updatefw_window::on_start_update_button_clicked()
 
   /*启动计时*/
   timer->start();
+
+  /* 设置通讯参数 */
+  protocol_stack_obj->set_com_config_channel(QString::number(ui->update_ch_comboBox->currentIndex()));
 
   /* 启动更新 */
   updatefw_protocol::UPDATEFW_TASK_LIST_Typedef_t task;

@@ -802,13 +802,13 @@ void more_window::show_can_msg(can_driver_model::CAN_MSG_DISPLAY_Typedef_t &msg)
   QString item;
   if(msg.direction == can_driver_model::CAN_TX_DIRECT || msg.direction == can_driver_model::CAN_RX_DIRECT)
   {
-    item = QString::asprintf(tr("[%u]%sx CAN%s ID: %08X %s %s LEN: %d DATA: ").toUtf8().data(), \
-                                                                                                msg.channel_num, \
-                                                                                                                         msg.direction == can_driver_model::CAN_TX_DIRECT ? "T" : "R",\
-                                                                                                                                   msg.can_protocol == can_driver_model::CANFD_PROTOCOL_TYPE ? "FD" : "", \
-                                                                                                                                     msg.can_id, msg.frame_type == can_driver_model::EXT_FRAME_TYPE ? "EXT_FRAME" : "STD_FRAME", \
-                                                                                                                     msg.frame_data_type == can_driver_model::REMOTE_FRAME_TYPE ? "REMOTE_FRAME" : "DATA_FRAME", \
-                                                                                                                                 msg.data_len);
+    item = QString::asprintf(tr("[%u]%sx CAN%s ID: %08X %s %s LEN: %d DATA: ").toUtf8().data(),
+                             msg.channel_num,
+                             msg.direction == can_driver_model::CAN_TX_DIRECT ? "T" : "R",
+                             msg.can_protocol == can_driver_model::CANFD_PROTOCOL_TYPE ? "FD" : "",
+                             msg.can_id, msg.frame_type == can_driver_model::EXT_FRAME_TYPE ? "EXT_FRAME" : "STD_FRAME",
+                             msg.frame_data_type == can_driver_model::REMOTE_FRAME_TYPE ? "REMOTE_FRAME" : "DATA_FRAME",
+                             msg.data_len);
     for(quint32 i = 0; i < msg.data_len; ++i)
     {
       item += QString::asprintf("%02X ", msg.msg_data[i]);
@@ -926,6 +926,9 @@ void more_window::set_channel_num(quint8 channel_num)
 
   /* 更新诊断页面 */
   frame_diagnosis_obj->set_channel_num(channel_num);
+
+  /* 更新固件更新页面 */
+  updatefw_window_obj->set_channel_num(channel_num);
 }
 
 /** Public application code --------------------------------------------------*/
