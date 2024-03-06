@@ -1,5 +1,25 @@
-#include "debug_window.h"
-#include "ui_debug_window.h"
+/**
+ *  @file debug_window.cpp
+ *
+ *  @date 2024年01月18日 11:11:54 星期一
+ *
+ *  @author aron566
+ *
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
+ *
+ *  @brief shell调试窗口.
+ *
+ *  @details None.
+ *
+ *  @version v0.0.1 aron566 2024.01.18 12:11 初始版本.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  </table>
+ */
+/** Includes -----------------------------------------------------------------*/
 #include <QFile>
 #include <QSettings>
 #include <QClipboard>
@@ -8,12 +28,34 @@
 #include <QMimeData>
 #include <QInputMethod>
 #include <QDebug>
+/** Private includes ---------------------------------------------------------*/
+#include "debug_window.h"
+#include "ui_debug_window.h"
+/** Use C compiler -----------------------------------------------------------*/
 
+/** Private macros -----------------------------------------------------------*/
 #define CONFIG_VER_STR            "0.0.2"                /**< 配置文件版本 */
+/** Private typedef ----------------------------------------------------------*/
+
+/** Private constants --------------------------------------------------------*/
+/** Public variables ---------------------------------------------------------*/
+/** Private variables --------------------------------------------------------*/
+
+/** Private function prototypes ----------------------------------------------*/
+
+/** Private user code --------------------------------------------------------*/
+
+/** Private application code -------------------------------------------------*/
+/*******************************************************************************
+*
+*       Static code
+*
+********************************************************************************
+*/
 
 debug_window::debug_window(QString title, QWidget *parent) :
-  QWidget(parent),
-  ui(new Ui::debug_window)
+    QWidget(parent),
+    ui(new Ui::debug_window)
 {
   ui->setupUi(this);
 
@@ -186,7 +228,7 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
   if(127 > (*k->text().toLatin1().data()))
   {
     if(k->key() != Qt::Key_Up
-       && k->key() != Qt::Key_Down)
+        && k->key() != Qt::Key_Down)
     {
       qDebug() << "send key" << k->key() << k->text().toLatin1();
       emit signal_send_command_char(*k->text().toLatin1().data());
@@ -458,8 +500,16 @@ void debug_window::send_command_port(QString &text)
   text.append("\r\n");
 
   /* 发送 */
-//  emit signal_send_command(text);
+  //  emit signal_send_command(text);
 }
+
+/** Public application code --------------------------------------------------*/
+/*******************************************************************************
+*
+*       Public code
+*
+********************************************************************************
+*/
 
 void debug_window::on_addquick_compelat_pushButton_clicked()
 {
@@ -593,8 +643,8 @@ void debug_window::rec_shell_data(const quint8 *data, quint32 data_len)
     str = ui->shell_textEdit->textCursor().selectedText();
     if("\u001B[2J\u001B[1H" == str)
     {
-//      ui->shell_textEdit->clear();
-//      ui->shell_textEdit->moveCursor(QTextCursor::Start);
+      //      ui->shell_textEdit->clear();
+      //      ui->shell_textEdit->moveCursor(QTextCursor::Start);
       ui->shell_textEdit->setHtml("<body bgcolor=\"#000000\"></body>");
       /* 设置颜色 */
       ui->shell_textEdit->setTextColor(ui->color_list_comboBox->currentText());
@@ -610,3 +660,5 @@ void debug_window::on_case_sensitive_checkBox_stateChanged(int arg1)
 {
   Q_UNUSED(arg1)
 }
+
+/******************************** End of file *********************************/

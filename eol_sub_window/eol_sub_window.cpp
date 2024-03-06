@@ -1,10 +1,54 @@
+/**
+ *  @file eol_sub_window.cpp
+ *
+ *  @date 2024年01月18日 11:11:54 星期一
+ *
+ *  @author aron566
+ *
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
+ *
+ *  @brief eol信息读写窗口.
+ *
+ *  @details None.
+ *
+ *  @version v0.0.1 aron566 2024.01.18 12:11 初始版本.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  </table>
+ */
+/** Includes -----------------------------------------------------------------*/
+#include <QFile>
+/** Private includes ---------------------------------------------------------*/
 #include "eol_sub_window.h"
 #include "ui_eol_sub_window.h"
-#include <QFile>
+/** Use C compiler -----------------------------------------------------------*/
+
+/** Private macros -----------------------------------------------------------*/
+
+/** Private typedef ----------------------------------------------------------*/
+
+/** Private constants --------------------------------------------------------*/
+/** Public variables ---------------------------------------------------------*/
+/** Private variables --------------------------------------------------------*/
+
+/** Private function prototypes ----------------------------------------------*/
+
+/** Private user code --------------------------------------------------------*/
+
+/** Private application code -------------------------------------------------*/
+/*******************************************************************************
+*
+*       Static code
+*
+********************************************************************************
+*/
 
 eol_sub_window::eol_sub_window(QString title, QWidget *parent) :
-  QWidget(parent),
-  ui(new Ui::eol_sub_window)
+    QWidget(parent),
+    ui(new Ui::eol_sub_window)
 {
   ui->setupUi(this);
 
@@ -97,6 +141,14 @@ void eol_sub_window::set_eol_protocol_obj(eol_protocol *obj)
   connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_sub_window::slot_rw_device_ok, Qt::QueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_sub_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
 }
+
+/** Public application code --------------------------------------------------*/
+/*******************************************************************************
+*
+*       Public code
+*
+********************************************************************************
+*/
 
 void eol_sub_window::on_test_pushButton_clicked()
 {
@@ -534,3 +586,4 @@ void eol_sub_window::on_more_pushButton_clicked()
   eol_sub_more_window_obj->show();
 }
 
+/******************************** End of file *********************************/

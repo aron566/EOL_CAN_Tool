@@ -1,11 +1,35 @@
+/**
+ *  @file eol_angle_calibration_window.hpp
+ *
+ *  @date 2024年01月18日 11:12:45 星期一
+ *
+ *  @author aron566 <aron566@163.com>.
+ *
+ *  @brief None.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  </table>
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
+ */
 #ifndef EOL_ANGLE_CALIBRATION_WINDOW_H
 #define EOL_ANGLE_CALIBRATION_WINDOW_H
-
+/** Includes -----------------------------------------------------------------*/
 #include <QWidget>
 #include <QList>
 #include <QTimer>
 #include <QFile>
+/** Private includes ---------------------------------------------------------*/
 #include "eol_protocol.h"
+/** Private defines ----------------------------------------------------------*/
+/** Exported typedefines -----------------------------------------------------*/
+/** Exported constants -------------------------------------------------------*/
+
+/** Exported macros-----------------------------------------------------------*/
+/** Exported variables -------------------------------------------------------*/
+/** Exported functions prototypes --------------------------------------------*/
 
 namespace Ui {
 class eol_angle_calibration_window;
@@ -43,11 +67,11 @@ public slots:
     calibration_profile_info_list.clear();
   }
 protected:
-    /**
+  /**
      * @brief closeEvent
      * @param event
      */
-    virtual void closeEvent(QCloseEvent *event) override;
+  virtual void closeEvent(QCloseEvent *event) override;
 
 private:
 
@@ -192,3 +216,4 @@ private:
 };
 
 #endif // EOL_ANGLE_CALIBRATION_WINDOW_H
+/******************************** End of file *********************************/

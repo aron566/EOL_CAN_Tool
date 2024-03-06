@@ -1,9 +1,35 @@
-#include "eol_calibration_window.h"
-#include "ui_eol_calibration_window.h"
+/**
+ *  @file eol_calibration_window.cpp
+ *
+ *  @date 2024年01月18日 11:11:54 星期一
+ *
+ *  @author aron566
+ *
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
+ *
+ *  @brief eol_calibration_window.
+ *
+ *  @details None.
+ *
+ *  @version v0.0.1 aron566 2024.01.18 12:11 初始版本.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  </table>
+ */
+/** Includes -----------------------------------------------------------------*/
 #include <QFile>
 #include <QFileDialog>
 #include <QDateTime>
 #include <QMessageBox>
+/** Private includes ---------------------------------------------------------*/
+#include "eol_calibration_window.h"
+#include "ui_eol_calibration_window.h"
+/** Use C compiler -----------------------------------------------------------*/
+
+/** Private macros -----------------------------------------------------------*/
 
 /* 显示过滤 */
 #define SHOW_RANGE_FILTER_SET     0.2f
@@ -22,10 +48,27 @@
 #define CNT_RCS_FILTER_SET        5.0f
 #define CNT_SNR_FILTER_SET        5.0f
 #define CNT_MAG_FILTER_SET        5.0f
+/** Private typedef ----------------------------------------------------------*/
+
+/** Private constants --------------------------------------------------------*/
+/** Public variables ---------------------------------------------------------*/
+/** Private variables --------------------------------------------------------*/
+
+/** Private function prototypes ----------------------------------------------*/
+
+/** Private user code --------------------------------------------------------*/
+
+/** Private application code -------------------------------------------------*/
+/*******************************************************************************
+*
+*       Static code
+*
+********************************************************************************
+*/
 
 eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
-  QWidget(parent),
-  ui(new Ui::eol_calibration_window)
+    QWidget(parent),
+    ui(new Ui::eol_calibration_window)
 {
   ui->setupUi(this);
 
@@ -84,7 +127,7 @@ eol_calibration_window::eol_calibration_window(QString title, QWidget *parent) :
   ui->target_filter_mag_lineEdit->setToolTip(tr("this conditions is not used if it is empty"));
 
   /* 设置表格 */
-//  ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+  //  ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
   ui->tableWidget->verticalHeader()->setFixedWidth(25);
   ui->target_cnt_tableWidget->verticalHeader()->setFixedWidth(30);
   ui->target_cnt_tableWidget->setVisible(false);
@@ -174,7 +217,7 @@ void eol_calibration_window::set_eol_protocol_obj(eol_protocol *obj)
   }
   eol_protocol_obj = obj;
   /* 数据接收 */
-//  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok);
+  //  connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok);
   connect(eol_protocol_obj, &eol_protocol::signal_protocol_rw_err, this, &eol_calibration_window::slot_protocol_rw_err, Qt::BlockingQueuedConnection);
   connect(eol_protocol_obj, &eol_protocol::signal_rw_device_ok, this, &eol_calibration_window::slot_rw_device_ok, Qt::QueuedConnection);
 }
@@ -412,7 +455,7 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
 
   frame_cnt++;
 
-//  qDebug() << "profile " << profile_id << "obj_num " << obj_num;
+  //  qDebug() << "profile " << profile_id << "obj_num " << obj_num;
 
   /* 设置当前表格行数 */
   ui->tableWidget->clearContents();
@@ -481,6 +524,14 @@ void eol_calibration_window::refresh_obj_list_info(quint8 profile_id, quint16 ob
   }
 }
 
+/** Public application code --------------------------------------------------*/
+/*******************************************************************************
+*
+*       Public code
+*
+********************************************************************************
+*/
+
 /**
  * @brief 添加阈值到列表
  */
@@ -494,16 +545,16 @@ void eol_calibration_window::on_add_pushButton_clicked()
   threshold_info.snr_dB_threshold_down = (qint8)ui->snr_threshold_min_lineEdit->text().toShort();
   threshold_info.snr_dB_threshold_up = (qint8)ui->snr_threshold_max_lineEdit->text().toShort();
   threshold_info.rts_dBsm = (quint8)ui->rts_lineEdit->text().toUShort();
-
-  threshold_info.str = QString::asprintf("id:%u,%um,mag:>%u <%u,snr:>%u <%u,rts:%u\r\n", \
-                                         threshold_info.profile_id, \
-                                         threshold_info.distance_m, \
-                                         threshold_info.mag_dB_threshold_down, \
-                                         threshold_info.mag_dB_threshold_up, \
-                                         threshold_info.snr_dB_threshold_down, \
-                                         threshold_info.snr_dB_threshold_up, \
+  threshold_info.str = QString::asprintf("id:%u,%um,mag:>%u <%u,snr:>%u <%u,rts:%u\r\n",
+                                         threshold_info.profile_id,
+                                         threshold_info.distance_m,
+                                         threshold_info.mag_dB_threshold_down,
+                                         threshold_info.mag_dB_threshold_up,
+                                         threshold_info.snr_dB_threshold_down,
+                                         threshold_info.snr_dB_threshold_up,
                                          threshold_info.rts_dBsm);
   threshold_list.append(threshold_info);
+
   QString str;
   ui->threshold_list_label->clear();
   for(qint32 i = 0; i < threshold_list.size(); i++)
@@ -907,3 +958,8 @@ void eol_calibration_window::on_export_total_list_pushButton_clicked()
     utility::export_table2csv_file(ui->target_cnt_tableWidget, current_file_path);
   }
 }
+/******************************** End of file *********************************/
+
+
+
+

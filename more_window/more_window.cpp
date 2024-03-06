@@ -1,11 +1,36 @@
-#include "more_window.h"
-#include "ui_more_window.h"
+/**
+ *  @file more_window.cpp
+ *
+ *  @date 2024年01月18日 11:11:54 星期一
+ *
+ *  @author aron566
+ *
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
+ *
+ *  @brief 更多页面.
+ *
+ *  @details None.
+ *
+ *  @version v0.0.1 aron566 2024.01.18 12:11 初始版本.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  </table>
+ */
+/** Includes -----------------------------------------------------------------*/
 #include <QDebug>
 #include <QFile>
 #include <QFileDialog>
 #include <QDateTime>
 #include <QWheelEvent>
+/** Private includes ---------------------------------------------------------*/
+#include "more_window.h"
+#include "ui_more_window.h"
+/** Use C compiler -----------------------------------------------------------*/
 
+/** Private macros -----------------------------------------------------------*/
 #define SHOW_MSG_SAVE_NUM_MAX     200U                    /**< 最大显示消息数 */
 #define SHOW_MSG_ONE_SCORLL       (1U)                    /**< 上翻每次刷新列表数 */
 #define SAVE_MSG_BUF_MAX          (1024U*512U*1U)         /**< 最大缓存消息数 */
@@ -14,6 +39,23 @@
 #define SHOW_CHAR_TIMEOUT_MS_MAX  (1000U)                 /**< 最大等待无换行符时间ms */
 
 #define CONFIG_VER_STR            "0.0.2"                 /**< 配置文件版本 */
+/** Private typedef ----------------------------------------------------------*/
+
+/** Private constants --------------------------------------------------------*/
+/** Public variables ---------------------------------------------------------*/
+/** Private variables --------------------------------------------------------*/
+
+/** Private function prototypes ----------------------------------------------*/
+
+/** Private user code --------------------------------------------------------*/
+
+/** Private application code -------------------------------------------------*/
+/*******************************************************************************
+*
+*       Static code
+*
+********************************************************************************
+*/
 
 more_window::more_window(QString title, QWidget *parent) :
     QWidget(parent),
@@ -187,11 +229,11 @@ void more_window::resizeEvent(QResizeEvent *event)
 void more_window::wheelEvent(QWheelEvent *event)
 {
 #if 1
-//  qDebug() << "wheel event angleDelta" << event->angleDelta().y();
-//  qDebug() << "wheel event phase" << event->phase();
-//  qDebug() << "wheel event inverted" << event->inverted();
-//  qDebug() << "wheel event pixelDelta" << event->pixelDelta().y();
-//  qDebug() << "wheel event globalPosition " << event->globalPosition().x() << event->globalPosition().y();
+  //  qDebug() << "wheel event angleDelta" << event->angleDelta().y();
+  //  qDebug() << "wheel event phase" << event->phase();
+  //  qDebug() << "wheel event inverted" << event->inverted();
+  //  qDebug() << "wheel event pixelDelta" << event->pixelDelta().y();
+  //  qDebug() << "wheel event globalPosition " << event->globalPosition().x() << event->globalPosition().y();
 
   int xp1, yp1, xp2, yp2;
   quint32 *pchx_scroll_cnt = nullptr;
@@ -205,11 +247,11 @@ void more_window::wheelEvent(QWheelEvent *event)
   yp2 = text_edit_widget_temp->rect().height() + yp1;
 
   if(event->globalPosition().x() >= (qreal)xp1 && \
-     event->globalPosition().x() <= (qreal)xp2 && \
-     event->globalPosition().y() >= (qreal)yp1 && \
-     event->globalPosition().y() <= (qreal)yp2)
+                                                        event->globalPosition().x() <= (qreal)xp2 && \
+             event->globalPosition().y() >= (qreal)yp1 && \
+             event->globalPosition().y() <= (qreal)yp2)
   {
-//    qDebug() << "ch1";
+    //    qDebug() << "ch1";
     text_edit_widget = ui->ch1_receive_data_textEdit;
     pchx_scroll_cnt = &ch1_scroll_cnt;
     pList = &ch1_show_msg_list;
@@ -223,11 +265,11 @@ void more_window::wheelEvent(QWheelEvent *event)
   yp2 = text_edit_widget_temp->rect().height() + yp1;
 
   if(event->globalPosition().x() >= (qreal)xp1 && \
-     event->globalPosition().x() <= (qreal)xp2 && \
-     event->globalPosition().y() >= (qreal)yp1 && \
-     event->globalPosition().y() <= (qreal)yp2)
+                                                        event->globalPosition().x() <= (qreal)xp2 && \
+             event->globalPosition().y() >= (qreal)yp1 && \
+             event->globalPosition().y() <= (qreal)yp2)
   {
-//    qDebug() << "ch2";
+    //    qDebug() << "ch2";
     text_edit_widget = ui->ch2_receive_data_textEdit;
     pchx_scroll_cnt = &ch2_scroll_cnt;
     pList = &ch2_show_msg_list;
@@ -246,7 +288,7 @@ void more_window::wheelEvent(QWheelEvent *event)
       /* 是否能下翻 */
       if((*pchx_scroll_cnt) + 1 > (quint32)pList->size())
       {
-//        qDebug() << " down " << (*pchx_scroll_cnt) << pList->size();
+        //        qDebug() << " down " << (*pchx_scroll_cnt) << pList->size();
         return;
       }
       *pchx_scroll_cnt = (*pchx_scroll_cnt) + 1;
@@ -267,7 +309,7 @@ void more_window::wheelEvent(QWheelEvent *event)
       }
       else
       {
-//        qDebug() << " up " << (*pchx_scroll_cnt) << SHOW_MSG_SAVE_NUM_MAX;
+        //        qDebug() << " up " << (*pchx_scroll_cnt) << SHOW_MSG_SAVE_NUM_MAX;
         return;
       }
 
@@ -279,7 +321,7 @@ void more_window::wheelEvent(QWheelEvent *event)
       }
       else
       {
-//        qDebug() << " up top_index" << top_index;
+        //        qDebug() << " up top_index" << top_index;
         return;
       }
       // qDebug() << " UP" << top_index;
@@ -421,12 +463,12 @@ void more_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_M
     // cursor.insertText(show_messagex.str + '\n');
     // text_edit_widget->setTextCursor(cursor);
 
-//     text_edit_widget->moveCursor(QTextCursor::Start);
-//     text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
-//     text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
-// //    qDebug() << "sel1 :" << text_edit_widget->textCursor().selectedText();
-//     text_edit_widget->textCursor().removeSelectedText();
-//     text_edit_widget->moveCursor(QTextCursor::End);
+    //     text_edit_widget->moveCursor(QTextCursor::Start);
+    //     text_edit_widget->moveCursor(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+    //     text_edit_widget->moveCursor(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+    // //    qDebug() << "sel1 :" << text_edit_widget->textCursor().selectedText();
+    //     text_edit_widget->textCursor().removeSelectedText();
+    //     text_edit_widget->moveCursor(QTextCursor::End);
   }
   /* 上翻 */
   else
@@ -487,7 +529,7 @@ void more_window::slot_show_window()
 }
 
 void more_window::slot_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, \
-  quint8 direct, quint32 channel_num, quint8 protocol_type, quint64 ms)
+                                      quint8 direct, quint32 channel_num, quint8 protocol_type, quint64 ms)
 {
   frame_diagnosis_obj->add_msg_to_table(can_id, data, len, direct, channel_num, protocol_type, ms);
 }
@@ -529,12 +571,12 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
     {
       show_line_str.append(str);
       msg.append(show_line_str);
-//      qDebug() << "尾部有换行拼接" << a << ":" << show_line_str;
+      //      qDebug() << "尾部有换行拼接" << a << ":" << show_line_str;
       show_line_str.clear();
     }
     else
     {
-//      qDebug() << "尾部有换行" << a << ":" << str;
+      //      qDebug() << "尾部有换行" << a << ":" << str;
       msg.append(str);
     }
     return true;
@@ -561,7 +603,7 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
       {
         show_line_str_force = false;
         msg.append(show_line_str);
-//        qDebug() << "无换行符强制" << a << ":" << show_line_str;
+        //        qDebug() << "无换行符强制" << a << ":" << show_line_str;
         show_line_str.clear();
         return true;
       }
@@ -581,19 +623,19 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
       {
         show_line_str.append(str);
         msg.append(show_line_str);
-//        qDebug() << "中间有换行符拼接" << a << ":" << show_line_str;
+        //        qDebug() << "中间有换行符拼接" << a << ":" << show_line_str;
         show_line_str.clear();
       }
       else
       {
-//        qDebug() << "中间有换行符" << a << ":" << str;
+        //        qDebug() << "中间有换行符" << a << ":" << str;
         msg.append(str);
       }
       /* 剩余部分加到下一行显示 */
       memset(str_buf, 0, sizeof(str_buf));
       memcpy(str_buf, &data[index + 1U], data_len - index - 1U);
       str = QString::asprintf("%s", str_buf);
-//      qDebug() << "中间有换行符，剩余部分" << a << ":" << str;
+      //      qDebug() << "中间有换行符，剩余部分" << a << ":" << str;
       show_line_str.append(str);
       last_show_line_str_time_ms = current_show_line_str_time_ms;
     }
@@ -602,7 +644,7 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
 }
 
 void more_window::slot_show_message(const QString &message, quint32 channel_num, \
-  quint8 direct, const quint8 *data, quint32 data_len, quint32 can_id)
+                                    quint8 direct, const quint8 *data, quint32 data_len, quint32 can_id)
 {
   QString show_message;
 
@@ -760,13 +802,13 @@ void more_window::show_can_msg(can_driver_model::CAN_MSG_DISPLAY_Typedef_t &msg)
   QString item;
   if(msg.direction == can_driver_model::CAN_TX_DIRECT || msg.direction == can_driver_model::CAN_RX_DIRECT)
   {
-      item = QString::asprintf(tr("[%u]%sx CAN%s ID: %08X %s %s LEN: %d DATA: ").toUtf8().data(), \
-      msg.channel_num, \
-      msg.direction == can_driver_model::CAN_TX_DIRECT ? "T" : "R",\
-      msg.can_protocol == can_driver_model::CANFD_PROTOCOL_TYPE ? "FD" : "", \
-      msg.can_id, msg.frame_type == can_driver_model::EXT_FRAME_TYPE ? "EXT_FRAME" : "STD_FRAME", \
-      msg.frame_data_type == can_driver_model::REMOTE_FRAME_TYPE ? "REMOTE_FRAME" : "DATA_FRAME", \
-      msg.data_len);
+    item = QString::asprintf(tr("[%u]%sx CAN%s ID: %08X %s %s LEN: %d DATA: ").toUtf8().data(), \
+                                                                                                msg.channel_num, \
+                                                                                                                         msg.direction == can_driver_model::CAN_TX_DIRECT ? "T" : "R",\
+                                                                                                                                   msg.can_protocol == can_driver_model::CANFD_PROTOCOL_TYPE ? "FD" : "", \
+                                                                                                                                     msg.can_id, msg.frame_type == can_driver_model::EXT_FRAME_TYPE ? "EXT_FRAME" : "STD_FRAME", \
+                                                                                                                     msg.frame_data_type == can_driver_model::REMOTE_FRAME_TYPE ? "REMOTE_FRAME" : "DATA_FRAME", \
+                                                                                                                                 msg.data_len);
     for(quint32 i = 0; i < msg.data_len; ++i)
     {
       item += QString::asprintf("%02X ", msg.msg_data[i]);
@@ -792,7 +834,7 @@ void more_window::slot_show_can_msg()
     return;
   }
   quint32 msg_len = len / sizeof(can_driver_model::CAN_MSG_DISPLAY_Typedef_t);
-//  qDebug() << "msg" << msg_len;
+  //  qDebug() << "msg" << msg_len;
   // msg_len = msg_len > 64U ? 64U : msg_len;
   can_driver_model::CAN_MSG_DISPLAY_Typedef_t msg;
   for(quint32 i = 0; i < msg_len; i++)
@@ -885,6 +927,14 @@ void more_window::set_channel_num(quint8 channel_num)
   /* 更新诊断页面 */
   frame_diagnosis_obj->set_channel_num(channel_num);
 }
+
+/** Public application code --------------------------------------------------*/
+/*******************************************************************************
+*
+*       Public code
+*
+********************************************************************************
+*/
 
 void more_window::on_send_pushButton_clicked()
 {
@@ -1226,3 +1276,4 @@ void more_window::on_log_send_pushButton_clicked()
   can_log_sender_window_obj->show();
 }
 
+/******************************** End of file *********************************/

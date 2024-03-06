@@ -1,9 +1,33 @@
+/**
+ *  @file eol_sub_window.hpp
+ *
+ *  @date 2024年01月18日 11:12:45 星期一
+ *
+ *  @author aron566 <aron566@163.com>.
+ *
+ *  @brief None.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  </table>
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
+ */
 #ifndef EOL_SUB_WINDOW_H
 #define EOL_SUB_WINDOW_H
-
+/** Includes -----------------------------------------------------------------*/
 #include <QWidget>
+/** Private includes ---------------------------------------------------------*/
 #include "eol_protocol.h"
 #include "eol_sub_more_window/eol_sub_more_window.h"
+/** Private defines ----------------------------------------------------------*/
+/** Exported typedefines -----------------------------------------------------*/
+/** Exported constants -------------------------------------------------------*/
+
+/** Exported macros-----------------------------------------------------------*/
+/** Exported variables -------------------------------------------------------*/
+/** Exported functions prototypes --------------------------------------------*/
 
 namespace Ui {
 class eol_sub_window;
@@ -23,14 +47,14 @@ public:
    */
   void set_eol_protocol_obj(eol_protocol *obj = nullptr);
 protected:
-    /**
+  /**
      * @brief closeEvent
      * @param event
      */
-    virtual void closeEvent(QCloseEvent *event) override;
+  virtual void closeEvent(QCloseEvent *event) override;
 private:
 
-    /**
+  /**
    * @brief 读写窗口下级窗口初始化
    * @param title
    */
@@ -74,7 +98,7 @@ private slots:
 
   void on_more_pushButton_clicked();
 
-  private:
+private:
   Ui::eol_sub_window *ui;
 
   eol_sub_more_window *eol_sub_more_window_obj = nullptr;
@@ -87,3 +111,4 @@ private:
 };
 
 #endif // EOL_SUB_WINDOW_H
+/******************************** End of file *********************************/

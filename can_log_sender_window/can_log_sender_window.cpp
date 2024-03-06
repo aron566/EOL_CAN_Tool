@@ -24,6 +24,7 @@
 #include <QDateTime>
 #include <QThreadPool>
 #include <QStringList>
+#include <QSettings>
 /** Private includes ---------------------------------------------------------*/
 #include "can_log_sender_window.h"
 #include "ui_can_log_sender_window.h"
@@ -71,11 +72,29 @@ can_log_sender_window::can_log_sender_window(QString title, QWidget *parent)
   /* 禁止线程完成后执行析构对象 */
   this->setAutoDelete(false);
 
-  connect(this, &can_log_sender_window::signal_update_progress, this, &can_log_sender_window::slot_update_progress);//, Qt::BlockingQueuedConnection);
+  connect(this, &can_log_sender_window::signal_update_progress, this, &can_log_sender_window::slot_update_progress, Qt::QueuedConnection);
+
+  /* 设置悬浮提示 */
+  ui->s_index_lineEdit->setToolTip(tr("must set"));
+  ui->bytes_lineEdit->setToolTip(tr("must set"));
+  ui->can_id_index_lineEdit->setToolTip(tr("must set"));
+  ui->send_delay_ms_lineEdit->setToolTip(tr("must set"));
+  ui->permissable_can_id_lineEdit->setToolTip(tr("must set & use hex data"));
+  ui->response_can_data_lineEdit->setToolTip(tr("this conditions is not used if it's empty"));
+  ui->response_can_id_lineEdit->setToolTip(tr("this conditions is not used if it's empty"));
+  ui->wait_can_data_index_lineEdit->setToolTip(tr("default 0"));
+  ui->wait_response_ms_lineEdit->setToolTip(tr("default 0"));
+  ui->send_channel_lineEdit->setToolTip(tr("must set"));
+
+  /* 恢复参数 */
+  read_cfg();
 }
 
 can_log_sender_window::~can_log_sender_window()
 {
+  /* 保存参数 */
+  save_cfg();
+
   delete ui;
 }
 
@@ -85,6 +104,54 @@ void can_log_sender_window::closeEvent(QCloseEvent *event)
   run_state = false;
   this->hide();
   emit signal_window_closed();
+}
+
+void can_log_sender_window::read_cfg()
+{
+  QFile file("./eol_tool_cfg.ini");
+  if(false == file.exists())
+  {
+    return;
+  }
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
+  if(false == setting.contains("can_log_sender_window/last_can_log_dir"))
+  {
+    qDebug() << "err can_log_sender_window config not exist";
+    return;
+  }
+  /* last_can_log_dir */
+  last_file_path = setting.value("can_log_sender_window/last_can_log_dir").toString();
+  ui->s_index_lineEdit->setText(setting.value("can_log_sender_window/data_field_s_index").toString());
+  ui->bytes_lineEdit->setText(setting.value("can_log_sender_window/data_bytes").toString());
+  ui->can_id_index_lineEdit->setText(setting.value("can_log_sender_window/can_id_field_index").toString());
+  ui->send_delay_ms_lineEdit->setText(setting.value("can_log_sender_window/send_delay_ms").toString());
+  ui->send_channel_lineEdit->setText(setting.value("can_log_sender_window/send_channel").toString());
+  ui->permissable_can_id_lineEdit->setText(setting.value("can_log_sender_window/permissable_can_id_list").toString());
+  ui->response_can_id_lineEdit->setText(setting.value("can_log_sender_window/response_can_id_list").toString());
+  ui->wait_response_ms_lineEdit->setText(setting.value("can_log_sender_window/wait_response_ms").toString());
+  ui->response_can_data_lineEdit->setText(setting.value("can_log_sender_window/response_can_data_list").toString());
+  ui->wait_can_data_index_lineEdit->setText(setting.value("can_log_sender_window/wait_can_data_field_index").toString());
+  setting.sync();
+}
+
+void can_log_sender_window::save_cfg()
+{
+  QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
+  setting.setIniCodec("UTF-8");
+  /* last_can_log_dir */
+  setting.setValue("can_log_sender_window/last_can_log_dir", last_file_path);
+  setting.setValue("can_log_sender_window/data_field_s_index", ui->s_index_lineEdit->text());
+  setting.setValue("can_log_sender_window/data_bytes", ui->bytes_lineEdit->text());
+  setting.setValue("can_log_sender_window/can_id_field_index", ui->can_id_index_lineEdit->text());
+  setting.setValue("can_log_sender_window/send_delay_ms", ui->send_delay_ms_lineEdit->text());
+  setting.setValue("can_log_sender_window/send_channel", ui->send_channel_lineEdit->text());
+  setting.setValue("can_log_sender_window/permissable_can_id_list", ui->permissable_can_id_lineEdit->text());
+  setting.setValue("can_log_sender_window/response_can_id_list", ui->response_can_id_lineEdit->text());
+  setting.setValue("can_log_sender_window/wait_response_ms", ui->wait_response_ms_lineEdit->text());
+  setting.setValue("can_log_sender_window/response_can_data_list", ui->response_can_data_lineEdit->text());
+  setting.setValue("can_log_sender_window/wait_can_data_field_index", ui->wait_can_data_index_lineEdit->text());
+  setting.sync();
 }
 
 void can_log_sender_window::set_can_driver_obj(can_driver_model *_can_driver_obj)

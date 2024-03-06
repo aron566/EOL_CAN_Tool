@@ -1,8 +1,33 @@
+/**
+ *  @file XX.hpp
+ *
+ *  @date 2024年01月18日 11:12:45 星期一
+ *
+ *  @author aron566 <aron566@163.com>.
+ *
+ *  @brief None.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  </table>
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
+ */
 #ifndef DEBUG_WINDOW_H
 #define DEBUG_WINDOW_H
-
+/** Includes -----------------------------------------------------------------*/
 #include <QWidget>
 #include <QTimer>
+/** Private includes ---------------------------------------------------------*/
+
+/** Private defines ----------------------------------------------------------*/
+/** Exported typedefines -----------------------------------------------------*/
+/** Exported constants -------------------------------------------------------*/
+
+/** Exported macros-----------------------------------------------------------*/
+/** Exported variables -------------------------------------------------------*/
+/** Exported functions prototypes --------------------------------------------*/
 
 namespace Ui {
 class debug_window;
@@ -17,44 +42,44 @@ public:
   ~debug_window();
 
 protected:
-    /**
+  /**
      * @brief closeEvent
      * @param event
      */
-    virtual void closeEvent(QCloseEvent *event) override;
-    virtual void showEvent(QShowEvent *event) override;
-    // virtual void contextMenuEvent(QContextMenuEvent *event) override;
-    // virtual void mousePressEvent(QMouseEvent *event) override;
+  virtual void closeEvent(QCloseEvent *event) override;
+  virtual void showEvent(QShowEvent *event) override;
+  // virtual void contextMenuEvent(QContextMenuEvent *event) override;
+  // virtual void mousePressEvent(QMouseEvent *event) override;
 private:
-  signals:
-    /**
+signals:
+  /**
      * @brief 窗口关闭信号
      */
-    void signal_window_closed();
+  void signal_window_closed();
 
-    /**
+  /**
      * @brief 发送命令信号
      * @param text 命令
      */
-    void signal_send_command(QString text);
-    void signal_send_command_char(char c);
+  void signal_send_command(QString text);
+  void signal_send_command_char(char c);
 public:
 
-    /**
+  /**
      * @brief 接收shell数据
      * @param data 数据
      * @param data_len 数据长度
      */
-    void rec_shell_data(const quint8 *data, quint32 data_len);
+  void rec_shell_data(const quint8 *data, quint32 data_len);
 
 private slots:
-    void on_addquick_compelat_pushButton_clicked();
+  void on_addquick_compelat_pushButton_clicked();
 
-    void on_del_quick_compelat_pushButton_clicked();
+  void on_del_quick_compelat_pushButton_clicked();
 
-    void on_quick_compleat_plainTextEdit_cursorPositionChanged();
+  void on_quick_compleat_plainTextEdit_cursorPositionChanged();
 
-    void on_color_list_comboBox_currentTextChanged(const QString &arg1);
+  void on_color_list_comboBox_currentTextChanged(const QString &arg1);
 
 private:
   Ui::debug_window *ui;
@@ -105,14 +130,14 @@ private:
   const QString emptyStr = "";
 
   const QString logo = (
-    "   ______  __                          _______               __     \r\n"
-    "  |      ||  |--..-----..-----..-----.|_     _|.-----..----.|  |--. \r\n"
-    "  |   ---||     ||  -__||     ||  _  |  |   |  |  -__||  __||     | \r\n"
-    "  |______||__|__||_____||__|__||___  |  |___|  |_____||____||__|__| \r\n"
-    "                               |_____|\r\n"
-    "Build:       " __DATE__ " " __TIME__ "\r\n"
-    "Version:     v0.0.1\r\n"
-    "Copyright:   (c) 2023 Shenzhen Cheng-Tech Co.,Ltd.\r\n");
+      "   ______  __                          _______               __     \r\n"
+      "  |      ||  |--..-----..-----..-----.|_     _|.-----..----.|  |--. \r\n"
+      "  |   ---||     ||  -__||     ||  _  |  |   |  |  -__||  __||     | \r\n"
+      "  |______||__|__||_____||__|__||___  |  |___|  |_____||____||__|__| \r\n"
+      "                               |_____|\r\n"
+      "Build:       " __DATE__ " " __TIME__ "\r\n"
+      "Version:     v0.0.1\r\n"
+      "Copyright:   (c) 2023 Shenzhen Cheng-Tech Co.,Ltd.\r\n");
 
   QStringList quick_complets;/**< 快捷指令 */
 
@@ -126,3 +151,4 @@ private:
 };
 
 #endif // DEBUG_WINDOW_H
+/******************************** End of file *********************************/

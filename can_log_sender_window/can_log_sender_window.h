@@ -77,6 +77,15 @@ public:
    */
   void set_can_driver_obj(can_driver_model *_can_driver_obj);
 
+  /**
+   * @brief read_cfg
+   */
+  void read_cfg();
+
+  /**
+   * @brief save_cfg
+   */
+  void save_cfg();
 private:
   /**
    * @brief can_log_sender_task

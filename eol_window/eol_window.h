@@ -1,6 +1,22 @@
+/**
+ *  @file eol_window.hpp
+ *
+ *  @date 2024年01月18日 11:12:45 星期一
+ *
+ *  @author aron566 <aron566@163.com>.
+ *
+ *  @brief None.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  </table>
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
+ */
 #ifndef EOL_WINDOW_H
 #define EOL_WINDOW_H
-
+/** Includes -----------------------------------------------------------------*/
 #include <QWidget>
 #include <QTimer>
 #include <QList>
@@ -10,6 +26,8 @@
 #include <QRunnable>
 #include <QAtomicInt>
 #include <QTemporaryFile>
+#include <QDebug>
+/** Private includes ---------------------------------------------------------*/
 #include <eol_protocol.h>
 #include "eol_sub_window.h"
 #include "eol_calibration_window.h"
@@ -18,6 +36,13 @@
 #include "rts_ctrl_window/rts_ctrl_window.h"
 #include "rts_protocol/rts_protocol.h"
 #include "network_driver/network_driver_model.h"
+/** Private defines ----------------------------------------------------------*/
+/** Exported typedefines -----------------------------------------------------*/
+/** Exported constants -------------------------------------------------------*/
+
+/** Exported macros-----------------------------------------------------------*/
+/** Exported variables -------------------------------------------------------*/
+/** Exported functions prototypes --------------------------------------------*/
 
 namespace Ui {
 class eol_window;
@@ -57,7 +82,7 @@ public:
    * @brief 设置rts网络驱动接口
    * @param can_driver_obj
    */
-//  void set_plc_driver_obj(network_driver_model *network_driver_obj);
+  //  void set_plc_driver_obj(network_driver_model *network_driver_obj);
 
   /**
    * @brief eol协议窗口线程启动
@@ -92,19 +117,19 @@ public:
     /* 原子操作 */
     if(thread_run_statex.testAndSetRelaxed(1, 0))
     {
-//      qDebug() << "eol window thread_run_statex was successfully updated.";
+      //      qDebug() << "eol window thread_run_statex was successfully updated.";
     }
     else
     {
-//      qDebug() << "eol window thread_run_statex was not updated.";
+      //      qDebug() << "eol window thread_run_statex was not updated.";
     }
   }
 protected:
-    /**
+  /**
      * @brief closeEvent
      * @param event
      */
-    virtual void closeEvent(QCloseEvent *event) override;
+  virtual void closeEvent(QCloseEvent *event) override;
 private:
   Ui::eol_window *ui;
 
@@ -140,7 +165,7 @@ private slots:
    * @param data_len 数据长度
    */
   void slot_recv_eol_table_data(quint16 frame_num, const quint8 *data, quint16
-                                   data_len);
+                                                                           data_len);
 
   /**
    * @brief 当前发送进度
@@ -492,3 +517,4 @@ private slots:
 };
 
 #endif // EOL_WINDOW_H
+/******************************** End of file *********************************/

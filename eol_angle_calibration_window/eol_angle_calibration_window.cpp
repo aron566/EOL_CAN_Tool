@@ -1,12 +1,56 @@
-#include "eol_angle_calibration_window.h"
-#include "ui_eol_angle_calibration_window.h"
+/**
+ *  @file eol_angle_calibration_window.cpp
+ *
+ *  @date 2024年01月18日 11:11:54 星期一
+ *
+ *  @author aron566
+ *
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
+ *
+ *  @brief eol角度校准页面.
+ *
+ *  @details None.
+ *
+ *  @version v0.0.1 aron566 2024.01.18 12:11 初始版本.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  </table>
+ */
+/** Includes -----------------------------------------------------------------*/
 #include <QFileDialog>
 #include <QTableWidgetItem>
 #include <QDateTime>
+/** Private includes ---------------------------------------------------------*/
+#include "eol_angle_calibration_window.h"
+#include "ui_eol_angle_calibration_window.h"
+/** Use C compiler -----------------------------------------------------------*/
+
+/** Private macros -----------------------------------------------------------*/
+
+/** Private typedef ----------------------------------------------------------*/
+
+/** Private constants --------------------------------------------------------*/
+/** Public variables ---------------------------------------------------------*/
+/** Private variables --------------------------------------------------------*/
+
+/** Private function prototypes ----------------------------------------------*/
+
+/** Private user code --------------------------------------------------------*/
+
+/** Private application code -------------------------------------------------*/
+/*******************************************************************************
+*
+*       Static code
+*
+********************************************************************************
+*/
 
 eol_angle_calibration_window::eol_angle_calibration_window(QString title, QWidget *parent) :
-  QWidget(parent),
-  ui(new Ui::eol_angle_calibration_window)
+    QWidget(parent),
+    ui(new Ui::eol_angle_calibration_window)
 {
   ui->setupUi(this);
 
@@ -308,7 +352,7 @@ void eol_angle_calibration_window::on_start_pushButton_clicked()
 #endif
 
   /* 启动轮询定时器 */
-//  timer_obj->stop();
+  //  timer_obj->stop();
 
   /* 启动eol线程 */
   eol_protocol_obj->start_task();
@@ -328,10 +372,10 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
   }
 
   if(0xFF == data[5] && 0xFF == data[6] \
-     && 0 == data[7] \
-     && 0 == data[8] \
-     && 0 == data[9] \
-     && 0 == data[10])
+      && 0 == data[7] \
+      && 0 == data[8] \
+      && 0 == data[9] \
+      && 0 == data[10])
   {
     return false;
   }
@@ -418,7 +462,7 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
     profile_fft_list.append(QString("channel_num:%1").arg(channel_num));
     /* 添加配置下所有通道fft */
     for(quint8 ch = 0; ch < channel_num; ch++)
-    {     
+    {
       QString real = utility::data2str(data + index, data_type);
       index += (utility::num_type_to_bytes(data_type) / 2U);
       profile_fft_list.append(real);
@@ -551,22 +595,23 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
       /* 写入标题内容 */
       str.clear();
       str = QString::asprintf("%d,%u,%u,%.1f,%.1f,%.f,%.f,%d,%u,%u,%u,%u,%u,%u,%u,%u\r\n",
-                    (int)condition.direction, \
-                    fft_data_version, \
-                    fft_data_type, \
-                    condition.azi_ele_angle, \
-                    condition.s_angle, \
-                    condition.e_angle, \
-                    condition.step_angle, \
-                    fft_data_factor, \
-                    get_profile_channel_num(0), \
-                    get_profile_channel_num(1), \
-                    get_profile_channel_num(2), \
-                    get_profile_channel_num(3), \
-                    condition.bit_tx_order[0], \
-                    condition.bit_tx_order[1], \
-                    condition.bit_tx_order[2], \
-                    condition.bit_tx_order[3]);
+                              (int)condition.direction,
+                              fft_data_version,
+                              fft_data_type,
+                              condition.azi_ele_angle,
+                              condition.s_angle,
+                              condition.e_angle,
+                              condition.step_angle,
+                              fft_data_factor,
+                              get_profile_channel_num(0),
+                              get_profile_channel_num(1),
+                              get_profile_channel_num(2),
+                              get_profile_channel_num(3),
+                              condition.bit_tx_order[0],
+                              condition.bit_tx_order[1],
+                              condition.bit_tx_order[2],
+                              condition.bit_tx_order[3]);
+
       fft_csv_file.write(str.toUtf8());
       last_direction = condition.direction;
       last_azi_ele_angle = condition.azi_ele_angle;
@@ -631,22 +676,22 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
       /* 写入标题内容 */
       str.clear();
       str = QString::asprintf("%d,%u,%u,%.1f,%.1f,%.f,%.f,%d,%u,%u,%u,%u,%u,%u,%u,%u\r\n",
-                    (int)condition.direction,
-                    fft_data_version,
-                    fft_data_type,
-                    condition.azi_ele_angle,
-                    condition.s_angle,
-                    condition.e_angle,
-                    condition.step_angle,
-                    1,
-                    get_profile_channel_num(0),
-                    get_profile_channel_num(1),
-                    get_profile_channel_num(2),
-                    get_profile_channel_num(3),
-                    condition.bit_tx_order[0],
-                    condition.bit_tx_order[1],
-                    condition.bit_tx_order[2],
-                    condition.bit_tx_order[3]);
+                              (int)condition.direction,
+                              fft_data_version,
+                              fft_data_type,
+                              condition.azi_ele_angle,
+                              condition.s_angle,
+                              condition.e_angle,
+                              condition.step_angle,
+                              1,
+                              get_profile_channel_num(0),
+                              get_profile_channel_num(1),
+                              get_profile_channel_num(2),
+                              get_profile_channel_num(3),
+                              condition.bit_tx_order[0],
+                              condition.bit_tx_order[1],
+                              condition.bit_tx_order[2],
+                              condition.bit_tx_order[3]);
       fft_csv_file_origin.write(str.toUtf8());
       last_direction = condition.direction;
     }
@@ -675,6 +720,14 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
   }
   fft_csv_file_origin.close();
 }
+
+/** Public application code --------------------------------------------------*/
+/*******************************************************************************
+*
+*       Public code
+*
+********************************************************************************
+*/
 
 /**
  * @brief 定时器
@@ -821,3 +874,5 @@ void eol_angle_calibration_window::slot_protocol_rw_err(quint8 reg, quint8 comma
       break;
   }
 }
+
+/******************************** End of file *********************************/
