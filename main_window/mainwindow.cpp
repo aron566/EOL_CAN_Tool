@@ -305,6 +305,11 @@ void MainWindow::update_can_use(can_driver_model::SET_FUNCTION_CAN_USE_Typedef_t
 void MainWindow::slot_show_this_window()
 {
   this->show();
+  if(true == this->isMinimized())
+  {
+    this->showNormal();
+  }
+  this->activateWindow();
 }
 
 void MainWindow::slot_lasted_version_info(QString version, QString change_log)
@@ -606,6 +611,11 @@ void MainWindow::on_more_pushButton_clicked()
 {
 //  this->hide();
   more_window_obj->show();
+  if(true == more_window_obj->isMinimized())
+  {
+    more_window_obj->showNormal();
+  }
+  more_window_obj->activateWindow();
 }
 
 void MainWindow::on_end_resistance_checkBox_clicked(bool checked)
@@ -793,6 +803,11 @@ void MainWindow::on_device_info_pushButton_clicked()
 void MainWindow::on_updater_pushButton_clicked()
 {
   updater_window_obj->show();
+  if(true == updater_window_obj->isMinimized())
+  {
+    updater_window_obj->showNormal();
+  }
+  updater_window_obj->activateWindow();
 }
 
 void MainWindow::on_rts_start_pushButton_clicked()

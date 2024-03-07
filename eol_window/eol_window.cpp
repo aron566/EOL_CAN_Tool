@@ -403,6 +403,11 @@ void eol_window::read_cfg()
 void eol_window::slot_show_this_window()
 {
   this->show();
+  if(true == this->isMinimized())
+  {
+    this->showNormal();
+  }
+  this->activateWindow();
 }
 
 void eol_window::slot_close_shell_window()
@@ -2281,6 +2286,11 @@ void eol_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 data_
 void eol_window::on_eol_device_rw_func_pushButton_clicked()
 {
   eol_sub_window_obj->show();
+  if(true == eol_sub_window_obj->isMinimized())
+  {
+    eol_sub_window_obj->showNormal();
+  }
+  eol_sub_window_obj->activateWindow();
 }
 
 void eol_window::slot_eol_protol_is_start()
@@ -2291,12 +2301,22 @@ void eol_window::slot_eol_protol_is_start()
 void eol_window::on_ant_calibration_func_pushButton_clicked()
 {
   eol_2dfft_calibration_window_obj->show();
+  if(true == eol_2dfft_calibration_window_obj->isMinimized())
+  {
+    eol_2dfft_calibration_window_obj->showNormal();
+  }
+  eol_2dfft_calibration_window_obj->activateWindow();
 }
 
 
 void eol_window::on_rcs_calibration_func_pushButton_clicked()
 {
   eol_calibration_window_obj->show();
+  if(true == eol_calibration_window_obj->isMinimized())
+  {
+    eol_calibration_window_obj->showNormal();
+  }
+  eol_calibration_window_obj->activateWindow();
 }
 
 void eol_window::on_reboot_pushButton_clicked()
@@ -2321,6 +2341,11 @@ void eol_window::on_reboot_pushButton_clicked()
 void eol_window::on_debug_pushButton_clicked()
 {
   debug_window_window_obj->show();
+  if(true == debug_window_window_obj->isMinimized())
+  {
+    debug_window_window_obj->showNormal();
+  }
+  debug_window_window_obj->activateWindow();
 }
 
 void eol_window::on_com_hw_comboBox_currentIndexChanged(int index)
@@ -2409,6 +2434,11 @@ void eol_window::on_export_all_pushButton_clicked()
 void eol_window::on_rts_crl_pushButton_clicked()
 {
   rts_ctrl_window_obj->show();
+  if(true == rts_ctrl_window_obj->isMinimized())
+  {
+    rts_ctrl_window_obj->showNormal();
+  }
+  rts_ctrl_window_obj->activateWindow();
   connect(rts_protocol_obj, &rts_protocol::signal_protocol_error_occur, rts_ctrl_window_obj, &rts_ctrl_window::slot_protocol_error_occur);
   connect(rts_protocol_obj, &rts_protocol::signal_protocol_timeout, rts_ctrl_window_obj, &rts_ctrl_window::slot_protocol_timeout);
   connect(rts_protocol_obj, &rts_protocol::signal_protocol_rw_err, rts_ctrl_window_obj, &rts_ctrl_window::slot_protocol_rw_err);

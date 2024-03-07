@@ -17,6 +17,7 @@
  *  <table>
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2024-02-21 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2024-03-07 <td>v0.0.2  <td>aron566 <td>添加退出升级及升级失败提示信息
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -249,6 +250,19 @@ void updatefw_window::slot_protocol_rw_err(QString cmd)
 {
   Q_UNUSED(cmd)
   run_state = false;
+
+  QString tips;
+  /* 检测是否是主动关闭状态 */
+  if(true == this->isHidden())
+  {
+    tips = "updatefw exit!";
+  }
+  else
+  {
+    tips = "updatefw err!";
+  }
+  QMessageBox message(QMessageBox::Information, tr("通知"), tr("<font size='10' color='red'>%1</font>").arg(tips), QMessageBox::Yes, nullptr);
+  message.exec();
 }
 
 void updatefw_window::slot_protocol_run_step_msg(QString msg)

@@ -81,6 +81,11 @@ void tool_window::serial_port_plotter_init()
 void tool_window::on_data_wave_pushButton_clicked()
 {
   serial_port_plotter_win->show();
+  if(true == serial_port_plotter_win->isMinimized())
+  {
+    serial_port_plotter_win->showNormal();
+  }
+  serial_port_plotter_win->activateWindow();
 }
 
 void tool_window::slot_wave_data(QByteArray data)

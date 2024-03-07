@@ -71,7 +71,7 @@ include(ts_can_lib/ts_can_lib.pri)
 include(kvaser_can_lib/kvaser_can_lib.pri)
 
 # libhv网络驱动库
-include(3third_party_lib\3third_party_lib.pri)
+include(3third_party_lib/3third_party_lib.pri)
 
 # ini配置文件解析驱动库
 include(ini_parse/ini_parse.pri)

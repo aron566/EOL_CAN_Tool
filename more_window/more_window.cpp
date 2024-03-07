@@ -174,6 +174,11 @@ void more_window::network_window_init(QString titile)
 
   connect(network_window_obj, &network_window::signal_window_closed, this, [=]{
     this->show();
+    if(true == this->isMinimized())
+    {
+      this->showNormal();
+    }
+    this->activateWindow();
   });
 
   connect(network_window_obj, &network_window::signal_network_start, this, [=](network_window::NETWORK_DEVICE_Typedef_t device_type){
@@ -196,6 +201,11 @@ void more_window::updatefw_window_init(QString titile)
   updatefw_window_obj = new updatefw_window(titile);
   connect(updatefw_window_obj, &updatefw_window::signal_window_closed, this, [=]{
     this->show();
+    if(true == this->isMinimized())
+    {
+      this->showNormal();
+    }
+    this->activateWindow();
   });
 }
 
@@ -526,6 +536,11 @@ void more_window::slot_show_window()
   can_driver_model::set_message_data(data);
 
   this->show();
+  if(true == this->isMinimized())
+  {
+    this->showNormal();
+  }
+  this->activateWindow();
 }
 
 void more_window::slot_can_driver_msg(quint16 can_id, const quint8 *data, quint32 len, \
@@ -883,6 +898,11 @@ void more_window::on_data_lineEdit_textChanged(const QString &arg1)
 void more_window::on_eol_test_pushButton_2_clicked()
 {
   eol_window_obj->show();
+  if(true == eol_window_obj->isMinimized())
+  {
+    eol_window_obj->showNormal();
+  }
+  eol_window_obj->activateWindow();
 }
 
 
@@ -1037,6 +1057,11 @@ void more_window::on_frame_diagnosis_pushButton_clicked()
   disconnect(can_driver_obj, &can_driver_model::signal_show_can_msg_asynchronous, this, &more_window::slot_show_can_msg);
   connect(can_driver_obj, &can_driver_model::signal_can_driver_msg, this, &more_window::slot_can_driver_msg, Qt::QueuedConnection);
   frame_diagnosis_obj->show();
+  if(true == frame_diagnosis_obj->isMinimized())
+  {
+    frame_diagnosis_obj->showNormal();
+  }
+  frame_diagnosis_obj->activateWindow();
 }
 
 void more_window::on_export_txt_pushButton_clicked()
@@ -1180,6 +1205,11 @@ void more_window::on_crc_pushButton_clicked()
 void more_window::on_tool_pushButton_clicked()
 {
   tool_window_obj->show();
+  if(true == tool_window_obj->isMinimized())
+  {
+    tool_window_obj->showNormal();
+  }
+  tool_window_obj->activateWindow();
 }
 
 void more_window::on_display_str_id_limit_lineEdit_textChanged(const QString &arg1)
@@ -1191,6 +1221,11 @@ void more_window::on_display_str_id_limit_lineEdit_textChanged(const QString &ar
 void more_window::on_network_test_pushButton_clicked()
 {
   network_window_obj->show();
+  if(true == network_window_obj->isMinimized())
+  {
+    network_window_obj->showNormal();
+  }
+  network_window_obj->activateWindow();
 }
 
 
@@ -1272,11 +1307,21 @@ void more_window::on_timer_checkBox_clicked(bool checked)
 void more_window::on_update_pushButton_clicked()
 {
   updatefw_window_obj->show();
+  if(true == updatefw_window_obj->isMinimized())
+  {
+    updatefw_window_obj->showNormal();
+  }
+  updatefw_window_obj->activateWindow();
 }
 
 void more_window::on_log_send_pushButton_clicked()
 {
   can_log_sender_window_obj->show();
+  if(true == can_log_sender_window_obj->isMinimized())
+  {
+    can_log_sender_window_obj->showNormal();
+  }
+  can_log_sender_window_obj->activateWindow();
 }
 
 /******************************** End of file *********************************/

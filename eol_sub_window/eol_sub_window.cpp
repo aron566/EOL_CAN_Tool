@@ -87,6 +87,11 @@ void eol_sub_window::rw_more_window_init(QString title)
   connect(eol_sub_more_window_obj, &eol_sub_more_window::signal_window_closed, this, [=]
           {
             this->show();
+            if(true == this->isMinimized())
+            {
+              this->showNormal();
+            }
+            this->activateWindow();
           });
   connect(eol_sub_more_window_obj, &eol_sub_more_window::signal_get_dtc_err_status, this, [=]
           {
@@ -584,6 +589,11 @@ void eol_sub_window::on_write_pushButton_clicked()
 void eol_sub_window::on_more_pushButton_clicked()
 {
   eol_sub_more_window_obj->show();
+  if(true == eol_sub_more_window_obj->isMinimized())
+  {
+    eol_sub_more_window_obj->showNormal();
+  }
+  eol_sub_more_window_obj->activateWindow();
 }
 
 /******************************** End of file *********************************/
