@@ -849,7 +849,7 @@ void more_window::slot_show_can_msg()
     return;
   }
   quint32 msg_len = len / sizeof(can_driver_model::CAN_MSG_DISPLAY_Typedef_t);
-  //  qDebug() << "msg" << msg_len;
+  // qDebug() << "msg" << msg_len;
   // msg_len = msg_len > 64U ? 64U : msg_len;
   can_driver_model::CAN_MSG_DISPLAY_Typedef_t msg;
   for(quint32 i = 0; i < msg_len; i++)
@@ -982,17 +982,7 @@ void more_window::on_send_pushButton_clicked()
 
 void more_window::slot_timeout()
 {
-  if(nullptr != can_driver_obj)
-  {
-    if(0 < can_driver_obj->get_period_send_list_size() && true == ui->timer_checkBox->isChecked())
-    {
-      ui->clear_send_timer_pushButton->setVisible(true);
-    }
-    else
-    {
-      ui->clear_send_timer_pushButton->setVisible(false);
-    }
-  }
+  slot_check_send_timer();
 
   current_show_line_str_time_ms++;
   /* 检查没有换行符的字符显示 */
@@ -1281,13 +1271,16 @@ void more_window::on_clear_send_timer_pushButton_clicked()
 void more_window::slot_check_send_timer()
 {
   /* 定时发送列表是否为空 */
-  if(0 >= can_driver_obj->get_period_send_list_size())
+  if(nullptr != can_driver_obj)
   {
-    ui->clear_send_timer_pushButton->setVisible(false);
-  }
-  else
-  {
-    ui->clear_send_timer_pushButton->setVisible(true);
+    if(0 < can_driver_obj->get_period_send_list_size() && true == ui->timer_checkBox->isChecked())
+    {
+      ui->clear_send_timer_pushButton->setVisible(true);
+    }
+    else
+    {
+      ui->clear_send_timer_pushButton->setVisible(false);
+    }
   }
 }
 

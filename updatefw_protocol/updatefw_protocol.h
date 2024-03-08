@@ -56,7 +56,7 @@ public:
 
     /* 删除cq */
     delete cq_obj;
-    qDebug() << "updatefw protocol delete";
+    qDebug() << "del updatefw protocol";
   }
 
 public:

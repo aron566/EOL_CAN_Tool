@@ -356,11 +356,10 @@ public:
     while(start_)
     {
       send_data();
-
       receive_data();
       /* 刷新界面 */
       emit signal_show_can_msg();
-      QThread::usleep(0);
+      QThread::usleep(10);
     }
     /* 清空关闭发送 */
     clear_send_data();

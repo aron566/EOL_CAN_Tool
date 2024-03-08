@@ -722,10 +722,10 @@ bool can_driver_zlg::send(const CHANNEL_STATE_Typedef_t &channel_state, \
   result = zlg_can_send(channel_state, data, size, id, frame_type, protocol);
 
   /* 消息分发到UI显示cq */
-  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, CAN_TX_DIRECT, \
-                   protocol, \
-                   frame_type, \
-                   DATA_FRAME_TYPE, \
+  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, CAN_TX_DIRECT,
+                   protocol,
+                   frame_type,
+                   DATA_FRAME_TYPE,
                    data, size);
 
   QString csText;
@@ -741,10 +741,10 @@ bool can_driver_zlg::send(const CHANNEL_STATE_Typedef_t &channel_state, \
     ret = true;
     result_info_str = tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText;
   }
-  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, UNKNOW_DIRECT, \
-                   protocol, \
-                   frame_type, \
-                   DATA_FRAME_TYPE, \
+  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, UNKNOW_DIRECT,
+                   protocol,
+                   frame_type,
+                   DATA_FRAME_TYPE,
                    (const quint8 *)result_info_str.toUtf8().data(), result_info_str.size());
   return ret;
 }
@@ -903,9 +903,9 @@ void can_driver_zlg::show_rec_message(const CHANNEL_STATE_Typedef_t &channel_sta
     can_id = GET_ID(id);
 
     /* 消息分发到UI显示cq */
-    msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT, \
-                     CAN_PROTOCOL_TYPE, is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
-                     is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE, \
+    msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT,
+                     CAN_PROTOCOL_TYPE, is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE,
+                     is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE,
                      can.frame.data, can.frame.can_dlc);
 
     /* 消息过滤分发 */
@@ -923,10 +923,10 @@ void can_driver_zlg::show_rec_message(const CHANNEL_STATE_Typedef_t &channel_sta
     can_id = GET_ID(id);
 
     /* 消息分发到UI显示cq */
-    msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT, \
-                     CANFD_PROTOCOL_TYPE, IS_EFF(id) ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
-                                                                       IS_RTR(id) ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE, \
-                                                                                          canfd.frame.data, canfd.frame.len);
+    msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT,
+                     CANFD_PROTOCOL_TYPE, IS_EFF(id) ? EXT_FRAME_TYPE : STD_FRAME_TYPE,
+                     IS_RTR(id) ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE,
+                     canfd.frame.data, canfd.frame.len);
 
     /* 消息过滤分发 */
     msg_to_cq_buf(can_id, (quint8)channel_state.channel_num, canfd.frame.data, canfd.frame.len);

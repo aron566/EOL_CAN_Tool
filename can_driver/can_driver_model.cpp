@@ -229,6 +229,7 @@ void can_driver_model::send(const CHANNEL_STATE_Typedef_t &channel_state)
 bool can_driver_model::send_data()
 {
   // QReadLocker locker(&tx_msg_rw_lock);
+  // sender_obj->send_data_task();
 
   /* 定时发送 */
   if(false == period_send_msg_list.isEmpty())
@@ -334,7 +335,7 @@ bool can_driver_model::receive_data()
     channel_state = channel_state_list.value(i);
     if(true == channel_state.channel_en)
     {
-      receive_data(channel_state); 
+      receive_data(channel_state);
     }
   }
   return true;
@@ -355,24 +356,21 @@ bool can_driver_model::send(const quint8 *data, quint8 size, quint32 id, FRAME_T
     return false;
   }
 
-  tx_sem.acquire();
-
   bool ret = false;
   CHANNEL_STATE_Typedef_t channel_state;
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     channel_state = channel_state_list.value(i);
-    if((channel_num == channel_state.channel_num || 0xFFU == channel_num) \
+    if((channel_num == channel_state.channel_num || 0xFFU == channel_num)
         && true == channel_state.channel_en)
     {
+      tx_sem.acquire();
       ret = send(channel_state, data, size, id, frame_type, protocol);
-      /* 刷新界面 */
-      emit signal_show_can_msg();
+      tx_sem.release();
       break;
     }
   }
 
-  tx_sem.release();
   return ret;
 }
 
@@ -546,6 +544,7 @@ void can_driver_model::msg_to_ui_cq_buf(quint32 can_id, quint8 channel_num, CAN_
   ui_msg.direction = direction;
   ui_msg.channel_num = channel_num;
   ui_msg.data_len = data_len;
+  memset(ui_msg.msg_data, 0, sizeof(ui_msg.msg_data));
   memcpy(ui_msg.msg_data, data, data_len);
 
   cq_sem.acquire();
@@ -613,13 +612,10 @@ void can_driver_model::period_send_set(quint32 id, QString data, quint32 period_
 
   /* 周期 */
   send_task.period_time = period_time;
-
   /* 上次发送时间 */
   send_task.last_send_time = static_cast<quint64>(QDateTime::currentMSecsSinceEpoch());
-
   /* 发送帧数 */
   send_task.send_cnt = send_cnt;
-
   /* canid */
   send_task.can_id = id;
   /* 发送通道 */
@@ -632,8 +628,9 @@ void can_driver_model::period_send_set(quint32 id, QString data, quint32 period_
   send_task.can_fd_exp = can_fd_exp;
   /* 数据 */
   send_task.data = data;
-  // period_send_msg_list.append(send_task);
+  /* 加入到队列 */
   sender_obj->period_send_set(send_task);
+  /* 启动发送器 */
   sender_obj->start_task();
 }
 /******************************** End of file *********************************/

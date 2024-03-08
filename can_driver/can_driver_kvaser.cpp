@@ -934,10 +934,10 @@ bool can_driver_kvaser::send(const CHANNEL_STATE_Typedef_t &channel_state, \
   result = kvaser_can_send(channel_state, data, size, id, frame_type, protocol);
 
   /* 消息分发到UI显示cq */
-  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, CAN_TX_DIRECT, \
-                   protocol, \
-                   frame_type, \
-                   DATA_FRAME_TYPE, \
+  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, CAN_TX_DIRECT,
+                   protocol,
+                   frame_type,
+                   DATA_FRAME_TYPE,
                    data, size);
 
   QString csText;
@@ -953,11 +953,11 @@ bool can_driver_kvaser::send(const CHANNEL_STATE_Typedef_t &channel_state, \
     ret = true;
     result_info_str = tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText;
   }
-  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, UNKNOW_DIRECT, \
-                   protocol, \
-                   frame_type, \
-                   DATA_FRAME_TYPE, \
-                                    (const quint8 *)result_info_str.toUtf8().data(), result_info_str.size());
+  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, UNKNOW_DIRECT,
+                   protocol,
+                   frame_type,
+                   DATA_FRAME_TYPE,
+                   (const quint8 *)result_info_str.toUtf8().data(), result_info_str.size());
   return ret;
 }
 

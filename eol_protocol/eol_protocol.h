@@ -112,7 +112,7 @@ public:
 
     /* 删除cq */
     delete cq_obj;
-    qDebug() << "eol protocol delete";
+    qDebug() << "del eol protocol";
   }
 
   /* 设备工作模式 */

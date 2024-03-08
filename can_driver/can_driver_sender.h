@@ -17,21 +17,16 @@
 #ifndef CAN_DRIVER_SENDER_H
 #define CAN_DRIVER_SENDER_H
 /** Includes -----------------------------------------------------------------*/
-// #include <limits.h> /**< need variable max value    */
-// #include <stdalign.h> /**< need alignof    */
-// #include <stdarg.h> /**< need va_start    */
-// #include <ctype.h> /**< need isalpha isdigit */
-// #include <stdatomic.h> /**< need atomic_compare_exchange_weak */
-// #include <assert.h> /**< need assert( a > b ); */
-// #include <setjmp.h> /**< need jmp_buf buf setjmp(buf); longjmp(buf,1) */
-/** Private includes ---------------------------------------------------------*/
 #include <QObject>
 #include <QMutex>
 #include <QThread>
 #include <QThreadPool>
 #include <QRunnable>
 #include <QSemaphore>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QDebug>
+/** Private includes ---------------------------------------------------------*/
 #include <can_driver_model.h>
 /** Private defines ----------------------------------------------------------*/
 /** Exported typedefines -----------------------------------------------------*/
@@ -50,7 +45,7 @@ public:
   {
     start_ = false;
     clear_flag = true;
-    qDebug() << "can driver sender del";
+    qDebug() << "del can driver sender";
   }
 public:
   /**
@@ -62,7 +57,7 @@ public:
     while(start_)
     {
       send_data_task();
-      QThread::usleep(0);
+      QThread::msleep(1);
     }
     qDebug() << "[thread]" << QThread::currentThreadId() << "can driver sender task end";
 
@@ -124,6 +119,8 @@ public:
    */
   void period_send_set(const can_driver_model::PERIOD_SEND_MSG_Typedef_t &send_task)
   {
+    QMutexLocker locker(&m_mutex);
+    /* 增加 */
     period_send_msg_list.append(send_task);
   }
 
@@ -148,7 +145,14 @@ private:
   can_driver_model *can_driver_obj = nullptr;
   QList<can_driver_model::PERIOD_SEND_MSG_Typedef_t>period_send_msg_list;
   QAtomicInt thread_run_statex;
+  QMutex m_mutex;
+
 signals:
+
+  /**
+   * @brief signal_sender_update_ui
+   */
+  void signal_sender_update_ui();
 
 public:
   /**
@@ -159,8 +163,3 @@ public:
 
 #endif // CAN_DRIVER_SENDER_H
 /******************************** End of file *********************************/
-
-
-
-
-

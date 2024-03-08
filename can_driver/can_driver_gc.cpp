@@ -236,9 +236,9 @@ void can_driver_gc::show_rec_message(const CHANNEL_STATE_Typedef_t &channel_stat
           can_id = (id & 0x1FFFFFFFU);
 
           /* 消息分发到UI显示cq */
-          msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT, \
-                           CAN_PROTOCOL_TYPE, is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
-                           is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE, \
+          msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT,
+                           CAN_PROTOCOL_TYPE, is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE,
+                           is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE,
                            can.Data, can.DataLen);
 
           /* 消息过滤分发 */
@@ -275,10 +275,10 @@ void can_driver_gc::show_rec_message(const CHANNEL_STATE_Typedef_t &channel_stat
           can_id = (id & 0x1FFFFFFFU);
 
           /* 消息分发到UI显示cq */
-          msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT, \
-                           is_fd ? CANFD_PROTOCOL_TYPE : CAN_PROTOCOL_TYPE, \
-                           is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
-                           is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE, \
+          msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT,
+                           is_fd ? CANFD_PROTOCOL_TYPE : CAN_PROTOCOL_TYPE,
+                           is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE,
+                           is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE,
                            can.Data, can.DataLen);
 
           /* 消息过滤分发 */
@@ -904,10 +904,10 @@ bool can_driver_gc::send(const CHANNEL_STATE_Typedef_t &channel_state, \
   }
 
   /* 消息分发到UI显示cq */
-  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, CAN_TX_DIRECT, \
-                   protocol, \
-                   frame_type, \
-                   DATA_FRAME_TYPE, \
+  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, CAN_TX_DIRECT,
+                   protocol,
+                   frame_type,
+                   DATA_FRAME_TYPE,
                    data, size);
 
   QString result_info_str;
@@ -921,10 +921,10 @@ bool can_driver_gc::send(const CHANNEL_STATE_Typedef_t &channel_state, \
     ret = true;
     result_info_str = tr("[%1]send data sucessful! ").arg(channel_state.channel_num) + csText;
   }
-  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, UNKNOW_DIRECT, \
-                   protocol, \
-                   frame_type, \
-                   DATA_FRAME_TYPE, \
+  msg_to_ui_cq_buf(id, (quint8)channel_state.channel_num, UNKNOW_DIRECT,
+                   protocol,
+                   frame_type,
+                   DATA_FRAME_TYPE,
                    (const quint8 *)result_info_str.toUtf8().data(), result_info_str.size());
   return ret;
 }

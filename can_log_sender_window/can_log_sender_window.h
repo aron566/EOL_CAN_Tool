@@ -114,14 +114,14 @@ signals:
    */
   void signal_window_closed();
 
-  void signal_update_progress(qint32 size);
+  void signal_update_progress(qint32 size, qint32 total);
 
 private slots:
   void on_set_file_pushButton_clicked();
 
   void on_start_pushButton_clicked();
 
-  void slot_update_progress(qint32 size);
+  void slot_update_progress(qint32 size, qint32 total);
 private:
   Ui::can_log_sender *ui;
   can_driver_model *can_driver_obj = nullptr;
@@ -147,6 +147,13 @@ private:
   quint32 data_field_index_s = 0;
   quint8 send_channel = 0;
   quint32 send_delay_ms = 0;
+
+  typedef struct
+  {
+    quint32 can_id;
+    QString data;
+  }SEND_DATA_INFO_Typedef_t;
+  QList<SEND_DATA_INFO_Typedef_t>send_data_list;
 };
 
 #endif // CAN_LOG_SENDER_WINDOW_H
