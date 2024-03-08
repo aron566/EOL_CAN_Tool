@@ -17,6 +17,7 @@
  *  <table>
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2024-03-08 <td>v0.0.2  <td>aron566 <td>优化重新打开关闭driver通讯设置未生效问题
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -310,6 +311,12 @@ void eol_window::eol_protocol_init(can_driver_model *can_driver_obj)
 
   /* 设置can驱动接口 */
   eol_protocol_obj->set_can_driver_obj(can_driver_obj);
+
+  /* 设置通讯 */
+  eol_protocol_obj->set_eol_com_config_hw((eol_protocol::EOL_SEND_HW_Typedef_t)ui->com_hw_comboBox->currentIndex());
+  eol_protocol_obj->set_eol_com_config_channel(ui->com_config_lineEdit->text());
+  eol_protocol_obj->set_eol_vcom_config_channel(ui->vcom_config_lineEdit->text());
+  eol_protocol_obj->set_eol_dev_addr(ui->dev_addr_lineEdit->text());
 
   /* 设置eol协议栈 */
   eol_sub_window_obj->set_eol_protocol_obj(eol_protocol_obj);
