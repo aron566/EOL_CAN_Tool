@@ -75,6 +75,7 @@ can_log_sender_window::can_log_sender_window(QString title, QWidget *parent)
   connect(this, &can_log_sender_window::signal_update_progress, this, &can_log_sender_window::slot_update_progress);
 
   /* 设置悬浮提示 */
+  ui->circle_lineEdit->setToolTip(tr("default 1"));
   ui->s_index_lineEdit->setToolTip(tr("must set"));
   ui->bytes_lineEdit->setToolTip(tr("must set"));
   ui->can_id_index_lineEdit->setToolTip(tr("must set"));
@@ -170,6 +171,13 @@ void can_log_sender_window::set_can_driver_obj(can_driver_model *_can_driver_obj
 
 void can_log_sender_window::can_log_sender_task()
 {
+  /* 检测次数 */
+  if(0U == circle_times)
+  {
+    run_state = false;
+    return;
+  }
+
   /* 打开文件句柄 */
   if(true == file.fileName().isEmpty())
   {
@@ -236,83 +244,86 @@ void can_log_sender_window::can_log_sender_task()
   }
 
   /* 发送 */
-  for(qint32 i = 0; i < send_data_list.size() && true == run_state; i++)
-  {
-    emit signal_update_progress(i, send_data_list.size());
-    if(nullptr == can_driver_obj)
+  do{
+    for(qint32 i = 0; i < send_data_list.size() && true == run_state; i++)
     {
-      continue;
-    }
-    SEND_DATA_INFO_Typedef_t send_info;
-    send_info = send_data_list.value(i);
-    quint64 start_time = QDateTime::currentMSecsSinceEpoch();
-
-    // qDebug() << "id:" << data_list.value(can_id_field_index) << "data:" << data;
-    // can_driver_obj->period_send_set(send_info.can_id,
-    //                                 utility::line_data2split(send_info.data),
-    //                                 0, 1, send_channel,
-    //                                 can_driver_model::STD_FRAME_TYPE,
-    //                                 8U < send_bytes ? can_driver_model::CANFD_PROTOCOL_TYPE : can_driver_model::CAN_PROTOCOL_TYPE,
-    //                                 0U);
-    // while(can_driver_obj->get_period_send_list_size() > 0 && true == run_state)
-    // {
-    //   QThread::usleep(500);
-    // }
-
-    /* 拷贝数据 */
-    quint8 data_buf[64];
-    QStringList data_list = send_info.data.split(' ');
-    quint32 data_size = (quint32)data_list.length();
-    data_size = data_size > send_bytes ? send_bytes : data_size;
-    for(quint8 index = 0; index < data_size; index++)
-    {
-      data_buf[index] = (quint8)data_list[index].toUShort(nullptr, 16);
-    }
-    /* 立即发送 */
-    can_driver_obj->send(data_buf, data_size,
-                         send_info.can_id,
-                         can_driver_model::STD_FRAME_TYPE,
-                         8U < send_bytes ? can_driver_model::CANFD_PROTOCOL_TYPE : can_driver_model::CAN_PROTOCOL_TYPE,
-                         send_channel);
-
-    quint32 delay_time_cnt = is_timeout(start_time, send_delay_ms);
-    if(0U < delay_time_cnt)
-    {
-      QThread::msleep((quint32)delay_time_cnt);
-    }
-
-    /* 等待特殊canid帧 */
-    if(false == can_id_response_list.isEmpty())
-    {
-      if(true == can_id_response_list.contains(send_info.can_id))
-      {
-        /* 延时剩余时间 */
-        quint32 current_delay = wait_response_delay_ms > delay_time_cnt ? wait_response_delay_ms - delay_time_cnt : 0U;
-        QThread::msleep(current_delay);
-        delay_time_cnt += current_delay;
-      }
-    }
-
-    /* 等待特殊数据帧 */
-    if(false == wait_can_data_list.isEmpty())
-    {
-      QStringList data_list = send_info.data.split(" ");
-      if(data_list.size() <= (qint32)wait_can_data_index)
+      emit signal_update_progress(i, send_data_list.size());
+      if(nullptr == can_driver_obj)
       {
         continue;
       }
-      quint32 can_data = data_list.value(wait_can_data_index).toUInt(nullptr, 16);
-      if(true == wait_can_data_list.contains(can_data))
+      SEND_DATA_INFO_Typedef_t send_info;
+      send_info = send_data_list.value(i);
+      quint64 start_time = QDateTime::currentMSecsSinceEpoch();
+
+      // qDebug() << "id:" << data_list.value(can_id_field_index) << "data:" << data;
+      // can_driver_obj->period_send_set(send_info.can_id,
+      //                                 utility::line_data2split(send_info.data),
+      //                                 0, 1, send_channel,
+      //                                 can_driver_model::STD_FRAME_TYPE,
+      //                                 8U < send_bytes ? can_driver_model::CANFD_PROTOCOL_TYPE : can_driver_model::CAN_PROTOCOL_TYPE,
+      //                                 0U);
+      // while(can_driver_obj->get_period_send_list_size() > 0 && true == run_state)
+      // {
+      //   QThread::usleep(500);
+      // }
+
+      /* 拷贝数据 */
+      quint8 data_buf[64];
+      QStringList data_list = send_info.data.split(' ');
+      quint32 data_size = (quint32)data_list.length();
+      data_size = data_size > send_bytes ? send_bytes : data_size;
+      for(quint8 index = 0; index < data_size; index++)
       {
-        /* 延时剩余时间 */
-        quint32 current_delay = wait_response_delay_ms > delay_time_cnt ? wait_response_delay_ms - delay_time_cnt : 0U;
-        QThread::msleep(current_delay);
-        // qDebug("wait 0x%02X %ums", can_data, current_delay);
-        // delay_time_cnt += current_delay;
+        data_buf[index] = (quint8)data_list[index].toUShort(nullptr, 16);
+      }
+      /* 立即发送 */
+      can_driver_obj->send(data_buf, data_size,
+                           send_info.can_id,
+                           can_driver_model::STD_FRAME_TYPE,
+                           8U < send_bytes ? can_driver_model::CANFD_PROTOCOL_TYPE : can_driver_model::CAN_PROTOCOL_TYPE,
+                           send_channel);
+
+      quint32 delay_time_cnt = is_timeout(start_time, send_delay_ms);
+      if(0U < delay_time_cnt)
+      {
+        QThread::msleep((quint32)delay_time_cnt);
+      }
+
+      /* 等待特殊canid帧 */
+      if(false == can_id_response_list.isEmpty())
+      {
+        if(true == can_id_response_list.contains(send_info.can_id))
+        {
+          /* 延时剩余时间 */
+          quint32 current_delay = wait_response_delay_ms > delay_time_cnt ? wait_response_delay_ms - delay_time_cnt : 0U;
+          QThread::msleep(current_delay);
+          delay_time_cnt += current_delay;
+        }
+      }
+
+      /* 等待特殊数据帧 */
+      if(false == wait_can_data_list.isEmpty())
+      {
+        QStringList data_list = send_info.data.split(" ");
+        if(data_list.size() <= (qint32)wait_can_data_index)
+        {
+          continue;
+        }
+        quint32 can_data = data_list.value(wait_can_data_index).toUInt(nullptr, 16);
+        if(true == wait_can_data_list.contains(can_data))
+        {
+          /* 延时剩余时间 */
+          quint32 current_delay = wait_response_delay_ms > delay_time_cnt ? wait_response_delay_ms - delay_time_cnt : 0U;
+          QThread::msleep(current_delay);
+          // qDebug("wait 0x%02X %ums", can_data, current_delay);
+          // delay_time_cnt += current_delay;
+        }
       }
     }
-  }
-  emit signal_update_progress(send_data_list.size(), send_data_list.size());
+    emit signal_update_progress(send_data_list.size(), send_data_list.size());
+  }while((--circle_times) && true == run_state);
+
   run_state = false;
 }
 
@@ -338,6 +349,11 @@ void can_log_sender_window::slot_update_progress(qint32 size, qint32 total)
 {
   ui->send_progressBar->setValue(size);
   ui->send_progressBar->setMaximum(total);
+  if(size == total)
+  {
+    current_circle_times++;
+    ui->current_circle_lineEdit->setText(QString::number(current_circle_times - 1U));
+  }
 }
 
 void can_log_sender_window::on_set_file_pushButton_clicked()
@@ -385,6 +401,13 @@ void can_log_sender_window::on_start_pushButton_clicked()
   {
     return;
   }
+
+  if(true == ui->circle_lineEdit->text().isEmpty())
+  {
+    circle_times = 1;
+    ui->circle_lineEdit->setText("1");
+  }
+  circle_times = (quint32)ui->circle_lineEdit->text().toInt();
 
   if(true == ui->s_index_lineEdit->text().isEmpty())
   {
@@ -448,6 +471,7 @@ void can_log_sender_window::on_start_pushButton_clicked()
   if(true == ui->send_delay_ms_lineEdit->text().isEmpty())
   {
     wait_response_delay_ms = 0;
+    ui->send_delay_ms_lineEdit->setText("0");
   }
   else
   {
@@ -473,6 +497,7 @@ void can_log_sender_window::on_start_pushButton_clicked()
   if(true == ui->wait_can_data_index_lineEdit->text().isEmpty())
   {
     wait_can_data_index = 0;
+    ui->wait_can_data_index_lineEdit->setText("0");
   }
   else
   {
@@ -485,6 +510,10 @@ void can_log_sender_window::on_start_pushButton_clicked()
   /* 原子操作 */
   if(thread_run_statex.testAndSetRelaxed(0, 1))
   {
+    /* 重置计数 */
+    current_circle_times = 0;
+    ui->current_circle_lineEdit->setText("0");
+
     /* 启动任务线程 */
     QThreadPool::globalInstance()->start(this);
   }

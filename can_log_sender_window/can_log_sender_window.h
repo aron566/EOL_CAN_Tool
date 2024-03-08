@@ -147,6 +147,8 @@ private:
   quint32 data_field_index_s = 0;
   quint8 send_channel = 0;
   quint32 send_delay_ms = 0;
+  quint32 circle_times = 0;
+  quint32 current_circle_times = 0;
 
   typedef struct
   {
