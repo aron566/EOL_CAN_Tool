@@ -538,6 +538,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
     {
       can_driver_obj->set_msg_show_en(false);
       /* 直接发送 */
+      set_timeout(3U);
       if(true != send_data_port(0x200U, send_data, 8U, channel_num))
       {
         error_cnt++;
@@ -575,7 +576,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       do
       {
         // can_driver_obj->set_msg_show_en();
-        set_timeout(1U);
+        set_timeout(3U);
         ret = protocol_stack_create_task(0x200U, send_data, 8U);
         if(RETURN_OK != ret)
         {
@@ -626,7 +627,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       do
       {
         // can_driver_obj->set_msg_show_en();
-        set_timeout(1U);
+        set_timeout(3U);
         ret = protocol_stack_create_task(0x200U, send_data, 8U);
         if(RETURN_OK != ret)
         {
@@ -684,7 +685,7 @@ bool updatefw_protocol::update_device_app_task(void *param_)
   do
   {
     can_driver_obj->set_msg_show_en();
-    set_timeout(1U);
+    set_timeout(3U);
     ret = protocol_stack_create_task(0x200U, send_data, 8U);
     if(RETURN_OK != ret)
     {
