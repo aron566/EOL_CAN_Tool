@@ -108,6 +108,7 @@
  *  <tr><td>2024-03-04 <td>v1.3.5  <td>aron566 <td>优化更新表数据未全部清楚状态问题
  *  <tr><td>2024-03-04 <td>v1.4.0  <td>aron566 <td>增加can log回灌功能
  *  <tr><td>2024-03-06 <td>v1.4.1  <td>aron566 <td>支持升级可选择can通道，添加退出升级及升级失败提示信息，优化窗口最小化恢复
+ *  <tr><td>2024-03-08 <td>v1.4.2  <td>aron566 <td>优化显示速度
  *  </table>
  */
 #include "mainwindow.h"
@@ -115,7 +116,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.4.1"
+#define PC_SOFTWARE_VERSION       "1.4.2"
 
 int main(int argc, char *argv[])
 {

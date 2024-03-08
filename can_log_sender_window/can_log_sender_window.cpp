@@ -52,7 +52,6 @@
 ********************************************************************************
 */
 
-
 can_log_sender_window::can_log_sender_window(QString title, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::can_log_sender)
