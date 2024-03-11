@@ -34,6 +34,9 @@
 | 2024.1.15  | 增加描述寄存器读取写入时具体字节                             | v0.0.27 | Aron   |
 | 2024.1.17  | 修改切换配置ID字段描述，修改获取2D数据回复内容增加版本，数据类型，放大系数信息 | v0.0.28 | Aron   |
 | 2024.1.18  | 增加dll动态库接口说明                                        | v0.0.29 | Aron   |
+| 2024.1.29  | 完善EOL生产流程准备要求                                      | v0.0.30 | Aron   |
+| 2024.2.20  | 完善EOL生产流程                                              | v0.0.31 | Aron   |
+| 2024.2.28  | 更正看门狗测试写入数据说明                                   | v0.0.32 | Aron   |
 |            |                                                              |         |        |
 
 ## 传输硬件
@@ -186,7 +189,7 @@ PS：
 | 0x18<br/>读:0x31<br/>写:0x30<br/>                         | PMIC SN读取<br/>字节数 = 1Byte + SN字节数                    | DATA[0]：SN字节数<br/>DATA[1]：PMIC SN信息Byte0<br/>==剩余SN信息...== | 生产普通/生产调试模式 | R           |
 | 0x19<br/>读:0x33<br/>写:0x32<br/>                         | 客户UDS软硬件版本号（DID），软件编码（DID）信息读取<br/>客户版本信息可能存储的是字符或者数值形式，格式不一<br/>字节数 = 1Byte + 版本信息长度（最大64Bytes） | DATA[0]：版本信息长度，范围：0 - 64Bytes<br/>==版本信息...== | 生产普通/生产调试模式 | R           |
 | 0x1A<br/>读:0x35<br/>写:0x34<br/>                         | RDM数据（区域能量指标）<br/>R：距离，m<br/>D：速度，m/s<br/>==获取数据时，应先设定条件（获取使能、配置ID、距离、速度、通道数）再进行获取，数据未准备好只返回1个字节0xFF，数据准备好后，雷达停止基带，等待数据被取出==<br/>写入字节数 = 10Bytes<br/>首次读取RDM数据：<br/>**帧计数为0时**，返回《RDM数据信息》<br/>数据排列方式：[ 距离bin维度 ] [ 速度bin维度 ]<br/>假设距离bin 512点，速度bin 64点，总RDM数据个数512 * 64：<br/>**帧计数大于0并且小于0xFFFF**，返回一帧**最大64个**《RDM数据》，数据含义：<br/>0 - 63：距离bin为0，64个速度bin下的RDM数据<br/>64 - 127：距离bin为1，64个速度bin下的RDM数据<br/>持续读取，当帧计数为0xFFFF时，代表RDM数据获取结束，雷达启动基带信号处理自动进行下一个RDM数据更新 | 功能码（RW读写位）为写入请求时：<br/>设定RDM数据获取，0关闭，1使能：<br/>DATA[0]<br/>**为1使能时，以下参数有效**<br/>设定需要的数据，配置ID：<br/>DATA[1]<br/>设定需要的数据，距离起始，单位m，无符号16位，数值范围：>= 0：<br/>DATA[2]：低字节<br/>DATA[3]：高字节<br/>设定需要的数据，距离结束，单位m，无符号16位，放大10倍，数值范围：<= 1228：<br/>DATA[4]：低字节<br/>DATA[5]：高字节<br/>设定需要的数据，速度起始，单位m/s，无符号8位，放大10倍，数值范围：>= 0：<br/>DATA[6]<br/>设定需要的数据，速度结束，单位m/s，无符号8位，放大10倍，数值范围：<= 91：<br/>DATA[7]<br/>设定需要的数据，通道起始，无符号8位，数值范围：>= 0：<br/>DATA[8]<br/>设定需要的数据，通道结束，无符号8位，数值范围：<= 16：<br/>DATA[9]<br/>功能码（RW读写位）为读取请求时：<br/>**无符号16位帧计数**<br/>DATA[0]：Byte0(低位)帧计数<br/>DATA[1]：Byte1(高位)帧计数<br/>==帧计数为0《RDM数据信息》==<br/>DATA[2]：配置ID<br/>距离bin起始，无符号16位<br/>DATA[3]：低字节<br/>DATA[4]：高字节<br/>距离bin结束，无符号16位<br/>DATA[5]：低字节<br/>DATA[6]：高字节<br/>距离bin最大值，无符号16位<br/>DATA[7]：低字节<br/>DATA[8]：高字节<br/>速度bin起始，无符号16位<br/>DATA[9]：低字节<br/>DATA[10]：高字节<br/>速度bin结束，无符号16位<br/>DATA[11]：低字节<br/>DATA[12]：高字节<br/>速度bin最大值，无符号16位<br/>DATA[13]：低字节<br/>DATA[14]：高字节<br/>DATA[15]：通道号起始<br/>DATA[16]：通道号结束<br/>TX发波次序：<br/>DATA[17]：TX0的发波次序，0代表未启用<br/>DATA[18]：TX1的发波次序<br/>DATA[19]：TX2的发波次序<br/>DATA[20]：TX3的发波次序<br/>==0 < 帧计数 < 0xFFFF《RDM数据》==<br/>n个（最大64个）平均dB数值，有符号16位，放大10倍：<br/>DATA[2]：低字节<br/>DATA[3]：高字节<br/>==剩余RDM数据...==<br/>==帧计数0xFFFF《结束帧》== | 生产调试模式          | RW          |
-| 0x1B<br/>读:0x37<br/>写:0x36<br/>                         | 操作看门狗                                                   | DATA[0]：开关喂狗，0关闭喂狗，1允许喂狗<br/>                 | 生产普通/生产调试模式 | W           |
+| 0x1B<br/>读:0x37<br/>写:0x36<br/>                         | 操作看门狗                                                   | DATA[0]：开关喂狗，0：关闭看门狗 + 允许喂狗，1：开启看门狗 + 禁止喂狗（雷达将通过看门狗复位重启）<br/> | 生产普通/生产调试模式 | W           |
 | 0x1C<br/>读:0x39<br/>写:0x38<br/>                         | 操作GPIO                                                     | 功能码（RW读写位）为写入请求时：<br/>DATA[0]：端口号<br/>DATA[1]：设置端口方向，0输入，1输出<br/>DATA[2]：设置输出端口数值<br/>功能码（RW读写位）为读取请求时：<br/>DATA[0]：端口号<br/>DATA[1]：端口方向，0输入，1输出<br/>DATA[2]：端口数值，0低电平，1高电平 | 生产普通/生产调试模式 | RW          |
 | 0x1D<br/>读:0x3B<br/>写:0x3A<br/>                         | shell命令交互<br/>设备内部shell控制台在接收到命令时，自动发送回复报文，**无需手动读取** | 功能码（RW读写位）为写入请求时：<br/>写入命令：最大支持1 - 64字符<br/>DATA[0] - DATA[255]<br/>功能码（RW读写位）为读取时：<br/>最大单帧1024字符，无需手动读取，监听即可 | 生产调试模式          | RW          |
 | 0x1E<br/>读:0x3D<br/>写:0x3C<br/>                         | SPI操作                                                      | 操作指令：0写入测试，1读取测试<br/>DATA[0]：操作指令<br/>    | 生产普通/生产调试模式 | W           |
@@ -401,6 +404,90 @@ unsigned int CRC_updateCrc32(unsigned int crc_accum, char *data_blk_ptr, int dat
 
     return crc_accum;
 }
+```
+
+## CRC32计算公式python
+
+```PY
+#
+#  @file cal_crc_demo.py
+#
+#  @date 2023年12月15日 14:38:05 星期五
+#
+#  @author aron566
+#
+#  @copyright Copyright (c) 2023 aron566 <aron566@163.com>.
+#
+#  @brief 计算CRC.
+#
+#  @details None.
+#
+#  @version v0.0.1 aron566 2023.12.15 14:38 初始版本.
+#
+#  @par 修改日志:
+#  <table>
+#  <tr><th>Date       <th>Version <th>Author  <th>Description
+#  <tr><td>2023-12-15 <td>v0.0.1  <td>aron566 <td>初始版本
+#  </table>
+#
+#** Package ------------------------------------------------------------------
+
+#** Private constants --------------------------------------------------------
+#** Public variables ---------------------------------------------------------
+#** Private variables --------------------------------------------------------
+crcTable = list(range(256))
+
+csvData = [2558448320,1899434256]
+#** Private function prototypes ----------------------------------------------
+
+def generateCrcTable():
+    POLYNOMIAL = 0x04c11db7
+    for i in range(256):
+        crc_accum = i << 24
+        for j in range(8):
+            if crc_accum & 0x80000000:
+                crc_accum = ((crc_accum << 1) & 0xFFFFFFFF) ^ POLYNOMIAL
+            else:
+                crc_accum = ((crc_accum << 1) & 0xFFFFFFFF)
+        crcTable[i] = crc_accum
+    return
+
+def calCRC(data):
+    crc_accum = 0
+    idx = 0
+    for v in data:
+        idx += 1
+        i = ((crc_accum >> 24) ^ v) & 0xFF
+        crc_accum = ((crc_accum << 8) & 0xFFFFFFFF) ^ crcTable[i]
+    return crc_accum
+
+def intArrayCalcCrc(initArray):
+    dbfFactorDataBytesTrans = []
+    dbfFactorDataBytesFlash = []
+    for dbfFactor in initArray:
+        byte0 = dbfFactor & 0xFF
+        byte1 = (dbfFactor >> 8) & 0xFF
+        byte2 = (dbfFactor >> 16) & 0xFF
+        byte3 = (dbfFactor >> 24) & 0xFF
+        # 发送的数据顺序
+        dbfFactorDataBytesTrans.append(byte3)
+        dbfFactorDataBytesTrans.append(byte2)
+        dbfFactorDataBytesTrans.append(byte1)
+        dbfFactorDataBytesTrans.append(byte0)
+
+        # 计算crc的数据顺序
+        dbfFactorDataBytesFlash.append(byte0)
+        dbfFactorDataBytesFlash.append(byte1)
+        dbfFactorDataBytesFlash.append(byte2)
+        dbfFactorDataBytesFlash.append(byte3)
+        # 计算该分区数据的CRC，注意按照Flash内存储顺序计算
+    generateCrcTable()
+    crc = calCRC(dbfFactorDataBytesFlash)
+    print(f'CRC: {crc}')
+    return crc
+
+intArrayCalcCrc(csvData)
+#******************************** End of file ********************************
 ```
 
 
@@ -819,6 +906,7 @@ int32_t alg_dll_port_2dfft2cali_data(const char *params_file_name,
 - 确认测试需求规格书
   - 中心频率、带宽、方位、俯仰角度范围
   - 测试FOV最大探测距离、角度、速度
+  - 接插件安装方向，转台旋转方向
 - 制定检测标准阈值
 - 设计测试序列
 
@@ -835,34 +923,43 @@ electric_test=>start: 电气测试，电压电流
 
 read_device_access_code=>start: 读取雷达验证码
 set_device_run_mode=>start: 设置雷达工作在生产普通模式
-pcb_version_test=>start: pcb码读取验证？
-clear_flash_test=>start: 清除校准涉及的写入信息？
+
+pcb_version_test=>start: pcb码读取验证
+clear_flash_test=>start: 清除校准涉及的写入信息
 read_device_mode=>start: 读取工作模式、配置文件数量、及接收通道数
-sn_write=>start: SN写入再读取验证？
+
 id0_pin_test=>start: 设置mound0接地，读1，悬空读0
 id1_pin_test=>start: 设置mound1接地，读1，悬空读0
-sf_version_test=>start: 读取软件版本号验证？
-soc_sn_test=>start: socSN验证？
-pmic_sn_test=>start: pmicSN验证？
-spi_test=>start: spi测试？
-i2c_test=>start: i2c测试？
-vcan_test=>start: VCAN通讯验证？
+sf_version_test=>start: 读取软件版本号验证
+soc_sn_test=>start: socSN验证
+pmic_sn_test=>start: pmicSN验证
+spi_test=>start: spi测试
+i2c_test=>start: i2c测试
+vcan_test=>start: VCAN通讯验证
 ant_calibration=>start: 天线校准，方位@0deg，俯仰@0deg，俯仰@-45deg，俯仰@+45deg，获取相应2DFFT数据
 call_dll_calc_dbf_coeff=>start: 调用dll计算dbf因子、方向图等，生成相应csv log
-sys_pattern_test=>start: 方向图测试，选取所有通道n个角度点，判断该角度下偏差
 call_dll_decode_csv=>start: 调用dll解析校准数据总表csv，获取打包后的传输数据
 write_ant_calibration=>start: 写入DBF因子（方位、俯仰）、方向图、天线间距相位补偿
+sys_pattern_test=>start: 方向图测试，选取所有通道n个角度点，判断该角度下偏差
+
+clear_save_dtc=>start: 清除DTC，保存DTC
 
 reboot_radar=>start: 看门狗停止喂狗，等待重启雷达应用校准参数
 
 read_device_access_code2=>start: 读取雷达验证码
 set_device_run_mode2=>start: 设置雷达工作在生产普通模式
-set_device_tx_wave_mode=>start: 设置雷达Tx工作在正常波形
+set_device_tx_wave_mode=>start: 设置雷达工作在正常波形
 
 set_obj_info_profile_id=>start: 设置需要的目标信息ID（正常运行使用）
-read_obj_info=>start: 读取目标的rcs，mag，snr，计算rcs
-write_calc_rcs_compensation=>start: 计算rcs补偿值，写入
+read_obj_info=>start: 读取目标的rcs，mag，snr，计算rcs offset
 
+write_calc_rcs_compensation=>start: 计算rcs补偿值，写入
+write_cali_mode=>start: 校准模式：拟合/一度一校准，写入
+sn_write=>start: SN，写入
+
+hw_reboot_radar=>start: 硬件断电重启雷达
+
+sn_check=>start: SN验证
 check_calibration_rsl=>start: 测试校准后、方位、俯仰、rcs、snr、mag
 
 read_background_noise=>start: 读取底噪（关闭rts），导出csv
@@ -870,7 +967,7 @@ write_background_noise=>start: 写入底噪数据到雷达
 
 e=>end: 测试ok
 
-sn_read->ready_test->electric_test->read_device_access_code->set_device_run_mode->pcb_version_test->clear_flash_test->read_device_mode->sn_write->id0_pin_test->id1_pin_test->sf_version_test->soc_sn_test->pmic_sn_test->spi_test->i2c_test->vcan_test->ant_calibration->call_dll_calc_dbf_coeff->sys_pattern_test->call_dll_decode_csv->write_ant_calibration->reboot_radar->read_device_access_code2->set_device_run_mode2->set_device_tx_wave_mode->set_obj_info_profile_id->read_obj_info->write_calc_rcs_compensation->check_calibration_rsl->e
+sn_read->ready_test->electric_test->read_device_access_code->set_device_run_mode->pcb_version_test->clear_flash_test->read_device_mode->id0_pin_test->id1_pin_test->sf_version_test->soc_sn_test->pmic_sn_test->spi_test->i2c_test->vcan_test->ant_calibration->call_dll_calc_dbf_coeff->sys_pattern_test->call_dll_decode_csv->write_ant_calibration->sys_pattern_test->clear_save_dtc->reboot_radar->read_device_access_code2->set_device_run_mode2->set_device_tx_wave_mode->set_obj_info_profile_id->read_obj_info->write_calc_rcs_compensation->write_cali_mode->sn_write->hw_reboot_radar->check_calibration_rsl->e
 
 ```
 
