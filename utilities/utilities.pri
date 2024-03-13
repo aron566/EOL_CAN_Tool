@@ -1,5 +1,6 @@
 HEADERS += \
   $$PWD/auto_dynamic_mem.h \
+  $$PWD/blf2asc.h \
   $$PWD/block_queue.h \
   $$PWD/circularqueue.h \
   $$PWD/line_highlighter.h \
@@ -9,6 +10,7 @@ HEADERS += \
 
 SOURCES += \
   $$PWD/auto_dynamic_mem.cpp \
+  $$PWD/blf2asc.cpp \
   $$PWD/block_queue.cpp \
   $$PWD/circularqueue.cpp \
   $$PWD/line_highlighter.cpp \
