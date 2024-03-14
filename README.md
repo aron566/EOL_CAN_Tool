@@ -295,3 +295,6 @@ Show_Elapsed_Time(E - S, 2, 3);
 
 - [EOL协议](doc/EOL数据传输协议.md)
 
+## 编译环境
+
+QT5.15.2
