@@ -431,10 +431,11 @@ void eol_window::slot_send_command(QString text)
   /* 发送shell命令 */
   task.reg = EOL_RW_SHELL_REG;
   task.command = eol_protocol::EOL_WRITE_CMD;
-  memcpy(task.buf, text.toStdString().data(), text.toStdString().size());
-  task.len = (quint16)text.toStdString().size();
+  quint16 len = (quint16)text.toStdString().size();
+  len = len > sizeof(task.buf) ? sizeof(task.buf) : len;
+  memcpy_s(task.buf, sizeof(task.buf), text.toStdString().data(), text.toStdString().size());
+  task.len = len;
   eol_protocol_obj->eol_master_common_rw_device(task);
-
   eol_protocol_obj->start_task(true);
 }
 

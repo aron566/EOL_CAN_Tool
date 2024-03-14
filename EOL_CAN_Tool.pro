@@ -56,6 +56,16 @@ contains(QMAKE_HOST.arch, x86_64) {
     PRE_TARGETDEPS += copy_sslfiles
 }
 
+# 拷贝binlog库文件
+contains(QMAKE_HOST.arch, x86_64) {
+    # 64位编译器链接的库文件
+    copy_binlogfiles.commands = powershell -Command "Copy-Item -Path $$PWD/3third_party_lib/blf/LIB/x64_Release/binlog.dll -Destination $$DESTDIR/binlog.dll -Force"
+    QMAKE_EXTRA_TARGETS += copy_binlogfiles
+    PRE_TARGETDEPS += copy_binlogfiles
+} else {
+    # 32位编译器链接的库文件
+}
+
 win32: QMAKE_POST_LINK += $$DESTDIR/qtenvPackage.bat $$DESTDIR $${TARGET}.exe
 
 # 周立功can驱动库
