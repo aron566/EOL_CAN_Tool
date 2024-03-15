@@ -25,6 +25,14 @@
     "initializer_list": "cpp",
     "format": "cpp",
     "random": "cpp",
-    "xtree": "cpp"
+    "xtree": "cpp",
+    "array": "cpp",
+    "ranges": "cpp",
+    "span": "cpp",
+    "deque": "cpp",
+    "queue": "cpp",
+    "valarray": "cpp",
+    "chrono": "cpp",
+    "variant": "cpp"
   }
 }
