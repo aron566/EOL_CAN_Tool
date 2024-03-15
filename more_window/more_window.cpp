@@ -571,7 +571,7 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
   /* 查看字符的尾部是否是换行符 */
   if(data[size - 1U] == '\r' || data[size - 1U] == '\n')
   {
-    memcpy(str_buf, data, size);
+    memcpy_s(str_buf, sizeof(str_buf) - 1U, data, size);
     /* 去除尾部换行 */
     if(str_buf[size - 1U] == '\r' || str_buf[size - 1U] == '\n')
     {
@@ -610,7 +610,7 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
     /* 找不到，无换行符 */
     if(0U == index)
     {
-      memcpy(str_buf, data, size);
+      memcpy_s(str_buf, sizeof(str_buf) - 1U, data, size);
       QString str = QString::asprintf("%s", str_buf);
       show_line_str.append(str);
       last_show_line_str_time_ms = current_show_line_str_time_ms;
@@ -628,7 +628,7 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
     else
     {
       /* 输出时换行符 */
-      memcpy(str_buf, data, index);
+      memcpy_s(str_buf, sizeof(str_buf) - 1U, data, index);
       if(str_buf[index - 1U] == '\r' || str_buf[index - 1U] == '\n')
       {
         str_buf[index - 1U] = '\0';
@@ -648,7 +648,7 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
       }
       /* 剩余部分加到下一行显示 */
       memset(str_buf, 0, sizeof(str_buf));
-      memcpy(str_buf, &data[index + 1U], data_len - index - 1U);
+      memcpy_s(str_buf, sizeof(str_buf) - 1U, &data[index + 1U], data_len - index - 1U);
       str = QString::asprintf("%s", str_buf);
       //      qDebug() << "中间有换行符，剩余部分" << a << ":" << str;
       show_line_str.append(str);

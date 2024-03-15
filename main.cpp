@@ -110,6 +110,7 @@
  *  <tr><td>2024-03-06 <td>v1.4.1  <td>aron566 <td>支持升级可选择can通道，添加退出升级及升级失败提示信息，优化窗口最小化恢复
  *  <tr><td>2024-03-08 <td>v1.4.2  <td>aron566 <td>优化显示速度，增加回灌次数设置
  *  <tr><td>2024-03-14 <td>v1.4.3  <td>aron566 <td>调试窗口拷贝安全性优化
+ *  <tr><td>2024-03-15 <td>v1.4.4  <td>aron566 <td>拷贝安全性优化
  *  </table>
  */
 #include "mainwindow.h"
@@ -117,7 +118,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.4.3"
+#define PC_SOFTWARE_VERSION       "1.4.4"
 
 int main(int argc, char *argv[])
 {

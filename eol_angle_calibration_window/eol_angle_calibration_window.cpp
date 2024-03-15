@@ -414,7 +414,7 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
   utility::NUM_TYPE_Typedef_t data_type = (utility::NUM_TYPE_Typedef_t)fft_data_type;
 
   /* 放大系数 */
-  memcpy(&fft_data_factor, &data[1], sizeof(fft_data_factor));
+  memcpy_s(&fft_data_factor, sizeof(fft_data_factor), &data[1], sizeof(fft_data_factor));
 
   FFT_REQUEST_CONDITION_Typedef_t condition = fft_request_list.value(angle_position_index);
   memset(condition.bit_tx_order, 0, sizeof(condition.bit_tx_order));

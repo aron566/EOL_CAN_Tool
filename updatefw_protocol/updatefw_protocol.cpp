@@ -140,7 +140,7 @@ updatefw_protocol::RETURN_TYPE_Typedef_t updatefw_protocol::protocol_stack_creat
   updatefw_protocol::WAIT_RESPONSE_LIST_Typedef_t wait;
   wait.start_time = static_cast<uint64_t>(QDateTime::currentMSecsSinceEpoch());
   wait.id = can_id;
-  memcpy(wait.send_data, data, data_len);
+  memcpy_s(wait.send_data, sizeof(wait.send_data), data, data_len);
   wait_response_list.append(wait);
 
   /* 发送 */
@@ -283,7 +283,7 @@ bool updatefw_protocol::response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait)
 updatefw_protocol::RTS_OPT_STATUS_Typedef_t updatefw_protocol::decode_ack_frame(const quint8 *temp_buf, const quint8 *send_data)
 {
   quint8 reply_data[8] = {0};
-  memcpy(reply_data, send_data, 8U);
+  memcpy_s(reply_data, sizeof(reply_data), send_data, 8U);
   switch(temp_buf[1])
   {
     case UPDATE_FW_TO_BOOT_CMD         :
@@ -364,8 +364,8 @@ updatefw_protocol::RTS_OPT_STATUS_Typedef_t updatefw_protocol::decode_ack_frame(
 
 updatefw_protocol::RETURN_TYPE_Typedef_t updatefw_protocol::decode_data_frame(const quint8 *temp_buf, quint32 data_len)
 {
-  char str[64] = {0};
-  memcpy(str, temp_buf, data_len >= 64U ? 63 : data_len);
+  char str[65] = {0};
+  memcpy_s(str, sizeof(str) - 1U, temp_buf, data_len);
 
   return RETURN_OK;
 }

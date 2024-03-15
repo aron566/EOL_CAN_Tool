@@ -600,7 +600,7 @@ void debug_window::rec_shell_data(const quint8 *data, quint32 data_len)
 
   /* 读取数据 */
   char strbuf[512] = {0};
-  memcpy(strbuf, data, data_len);
+  memcpy_s(strbuf, sizeof(strbuf), data, data_len);
 
   /* 检测是否是清屏命令 */
   QString str = QString::asprintf("%s", strbuf);

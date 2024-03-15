@@ -373,8 +373,8 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
 
           task.reg = reg;
           task.command = eol_protocol::EOL_WRITE_CMD;
-          memcpy(task.buf, data, data_len);
-          memcpy(version_info, data, data_len);
+          memcpy_s(task.buf, sizeof(task.buf), data, data_len);
+          memcpy_s(version_info, sizeof(version_info), data, data_len);
           task.len = data_len;
           eol_protocol_obj->eol_master_common_rw_device(task);
 
@@ -406,7 +406,7 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
 
           task.reg = reg;
           task.command = eol_protocol::EOL_WRITE_CMD;
-          memcpy(task.buf, data, data_len);
+          memcpy_s(task.buf, sizeof(task.buf), data, data_len);
           task.len = data_len;
           eol_protocol_obj->eol_master_common_rw_device(task);
 
@@ -555,7 +555,7 @@ void eol_sub_window::on_write_pushButton_clicked()
     bool ok;
     quint16 ver = ui->calibration_ver_lineEdit->text().toUShort(&ok, 16);
     memcpy(version_info + 8, &ver, sizeof(ver));
-    memcpy(task.buf, version_info, sizeof(version_info));
+    memcpy_s(task.buf, sizeof(task.buf), version_info, sizeof(version_info));
     task.len = sizeof(version_info);
     eol_protocol_obj->eol_master_common_rw_device(task);
   }
@@ -567,7 +567,7 @@ void eol_sub_window::on_write_pushButton_clicked()
     task.reg = EOL_RW_SN_REG;
     task.command = eol_protocol::EOL_WRITE_CMD;
     QByteArray p_sn = ui->sn_number_lineEdit->text().toLatin1();
-    memcpy(task.buf, p_sn.data(), ui->sn_number_lineEdit->text().size());
+    memcpy_s(task.buf, sizeof(task.buf), p_sn.data(), ui->sn_number_lineEdit->text().size());
     task.len = ui->sn_number_lineEdit->text().size();
     eol_protocol_obj->eol_master_common_rw_device(task);
   }

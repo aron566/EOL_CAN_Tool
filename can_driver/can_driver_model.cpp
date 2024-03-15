@@ -545,7 +545,7 @@ void can_driver_model::msg_to_ui_cq_buf(quint32 can_id, quint8 channel_num, CAN_
   ui_msg.channel_num = channel_num;
   ui_msg.data_len = data_len;
   memset(ui_msg.msg_data, 0, sizeof(ui_msg.msg_data));
-  memcpy(ui_msg.msg_data, data, data_len);
+  memcpy_s(ui_msg.msg_data, sizeof(ui_msg.msg_data), data, data_len);
 
   cq_sem.acquire();
   if(true == CircularQueue::CQ_canSaveLength(cq_obj->CQ_getCQHandle(), sizeof(ui_msg)))

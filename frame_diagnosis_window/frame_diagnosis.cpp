@@ -226,7 +226,7 @@ void frame_diagnosis::add_msg_to_table(uint16_t id, const quint8 *data, quint32 
         msg.repeat_cnt++;
       }
       memset(msg.data, 0, sizeof(msg.data));
-      memcpy(msg.data, data, len);
+      memcpy_s(msg.data, sizeof(msg.data), data, len);
 
       quint64 current_ms = ms;
       quint64 elpased_ms = current_ms - msg.last_time_ms;
@@ -246,7 +246,7 @@ void frame_diagnosis::add_msg_to_table(uint16_t id, const quint8 *data, quint32 
   msg.channel_num = channel_num;
   msg.protocol_type = protocol_type;
   memset(msg.data, 0, sizeof(msg.data));
-  memcpy(msg.data, data, len);
+  memcpy_s(msg.data, sizeof(msg.data), data, len);
 
   msg.last_time_ms = ms;
   msg.cycle_time_ms = 0;

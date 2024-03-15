@@ -1503,8 +1503,8 @@ bool eol_window::one_key_rec_all_table_data_silent(quint16 frame_num, const QByt
  * @param data 数据
  * @param data_len 数据长度
  */
-void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data, quint16
-                                                                                     data_len)
+void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
+                                          quint16 data_len)
 {
   /* 重置错误统计 */
   err_constantly_cnt = 0;
@@ -1512,10 +1512,11 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
   /* 0帧为表信息数据 */
   if(0 == frame_num)
   {
-    memcpy(&common_table_info.Common_Info, data, data_len > sizeof(common_table_info.Common_Info) ? sizeof(common_table_info.Common_Info) : data_len);
+    memcpy_s(&common_table_info.Common_Info, sizeof(common_table_info), data, data_len);
 
     /* 组织表头信息 */
-    ui->transfer_progressBar->setMaximum(common_table_info.Common_Info.Data_Size);
+    ui->transfer_progressBar->setMaximum((qint32)common_table_info.Common_Info.Data_Size);
+
     eol_protocol::TABLE_CLASS_Typedef_t table_class = eol_protocol::get_table_class((eol_protocol::TABLE_Typedef_t)common_table_info.Common_Info.Table_Type);
     quint32 version = common_table_info.Common_Info.Version_REVISION;
     version <<= 8;
@@ -1529,11 +1530,11 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 
     qDebug() << "data size " << common_table_info.Common_Info.Data_Size << " crc " << common_table_info.Common_Info.Crc_Val;
     qint64 check_sum = 0;
-    check_sum += (qint64)table_class + \
-                 version + \
-                   common_table_info.Common_Info.Data_Type + \
-                 data_num + \
-                   common_table_info.Common_Info.Crc_Val;
+    check_sum += (qint64)table_class +
+                 version +
+                 common_table_info.Common_Info.Data_Type +
+                 data_num +
+                 common_table_info.Common_Info.Crc_Val;
     QString csv_header;
     QString str;
     str = QString::asprintf("%u,"
@@ -1541,11 +1542,11 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
                             "%u,"
                             "%u,"
                             "%u",
-                            table_class, \
-                            version, \
-                                     common_table_info.Common_Info.Data_Type, \
-                            data_num, \
-                                      common_table_info.Common_Info.Crc_Val);
+                            table_class,
+                            version,
+                            common_table_info.Common_Info.Data_Type,
+                            data_num,
+                            common_table_info.Common_Info.Crc_Val);
     QString tips_str;
     tips_str = QString("<font size='5' color='green'><div align='legt'> Table Type: </div> <div align='right'> %1 </div> </font>\n"
                        "<font size='5' color='orange'><div align='legt'> Ver: </div> <div align='right'> %2.%3.%4 </div> </font>\n"
@@ -1569,7 +1570,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
       case eol_protocol::SV_ELEVATION_AZI_N45_TABLE:
       case eol_protocol::SV_ELEVATION_AZI_P45_TABLE:
         {
-          memcpy(&table_info.Common_Info, &common_table_info.Common_Info, Index);
+          memcpy_s(&table_info.Common_Info, sizeof(table_info.Common_Info), &common_table_info.Common_Info, Index);
           memcpy(&table_info.Start_Angle, data + Index, sizeof(table_info.Start_Angle));
           Index += sizeof(table_info.Start_Angle);
           memcpy(&table_info.End_Angle, data + Index, sizeof(table_info.End_Angle));
@@ -1592,14 +1593,14 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
           check_sum += Start_Angle + End_Angle + Azi_Ele_Angle + table_info.Points + table_info.Channel_Num + tx_order + table_info.Profile_ID;
           csv_header = tr("table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, ele angle*10, tx_order, profile_id, check sum\r\n");
           str += QString::asprintf(",%u,%u,%d,%d,%d,%u,%u,"
-                                   "%lld\r\n", \
-                                               table_info.Points, \
-                                                                  table_info.Channel_Num, \
-                                   Start_Angle, \
-                                   End_Angle, \
-                                   Azi_Ele_Angle, \
-                                   tx_order, \
-                                             table_info.Profile_ID, \
+                                   "%lld\r\n",
+                                   table_info.Points,
+                                   table_info.Channel_Num,
+                                   Start_Angle,
+                                   End_Angle,
+                                   Azi_Ele_Angle,
+                                   tx_order,
+                                   table_info.Profile_ID,
                                    check_sum);
 
           tips_str += QString("<font size='5' color='black'><div align='legt'> Channel Num: </div> <div align='right'> %1 </div> </font>\n"
@@ -1622,7 +1623,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
       /* 天线信息表 */
       case eol_protocol::ANT_BOTH_TABLE:
         {
-          memcpy(&ant_table_info.Common_Info, &common_table_info.Common_Info, Index);
+          memcpy_s(&ant_table_info.Common_Info, sizeof(ant_table_info.Common_Info), &common_table_info.Common_Info, Index);
           memcpy(&ant_table_info.Points, data + Index, sizeof(ant_table_info.Points));
           Index += sizeof(ant_table_info.Points);
           memcpy(&ant_table_info.Channel_Num, data + Index, sizeof(ant_table_info.Channel_Num));
@@ -1637,11 +1638,11 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 
           csv_header = tr("table class, version, data type, data size, data crc, points, channel num, tx_order, profile_id, check sum\r\n");
           str += QString::asprintf(",%u,%u,%u,%u,"
-                                   "%lld\r\n", \
-                                               ant_table_info.Points, \
-                                                                      ant_table_info.Channel_Num, \
-                                   tx_order, \
-                                             ant_table_info.Profile_ID, \
+                                   "%lld\r\n",
+                                   ant_table_info.Points,
+                                   ant_table_info.Channel_Num,
+                                   tx_order,
+                                   ant_table_info.Profile_ID,
                                    check_sum);
 
           tips_str += QString("<font size='5' color='black'><div align='legt'> Channel Num: </div> <div align='right'> %1 </div> </font>\n"
@@ -1658,7 +1659,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
       /* 方向表 */
       case eol_protocol::PATTERN_TABLE:
         {
-          memcpy(&pattern_table_info.Common_Info, &common_table_info.Common_Info, Index);
+          memcpy_s(&pattern_table_info.Common_Info, sizeof(pattern_table_info.Common_Info), &common_table_info.Common_Info, Index);
           memcpy(&pattern_table_info.Start_Angle, data + Index, sizeof(pattern_table_info.Start_Angle));
           Index += sizeof(pattern_table_info.Start_Angle);
           memcpy(&pattern_table_info.End_Angle, data + Index, sizeof(pattern_table_info.End_Angle));
@@ -1680,14 +1681,14 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
           check_sum += Start_Angle + End_Angle + pattern_table_info.Points + pattern_table_info.Channel_Num + pattern_table_info.Unit + tx_order + pattern_table_info.Profile_ID;
           csv_header = tr("table class, version, data type, data size, data crc, points, channel num, start angle*10, end angle*10, unit, tx_order, profile_id, check sum\r\n");
           str += QString::asprintf(",%u,%u,%d,%d,%u,%u,%u,"
-                                   "%lld\r\n", \
-                                               pattern_table_info.Points, \
-                                                                          pattern_table_info.Channel_Num, \
-                                   Start_Angle, \
-                                   End_Angle, \
-                                              pattern_table_info.Unit, \
-                                   tx_order, \
-                                             pattern_table_info.Profile_ID, \
+                                   "%lld\r\n",
+                                   pattern_table_info.Points,
+                                   pattern_table_info.Channel_Num,
+                                   Start_Angle,
+                                   End_Angle,
+                                   pattern_table_info.Unit,
+                                   tx_order,
+                                   pattern_table_info.Profile_ID,
                                    check_sum);
 
           tips_str += QString("<font size='5' color='black'><div align='legt'> Channel Num: </div> <div align='right'> %1 </div> </font>\n"
@@ -1719,14 +1720,14 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
           memcpy(&noise_table_info.Clibration_Tx_Order[0][0], data + Index, sizeof(noise_table_info.Clibration_Tx_Order));
           //        Index += sizeof(noise_table_info.Clibration_Tx_Order);
 
-          check_sum += noise_table_info.Channel_Num[0] + \
-                                                         noise_table_info.Channel_Num[1] + \
-                         noise_table_info.Channel_Num[2] + \
-                         noise_table_info.Channel_Num[3] + \
-                         noise_table_info.Unit + \
-                       tx_order[0] + \
-                       tx_order[1] + \
-                       tx_order[2] + \
+          check_sum += noise_table_info.Channel_Num[0] +
+                       noise_table_info.Channel_Num[1] +
+                       noise_table_info.Channel_Num[2] +
+                       noise_table_info.Channel_Num[3] +
+                       noise_table_info.Unit +
+                       tx_order[0] +
+                       tx_order[1] +
+                       tx_order[2] +
                        tx_order[3];
           /* table class, version, data type, data size, data crc,
          * channel num0, channel num1, channel num2, channel num3,
@@ -1735,17 +1736,17 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
                           "channel num0, channel num1, channel num2, channel num3, "
                           "unit, tx_order0, tx_order1, tx_order2, tx_order3, check sum\r\n");
           str += QString::asprintf(",%u,%u,%u,%u,%u,%u,%u,"
-                                   "%u,%u,%lld\r\n", \
-                                                     noise_table_info.Channel_Num[0], \
-                                                                                      noise_table_info.Channel_Num[1], \
-                                                                                                                       noise_table_info.Channel_Num[2], \
-                                                                                                                                                        noise_table_info.Channel_Num[3], \
-                                                                                                                                                                                         noise_table_info.Unit, \
-                                   tx_order[0], \
-                                   tx_order[1], \
-                                   tx_order[2], \
-                                   tx_order[3], \
-                                   check_sum);
+                                   "%u,%u,%lld\r\n",
+                                    noise_table_info.Channel_Num[0],
+                                    noise_table_info.Channel_Num[1],
+                                    noise_table_info.Channel_Num[2],
+                                    noise_table_info.Channel_Num[3],
+                                    noise_table_info.Unit,
+                                    tx_order[0],
+                                    tx_order[1],
+                                    tx_order[2],
+                                    tx_order[3],
+                                    check_sum);
 
           tips_str += QString("<font size='5' color='black'><div align='legt'> Channel Num0: </div> <div align='right'> %1 </div> </font>\n"
                               "<font size='5' color='black'><div align='legt'> Channel Num1: </div> <div align='right'> %2 </div> </font>\n"
@@ -1919,7 +1920,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
               default:
                 {
                   qint16 Val = 0;
-                  memcpy(&Val, data + i, 2U);
+                  memcpy_s(&Val, 2U, data + i, 2U);
                   data_list.append(QString("%1").arg(Val));
                   origin_data_list.append(QString("%1").arg(Val));
                   i += sizeof(Val);
@@ -1943,6 +1944,7 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
     if(true == one_key_rec_all_table_data_silent(frame_num, data_str.toUtf8()))
     {
       ui->transfer_progressBar->setValue(size > common_table_info.Common_Info.Data_Size ? common_table_info.Common_Info.Data_Size : size);
+      qDebug() << "set val" << size;
       ui->bytes_lcdNumber->display((int)size);
       return;
     }
@@ -2093,7 +2095,7 @@ void eol_window::slot_device_mode(const void *pass_data)
 
   quint16 index = 0;
   eol_protocol::CALIBRATION_PROFILE_INFO_Typedef_t info;
-  memcpy(&info.time_sec, data_ptr + index, sizeof(info.time_sec));
+  memcpy_s(&info.time_sec, sizeof(info.time_sec), data_ptr + index, sizeof(info.time_sec));
   index += sizeof(info.time_sec);
   eol_protocol::DEVICE_MODE_Typedef_t mode = (eol_protocol::DEVICE_MODE_Typedef_t)data_ptr[index];
   index++;
@@ -2172,7 +2174,7 @@ void eol_window::slot_device_mode(const void *pass_data)
     index++;
     info.channel_num = data_ptr[index];
     index++;
-    memcpy(info.tx_order, data_ptr + index, sizeof(info.tx_order));
+    memcpy_s(info.tx_order, sizeof(info.tx_order), data_ptr + index, sizeof(info.tx_order));
     index += sizeof(info.tx_order);
 
     msg += QString("<font size='5' color='green'><div align='legt'>profile id:%1</div> </font>").arg(info.profile_id);
@@ -2539,4 +2541,3 @@ void eol_window::slot_rts_protocol_rw_ok(QString cmd)
   message.exec();
 }
 /******************************** End of file *********************************/
-

@@ -441,7 +441,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
     case EOL_META_CMD:
       {
         index = data_len;
-        memcpy_s(send_buf, FRAME_TEMP_BUF_SIZE, data, data_len);
+        memcpy_s(send_buf, sizeof(send_buf), data, data_len);
         break;
       }
 
@@ -917,7 +917,7 @@ bool eol_protocol::get_eol_table_data_task(void *param_)
       {
         goto __get_eol_table_data_err;
       }
-      
+
       error_cnt++;
       if(RETRY_NUM_MAX > error_cnt)
       {
@@ -1296,7 +1296,7 @@ bool eol_protocol::eol_master_send_table_data(COMMON_TABLE_HEADER_Typedef_t &tab
   can_driver_obj->add_msg_filter(EOL_PROTOCOL_REPLY_CAN_ID, cq_obj, (quint8)channel_num.toUShort());
 
   /* 公共 + 私有表头 */
-  memcpy(&send_table_data.head_data, &table_info, sizeof(table_info.Common_Info) + table_info.Common_Info.Header_Size);
+  memcpy_s(&send_table_data.head_data, sizeof(send_table_data.head_data), &table_info, sizeof(table_info.Common_Info) + table_info.Common_Info.Header_Size);
   send_table_data.data = data;
 
   EOL_TASK_LIST_Typedef_t task;

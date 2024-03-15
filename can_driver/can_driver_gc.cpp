@@ -719,7 +719,7 @@ quint32 can_driver_gc::gc_can_send(const CHANNEL_STATE_Typedef_t &channel_state,
               can_data.RemoteFlag = 0;
               can_data.ExternFlag = (quint8)frame_type;
               can_data.DataLen = size;
-              memcpy(can_data.Data, data, size);
+              memcpy_s(can_data.Data, sizeof(can_data.Data), data, size);
 
               if(nSendCount > 0)
               {
@@ -752,7 +752,7 @@ quint32 can_driver_gc::gc_can_send(const CHANNEL_STATE_Typedef_t &channel_state,
               can_data.TimeStamp.microsecond = 0;
 
               can_data.DataLen = size;
-              memcpy(can_data.Data, data, size);
+              memcpy_s(can_data.Data, sizeof(can_data.Data), data, size);
 
               if(nSendCount > 0)
               {
@@ -790,26 +790,26 @@ quint32 can_driver_gc::gc_can_send(const CHANNEL_STATE_Typedef_t &channel_state,
               GC_CAN_OBJ can_data;
               can_data.ID = id;
               can_data.SendType = send_type_index_;
-              can_data.RemoteFlag = 0;
+              can_data.RemoteFlag = 0U;
               can_data.ExternFlag = (quint8)frame_type;
 
               /* 计算分包数 */
-              nSendCount = (size + 7) / 8;
+              nSendCount = (size + 7U) / 8U;
 
-              if(nSendCount > 0)
+              if(nSendCount > 0U)
               {
                 GC_CAN_OBJ *pData = new GC_CAN_OBJ[nSendCount];
-                for(quint32 i = 0; i < nSendCount; ++i)
+                for(quint32 i = 0U; i < nSendCount; ++i)
                 {
-                  if((i * 8 + 8) > size)
+                  if((i * 8U + 8U) > size)
                   {
-                    can_data.DataLen = size - i * 8;
+                    can_data.DataLen = size - i * 8U;
                   }
                   else
                   {
-                    can_data.DataLen = 8;
+                    can_data.DataLen = 8U;
                   }
-                  memcpy(can_data.Data, data + i * 8, can_data.DataLen);
+                  memcpy_s(can_data.Data, sizeof(can_data.Data), data + i * 8U, can_data.DataLen);
                   memcpy_s(&pData[i], sizeof(GC_CAN_OBJ), &can_data, sizeof(can_data));
                 }
 
@@ -840,7 +840,7 @@ quint32 can_driver_gc::gc_can_send(const CHANNEL_STATE_Typedef_t &channel_state,
 
               can_data.DataLen = size;
               memset(can_data.Data, 0, sizeof(can_data.Data));
-              memcpy(can_data.Data, data, size);
+              memcpy_s(can_data.Data, sizeof(can_data.Data), data, size);
               /* 对齐 */
               can_data.DataLen = gc_canfd_lib_tool::get_send_len(can_data.DataLen);
 

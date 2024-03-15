@@ -294,8 +294,8 @@ rts_protocol::RTS_OPT_STATUS_Typedef_t rts_protocol::decode_ack_frame(const quin
 
 rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::decode_data_frame(const quint8 *temp_buf, quint32 data_len)
 {
-  char str[64] = {0};
-  memcpy(str, temp_buf, data_len >= 64U ? 63 : data_len);
+  char str[65] = {0};
+  memcpy_s(str, sizeof(str) - 1U, temp_buf, data_len);
 
   /* A(空格)B(空格)C B为VRTS连接状态，1为连接其他字符为未连接 当B不为1且C不为1时，则为VRTS报错 */
   QString status = QString::asprintf("%s", str);
