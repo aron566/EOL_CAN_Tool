@@ -18,7 +18,7 @@
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2023-11-27 <td>v0.0.1  <td>aron566 <td>初始版本
  *  <tr><td>2024-01-08 <td>v0.0.2  <td>aron566 <td>优化报文转发接口
- *
+ *  <tr><td>2024-03-20 <td>v0.0.3  <td>aron566 <td>避免出现inf问题
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -232,7 +232,7 @@ void frame_diagnosis::add_msg_to_table(uint16_t id, const quint8 *data, quint32 
       quint64 elpased_ms = current_ms - msg.last_time_ms;
 
       msg.last_time_ms = current_ms;
-      msg.cycle_time_ms += (elpased_ms - (double)msg.cycle_time_ms) / ((float)msg.cnt + 1.f);
+      msg.cycle_time_ms += ((double)elpased_ms - (double)msg.cycle_time_ms) / ((float)msg.cnt + 1.f);
 
       msg.fps = 1000 / msg.cycle_time_ms;
       msg.cnt++;
@@ -249,8 +249,8 @@ void frame_diagnosis::add_msg_to_table(uint16_t id, const quint8 *data, quint32 
   memcpy_s(msg.data, sizeof(msg.data), data, len);
 
   msg.last_time_ms = ms;
-  msg.cycle_time_ms = 0;
-  msg.fps = 1;
+  msg.cycle_time_ms = 0.000001;
+  msg.fps = 1.0;
   msg.cnt = 1;
   msg.repeat_cnt = 0;
   can_msg_list.append(msg);
