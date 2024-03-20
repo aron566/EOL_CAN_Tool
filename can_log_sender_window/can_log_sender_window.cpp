@@ -18,6 +18,7 @@
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2024-03-05 <td>v0.0.1  <td>aron566 <td>初始版本
  *  <tr><td>2024-03-08 <td>v0.0.2  <td>aron566 <td>改为直接发送方式
+ *  <tr><td>2024-03-20 <td>v0.0.3  <td>aron566 <td>发送的数据长度改为索引解析方式
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -77,7 +78,7 @@ can_log_sender_window::can_log_sender_window(QString title, QWidget *parent)
   /* 设置悬浮提示 */
   ui->circle_lineEdit->setToolTip(tr("default 1"));
   ui->s_index_lineEdit->setToolTip(tr("must set"));
-  ui->bytes_lineEdit->setToolTip(tr("must set"));
+  ui->bytes_index_lineEdit->setToolTip(tr("must set"));
   ui->can_id_index_lineEdit->setToolTip(tr("must set"));
   ui->send_delay_ms_lineEdit->setToolTip(tr("must set"));
   ui->permissable_can_id_lineEdit->setToolTip(tr("must set & use hex data"));
@@ -124,7 +125,7 @@ void can_log_sender_window::read_cfg()
   /* last_can_log_dir */
   last_file_path = setting.value("can_log_sender_window/last_can_log_dir").toString();
   ui->s_index_lineEdit->setText(setting.value("can_log_sender_window/data_field_s_index").toString());
-  ui->bytes_lineEdit->setText(setting.value("can_log_sender_window/data_bytes").toString());
+  ui->bytes_index_lineEdit->setText(setting.value("can_log_sender_window/data_bytes_index").toString());
   ui->can_id_index_lineEdit->setText(setting.value("can_log_sender_window/can_id_field_index").toString());
   ui->send_delay_ms_lineEdit->setText(setting.value("can_log_sender_window/send_delay_ms").toString());
   ui->send_channel_lineEdit->setText(setting.value("can_log_sender_window/send_channel").toString());
@@ -143,7 +144,7 @@ void can_log_sender_window::save_cfg()
   /* last_can_log_dir */
   setting.setValue("can_log_sender_window/last_can_log_dir", last_file_path);
   setting.setValue("can_log_sender_window/data_field_s_index", ui->s_index_lineEdit->text());
-  setting.setValue("can_log_sender_window/data_bytes", ui->bytes_lineEdit->text());
+  setting.setValue("can_log_sender_window/data_bytes_index", ui->bytes_index_lineEdit->text());
   setting.setValue("can_log_sender_window/can_id_field_index", ui->can_id_index_lineEdit->text());
   setting.setValue("can_log_sender_window/send_delay_ms", ui->send_delay_ms_lineEdit->text());
   setting.setValue("can_log_sender_window/send_channel", ui->send_channel_lineEdit->text());
@@ -193,6 +194,7 @@ void can_log_sender_window::can_log_sender_task()
     return;
   }
 
+  quint32 send_bytes = 0;
   send_data_list.clear();
   quint64 size = file.size();
   /* 读取每一行 */
@@ -208,6 +210,14 @@ void can_log_sender_window::can_log_sender_task()
     QString str = utility::line_data2split(QString(line_data));
     QRegExp split_rx("\\s+");
     QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
+    /* 检测数据长度索引是否合法 */
+    if(send_bytes_index >= (quint32)data_list.size())
+    {
+      // qDebug() << "send_bytes_index:" << data_list.size();
+      continue;
+    }
+    send_bytes = data_list.value(send_bytes_index).toUInt(nullptr, 16);
+
     /* 检测数据长度是否合法 */
     if((send_bytes + data_field_index_s) > (quint32)data_list.size())
     {
@@ -402,6 +412,7 @@ void can_log_sender_window::on_start_pushButton_clicked()
     return;
   }
 
+  /* 重复次数 */
   if(true == ui->circle_lineEdit->text().isEmpty())
   {
     circle_times = 1;
@@ -409,36 +420,42 @@ void can_log_sender_window::on_start_pushButton_clicked()
   }
   circle_times = (quint32)ui->circle_lineEdit->text().toInt();
 
+  /* 数据起始索引 */
   if(true == ui->s_index_lineEdit->text().isEmpty())
   {
     return;
   }
   data_field_index_s = ui->s_index_lineEdit->text().toUInt();
 
-  if(true == ui->bytes_lineEdit->text().isEmpty())
+  /* 字节数索引 */
+  if(true == ui->bytes_index_lineEdit->text().isEmpty())
   {
     return;
   }
-  send_bytes = ui->bytes_lineEdit->text().toUInt();
+  send_bytes_index = ui->bytes_index_lineEdit->text().toUInt();
 
+  /* can id索引 */
   if(true == ui->can_id_index_lineEdit->text().isEmpty())
   {
     return;
   }
   can_id_field_index = ui->can_id_index_lineEdit->text().toUInt();
 
+  /* 帧间发送延时设置 */
   if(true == ui->send_delay_ms_lineEdit->text().isEmpty())
   {
     return;
   }
   send_delay_ms = ui->send_delay_ms_lineEdit->text().toUInt();
 
+  /* 发送通道设置 */
   if(true == ui->send_channel_lineEdit->text().isEmpty())
   {
     return;
   }
   send_channel = (quint8)ui->send_channel_lineEdit->text().toUShort();
 
+  /* 允许发送的can id列表 */
   if(true == ui->permissable_can_id_lineEdit->text().isEmpty())
   {
     return;
@@ -452,6 +469,7 @@ void can_log_sender_window::on_start_pushButton_clicked()
     can_id_permissable_list.append(data_list.value(i).toUInt(nullptr, 16));
   }
 
+  /* 等待应答的can id列表 */
   if(true == ui->response_can_id_lineEdit->text().isEmpty())
   {
     can_id_response_list.clear();
@@ -468,16 +486,18 @@ void can_log_sender_window::on_start_pushButton_clicked()
     }
   }
 
-  if(true == ui->send_delay_ms_lineEdit->text().isEmpty())
+  /* 等待时间设置 */
+  if(true == ui->wait_response_ms_lineEdit->text().isEmpty())
   {
     wait_response_delay_ms = 0;
-    ui->send_delay_ms_lineEdit->setText("0");
+    ui->wait_response_ms_lineEdit->setText("0");
   }
   else
   {
     wait_response_delay_ms = ui->wait_response_ms_lineEdit->text().toUInt();
   }
 
+  /* 特殊等待can数据列表 */
   if(true == ui->response_can_data_lineEdit->text().isEmpty())
   {
     wait_can_data_list.clear();
@@ -494,6 +514,7 @@ void can_log_sender_window::on_start_pushButton_clicked()
     }
   }
 
+  /* 特殊等待can数据索引号 */
   if(true == ui->wait_can_data_index_lineEdit->text().isEmpty())
   {
     wait_can_data_index = 0;

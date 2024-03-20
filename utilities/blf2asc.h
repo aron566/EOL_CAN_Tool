@@ -39,17 +39,17 @@ public:
   ~blf2asc();
 
 private:
-  QString m_sBlfName;
-  QString m_sAscName;
-  bool RunState = true;
-  bool isFilter = false;
+  QString blf_name_str;
+  QString asc_name_str;
+  bool run_status = true;
+  bool is_filter = false;
   QStringList fifter;
 
 private:
   void runConveter();
 signals:
   void sigStatus(int);
-  void sigInit(int);
+  void signal_status(int);
 private slots:
   void on_pushButton_sleBlf_clicked();
   void on_pushButton_selAsc_clicked();

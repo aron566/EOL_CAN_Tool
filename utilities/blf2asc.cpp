@@ -24,15 +24,16 @@
 #include <qstring.h>
 #include <qapplication.h>
 #include <windows.h>
-#include "binlog.h" /* BL    */
-#include <tchar.h>  /* RTL   */
 #include <qtextstream.h>
 #include <QFile>
 #include <QtConcurrent>
 #include <QDebug>
 #include <QMessageBox>
+#include <tchar.h> /* RTL   */
 /** Private includes ---------------------------------------------------------*/
 #include "blf2asc.h"
+#include "binlog.h" /* BL    */
+
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
@@ -49,59 +50,65 @@
 
 /** Private application code -------------------------------------------------*/
 /*******************************************************************************
-*
-*       Static code
-*
-********************************************************************************
-*/
+ *
+ *       Static code
+ *
+ ********************************************************************************
+ */
 
 QStringList         Mon  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"};
 QStringList         Week = {"Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"};
 QMap<uint, QString> DriverErrCode{
-                                  {0,   "timeout during board initialization"                          },
-                                  {1,   "no events in the rx queue / no event available for dvGetEvent"},
-                                  {2,   "tx queue full, tx request refused"                            },
-                                  {3,   "unknown Controller-Nr."                                       },
-                                  {4,   "timeout during command"                                       },
-                                  {5,   "DPRAM-Overflow"                                               },
-                                  {6,   "not allowed event in dvPutCommand"                            },
-                                  {8,   "driver detected another hardware"                             },
-                                  {9,   "parameter error in dvMeasureInit"                             },
-                                  {10,  "parameter error in dvMeasureInit and dvPutCommand"            },
-                                  {11,  "not (yet) implemented function in this version of driver"     },
-                                  {12,  "82526: no access to imp"                                      },
-                                  {14,  "last msg wasn't transferred"                                  },
-                                  {100, "unknown send id (FullCAN only)"                               },
-                                  {101, "rx queue overrun"                                             },
-                                  {102, "chip state busoff"                                            },
-                                  {103, "chip state error passive"                                     },
-                                  {104, "chip state error active"                                      },
-                                  {105, "rx register overrrun (BasicCan only)"                         },
-                                  {106, "at bootup the firmware couldn't access the controller"        },
-                                  {107, "no valid dpram address in dvBoardInit"                        },
-                                  {108, "no interrupt from CANIB received"                             },
-                                  {109, "wrong modulnumber"                                            },
-                                  {110, "wrong pointer to source buffer"                               },
-                                  {111, "address > CANIB_SRAM_SIZE"                                    },
-                                  {112, "address + size > CANIB_SRAM_SIZE"                             },
-                                  {113, "CAN-Nr. <> 0 && CAN-Nr. <> 1"                                 },
-                                  {114, "FIFO-Entry > 16 Byte"                                         },
-                                  {115, "see drvspec"                                                  },
-                                  };
+  {0,   "timeout during board initialization"                          },
+  {1,   "no events in the rx queue / no event available for dvGetEvent"},
+  {2,   "tx queue full, tx request refused"                            },
+  {3,   "unknown Controller-Nr."                                       },
+  {4,   "timeout during command"                                       },
+  {5,   "DPRAM-Overflow"                                               },
+  {6,   "not allowed event in dvPutCommand"                            },
+  {8,   "driver detected another hardware"                             },
+  {9,   "parameter error in dvMeasureInit"                             },
+  {10,  "parameter error in dvMeasureInit and dvPutCommand"            },
+  {11,  "not (yet) implemented function in this version of driver"     },
+  {12,  "82526: no access to imp"                                      },
+  {14,  "last msg wasn't transferred"                                  },
+  {100, "unknown send id (FullCAN only)"                               },
+  {101, "rx queue overrun"                                             },
+  {102, "chip state busoff"                                            },
+  {103, "chip state error passive"                                     },
+  {104, "chip state error active"                                      },
+  {105, "rx register overrrun (BasicCan only)"                         },
+  {106, "at bootup the firmware couldn't access the controller"        },
+  {107, "no valid dpram address in dvBoardInit"                        },
+  {108, "no interrupt from CANIB received"                             },
+  {109, "wrong modulnumber"                                            },
+  {110, "wrong pointer to source buffer"                               },
+  {111, "address > CANIB_SRAM_SIZE"                                    },
+  {112, "address + size > CANIB_SRAM_SIZE"                             },
+  {113, "CAN-Nr. <> 0 && CAN-Nr. <> 1"                                 },
+  {114, "FIFO-Entry > 16 Byte"                                         },
+  {115, "see drvspec"                                                  },
+};
 template <class T>
 T Range(T n, T tmin, T tmax)
 {
   if (n < tmin)
+  {
     return tmin;
+  }
   else if (n > tmax)
+  {
     return tmax;
+  }
   else
+  {
     return n;
+  }
 }
+
 blf2asc::blf2asc(QObject *parent)
     : QObject(parent)
 {
-
 }
 
 blf2asc::~blf2asc()
@@ -110,18 +117,20 @@ blf2asc::~blf2asc()
 
 void blf2asc::on_pushButton_sleBlf_clicked()
 {
-  // m_sBlfName = QFileDialog::getOpenFileName(this, "选择BLF文件", QCoreApplication::applicationDirPath(), "BLF文件(*blf *BLF)");
-  if (m_sBlfName.isEmpty())
+  // blf_name_str = QFileDialog::getOpenFileName(this, "选择BLF文件", QCoreApplication::applicationDirPath(), "BLF文件(*blf *BLF)");
+  if (true == blf_name_str.isEmpty())
+  {
     return;
+  }
 }
 
 void blf2asc::runConveter()
 {
-  QByteArray dd        = m_sBlfName.toLocal8Bit();
-  LPCSTR     pFileName = dd.data();
+  QByteArray blf_name_data = blf_name_str.toLocal8Bit();
+  LPCSTR     pFileName     = blf_name_data.data();
   DWORD      dwWritten;
   LONG64     sta = 0;
-  QFile      file(m_sAscName);
+  QFile      asc_file(asc_name_str);
 
   DWORD *pRead = new DWORD();
   *pRead       = 1;
@@ -130,6 +139,7 @@ void blf2asc::runConveter()
     VBLObjectHeaderBase base;
     // VBLCANMessage message;
     VBLCANMessage2_t       message2;
+    VBLCANFDMessage        message_fd;
     VBLCANDriverErrorExt_t erromessage;
     VBLCANErrorFrameExt    errofreammessage;
     VBLCANDriverStatistic  statistic;
@@ -141,7 +151,7 @@ void blf2asc::runConveter()
 
     if (NULL == pRead)
     {
-      emit sigInit(-88);
+      emit signal_status(-88);
       return;
     }
 
@@ -152,24 +162,24 @@ void blf2asc::runConveter()
 
     if (INVALID_HANDLE_VALUE == hFile)
     {
-      emit sigInit(-88);
+      emit signal_status(-88);
       return;
     }
 
     BLGetFileStatisticsEx(hFile, &statistics);
     int  n  = statistics.mObjectCount / 100;
     int  mn = 0;
-    emit sigInit(n);
+    emit signal_status(n);
     emit sigStatus(0);
     bSuccess = TRUE;
 
-    bool isok = file.open(QIODevice::WriteOnly);
-    if (!isok)
+    bool isok = asc_file.open(QIODevice::WriteOnly);
+    if (false == isok)
     {
-      emit sigInit(-88);
+      emit signal_status(-88);
       return;
     }
-    QTextStream filestream(&file);
+    QTextStream filestream(&asc_file);
     /*QString data = "date " + Mon.at(statistics.mMeasurementStartTime.wDayOfWeek-1) + " "
         + Week.at(statistics.mMeasurementStartTime.wMonth-1)
         + " " + QString::number(statistics.mMeasurementStartTime.wDay)
@@ -182,49 +192,57 @@ void blf2asc::runConveter()
     QString data = "date " + Mon.at(Range(statistics.mMeasurementStartTime.wMonth - 1, 0, 11)) + " " + QString::number(statistics.mMeasurementStartTime.wDay) + " " + Week.at(Range((int)statistics.mMeasurementStartTime.wDayOfWeek, 0, 6)) + " " + QString::number(statistics.mMeasurementStartTime.wHour) + ":" + QString::number(statistics.mMeasurementStartTime.wMinute) + ":" + QString::number(statistics.mMeasurementStartTime.wSecond) + "." + QString::number(statistics.mMeasurementStartTime.wMilliseconds) + "  " + QString::number(statistics.mMeasurementStartTime.wYear) + "\nbase hex  timestamps absolute\ninternal events logged\n// version N/A\n";
     filestream << data;
     /* read base object header from file */
-    while (RunState && BLPeekObject(hFile, &base))
+    while (run_status && BLPeekObject(hFile, &base))
     {
       switch (base.mObjectType)
       {
-        case BL_OBJ_TYPE_CAN_MESSAGE:
+        case BL_OBJ_TYPE_CAN_FD_MESSAGE_64:
+        case BL_OBJ_TYPE_CAN_FD_MESSAGE:
           {
-            message2.mHeader.mBase = base;
-            bSuccess               = BLReadObjectSecure(hFile, &message2.mHeader.mBase, sizeof(message2));
+            message_fd.mHeader.mBase = base;
+            bSuccess = BLReadObjectSecure(hFile, &message_fd.mHeader.mBase, sizeof(message_fd));
             /* free memory for the CAN message */
-            if (!message2.mDLC)
+            if (0 == message_fd.mDLC)
+            {
               continue;
+            }
             if (bSuccess)
             {
-              uint64_t id;
+              uint64_t id = 0;
               // CANoe的人在扩展帧ID上加了0x80000000的，所以要处理一下
-              if (message2.mID > 0x80000000)
-                id = message2.mID & 0x7FFFFFFF;
+              if (message_fd.mID > 0x80000000)
+              {
+                id = message_fd.mID & 0x7FFFFFFF;
+              }
               else
-                id = message2.mID;
+              {
+                id = message_fd.mID;
+              }
               /*printf("%ld 0x%x %2x %2x %2x %2x %2x %2x %2x %2x\n", message.mHeader.mObjectTimeStamp, (message.mID - 0x7FFFFFFF), message.mData[0],
-                message.mData[1], message.mData[2], message.mData[3], message.mData[4], message.mData[5], message.mData[6], message.mData[7]);*/
-              QString dir = CAN_MSG_DIR(message2.mFlags) == 0 ? "\tRx" : "\tTx";
-
-              QString str = QString("%1 %2  %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16 %17")
-                                .arg(QString::number(message2.mHeader.mObjectTimeStamp / 1000000000.0, 'f', 6))
-                                .arg(QString::number(message2.mChannel))
-                                .arg("0x" + QString::number(id, 16).toUpper())
-                                .arg(dir)
-                                .arg("d")
-                                .arg(QString::number(message2.mDLC))
-                                .arg(QString::number(message2.mData[0], 16).toUpper(), 2, QLatin1Char('0'))
-                                .arg(QString::number(message2.mData[1], 16).toUpper(), 2, QLatin1Char('0'))
-                                .arg(QString::number(message2.mData[2], 16).toUpper(), 2, QLatin1Char('0'))
-                                .arg(QString::number(message2.mData[3], 16).toUpper(), 2, QLatin1Char('0'))
-                                .arg(QString::number(message2.mData[4], 16).toUpper(), 2, QLatin1Char('0'))
-                                .arg(QString::number(message2.mData[5], 16).toUpper(), 2, QLatin1Char('0'))
-                                .arg(QString::number(message2.mData[6], 16).toUpper(), 2, QLatin1Char('0'))
-                                .arg(QString::number(message2.mData[7], 16).toUpper(), 2, QLatin1Char('0'))
-                                .arg("Length = " + QString::number(message2.mFrameLength))
-                                .arg("BitCount = " + QString::number(message2.mBitCount))
-                                .arg("ID = " + QString::number(id) + "x") +
-                            "\n";
-              if (isFilter)
+              message.mData[1], message.mData[2], message.mData[3], message.mData[4], message.mData[5], message.mData[6], message.mData[7]);*/
+              QString dir = CAN_MSG_DIR(message_fd.mFlags) == 0 ? "\tRx" : "\tTx";
+//ref https://blog.csdn.net/qfmzhu/article/details/130063907
+              QString str;
+              str = QString("%1 CANFD %2  %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16 %17")
+                        .arg(QString::number(message_fd.mHeader.mObjectTimeStamp / 1000000000.0, 'f', 6))
+                        .arg(QString::number(message_fd.mChannel))
+                        .arg("0x" + QString::number(id, 16).toUpper())
+                        .arg(dir)
+                        .arg("d")
+                        .arg(QString::number(message_fd.mDLC))
+                        .arg(QString::number(message_fd.mData[0], 16).toUpper(), 2, QLatin1Char('0'))
+                        .arg(QString::number(message_fd.mData[1], 16).toUpper(), 2, QLatin1Char('0'))
+                        .arg(QString::number(message_fd.mData[2], 16).toUpper(), 2, QLatin1Char('0'))
+                        .arg(QString::number(message_fd.mData[3], 16).toUpper(), 2, QLatin1Char('0'))
+                        .arg(QString::number(message_fd.mData[4], 16).toUpper(), 2, QLatin1Char('0'))
+                        .arg(QString::number(message_fd.mData[5], 16).toUpper(), 2, QLatin1Char('0'))
+                        .arg(QString::number(message_fd.mData[6], 16).toUpper(), 2, QLatin1Char('0'))
+                        .arg(QString::number(message_fd.mData[7], 16).toUpper(), 2, QLatin1Char('0'))
+                        .arg("Length = " + QString::number(message_fd.mFrameLength))
+                        .arg("BitCount = " + QString::number(message_fd.mArbBitCount))
+                        .arg("ID = " + QString::number(id) + "x") +
+                    "\n";
+              if (is_filter)
               {
                 if (fifter.size() > 0)
                 {
@@ -246,21 +264,89 @@ void blf2asc::runConveter()
             }
           }
           break;
+
+        case BL_OBJ_TYPE_CAN_MESSAGE:
+        {
+          message2.mHeader.mBase = base;
+          bSuccess               = BLReadObjectSecure(hFile, &message2.mHeader.mBase, sizeof(message2));
+          /* free memory for the CAN message */
+          if (0 == message2.mDLC)
+          {
+            continue;
+          }
+          if (bSuccess)
+          {
+            uint64_t id = 0;
+            // CANoe的人在扩展帧ID上加了0x80000000的，所以要处理一下
+            if (message2.mID > 0x80000000)
+            {
+              id = message2.mID & 0x7FFFFFFF;
+            }
+            else
+            {
+              id = message2.mID;
+            }
+            /*printf("%ld 0x%x %2x %2x %2x %2x %2x %2x %2x %2x\n", message.mHeader.mObjectTimeStamp, (message.mID - 0x7FFFFFFF), message.mData[0],
+              message.mData[1], message.mData[2], message.mData[3], message.mData[4], message.mData[5], message.mData[6], message.mData[7]);*/
+            QString dir = CAN_MSG_DIR(message2.mFlags) == 0 ? "\tRx" : "\tTx";
+
+            QString str;
+            str = QString("%1 %2  %3 %4 %5 %6 %7 %8 %9 %10 %11 %12 %13 %14 %15 %16 %17")
+                          .arg(QString::number(message2.mHeader.mObjectTimeStamp / 1000000000.0, 'f', 6))
+                          .arg(QString::number(message2.mChannel))
+                          .arg("0x" + QString::number(id, 16).toUpper())
+                          .arg(dir)
+                          .arg("d")
+                          .arg(QString::number(message2.mDLC))
+                          .arg(QString::number(message2.mData[0], 16).toUpper(), 2, QLatin1Char('0'))
+                          .arg(QString::number(message2.mData[1], 16).toUpper(), 2, QLatin1Char('0'))
+                          .arg(QString::number(message2.mData[2], 16).toUpper(), 2, QLatin1Char('0'))
+                          .arg(QString::number(message2.mData[3], 16).toUpper(), 2, QLatin1Char('0'))
+                          .arg(QString::number(message2.mData[4], 16).toUpper(), 2, QLatin1Char('0'))
+                          .arg(QString::number(message2.mData[5], 16).toUpper(), 2, QLatin1Char('0'))
+                          .arg(QString::number(message2.mData[6], 16).toUpper(), 2, QLatin1Char('0'))
+                          .arg(QString::number(message2.mData[7], 16).toUpper(), 2, QLatin1Char('0'))
+                          .arg("Length = " + QString::number(message2.mFrameLength))
+                          .arg("BitCount = " + QString::number(message2.mBitCount))
+                          .arg("ID = " + QString::number(id) + "x") +
+                          "\n";
+            if (is_filter)
+            {
+              if (fifter.size() > 0)
+              {
+                for (int i = 0; i < fifter.size(); i++)
+                {
+                  if (QString::number(id, 16).toUpper() == fifter.at(i).toUpper())
+                  {
+                    filestream << str;
+                  }
+                }
+              }
+            }
+            else
+            {
+              filestream << str;
+            }
+
+            BLFreeObject(hFile, &message2.mHeader.mBase);
+          }
+        }
+        break;
         case BL_OBJ_TYPE_CAN_STATISTIC:
           statistic.mHeader.mBase = base;
           bSuccess                = BLReadObjectSecure(hFile, &statistic.mHeader.mBase, sizeof(statistic));
           if (bSuccess)
           {
             QString str = QString("%1 %2  %3 %4 %5 %6 %7 %8 %9")
-                              .arg(QString::number(statistic.mHeader.mObjectTimeStamp / 1000000000.0, 'f', 6))
-                              .arg(QString::number(statistic.mChannel))
-                              .arg("Statistic: D " + QString::number(statistic.mStandardDataFrames))
-                              .arg("R " + QString::number(statistic.mStandardRemoteFrames))
-                              .arg("XD " + QString::number(statistic.mExtendedDataFrames))
-                              .arg("RD " + QString::number(statistic.mExtendedRemoteFrames))
-                              .arg("E " + QString::number(statistic.mErrorFrames))
-                              .arg("O " + QString::number(statistic.mOverloadFrames))
-                              .arg("B " + QString::number(statistic.mBusLoad / 100.0, 'f', 2) + "%\n");
+                            .arg(QString::number(statistic.mHeader.mObjectTimeStamp / 1000000000.0, 'f', 6))
+                            .arg(QString::number(statistic.mChannel))
+                            .arg("Statistic: D " + QString::number(statistic.mStandardDataFrames))
+                            .arg("R " + QString::number(statistic.mStandardRemoteFrames))
+                            .arg("XD " + QString::number(statistic.mExtendedDataFrames))
+                            .arg("RD " + QString::number(statistic.mExtendedRemoteFrames))
+                            .arg("E " + QString::number(statistic.mErrorFrames))
+                            .arg("O " + QString::number(statistic.mOverloadFrames))
+                            .arg("B " + QString::number(statistic.mBusLoad / 100.0, 'f', 2) + "%\n");
             filestream << str;
           }
           BLFreeObject(hFile, &statistic.mHeader.mBase);
@@ -271,24 +357,24 @@ void blf2asc::runConveter()
           if (bSuccess)
           {
             QString str = QString("%1 %2 %3 %4 Flags = 0x%5 CodeExt = 0x%6 Code = 0x%7 ID = 0x%8 Position = %9 Length = %10 Data = 0x%11 0x%12 0x%13 0x%14 0x%15 0x%16 0x%17 0x%18")
-                              .arg(QString::number(errofreammessage.mHeader.mObjectTimeStamp / 1000000000.0, 'f', 6))
-                              .arg(QString::number(errofreammessage.mChannel))
-                              .arg("ErrorFrame")
-                              .arg(QString::number(errofreammessage.mFlags, 16))   //+ "\n";
-                              .arg(QString::number(errofreammessage.mFlagsExt, 16))
-                              .arg(QString::number(errofreammessage.mECC, 16))
-                              .arg(QString::number(errofreammessage.mID, 16))
-                              .arg(QString::number(errofreammessage.mDLC, 16))
-                              .arg(QString::number(errofreammessage.mPosition))
-                              .arg(QString::number(errofreammessage.mLength))
-                              .arg(QString::number(errofreammessage.mData[0], 16))
-                              .arg(QString::number(errofreammessage.mData[1], 16))
-                              .arg(QString::number(errofreammessage.mData[2], 16))
-                              .arg(QString::number(errofreammessage.mData[3], 16))
-                              .arg(QString::number(errofreammessage.mData[4], 16))
-                              .arg(QString::number(errofreammessage.mData[5], 16))
-                              .arg(QString::number(errofreammessage.mData[6], 16))
-                              .arg(QString::number(errofreammessage.mData[7], 16)) +
+                            .arg(QString::number(errofreammessage.mHeader.mObjectTimeStamp / 1000000000.0, 'f', 6))
+                            .arg(QString::number(errofreammessage.mChannel))
+                            .arg("ErrorFrame")
+                            .arg(QString::number(errofreammessage.mFlags, 16))   //+ "\n";
+                            .arg(QString::number(errofreammessage.mFlagsExt, 16))
+                            .arg(QString::number(errofreammessage.mECC, 16))
+                            .arg(QString::number(errofreammessage.mID, 16))
+                            .arg(QString::number(errofreammessage.mDLC, 16))
+                            .arg(QString::number(errofreammessage.mPosition))
+                            .arg(QString::number(errofreammessage.mLength))
+                            .arg(QString::number(errofreammessage.mData[0], 16))
+                            .arg(QString::number(errofreammessage.mData[1], 16))
+                            .arg(QString::number(errofreammessage.mData[2], 16))
+                            .arg(QString::number(errofreammessage.mData[3], 16))
+                            .arg(QString::number(errofreammessage.mData[4], 16))
+                            .arg(QString::number(errofreammessage.mData[5], 16))
+                            .arg(QString::number(errofreammessage.mData[6], 16))
+                            .arg(QString::number(errofreammessage.mData[7], 16)) +
                           "\n";
             filestream << str;
           }
@@ -300,11 +386,11 @@ void blf2asc::runConveter()
           if (bSuccess)
           {
             QString str = QString("%1 %2 %3 %4%5")
-                              .arg(QString::number(erromessage.mHeader.mObjectTimeStamp / 1000000000.0, 'f', 6))
-                              .arg("CAN")
-                              .arg(QString::number(erromessage.mChannel))
-                              .arg("Status:")
-                              .arg(DriverErrCode[erromessage.mErrorCode]) +
+                            .arg(QString::number(erromessage.mHeader.mObjectTimeStamp / 1000000000.0, 'f', 6))
+                            .arg("CAN")
+                            .arg(QString::number(erromessage.mChannel))
+                            .arg("Status:")
+                            .arg(DriverErrCode[erromessage.mErrorCode]) +
                           "\n";
             filestream << str;
           }
@@ -325,17 +411,17 @@ void blf2asc::runConveter()
         emit sigStatus(++mn);
       }
 
-      if (!RunState)
+      if (!run_status)
       {
         filestream.flush();
-        file.close();
+        asc_file.close();
         return;
       }
     }
     filestream.flush();
-    file.close();
+    asc_file.close();
     emit sigStatus(n);
-    emit sigInit(-99);
+    emit signal_status(-99);
     /* close file */
     if (!BLCloseHandle(hFile))
     {
@@ -348,23 +434,25 @@ void blf2asc::runConveter()
 
 void blf2asc::on_pushButton_selAsc_clicked()
 {
-  // m_sAscName = QFileDialog::getSaveFileName(this, "保存asc文件", QCoreApplication::applicationDirPath(), "ASC文件(*asc *asc)");
-  if (m_sAscName.isEmpty())
+  // asc_name_str = QFileDialog::getSaveFileName(this, "保存asc文件", QCoreApplication::applicationDirPath(), "ASC文件(*asc *asc)");
+  if (asc_name_str.isEmpty())
+  {
     return;
+  }
 }
 
 void blf2asc::on_pushButton_converter_clicked()
 {
   if (true)
   {
-    fifter   = QString("123;456").split(";");
-    isFilter = true;
+    fifter    = QString("123;456").split(";");
+    is_filter = true;
   }
   else
   {
-    isFilter = false;
+    is_filter = false;
   }
-  if (m_sBlfName.isEmpty())
+  if (blf_name_str.isEmpty())
   {
     // QMessageBox::warning(this, "BLF文件为空", "BLF文件不能为空");
   }
@@ -375,7 +463,6 @@ void blf2asc::on_pushButton_converter_clicked()
 
 void blf2asc::on_recConveterState(int statue)
 {
-
 }
 
 void blf2asc::on_recInitState(int max)
@@ -392,16 +479,16 @@ void blf2asc::on_recInitState(int max)
 
 void blf2asc::closeEvent()
 {
-  RunState = false;
+  run_status = false;
   Sleep(300);
 }
 
 /** Public application code --------------------------------------------------*/
 /*******************************************************************************
-*
-*       Public code
-*
-********************************************************************************
-*/
+ *
+ *       Public code
+ *
+ ********************************************************************************
+ */
 
 /******************************** End of file *********************************/

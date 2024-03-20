@@ -143,7 +143,7 @@ private:
   quint32 wait_can_data_index = 0;
   quint32 wait_response_delay_ms = 0;
   quint32 can_id_field_index = 0;
-  quint32 send_bytes = 0;
+  quint32 send_bytes_index = 0;
   quint32 data_field_index_s = 0;
   quint8 send_channel = 0;
   quint32 send_delay_ms = 0;

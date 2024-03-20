@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>837</width>
-    <height>500</height>
+    <height>517</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -93,9 +93,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="bytes_label">
+        <widget class="QLabel" name="bytes_index_label">
          <property name="text">
-          <string>连续字段数</string>
+          <string>字节数索引</string>
          </property>
         </widget>
        </item>
@@ -167,9 +167,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="bytes_lineEdit">
+        <widget class="QLineEdit" name="bytes_index_lineEdit">
          <property name="text">
-          <string>8</string>
+          <string>2</string>
          </property>
         </widget>
        </item>

@@ -238,11 +238,11 @@
 
 typedef struct VBLObjectHeaderBase_t
 {
-    DWORD     mSignature;                        /* signature (BL_OBJ_SIGNATURE) */
-     WORD     mHeaderSize;                       /* sizeof object header */
-     WORD     mHeaderVersion;                    /* header version (1) */
-    DWORD     mObjectSize;                       /* object size */
-    DWORD     mObjectType;                       /* object type (BL_OBJ_TYPE_XXX) */
+  DWORD     mSignature;                        /* signature (BL_OBJ_SIGNATURE) */
+  WORD     mHeaderSize;                        /* sizeof object header */
+  WORD     mHeaderVersion;                     /* header version (1) */
+  DWORD     mObjectSize;                       /* object size */
+  DWORD     mObjectType;                       /* object type (BL_OBJ_TYPE_XXX) */
 } VBLObjectHeaderBase;
 
 /*----------------------------------------------------------------------------
