@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>728</height>
+    <height>794</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -293,42 +293,42 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
-         <widget class="QLabel" name="usd_hw_ver_label">
+         <widget class="QLabel" name="uds_hw_ver_label">
           <property name="text">
-           <string>USD硬件版本号：</string>
+           <string>UDS硬件版本号：</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="usd_hw_ver_lineEdit">
+         <widget class="QLineEdit" name="uds_hw_ver_lineEdit">
           <property name="enabled">
            <bool>true</bool>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="usd_soft_ver_label">
+         <widget class="QLabel" name="uds_soft_ver_label">
           <property name="text">
-           <string>USD软件版本号：</string>
+           <string>UDS软件版本号：</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="usd_soft_ver_lineEdit">
+         <widget class="QLineEdit" name="uds_soft_ver_lineEdit">
           <property name="enabled">
            <bool>true</bool>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="usd_boot_ver_label">
+         <widget class="QLabel" name="uds_boot_ver_label">
           <property name="text">
-           <string>USD Boot版本：</string>
+           <string>UDS Boot版本：</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="usd_boot_ver_lineEdit">
+         <widget class="QLineEdit" name="uds_boot_ver_lineEdit">
           <property name="enabled">
            <bool>true</bool>
           </property>

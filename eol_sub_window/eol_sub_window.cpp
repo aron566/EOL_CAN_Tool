@@ -165,9 +165,9 @@ void eol_sub_window::on_test_pushButton_clicked()
   ui->hw_ver_lineEdit->clear();
   ui->soft_ver_lineEdit->clear();
   ui->calibration_ver_lineEdit->clear();
-  ui->usd_hw_ver_lineEdit->clear();
-  ui->usd_soft_ver_lineEdit->clear();
-  ui->usd_boot_ver_lineEdit->clear();
+  ui->uds_hw_ver_lineEdit->clear();
+  ui->uds_soft_ver_lineEdit->clear();
+  ui->uds_boot_ver_lineEdit->clear();
 
   eol_protocol::EOL_TASK_LIST_Typedef_t task;
   task.param = nullptr;
@@ -347,7 +347,7 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
             str += QString::asprintf("%02X", data[index]);
             index++;
           }
-          ui->usd_hw_ver_lineEdit->setText(str);
+          ui->uds_hw_ver_lineEdit->setText(str);
 
           str.clear();
           for(quint16 i = 0; i < 6; i++)
@@ -355,7 +355,7 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
             str += QString::asprintf("%02X", data[index]);
             index++;
           }
-          ui->usd_soft_ver_lineEdit->setText(str);
+          ui->uds_soft_ver_lineEdit->setText(str);
 
           str.clear();
           for(quint16 i = 0; i < 7; i++)
