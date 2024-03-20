@@ -363,7 +363,7 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
             str += QString::asprintf("%02X", data[index]);
             index++;
           }
-          ui->usd_boot_ver_lineEdit->setText(str);
+          ui->uds_boot_ver_lineEdit->setText(str);
 
           ui->ver_test_lineEdit->setText(tr("read version ok "));
 
