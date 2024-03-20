@@ -17,6 +17,7 @@
  *  <table>
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2023-10-24 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2024-03-20 <td>v0.0.2  <td>aron566 <td>修复发送接口在未打开设备时依然调用发送接口问题
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -307,7 +308,9 @@ bool can_driver_model::send_data()
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     channel_state = channel_state_list.value(i);
-    if(true == channel_state.channel_en && channel_index == channel_state.channel_num)
+    if(true == channel_state.channel_en
+        && true == start_
+        && channel_index == channel_state.channel_num)
     {
       datas_ = msg.data;
       frame_type_index_ = (quint32)msg.frame_type;
@@ -362,7 +365,8 @@ bool can_driver_model::send(const quint8 *data, quint8 size, quint32 id, FRAME_T
   {
     channel_state = channel_state_list.value(i);
     if((channel_num == channel_state.channel_num || 0xFFU == channel_num)
-        && true == channel_state.channel_en)
+        && true == channel_state.channel_en
+        && true == start_)
     {
       tx_sem.acquire();
       ret = send(channel_state, data, size, id, frame_type, protocol);
@@ -580,8 +584,8 @@ void can_driver_model::send(quint8 channel_index)
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     channel_state = channel_state_list.value(i);
-    if(true == channel_state.channel_en && (channel_index == channel_state.channel_num \
-                                             || channel_index == channel_state_list.size()))
+    if(true == channel_state.channel_en
+        && (channel_index == channel_state.channel_num || channel_index == channel_state_list.size()))
     {
       msg.channel_num = (quint8)channel_state.channel_num;
       msg.data = datas_;
