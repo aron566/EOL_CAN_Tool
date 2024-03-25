@@ -101,6 +101,12 @@ public slots:
      */
     void slot_protocol_rw_err(QString cmd);
 
+    /**
+     * @brief 协议栈无回复超时
+     * @param ms m秒
+     */
+    void slot_protocol_timeout(quint32 ms);
+
 private slots:
 
     void on_frimware_sel_button_clicked();

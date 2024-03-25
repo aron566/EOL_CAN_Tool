@@ -199,9 +199,9 @@ signals:
 
   /**
    * @brief 协议栈无回复超时
-   * @param sec 秒
+   * @param ms m秒
    */
-  void signal_protocol_timeout(quint32 sec);
+  void signal_protocol_timeout(quint32 ms);
 
   /**
    * @brief 从机返回错误消息

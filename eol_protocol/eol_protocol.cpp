@@ -5,13 +5,20 @@
  *
  *  @author aron566
  *
- *  @copyright Copyright (c) 2022 aron566 <aron566@163.com>.
+ *  @copyright Copyright (c) 2024 aron566 <aron566@163.com>.
  *
- *  @brief None.
+ *  @brief 更新固件协议.
  *
  *  @details None.
  *
- *  @version v1.0.0 aron566 2023.02.20 17:05 初始版本.
+ *  @version v0.0.1 aron566 2023.02.20 17:05 初始版本.
+ *
+ *  @par 修改日志:
+ *  <table>
+ *  <tr><th>Date       <th>Version <th>Author  <th>Description
+ *  <tr><td>2023-02-20 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2024-03-25 <td>v1.0.0  <td>aron566 <td>优化超时检测机制逻辑
+ *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
 /** Private includes ---------------------------------------------------------*/
@@ -730,23 +737,6 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
       continue;
     }
 
-    /* 检测响应帧超时 */
-    if(response_is_timeout(wait) == true && false == listen_mode)
-    {
-      /* 清空缓冲区 */
-      CircularQueue::CQ_emptyData(cq);
-      qDebug() << "clear cq buf";
-      acc_error_cnt++;
-      if(acc_error_cnt > NO_RESPONSE_TIMES)
-      {
-        qDebug() << "response_is_timeout > " << \
-          (NO_RESPONSE_TIMES + 1U) * FRAME_TIME_OUT << "s -> signal_protocol_timeout";
-        emit signal_protocol_timeout(acc_error_cnt * FRAME_TIME_OUT);
-        acc_error_cnt = 0;
-      }
-      return RETURN_TIMEOUT;
-    }
-
     /* 元数据报文 */
     uint32_t meta_len = 0;
     if((quint8)EOL_META_CMD == wait.command && false == listen_mode)
@@ -760,14 +750,27 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
     }
 
     /* 检测缓冲区可读长度 */
-    if(check_can_read(cq) == 0)
-    {
-      return RETURN_WAITTING;
-    }
+    check_can_read(cq);
 
     len = CircularQueue::CQ_getLength(cq);
     if(EOL_FRAME_MIN_SIZE > len)
     {
+      /* 检测响应帧超时 */
+      if(response_is_timeout(wait) == true && false == listen_mode)
+      {
+        /* 清空缓冲区 */
+        CircularQueue::CQ_emptyData(cq);
+        qDebug() << "clear cq buf";
+        acc_error_cnt++;
+        if(acc_error_cnt > NO_RESPONSE_TIMES)
+        {
+          qDebug() << "response_is_timeout > " << \
+                                                      (NO_RESPONSE_TIMES + 1U) * FRAME_TIME_OUT << "s -> signal_protocol_timeout";
+          emit signal_protocol_timeout(acc_error_cnt * FRAME_TIME_OUT);
+          acc_error_cnt = 0;
+        }
+        return RETURN_TIMEOUT;
+      }
       return RETURN_WAITTING;
     }
 

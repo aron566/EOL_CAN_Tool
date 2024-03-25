@@ -18,6 +18,7 @@
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2023-12-01 <td>v0.0.1  <td>aron566 <td>初始版本
  *  <tr><td>2023-12-25 <td>v0.0.2  <td>aron566 <td>优化协议栈
+ *  <tr><td>2024-03-25 <td>v1.0.0  <td>aron566 <td>优化超时检测机制逻辑
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -142,6 +143,7 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_create_task(con
   while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state)
   {
     /* todo nothing */
+    QThread::msleep(1U);
   }
 
   /* 移除等待队列 */
@@ -185,25 +187,24 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_wait_reply_star
 
   while(run_state)
   {
-    /* 检测响应帧超时 */
-    if(response_is_timeout(wait) == true && false == listen_mode)
-    {
-      /* 清空缓冲区 */
-      CircularQueue::CQ_emptyData(cq);
-      acc_error_cnt++;
-      if(acc_error_cnt > NO_RESPONSE_TIMES)
-      {
-        qDebug() << "response_is_timeout > " <<
-            (NO_RESPONSE_TIMES + 1) * FRAME_TIME_OUT << "s -> signal_protocol_timeout";
-        emit signal_protocol_timeout(acc_error_cnt * FRAME_TIME_OUT);
-        acc_error_cnt = 0;
-      }
-      return RETURN_TIMEOUT;
-    }
-
     len = CircularQueue::CQ_getLength(cq);
     if(RTS_FRAME_MIN_SIZE > len)
     {
+      /* 检测响应帧超时 */
+      if(response_is_timeout(wait) == true && false == listen_mode)
+      {
+        /* 清空缓冲区 */
+        CircularQueue::CQ_emptyData(cq);
+        acc_error_cnt++;
+        if(acc_error_cnt > NO_RESPONSE_TIMES)
+        {
+          qDebug() << "response_is_timeout > " <<
+              (NO_RESPONSE_TIMES + 1) * FRAME_TIME_OUT << "s -> signal_protocol_timeout";
+          emit signal_protocol_timeout(acc_error_cnt * FRAME_TIME_OUT);
+          acc_error_cnt = 0;
+        }
+        return RETURN_TIMEOUT;
+      }
       return RETURN_WAITTING;
     }
 

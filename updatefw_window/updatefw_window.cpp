@@ -143,6 +143,7 @@ void updatefw_window::set_can_driver_obj(can_driver_model *can_driver_obj)
   connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_error_occur, this, &updatefw_window::slot_send_data_timeout_occured);
   connect(protocol_stack_obj, &updatefw_protocol::signal_send_progress, this, &updatefw_window::slot_send_progress, Qt::QueuedConnection);
   connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_rw_err, this, &updatefw_window::slot_protocol_rw_err);
+  connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_timeout, this, &updatefw_window::slot_protocol_timeout);
   connect(protocol_stack_obj, &updatefw_protocol::signal_protocol_run_step_msg, this, &updatefw_window::slot_protocol_run_step_msg);
 
   /* 禁止线程完成后执行析构对象 */
@@ -244,6 +245,15 @@ void updatefw_window::slot_send_data_timeout_occured()
 {
   timeout_cnt++;
   ui->error_cnt_label->setNum(timeout_cnt);
+}
+
+void updatefw_window::slot_protocol_timeout(quint32 ms)
+{
+  QString info = ui->run_info_msg->text();
+  QStringList infos = info.split(",");
+  info = infos.value(0);
+  info += QString(",timeout %1").arg(ms);
+  ui->run_info_msg->setText(info);
 }
 
 void updatefw_window::slot_protocol_rw_err(QString cmd)

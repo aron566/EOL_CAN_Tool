@@ -17,6 +17,7 @@
  *  <table>
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2024-02-22 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2024-03-25 <td>v1.0.0  <td>aron566 <td>优化超时检测机制逻辑
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -157,6 +158,7 @@ updatefw_protocol::RETURN_TYPE_Typedef_t updatefw_protocol::protocol_stack_creat
   while((ret = protocol_stack_wait_reply_start()) == RETURN_WAITTING && true == run_state)
   {
     /* todo nothing */
+    QThread::msleep(1U);
   }
 
   /* 移除等待队列 */
@@ -199,25 +201,25 @@ updatefw_protocol::RETURN_TYPE_Typedef_t updatefw_protocol::protocol_stack_wait_
 
   while(run_state)
   {
-    /* 检测响应帧超时 */
-    if(response_is_timeout(wait) == true && false == listen_mode)
-    {
-      /* 清空缓冲区 */
-      CircularQueue::CQ_emptyData(cq);
-      acc_error_cnt++;
-      if(acc_error_cnt > NO_RESPONSE_TIMES)
-      {
-        // qDebug() << "response_is_timeout > " <<
-        //     (NO_RESPONSE_TIMES + 1) * FRAME_TIME_OUT << "ms -> signal_protocol_timeout";
-        emit signal_protocol_timeout(acc_error_cnt * FRAME_TIME_OUT);
-        acc_error_cnt = 0;
-      }
-      return RETURN_TIMEOUT;
-    }
-
+    /* 检测长度 */
     len = CircularQueue::CQ_getLength(cq);
     if(GET_FRAME_MIN_SIZE > len)
     {
+      /* 检测响应帧超时 */
+      if(response_is_timeout(wait) == true && false == listen_mode)
+      {
+        /* 清空缓冲区 */
+        CircularQueue::CQ_emptyData(cq);
+        acc_error_cnt++;
+        if(acc_error_cnt > NO_RESPONSE_TIMES)
+        {
+          // qDebug() << "response_is_timeout > " <<
+          //     (NO_RESPONSE_TIMES + 1) * FRAME_TIME_OUT << "ms -> signal_protocol_timeout";
+          // emit signal_protocol_timeout(acc_error_cnt * FRAME_TIME_OUT);
+          acc_error_cnt = 0;
+        }
+        return RETURN_TIMEOUT;
+      }
       return RETURN_WAITTING;
     }
 
@@ -273,7 +275,7 @@ void updatefw_protocol::set_timeout(quint32 sec)
 /* 响应超时检测 */
 bool updatefw_protocol::response_is_timeout(WAIT_RESPONSE_LIST_Typedef_t &wait)
 {
-  if((QDateTime::currentMSecsSinceEpoch() - wait.start_time) >= FRAME_TIME_OUT)
+  if(((uint64_t)QDateTime::currentMSecsSinceEpoch() - wait.start_time) >= FRAME_TIME_OUT)
   {
     return true;
   }
@@ -292,6 +294,7 @@ updatefw_protocol::RTS_OPT_STATUS_Typedef_t updatefw_protocol::decode_ack_frame(
         memset(&reply_data[3], 0, 5U);
         if(0 != memcmp(reply_data, temp_buf, 8U))
         {
+          qDebug() << "UPDATE_FW_TO_BOOT_CMD ERR";
           return RTS_OPT_ERR;
         }
         return RTS_OPT_OK;
@@ -304,6 +307,7 @@ updatefw_protocol::RTS_OPT_STATUS_Typedef_t updatefw_protocol::decode_ack_frame(
         memset(&reply_data[2], 0, 6U);
         if(0 != memcmp(reply_data, temp_buf, 8U))
         {
+          qDebug() << "UPDATE_FW_TO_EARSE_CMD ERR";
           return RTS_OPT_ERR;
         }
         return RTS_OPT_OK;
@@ -315,6 +319,7 @@ updatefw_protocol::RTS_OPT_STATUS_Typedef_t updatefw_protocol::decode_ack_frame(
         reply_data[0] = 0U;
         if(0 != memcmp(reply_data, temp_buf, 6U))
         {
+          qDebug() << "UPDATE_FW_TO_GET_LEN_CMD ERR";
           return RTS_OPT_ERR;
         }
         return RTS_OPT_OK;
@@ -327,6 +332,7 @@ updatefw_protocol::RTS_OPT_STATUS_Typedef_t updatefw_protocol::decode_ack_frame(
         memset(&reply_data[2], 0, 6U);
         if(0 != memcmp(reply_data, temp_buf, 8U))
         {
+          qDebug() << "UPDATE_FW_TO_SAVE_CMD ERR";
           return RTS_OPT_ERR;
         }
         return RTS_OPT_OK;
@@ -338,6 +344,7 @@ updatefw_protocol::RTS_OPT_STATUS_Typedef_t updatefw_protocol::decode_ack_frame(
         reply_data[0] = 0U;
         if(0 != memcmp(reply_data, temp_buf, 5U))
         {
+          qDebug() << "UPDATE_FW_TO_GET_ALL_LEN_CMD ERR";
           return RTS_OPT_ERR;
         }
         return RTS_OPT_OK;
@@ -349,6 +356,7 @@ updatefw_protocol::RTS_OPT_STATUS_Typedef_t updatefw_protocol::decode_ack_frame(
         reply_data[0] = 0U;
         if(0 != memcmp(reply_data, temp_buf, 8U))
         {
+          qDebug() << "UPDATE_FW_TO_GET_CRC_CMD ERR";
           return RTS_OPT_ERR;
         }
         return RTS_OPT_OK;
