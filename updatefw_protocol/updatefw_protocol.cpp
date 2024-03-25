@@ -164,7 +164,7 @@ updatefw_protocol::RETURN_TYPE_Typedef_t updatefw_protocol::protocol_stack_creat
   /* 移除等待队列 */
   if(false == wait_response_list.isEmpty())
   {
-    wait_response_list.removeFirst();
+    updatefw_protocol_clear();
   }
 
   return ret;
@@ -188,7 +188,6 @@ updatefw_protocol::RETURN_TYPE_Typedef_t updatefw_protocol::protocol_stack_wait_
   /* 检查响应队列 */
   if(true == wait_response_list.isEmpty() && false == listen_mode)
   {
-    CircularQueue::CQ_emptyData(cq);
     return RETURN_OK;
   }
 
@@ -208,8 +207,6 @@ updatefw_protocol::RETURN_TYPE_Typedef_t updatefw_protocol::protocol_stack_wait_
       /* 检测响应帧超时 */
       if(response_is_timeout(wait) == true && false == listen_mode)
       {
-        /* 清空缓冲区 */
-        CircularQueue::CQ_emptyData(cq);
         acc_error_cnt++;
         if(acc_error_cnt > NO_RESPONSE_TIMES)
         {

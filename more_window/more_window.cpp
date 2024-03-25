@@ -17,6 +17,7 @@
  *  <table>
  *  <tr><th>Date       <th>Version <th>Author  <th>Description
  *  <tr><td>2024-01-18 <td>v0.0.1  <td>aron566 <td>初始版本
+ *  <tr><td>2024-03-25 <td>v0.0.2  <td>aron566 <td>优化打印对齐
  *  </table>
  */
 /** Includes -----------------------------------------------------------------*/
@@ -817,7 +818,7 @@ void more_window::show_can_msg(can_driver_model::CAN_MSG_DISPLAY_Typedef_t &msg)
   QString item;
   if(msg.direction == can_driver_model::CAN_TX_DIRECT || msg.direction == can_driver_model::CAN_RX_DIRECT)
   {
-    item = QString::asprintf(tr("[%u]%sx CAN%s ID: %08X %s %s LEN: %d DATA: ").toUtf8().data(),
+    item = QString::asprintf(tr("[%u]%sx CAN%s ID: %08X %s %s LEN: %-2d DATA: ").toUtf8().data(),
                              msg.channel_num,
                              msg.direction == can_driver_model::CAN_TX_DIRECT ? "T" : "R",
                              msg.can_protocol == can_driver_model::CANFD_PROTOCOL_TYPE ? "FD" : "",
