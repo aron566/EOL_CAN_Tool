@@ -388,10 +388,28 @@ bool updatefw_protocol::send_data_port(uint32_t can_id, const uint8_t *data, uin
                                   can_id,
                                   can_driver_model::STD_FRAME_TYPE,
                                   data_len > 8U ?
-                                      can_driver_model::CANFD_PROTOCOL_TYPE :
-                                      can_driver_model::CAN_PROTOCOL_TYPE,
+                                    can_driver_model::CANFD_PROTOCOL_TYPE :
+                                    can_driver_model::CAN_PROTOCOL_TYPE,
                                   (quint8)channel_num.toUInt());
   return ret;
+  // QStringList data_list;
+  // for(quint32 index = 0; index < data_len; index++)
+  // {
+  //   data_list.append(QString::number(data[index], 16));
+  // }
+
+  // QString data_str = data_list.join(" ");
+  // can_driver_obj->period_send_set(can_id,
+  //                                 data_str,
+  //                                 0, 1, (quint8)channel_num.toUInt(),
+  //                                 can_driver_model::STD_FRAME_TYPE,
+  //                                 8U < data_len ? can_driver_model::CANFD_PROTOCOL_TYPE : can_driver_model::CAN_PROTOCOL_TYPE,
+  //                                 0U);
+  // while(can_driver_obj->get_period_send_list_size() > 0 && true == run_state)
+  // {
+  //   QThread::usleep(0);
+  // }
+  // return true;
 }
 
 bool updatefw_protocol::update_device_app_task(void *param_)
@@ -479,6 +497,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       {
         continue;
       }
+      run_step_msg = "step2 erase device err";
+      emit signal_protocol_run_step_msg(run_step_msg);
       goto __set_device_err;
     }
     break;
@@ -551,6 +571,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
         {
           continue;
         }
+        run_step_msg = "step3 send fw data err";
+        emit signal_protocol_run_step_msg(run_step_msg);
         goto __set_device_err;
       }
       break;
@@ -596,6 +618,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
           {
             continue;
           }
+          run_step_msg = "step3.1 check fw data len err";
+          emit signal_protocol_run_step_msg(run_step_msg);
           goto __set_device_err;
         }
         break;
@@ -639,6 +663,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
           /* ack回复错误，不重发 */
           if(RETURN_ERROR == ret)
           {
+            run_step_msg = "step3.2 write fw data len ack err";
+            emit signal_protocol_run_step_msg(run_step_msg);
             goto __set_device_err;
           }
 
@@ -647,6 +673,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
           {
             continue;
           }
+          run_step_msg = "step3.2 write fw data len err";
+          emit signal_protocol_run_step_msg(run_step_msg);
           goto __set_device_err;
         }
         break;
@@ -697,6 +725,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       /* ack回复错误，不重发 */
       if(RETURN_ERROR == ret)
       {
+        run_step_msg = "step4 check fw all data len ack err";
+        emit signal_protocol_run_step_msg(run_step_msg);
         goto __set_device_err;
       }
 
@@ -705,6 +735,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       {
         continue;
       }
+      run_step_msg = "step4 check fw all data len err";
+      emit signal_protocol_run_step_msg(run_step_msg);
       goto __set_device_err;
     }
     break;
@@ -738,6 +770,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       /* ack回复错误，不重发 */
       if(RETURN_ERROR == ret)
       {
+        run_step_msg = "step5 check fw data crc ack err";
+        emit signal_protocol_run_step_msg(run_step_msg);
         goto __set_device_err;
       }
 
@@ -746,6 +780,8 @@ bool updatefw_protocol::update_device_app_task(void *param_)
       {
         continue;
       }
+      run_step_msg = "step5 check fw data crc err";
+      emit signal_protocol_run_step_msg(run_step_msg);
       goto __set_device_err;
     }
     break;
