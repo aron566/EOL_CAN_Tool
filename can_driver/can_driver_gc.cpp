@@ -762,7 +762,8 @@ quint32 can_driver_gc::gc_can_send(const CHANNEL_STATE_Typedef_t &channel_state,
                   memcpy_s(&pData[i], sizeof(GC_CANFD_OBJ), &can_data, sizeof(can_data));
                 }
 
-                if(GC_CANFD_STATUS_OK == TransmitFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount))
+                ulong ret = TransmitFD(kDeviceType[device_type_index_].device_type, device_index_, channel_state.channel_num, pData, nSendCount);
+                if(GC_CANFD_STATUS_OK == ret)
                 {
                   result = nSendCount;
                 }

@@ -336,7 +336,8 @@ bool can_driver_model::receive_data()
   for(qint32 i = 0; i < channel_state_list.size(); i++)
   {
     channel_state = channel_state_list.value(i);
-    if(true == channel_state.channel_en)
+    if(true == channel_state.channel_en
+        && true == start_)
     {
       receive_data(channel_state);
     }
