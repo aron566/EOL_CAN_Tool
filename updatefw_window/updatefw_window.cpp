@@ -101,7 +101,6 @@ updatefw_window::~updatefw_window()
 void updatefw_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   /* last_fw_dir */
   setting.setValue("updatefw_window/last_fw_dir", last_file_path);
   setting.sync();
@@ -115,7 +114,6 @@ void updatefw_window::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   if(false == setting.contains("updatefw_window/last_fw_dir"))
   {
     qDebug() << "err updatefw_window config not exist";

@@ -15,6 +15,8 @@
 
 namespace hv {
 
+// EventLoop is a loop-bound wrapper around hloop_t.
+// When constructed with an external hloop_t, the caller remains responsible for that loop's lifetime.
 class EventLoop : public Status {
 public:
 
@@ -88,8 +90,8 @@ public:
 
     // Timer interfaces: setTimer, killTimer, resetTimer
     TimerID setTimer(int timeout_ms, TimerCallback cb, uint32_t repeat = INFINITE, TimerID timerID = INVALID_TIMER_ID) {
-        assertInLoopThread();
         if (loop_ == NULL) return INVALID_TIMER_ID;
+        assertInLoopThread();
         htimer_t* htimer = htimer_add(loop_, onTimer, timeout_ms, repeat);
         assert(htimer != NULL);
         if (timerID == INVALID_TIMER_ID) {
@@ -104,6 +106,7 @@ public:
 
     // setTimerInLoop thread-safe
     TimerID setTimerInLoop(int timeout_ms, TimerCallback cb, uint32_t repeat = INFINITE, TimerID timerID = INVALID_TIMER_ID) {
+        if (loop_ == NULL) return INVALID_TIMER_ID;
         if (timerID == INVALID_TIMER_ID) {
             timerID = generateTimerID();
         }
@@ -169,6 +172,7 @@ public:
 
     void queueInLoop(Functor fn) {
         postEvent([fn](Event* ev) {
+            (void)(ev);
             if (fn) fn();
         });
     }
@@ -241,7 +245,7 @@ typedef std::shared_ptr<EventLoop> EventLoopPtr;
 static inline EventLoop* tlsEventLoop() {
     return (EventLoop*)ThreadLocalStorage::get(ThreadLocalStorage::EVENT_LOOP);
 }
-#define currentThreadEventLoop tlsEventLoop()
+#define currentThreadEventLoop ::hv::tlsEventLoop()
 
 static inline TimerID setTimer(int timeout_ms, TimerCallback cb, uint32_t repeat = INFINITE) {
     EventLoop* loop = tlsEventLoop();

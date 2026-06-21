@@ -191,7 +191,6 @@ void MainWindow::can_driver_init()
 void MainWindow::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   setting.setValue("com_v" CONFIG_VER_STR "/device_brand", ui->brand_comboBox->currentIndex());
   setting.setValue("com_v" CONFIG_VER_STR "/device_name", ui->device_list_comboBox->currentText());
   setting.setValue("com_v" CONFIG_VER_STR "/arbitration_bps", ui->arbitration_bps_comboBox->currentIndex());
@@ -231,7 +230,6 @@ void MainWindow::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   if(false == setting.contains("com_v" CONFIG_VER_STR "/device_brand"))
   {
     qDebug() << "err main_window config not exist";

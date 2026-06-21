@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <atomic>
 
 #include "hloop.h"
 #include "hsocket.h"
@@ -12,6 +13,8 @@
 
 namespace hv {
 
+// Channel is a loop-bound wrapper around hio_t.
+// The Channel address is stored in hio_context(io), so the object lifetime must cover all pending hio callbacks.
 class Channel {
 public:
     Channel(hio_t* io = NULL) {
@@ -179,6 +182,10 @@ public:
     int close(bool async = false) {
         if (isClosed()) return -1;
         status = CLOSED;
+        // NOTE: avoid to trigger on_close if not set onclose
+        if (onclose == NULL && hio_getcb_close(io_) == on_close) {
+            hio_setcb_close(io_, NULL);
+        }
         return async ? hio_close_async(io_) : hio_close(io_);
     }
 
@@ -193,7 +200,8 @@ public:
         CONNECTED,
         DISCONNECTED,
         CLOSED,
-    } status;
+    };
+    std::atomic<Status>          status;
     std::function<void(Buffer*)> onread;
     // NOTE: Use Channel::isWriteComplete in onwrite callback to determine whether all data has been written.
     std::function<void(Buffer*)> onwrite;

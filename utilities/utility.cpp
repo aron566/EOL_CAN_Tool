@@ -21,6 +21,7 @@
 /** Private includes ---------------------------------------------------------*/
 #include "utility.h"
 #include "qdebug.h"
+#include <QRegularExpression>
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
@@ -748,7 +749,7 @@ QString utility::line_data2split(const QString &line_data)
 {
   QString line_str = line_data;
   /* 删除0x */
-  QRegExp hex_remove_rx("0x");
+  QRegularExpression hex_remove_rx("0x");
   QString str = line_str.replace(hex_remove_rx, "");
 
   /* 替换逗号 */
@@ -758,7 +759,7 @@ QString utility::line_data2split(const QString &line_data)
   str = str.replace(":", " ");
 
   /* 匹配一个或多个空格字符，逗号字符，分割 */
-  QRegExp split_rx("\\s+");
+  QRegularExpression split_rx("\\s+");
   QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
   QString data = data_list.join(' ');
   return data;
@@ -831,7 +832,7 @@ void utility::export_table2csv_file(QTableWidget *tableWidget, QString filePath)
   }
 
   QTextStream out(&file);
-  out.setCodec("UTF-8");
+  out.setEncoding(QStringConverter::Utf8);
 
   int rowCount = tableWidget->rowCount();
   int columnCount = tableWidget->columnCount();

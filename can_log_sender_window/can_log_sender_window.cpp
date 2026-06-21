@@ -27,6 +27,7 @@
 #include <QThreadPool>
 #include <QStringList>
 #include <QSettings>
+#include <QRegularExpression>
 /** Private includes ---------------------------------------------------------*/
 #include "can_log_sender_window.h"
 #include "ui_can_log_sender_window.h"
@@ -116,7 +117,6 @@ void can_log_sender_window::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   if(false == setting.contains("can_log_sender_window/last_can_log_dir"))
   {
     qDebug() << "err can_log_sender_window config not exist";
@@ -140,7 +140,6 @@ void can_log_sender_window::read_cfg()
 void can_log_sender_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   /* last_can_log_dir */
   setting.setValue("can_log_sender_window/last_can_log_dir", last_file_path);
   setting.setValue("can_log_sender_window/data_field_s_index", ui->s_index_lineEdit->text());
@@ -208,7 +207,7 @@ void can_log_sender_window::can_log_sender_task()
       continue;
     }
     QString str = utility::line_data2split(QString(line_data));
-    QRegExp split_rx("\\s+");
+    QRegularExpression split_rx("\\s+");
     QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
     /* 检测数据长度索引是否合法 */
     if(send_bytes_index >= (quint32)data_list.size())
@@ -461,7 +460,7 @@ void can_log_sender_window::on_start_pushButton_clicked()
     return;
   }
   QString str = utility::line_data2split(ui->permissable_can_id_lineEdit->text());
-  QRegExp split_rx("\\s+");
+  QRegularExpression split_rx("\\s+");
   QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
   can_id_permissable_list.clear();
   for(qint32 i = 0; i < data_list.size(); i++)
@@ -477,7 +476,7 @@ void can_log_sender_window::on_start_pushButton_clicked()
   else
   {
     QString str = utility::line_data2split(ui->response_can_id_lineEdit->text());
-    QRegExp split_rx("\\s+");
+    QRegularExpression split_rx("\\s+");
     QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
     can_id_response_list.clear();
     for(qint32 i = 0; i < data_list.size(); i++)
@@ -505,7 +504,7 @@ void can_log_sender_window::on_start_pushButton_clicked()
   else
   {
     QString str = utility::line_data2split(ui->response_can_data_lineEdit->text());
-    QRegExp split_rx("\\s+");
+    QRegularExpression split_rx("\\s+");
     wait_can_data_list.clear();
     QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
     for(qint32 i = 0; i < data_list.size(); i++)

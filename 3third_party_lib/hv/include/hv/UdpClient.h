@@ -9,6 +9,8 @@
 namespace hv {
 
 template<class TSocketChannel = SocketChannel>
+// UdpClientEventLoopTmpl is a loop-bound wrapper around one udp client socket.
+// When used with an external EventLoopPtr, the caller must stop receiving and destroy the object on the owner loop.
 class UdpClientEventLoopTmpl {
 public:
     typedef std::shared_ptr<TSocketChannel> TSocketChannelPtr;
@@ -60,6 +62,7 @@ public:
         if (ret != 0) {
             perror("bind");
         }
+        hio_set_localaddr(channel->io(), &local_addr.sa, SOCKADDR_LEN(&local_addr));
         return ret;
     }
 
@@ -71,6 +74,7 @@ public:
     }
 
     int startRecv() {
+        loop_->assertInLoopThread();
         if (channel == NULL || channel->isClosed()) {
             int sockfd = createsocket(remote_port, remote_host.c_str());
             if (sockfd < 0) {
@@ -112,9 +116,7 @@ public:
     // sendto thread-safe
     int sendto(const void* data, int size, struct sockaddr* peeraddr = NULL) {
         if (channel == NULL) return -1;
-        std::lock_guard<std::mutex> locker(sendto_mutex);
-        if (peeraddr) hio_set_peeraddr(channel->io(), peeraddr, SOCKADDR_LEN(peeraddr));
-        return channel->write(data, size);
+        return hio_sendto(channel->io(), data, size, peeraddr);
     }
     int sendto(Buffer* buf, struct sockaddr* peeraddr = NULL) {
         return sendto(buf->data(), buf->size(), peeraddr);
@@ -151,7 +153,6 @@ public:
     std::function<void(const TSocketChannelPtr&, Buffer*)>  onWriteComplete;
 
 private:
-    std::mutex              sendto_mutex;
     EventLoopPtr            loop_;
 };
 
@@ -181,6 +182,7 @@ public:
     }
 
     // stop thread-safe
+    // NOTE: When constructed with an external loop, this closes the socket but does not stop that loop.
     void stop(bool wait_threads_stopped = true) {
         UdpClientEventLoopTmpl<TSocketChannel>::closesocket();
         if (is_loop_owner) {

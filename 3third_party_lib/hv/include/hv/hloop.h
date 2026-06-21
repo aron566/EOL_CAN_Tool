@@ -11,16 +11,18 @@ typedef struct hevent_s     hevent_t;
 
 // NOTE: The following structures are subclasses of hevent_t,
 // inheriting hevent_t data members and function members.
+typedef struct hio_s        hio_t;
 typedef struct hidle_s      hidle_t;
 typedef struct htimer_s     htimer_t;
 typedef struct htimeout_s   htimeout_t;
 typedef struct hperiod_s    hperiod_t;
-typedef struct hio_s        hio_t;
+typedef struct hevent_s     hsignal_t;
 
 typedef void (*hevent_cb)   (hevent_t* ev);
+typedef void (*hio_cb)      (hio_t* io);
 typedef void (*hidle_cb)    (hidle_t* idle);
 typedef void (*htimer_cb)   (htimer_t* timer);
-typedef void (*hio_cb)      (hio_t* io);
+typedef void (*hsignal_cb)  (hsignal_t* sig);
 
 typedef void (*haccept_cb)  (hio_t* io);
 typedef void (*hconnect_cb) (hio_t* io);
@@ -31,7 +33,8 @@ typedef void (*hclose_cb)   (hio_t* io);
 typedef enum {
     HLOOP_STATUS_STOP,
     HLOOP_STATUS_RUNNING,
-    HLOOP_STATUS_PAUSE
+    HLOOP_STATUS_PAUSE,
+    HLOOP_STATUS_DESTROY
 } hloop_status_e;
 
 typedef enum {
@@ -41,6 +44,7 @@ typedef enum {
     HEVENT_TYPE_PERIOD  = 0x00000020,
     HEVENT_TYPE_TIMER   = HEVENT_TYPE_TIMEOUT|HEVENT_TYPE_PERIOD,
     HEVENT_TYPE_IDLE    = 0x00000100,
+    HEVENT_TYPE_SIGNAL  = 0x00000200,
     HEVENT_TYPE_CUSTOM  = 0x00000400, // 1024
 } hevent_type_e;
 
@@ -93,6 +97,7 @@ typedef enum {
     HIO_TYPE_STDIO      = 0x0000000F,
 
     HIO_TYPE_FILE       = 0x00000010,
+    HIO_TYPE_PIPE       = 0x00000020,
 
     HIO_TYPE_IP         = 0x00000100,
     HIO_TYPE_SOCK_RAW   = 0x00000F00,
@@ -182,6 +187,10 @@ HV_EXPORT void* hloop_userdata(hloop_t* loop);
 // NOTE: hloop_post_event is thread-safe, used to post event from other thread to loop thread.
 HV_EXPORT void hloop_post_event(hloop_t* loop, hevent_t* ev);
 
+// signal
+HV_EXPORT hsignal_t* hsignal_add(hloop_t* loop, hsignal_cb cb, int signo);
+HV_EXPORT void       hsignal_del(hsignal_t* sig);
+
 // idle
 HV_EXPORT hidle_t* hidle_add(hloop_t* loop, hidle_cb cb, uint32_t repeat DEFAULT(INFINITE));
 HV_EXPORT void     hidle_del(hidle_t* idle);
@@ -224,6 +233,8 @@ const char* hio_engine() {
     return  "iocp";
 #elif defined(EVENT_PORT)
     return  "evport";
+#elif defined(EVENT_IO_URING)
+    return  "io_uring";
 #else
     return  "noevent";
 #endif
@@ -367,6 +378,7 @@ HV_EXPORT int hio_read_remain(hio_t* io);
 // NOTE: hio_write is thread-safe, locked by recursive_mutex, allow to be called by other threads.
 // hio_try_write => hio_add(io, HV_WRITE) => write => hwrite_cb
 HV_EXPORT int hio_write  (hio_t* io, const void* buf, size_t len);
+HV_EXPORT int hio_sendto (hio_t* io, const void* buf, size_t len, struct sockaddr* addr);
 
 // NOTE: hio_close is thread-safe, hio_close_async will be called actually in other thread.
 // hio_del(io, HV_RDWR) => close => hclose_cb
@@ -435,6 +447,10 @@ HV_EXPORT hio_t* hloop_create_udp_server (hloop_t* loop, const char* host, int p
 // @see examples/nc.c
 HV_EXPORT hio_t* hloop_create_udp_client (hloop_t* loop, const char* host, int port);
 
+//-----------------pipe---------------------------------------------
+// @see examples/pipe_test.c
+HV_EXPORT int hio_create_pipe(hloop_t* loop, hio_t* pipeio[2]);
+
 //-----------------upstream---------------------------------------------
 // hio_read(io)
 // hio_read(io->upstream_io)
@@ -481,8 +497,9 @@ typedef enum {
 // UNPACK_BY_LENGTH_FIELD
 typedef enum {
     ENCODE_BY_VARINT        = 17,               // 1 MSB + 7 bits
-    ENCODE_BY_LITTEL_ENDIAN = LITTLE_ENDIAN,    // 1234
+    ENCODE_BY_LITTLE_ENDIAN = LITTLE_ENDIAN,    // 1234
     ENCODE_BY_BIG_ENDIAN    = BIG_ENDIAN,       // 4321
+    ENCODE_BY_ASN1          = 80,               // asn1 decode int
 } unpack_coding_e;
 
 typedef struct unpack_setting_s {
@@ -503,7 +520,7 @@ typedef struct unpack_setting_s {
          *
          * package_len = head_len + body_len + length_adjustment
          *
-         * if (length_field_coding == ENCODE_BY_VARINT) head_len = body_offset + varint_bytes - length_field_bytes;
+         * if (length_field_coding == ENCODE_BY_VARINT || length_field_coding == ENCODE_BY_ASN1) head_len = body_offset + varint_bytes - length_field_bytes;
          * else head_len = body_offset;
          *
          * length_field stores body length, exclude head length,
@@ -627,7 +644,7 @@ HV_INLINE void reconn_setting_reset(reconn_setting_t* reconn) {
 HV_INLINE bool reconn_setting_can_retry(reconn_setting_t* reconn) {
     ++reconn->cur_retry_cnt;
     return reconn->max_retry_cnt == INFINITE ||
-           reconn->cur_retry_cnt < reconn->max_retry_cnt;
+           reconn->cur_retry_cnt <= reconn->max_retry_cnt;
 }
 
 HV_INLINE uint32_t reconn_setting_calc_delay(reconn_setting_t* reconn) {
@@ -681,6 +698,8 @@ typedef struct kcp_setting_s {
     int mtu;
     // ikcp_update
     int update_interval;
+    // bufsize for ikcp_recv
+    size_t rcv_bufsize;
 
 #ifdef __cplusplus
     kcp_setting_s() {
@@ -700,6 +719,7 @@ typedef struct kcp_setting_s {
         rcvwnd = 0;
         mtu = 1400;
         update_interval = 10; // ms
+        rcv_bufsize = 0;
     }
 #endif
 } kcp_setting_t;

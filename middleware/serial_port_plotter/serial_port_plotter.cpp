@@ -26,7 +26,11 @@
 
 #include "serial_port_plotter.hpp"
 #include "ui_serial_port_plotter.h"
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
 #include <x86intrin.h>
+#endif
 
 /**
  * @brief Constructor
@@ -627,8 +631,8 @@ void serial_port_plotter::on_savePNGButton_clicked()
  */
 void serial_port_plotter::onMouseMoveInPlot(QMouseEvent *event)
 {
-    int xx = int(ui->plot->xAxis->pixelToCoord(event->x()));
-    int yy = int(ui->plot->yAxis->pixelToCoord(event->y()));
+    int xx = int(ui->plot->xAxis->pixelToCoord(event->position().x()));
+    int yy = int(ui->plot->yAxis->pixelToCoord(event->position().y()));
     QString coordinates("X: %1 Y: %2");
     coordinates = coordinates.arg(xx).arg(yy);
     ui->statusBar->showMessage(coordinates);
@@ -641,9 +645,10 @@ void serial_port_plotter::onMouseMoveInPlot(QMouseEvent *event)
  */
 void serial_port_plotter::on_mouse_wheel_in_plot (QWheelEvent *event)
 {
-  QWheelEvent inverted_event = QWheelEvent(event->posF(), event->globalPosF(),
+  QWheelEvent inverted_event(event->position(), event->globalPosition(),
                                            -event->pixelDelta(), -event->angleDelta(),
-                                           0, Qt::Vertical, event->buttons(), event->modifiers());
+                                           event->buttons(), event->modifiers(),
+                                           Qt::NoScrollPhase, false);
   QApplication::sendEvent (ui->spinPoints, &inverted_event);
 }
 /** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

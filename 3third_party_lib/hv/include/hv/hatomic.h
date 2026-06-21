@@ -42,22 +42,9 @@ typedef volatile long long          atomic_llong;
 typedef volatile unsigned long long atomic_ullong;
 typedef volatile size_t             atomic_size_t;
 
-typedef struct atomic_flag { atomic_bool _Value; } atomic_flag;
+typedef struct atomic_flag { atomic_long _Value; } atomic_flag;
 
-#ifdef _WIN32
-
-#define ATOMIC_FLAG_TEST_AND_SET    atomic_flag_test_and_set
-static inline bool atomic_flag_test_and_set(atomic_flag* p) {
-    // return InterlockedIncrement((LONG*)&p->_Value, 1);
-    return InterlockedCompareExchange((LONG*)&p->_Value, 1, 0);
-}
-
-#define ATOMIC_ADD          InterlockedAdd
-#define ATOMIC_SUB(p, n)    InterlockedAdd(p, -n)
-#define ATOMIC_INC          InterlockedIncrement
-#define ATOMIC_DEC          InterlockedDecrement
-
-#elif defined(__GNUC__)
+#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1))
 
 #define ATOMIC_FLAG_TEST_AND_SET    atomic_flag_test_and_set
 static inline bool atomic_flag_test_and_set(atomic_flag* p) {
@@ -68,6 +55,19 @@ static inline bool atomic_flag_test_and_set(atomic_flag* p) {
 #define ATOMIC_SUB          __sync_fetch_and_sub
 #define ATOMIC_INC(p)       ATOMIC_ADD(p, 1)
 #define ATOMIC_DEC(p)       ATOMIC_SUB(p, 1)
+
+#elif defined(_WIN32)
+
+#define ATOMIC_FLAG_TEST_AND_SET    atomic_flag_test_and_set
+static inline bool atomic_flag_test_and_set(atomic_flag* p) {
+    // return InterlockedIncrement((LONG*)&p->_Value, 1);
+    return InterlockedCompareExchange(&p->_Value, 1, 0);
+}
+
+#define ATOMIC_ADD          InterlockedExchangeAdd
+#define ATOMIC_SUB(p, n)    InterlockedExchangeAdd(p, -(n))
+#define ATOMIC_INC(p)       InterlockedExchangeAdd(p, 1)
+#define ATOMIC_DEC(p)       InterlockedExchangeAdd(p, -1)
 
 #endif
 

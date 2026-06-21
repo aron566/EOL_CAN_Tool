@@ -350,4 +350,27 @@ Show_Elapsed_Time(E - S, 2, 3);
 
 ## 编译环境
 
-QT5.15.2
+### 当前版本 (v1.4.6, Qt6 适配)
+
+| 项目 | 说明 |
+| --- | --- |
+| Qt 版本 | Qt 6.8.3 LTS |
+| 编译器 | MSVC 2022 (64-bit) |
+| 构建工具 | qmake + nmake |
+| C++ 标准 | C++17 |
+| Qt 兼容模块 | Qt5Compat (core5compat) |
+| libhv | v1.3.4 (MSVC 编译, 启用 WITH_EVPP=ON) |
+| QCustomPlot | v2.0.1 (已适配 Qt6) |
+| QSimpleUpdater | 上游最新版 (alex-spataru/QSimpleUpdater master) |
+| 打包工具 | CQtDeployer 1.6.2323 |
+| 安装包生成 | NSIS (via CQtDeployer) |
+| CAN 设备库 | 周立功 ZLG / 同星 TS / KVASER |
+| 操作系统 | Windows 10/11 64-bit |
+
+### 历史版本 (v1.2.9 及以前)
+
+| 项目 | 说明 |
+| --- | --- |
+| Qt 版本 | Qt 5.15.2 |
+| 编译器 | MinGW 8.1.0 (64-bit) |
+| libhv | v1.3.2 (MinGW 编译) |

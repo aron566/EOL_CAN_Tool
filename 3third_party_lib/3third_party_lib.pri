@@ -6,15 +6,15 @@ INCLUDEPATH += $$PWD \
     $$PWD/hv/include \
     $$PWD/blf/include
 
-# libhv库文件
+# libhv库文件 (MSVC编译, v1.3.4)
 contains(QMAKE_HOST.arch, x86_64) {
     # 64位编译器链接的库文件
     DEPENDPATH += $$PWD/hv/bin
-    LIBS += -L$$PWD/hv/bin -llibhv64 -lws2_32
+    LIBS += -L$$PWD/hv/bin -lhv -lws2_32
 } else {
     # 32位编译器链接的库文件
     DEPENDPATH += $$PWD/hv/bin
-    LIBS += -L$$PWD/hv/bin -llibhv32 -lws2_32
+    LIBS += -L$$PWD/hv/bin -lhv -lws2_32
 }
 
 # can binlog库文件

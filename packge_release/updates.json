@@ -3,35 +3,35 @@
     "windows": {
       "open-url": "",
       "latest-version": "1.4.6",
-      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/main/packge_release/InstallerEOL_CAN_Tool.exe",
-      "changelog": "2026-06-21 v1.4.6 Qt5迁移Qt6.8.3 LTS, libhv用MSVC重编译, QSimpleUpdater升级最新版, QCustomPlot适配Qt6",
+      "download-url": "https://github.com/aron566/EOL_CAN_Tool/releases/download/v1.4.6/InstallerEOL_CAN_Tool.exe",
+      "changelog": "2026-06-21 v1.4.6 Qt5迁移Qt6.8.3 LTS, libhv用MSVC重编译v1.3.4, QSimpleUpdater升级最新版, QCustomPlot适配Qt6",
       "mandatory": true
     },
     "osx": {
       "open-url": "",
       "latest-version": "1.0.1",
-      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/main/packge_release/EOL_CAN_Tool.zip",
+      "download-url": "https://github.com/aron566/EOL_CAN_Tool/releases/download/v1.4.6/EOL_CAN_Tool.zip",
       "changelog": "This is an example changelog for Mac OS X. Go on...",
       "mandatory": true
     },
     "linux": {
       "open-url": "",
       "latest-version": "1.0.1",
-      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/main/packge_release/EOL_CAN_Tool.zip",
+      "download-url": "https://github.com/aron566/EOL_CAN_Tool/releases/download/v1.4.6/EOL_CAN_Tool.zip",
       "changelog": "This is an example changelog for Linux. Go on...",
       "mandatory": true
     },
     "ios": {
       "open-url": "",
       "latest-version": "1.0.1",
-      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/main/packge_release/EOL_CAN_Tool.zip",
+      "download-url": "https://github.com/aron566/EOL_CAN_Tool/releases/download/v1.4.6/EOL_CAN_Tool.zip",
       "changelog": "This is an example changelog for iOS. Go on...",
       "mandatory": true
     },
     "android": {
       "open-url": "",
       "latest-version": "1.0.1",
-      "download-url": "https://raw.githubusercontent.com/aron566/EOL_CAN_Tool/main/packge_release/EOL_CAN_Tool.zip",
+      "download-url": "https://github.com/aron566/EOL_CAN_Tool/releases/download/v1.4.6/EOL_CAN_Tool.zip",
       "changelog": "This is an example changelog for Android. Go on...",
       "mandatory": true
     }

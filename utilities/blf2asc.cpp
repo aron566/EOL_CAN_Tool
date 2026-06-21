@@ -458,7 +458,7 @@ void blf2asc::on_pushButton_converter_clicked()
   }
 
   /* 执行转换 */
-  QtConcurrent::run(this, &blf2asc::runConveter);
+  QtConcurrent::run([this](){ this->runConveter(); });
 }
 
 void blf2asc::on_recConveterState(int statue)

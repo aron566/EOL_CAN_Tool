@@ -12,6 +12,8 @@
 
 BEGIN_EXTERN_C
 
+typedef int (*printf_t)(const char *const fmt, ...);
+
 typedef struct main_ctx_s {
     char    run_dir[MAX_PATH];
     char    program_name[MAX_PATH];
@@ -65,6 +67,7 @@ typedef struct option_s {
     char        short_opt;
     const char* long_opt;
     int         arg_type;
+    const char* description;
 } option_t;
 
 HV_EXPORT int  main_ctx_init(int argc, char** argv);
@@ -76,7 +79,8 @@ HV_EXPORT void main_ctx_free(void);
 // watch -n10 ls
 HV_EXPORT int parse_opt(int argc, char** argv, const char* opt);
 // gcc -g -Wall -O3 -std=cpp main.c
-HV_EXPORT int parse_opt_long(int argc, char** argv, const option_t* long_options, int size);
+HV_EXPORT int parse_opt_long(int argc, char** argv, const option_t* long_options, int opt_size);
+HV_EXPORT int dump_opt_long(const option_t* long_options, int opt_size, char* out_str, int out_size);
 HV_EXPORT const char* get_arg(const char* key);
 HV_EXPORT const char* get_env(const char* key);
 
@@ -92,6 +96,7 @@ HV_EXPORT pid_t getpid_from_pidfile();
 // signal=[start,stop,restart,status,reload]
 HV_EXPORT int  signal_init(procedure_t reload_fn DEFAULT(NULL), void* reload_userdata DEFAULT(NULL));
 HV_EXPORT void signal_handle(const char* signal);
+HV_EXPORT bool signal_handle_noexit(const char* signal);
 #ifdef OS_UNIX
 // we use SIGTERM to quit process, SIGUSR1 to reload confile
 #define SIGNAL_TERMINATE    SIGTERM
@@ -103,6 +108,7 @@ void signal_handler(int signo);
 #define DEFAULT_WORKER_PROCESSES    4
 #define MAXNUM_WORKER_PROCESSES     256
 HV_EXPORT extern main_ctx_t   g_main_ctx;
+HV_EXPORT extern printf_t     printf_fn;
 
 // master-workers processes
 HV_EXPORT int master_workers_run(

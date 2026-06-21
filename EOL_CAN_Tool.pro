@@ -9,9 +9,10 @@ QT       += network
 QT       += concurrent
 # modbus / can driver
 QT       += serialbus
+QT       += core5compat
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
-CONFIG += c++11
+CONFIG += c++17
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -26,7 +27,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 # 设置目标生成路径
 unix:!macx: DESTDIR = ../../bin
-win32: DESTDIR = "$(USERPROFILE)\\Desktop\\EOL_CAN_Tool"
+win32: DESTDIR = "$$PWD/bin"
 
 # 执行打包工具
 QMAKE_PRE_LINK += echo start Build $$TARGET
@@ -34,7 +35,7 @@ QMAKE_PRE_LINK += echo start Build $$TARGET
 # 拷贝libhv库文件
 contains(QMAKE_HOST.arch, x86_64) {
     # 64位编译器链接的库文件
-    copy_hvfiles.commands = powershell -Command "Copy-Item -Path $$PWD/3third_party_lib/hv/bin/libhv64.dll -Destination $$DESTDIR/libhv.dll -Force"
+    copy_hvfiles.commands = powershell -Command "Copy-Item -Path $$PWD/3third_party_lib/hv/bin/hv.dll -Destination $$DESTDIR/hv.dll -Force"
     QMAKE_EXTRA_TARGETS += copy_hvfiles
     PRE_TARGETDEPS += copy_hvfiles
     copy_cryptofiles.commands = powershell -Command "Copy-Item -Path $$PWD/3third_party_lib/hv/lib/libcrypto-1_1-x64.dll -Destination $$DESTDIR/ -Force"
@@ -45,7 +46,7 @@ contains(QMAKE_HOST.arch, x86_64) {
     PRE_TARGETDEPS += copy_sslfiles
 } else {
     # 32位编译器链接的库文件
-    copy_hvfiles.commands = powershell -Command "Copy-Item -Path $$PWD/3third_party_lib/hv/bin/libhv32.dll -Destination $$DESTDIR/libhv.dll -Force"
+    copy_hvfiles.commands = powershell -Command "Copy-Item -Path $$PWD/3third_party_lib/hv/bin/hv.dll -Destination $$DESTDIR/hv.dll -Force"
     QMAKE_EXTRA_TARGETS += copy_hvfiles
     PRE_TARGETDEPS += copy_hvfiles
     copy_cryptofiles.commands = powershell -Command "Copy-Item -Path $$PWD/3third_party_lib/hv/lib/libcrypto-1_1.dll -Destination $$DESTDIR/ -Force"
@@ -66,7 +67,7 @@ contains(QMAKE_HOST.arch, x86_64) {
     # 32位编译器链接的库文件
 }
 
-win32: QMAKE_POST_LINK += $$DESTDIR/qtenvPackage.bat $$DESTDIR $${TARGET}.exe
+# win32: QMAKE_POST_LINK += $$DESTDIR/qtenvPackage.bat $$DESTDIR $${TARGET}.exe
 
 # 周立功can驱动库
 include(zlg_can_lib/zlg_can_lib.pri)
@@ -188,3 +189,6 @@ RESOURCES += \
     resource/qdarkstyle/dark/style.qrc
 
 RC_FILE = resource/EOL_CAN_Tool.rc
+
+# Disable auto manifest embedding (manifest is included in .rc file)
+CONFIG -= embed_manifest_exe

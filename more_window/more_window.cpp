@@ -26,6 +26,7 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QWheelEvent>
+#include <QRegularExpression>
 /** Private includes ---------------------------------------------------------*/
 #include "more_window.h"
 #include "ui_more_window.h"
@@ -356,7 +357,6 @@ void more_window::closeEvent(QCloseEvent *event)
 void more_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   /* can id */
   setting.setValue("more_window_v" CONFIG_VER_STR "/can_id", ui->id_lineEdit->text());
   /* crc */
@@ -376,7 +376,6 @@ void more_window::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   if(false == setting.contains("more_window_v" CONFIG_VER_STR "/can_id"))
   {
     qDebug() << "err more_window config not exist";
@@ -1126,7 +1125,7 @@ void more_window::on_crc_pushButton_clicked()
   quint8 temp_data[2048];
 
   QString str = utility::line_data2split(ui->data_lineEdit->text());
-  QRegExp split_rx("\\s+");
+  QRegularExpression split_rx("\\s+");
   QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
 
   quint32 len = (quint32)data_list.length() > sizeof(temp_data) ? sizeof(temp_data) : (quint32)data_list.length();

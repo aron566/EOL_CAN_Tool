@@ -32,7 +32,8 @@ HV_EXPORT const char* socket_strerror(int err);
 
 #ifdef OS_WIN
 
-typedef int socklen_t;
+typedef SOCKET  hsocket_t;
+typedef int     socklen_t;
 
 void WSAInit();
 void WSADeinit();
@@ -63,15 +64,29 @@ HV_INLINE int nonblocking(int sockfd) {
 
 #else
 
-#define blocking(s)     fcntl(s, F_SETFL, fcntl(s, F_GETFL) & ~O_NONBLOCK)
-#define nonblocking(s)  fcntl(s, F_SETFL, fcntl(s, F_GETFL) |  O_NONBLOCK)
+typedef int     hsocket_t;
 
-typedef int         SOCKET;
+#ifndef SOCKET
+#define SOCKET int
+#endif
+
+#ifndef INVALID_SOCKET
 #define INVALID_SOCKET  -1
+#endif
 
+HV_INLINE int blocking(int s) {
+    return fcntl(s, F_SETFL, fcntl(s, F_GETFL) & ~O_NONBLOCK);
+}
+
+HV_INLINE int nonblocking(int s) {
+    return fcntl(s, F_SETFL, fcntl(s, F_GETFL) |  O_NONBLOCK);
+}
+
+#ifndef closesocket
 HV_INLINE int closesocket(int sockfd) {
     return close(sockfd);
 }
+#endif
 
 #endif
 
@@ -106,6 +121,7 @@ HV_EXPORT void sockaddr_set_port(sockaddr_u* addr, int port);
 HV_EXPORT int sockaddr_set_ipport(sockaddr_u* addr, const char* host, int port);
 HV_EXPORT socklen_t sockaddr_len(sockaddr_u* addr);
 HV_EXPORT const char* sockaddr_str(sockaddr_u* addr, char* buf, int len);
+HV_EXPORT int sockaddr_compare(const sockaddr_u* addr1, const sockaddr_u* addr2);
 
 //#define INET_ADDRSTRLEN   16
 //#define INET6_ADDRSTRLEN  46

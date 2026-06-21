@@ -395,7 +395,6 @@ bool debug_window::eventFilter(QObject *target, QEvent *event)
 void debug_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   setting.setValue("debug_window_v" CONFIG_VER_STR "/open_case_sensitive", (int)ui->case_sensitive_checkBox->isChecked());
   setting.setValue("debug_window_v" CONFIG_VER_STR "/textcolor", ui->color_list_comboBox->currentText());
   /* 快捷命令 */
@@ -418,7 +417,6 @@ void debug_window::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   if(false == setting.contains("debug_window_v" CONFIG_VER_STR "/open_case_sensitive"))
   {
     qDebug() << "err debug_window config not exist";

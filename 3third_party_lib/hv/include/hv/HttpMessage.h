@@ -46,19 +46,6 @@
 #include "httpdef.h"
 #include "http_content.h"
 
-namespace hv {
-
-struct NetAddr {
-    std::string     ip;
-    int             port;
-
-    std::string ipport() {
-        return hv::asprintf("%s:%d", ip.c_str(), port);
-    }
-};
-
-}
-
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
 // Cookie: sessionid=1; domain=.example.com; path=/; max-age=86400; secure; httponly
 struct HV_EXPORT HttpCookie {
@@ -232,7 +219,9 @@ public:
         if (file.open(filepath.c_str(), "wb") != 0) {
             return HTTP_STATUS_INTERNAL_SERVER_ERROR;
         }
-        file.write(formdata.content.data(), formdata.content.size());
+        if (file.write(formdata.content.data(), formdata.content.size()) != formdata.content.size()) {
+            return HTTP_STATUS_INTERNAL_SERVER_ERROR;
+        }
         return 200;
     }
 
@@ -266,6 +255,7 @@ public:
     void FillContentType();
     // body.size -> content_length <-> headers["Content-Length"]
     void FillContentLength();
+    bool NeedContentLength();
 
     bool IsChunked();
     bool IsKeepAlive();
@@ -297,6 +287,7 @@ public:
     void* Content() {
         if (content == NULL && body.size() != 0) {
             content = (void*)body.data();
+            content_length = body.size();
         }
         return content;
     }

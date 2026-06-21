@@ -108,7 +108,6 @@ updater_window::~updater_window()
 void updater_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   /* 启动时检查更新 */
   setting.setValue("updater_window_v" CONFIG_VER_STR "/startup_check_update", (int)ui->startup_check_en_checkBox->isChecked());
   /* 下载保存路径 */
@@ -138,7 +137,6 @@ void updater_window::read_cfg()
       return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   if(false == setting.contains("updater_window_v" CONFIG_VER_STR "/updater_url"))
   {
     qDebug() << "err updater_window config not exist";

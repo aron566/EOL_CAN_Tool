@@ -365,7 +365,6 @@ void eol_window::timer_init()
 void eol_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   /* com hw */
   setting.setValue("eol_window_v" CONFIG_VER_STR "/eol_com_hw", ui->com_hw_comboBox->currentIndex());
   /* com chnannel */
@@ -387,7 +386,6 @@ void eol_window::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   if(false == setting.contains("eol_window_v" CONFIG_VER_STR "/eol_com_hw"))
   {
     qDebug() << "err eol_window config not exist";

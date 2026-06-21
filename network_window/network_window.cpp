@@ -26,6 +26,7 @@
 #include <QDateTime>
 #include <QWheelEvent>
 #include <QSettings>
+#include <QRegularExpression>
 /** Private includes ---------------------------------------------------------*/
 #include "network_window.h"
 #include "ui_network_window.h"
@@ -254,7 +255,6 @@ void network_window::wheelEvent(QWheelEvent *event)
 void network_window::save_cfg()
 {
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   /* addr */
   setting.setValue("network_window_v" CONFIG_VER_STR "/ip_addr", ui->ip_lineEdit->text());
   /* 端口 */
@@ -275,7 +275,6 @@ void network_window::read_cfg()
     return;
   }
   QSettings setting("./eol_tool_cfg.ini", QSettings::IniFormat);
-  setting.setIniCodec("UTF-8");
   if(false == setting.contains("network_window_v" CONFIG_VER_STR "/ip_addr"))
   {
     qDebug() << "err network_window config not exist";
@@ -1012,7 +1011,7 @@ void network_window::on_crc_pushButton_clicked()
   quint8 temp_data[2048];
 
   QString str = utility::line_data2split(ui->hex_lineEdit->text());
-  QRegExp split_rx("\\s+");
+  QRegularExpression split_rx("\\s+");
   QStringList data_list = str.split(split_rx, Qt::SkipEmptyParts);
 
   quint32 len = (quint32)data_list.length() > sizeof(temp_data) ? sizeof(temp_data) : (quint32)data_list.length();
