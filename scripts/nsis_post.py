@@ -8,6 +8,7 @@ windeployqt 只收集 Qt 依赖(不含 MSVC 运行库与第三方 CAN 驱动库)
 import os
 import glob
 import shutil
+import subprocess
 import sys
 
 # CI 的 Python stdout 可能是 cp1252,中文 print 会 UnicodeEncodeError;强制 UTF-8
@@ -46,21 +47,55 @@ DLL_ONLY_DIRS = {
 }
 
 
+def _pick_crt(redist_base):
+    """在 <VS>\\VC\\Redist\\MSVC 下找最新版本的 x64 Microsoft.VC143.CRT。"""
+    if not os.path.isdir(redist_base):
+        return None
+    for v in sorted(os.listdir(redist_base), reverse=True):
+        crt = os.path.join(redist_base, v, 'x64', 'Microsoft.VC143.CRT')
+        if os.path.isdir(crt):
+            return crt
+    return None
+
+
 def find_vc_crt():
-    """定位 VC143 运行库目录(兼容 Community/Enterprise/Professional/BuildTools)。"""
-    bases = [
+    """定位 VC143 运行库目录。优先 vcvars 注入的 VCToolsRedistDir(指向 ...\\Redist\\MSVC\\<ver>\\)，
+    回退 vswhere 动态定位,最后回退硬编码(本地 Community / runner 上 VS18 Enterprise)。"""
+    # 1. VCToolsRedistDir 环境变量(ilammy/msvc-dev-cmd 与 vcvars 都会注入)
+    v = os.environ.get('VCToolsRedistDir')
+    if v:
+        crt = os.path.join(v.rstrip('\\/'), 'x64', 'Microsoft.VC143.CRT')
+        if os.path.isdir(crt):
+            return crt
+    # 2. vswhere 动态定位 VS 安装根
+    vswhere = r'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
+    if os.path.isfile(vswhere):
+        try:
+            out = subprocess.run(
+                [vswhere, '-latest', '-products', '*',
+                 '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
+                 '-property', 'installationPath'],
+                capture_output=True, text=True, timeout=10)
+            base = out.stdout.strip()
+            if base:
+                crt = _pick_crt(os.path.join(base, 'VC', 'Redist', 'MSVC'))
+                if crt:
+                    return crt
+        except Exception:
+            pass
+    # 3. 硬编码回退
+    for base in [
         r'C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Redist\MSVC',
         r'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC',
         r'C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Redist\MSVC',
         r'C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC',
-    ]
-    for base in bases:
-        if not os.path.isdir(base):
-            continue
-        for v in sorted(os.listdir(base), reverse=True):
-            crt = os.path.join(base, v, 'x64', 'Microsoft.VC143.CRT')
-            if os.path.isdir(crt):
-                return crt
+        r'C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Redist\MSVC',
+        r'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Redist\MSVC',
+        r'C:\Program Files\Microsoft Visual Studio\18\BuildTools\VC\Redist\MSVC',
+    ]:
+        crt = _pick_crt(base)
+        if crt:
+            return crt
     raise SystemExit('找不到 VC143.CRT 目录')
 
 
