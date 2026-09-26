@@ -55,7 +55,7 @@ jobs:
         with:
           version: '6.8.3'
           arch: 'win64_msvc2022_64'
-          modules: 'qtcharts qtserialbus qtserialport qtsvg qtmultimedia qt5compat qttools'
+          modules: 'qtcharts qtserialbus qtserialport qtmultimedia qt5compat'
           cache: true
 
       - name: 安装 NSIS
