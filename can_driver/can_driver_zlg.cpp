@@ -373,34 +373,34 @@ bool can_driver_zlg::init(CHANNEL_STATE_Typedef_t &channel_state)
     if(tcpDevice)
     {
       qDebug() << "tcpDevice/";
-      sprintf(path, "%d/work_mode", channel_state.channel_num);
-      sprintf(value, "%d", server ? 1 : 0);
+      snprintf(path, sizeof(path), "%d/work_mode", channel_state.channel_num);
+      snprintf(value, sizeof(value), "%d", server ? 1 : 0);
       ZCAN_SetValue(device_handle_, path, value);
       if(server)
       {
         qDebug() << "server";
-        sprintf(path, "%d/local_port", channel_state.channel_num);
+        snprintf(path, sizeof(path), "%d/local_port", channel_state.channel_num);
         ZCAN_SetValue(device_handle_, path, local_port_str.toStdString().data());
       } // server
       else
       {
         qDebug() << "client";
-        sprintf(path, "%d/ip", channel_state.channel_num);
+        snprintf(path, sizeof(path), "%d/ip", channel_state.channel_num);
         ZCAN_SetValue(device_handle_, path, service_ip_str.toStdString().data());
 
-        sprintf(path, "%d/work_port", channel_state.channel_num);
+        snprintf(path, sizeof(path), "%d/work_port", channel_state.channel_num);
         ZCAN_SetValue(device_handle_, path, service_port_str.toStdString().data());
       }
     } // tcp
     else
     {
       qDebug() << "udpDevice";
-      sprintf(path, "%d/local_port", channel_state.channel_num);
+      snprintf(path, sizeof(path), "%d/local_port", channel_state.channel_num);
       ZCAN_SetValue(device_handle_, path, local_port_str.toStdString().data());
-      sprintf(path, "%d/ip", channel_state.channel_num);
+      snprintf(path, sizeof(path), "%d/ip", channel_state.channel_num);
 
       ZCAN_SetValue(device_handle_, path, service_ip_str.toStdString().data());
-      sprintf(path, "%d/work_port", channel_state.channel_num);
+      snprintf(path, sizeof(path), "%d/work_port", channel_state.channel_num);
       ZCAN_SetValue(device_handle_, path, service_port_str.toStdString().data());
     }
   }
@@ -431,8 +431,8 @@ bool can_driver_zlg::init(CHANNEL_STATE_Typedef_t &channel_state)
       qDebug() << "set usbcanfd channel";
       char path[50] = {0};
       char value[100] = {0};
-      sprintf(path, "%d/canfd_standard", channel_state.channel_num);
-      sprintf(value, "%d", 0);
+      snprintf(path, sizeof(path), "%d/canfd_standard", channel_state.channel_num);
+      snprintf(value, sizeof(value), "%d", 0);
       ZCAN_SetValue(device_handle_, path, value);
     }
     if(usbcanfd)
@@ -476,8 +476,8 @@ bool can_driver_zlg::init(CHANNEL_STATE_Typedef_t &channel_state)
 
       if(type == ZCAN_PCIE_CANFD_400U_EX )
       {
-        sprintf(path, "0/set_device_recv_merge");
-        sprintf(value, "0");
+        snprintf(path, sizeof(path), "0/set_device_recv_merge");
+        snprintf(value, sizeof(value), "0");
         ZCAN_SetValue(device_handle_, path, value);
       }
 
@@ -865,7 +865,7 @@ void can_driver_zlg::function_can_use_update()
 bool can_driver_zlg::custom_baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   char path[50] = {0};
-  sprintf(path, "%d/baud_rate_custom", channel_state.channel_num);
+  snprintf(path, sizeof(path), "%d/baud_rate_custom", channel_state.channel_num);
   return 1 == ZCAN_SetValue(device_handle_, path, custom_baudrate_.toUtf8().data());
 }
 
@@ -937,8 +937,8 @@ bool can_driver_zlg::transmit_type_config(const CHANNEL_STATE_Typedef_t &channel
 {
   char path[50] = {0};
   char value[100] = {0};
-  sprintf(path, "%d/send_type", channel_state.channel_num);
-  sprintf(value, "%d", send_type_index_);
+  snprintf(path, sizeof(path), "%d/send_type", channel_state.channel_num);
+  snprintf(value, sizeof(value), "%d", send_type_index_);
   return 1 == ZCAN_SetValue(device_handle_, path, value);
 }
 
@@ -946,9 +946,9 @@ bool can_driver_zlg::transmit_type_config(const CHANNEL_STATE_Typedef_t &channel
 bool can_driver_zlg::resistance_config(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   char path[50] = {0};
-  sprintf(path, "%d/initenal_resistance", channel_state.channel_num);
+  snprintf(path, sizeof(path), "%d/initenal_resistance", channel_state.channel_num);
   char value[10] = {0};
-  sprintf(value, "%d", resistance_enable_);
+  snprintf(value, sizeof(value), "%d", resistance_enable_);
   return 1 == ZCAN_SetValue(device_handle_, path, value);
 }
 
@@ -957,9 +957,9 @@ bool can_driver_zlg::baud_rate_config(const CHANNEL_STATE_Typedef_t &channel_sta
 {
   qDebug() << "/baud_rate_config";
   char path[50] = {0};
-  sprintf(path, "%d/baud_rate", channel_state.channel_num);
+  snprintf(path, sizeof(path), "%d/baud_rate", channel_state.channel_num);
   char value[10] = {0};
-  sprintf(value, "%d", kBaudrate[baud_index_]);
+  snprintf(value, sizeof(value), "%d", kBaudrate[baud_index_]);
   return 1 == ZCAN_SetValue(device_handle_, path, value);
 }
 
@@ -968,14 +968,14 @@ bool can_driver_zlg::cand_fd_bps_config(const CHANNEL_STATE_Typedef_t &channel_s
 {
   qDebug() << channel_state.channel_num << "/canfd_abit_baud_rate " << kAbitTimingUSB[abit_baud_index_];
   char path[50] = { 0 };
-  sprintf(path, "%d/canfd_abit_baud_rate", channel_state.channel_num);
+  snprintf(path, sizeof(path), "%d/canfd_abit_baud_rate", channel_state.channel_num);
   char value[10] = { 0 };
-  sprintf(value, "%d", kAbitTimingUSB[abit_baud_index_]);
+  snprintf(value, sizeof(value), "%d", kAbitTimingUSB[abit_baud_index_]);
   int ret_a = ZCAN_SetValue(device_handle_, path, value);
 
   qDebug() << channel_state.channel_num << "/canfd_dbit_baud_rate " << kDbitTimingUSB[dbit_baud_index_];
-  sprintf(path, "%d/canfd_dbit_baud_rate", channel_state.channel_num);
-  sprintf(value, "%d", kDbitTimingUSB[dbit_baud_index_]);
+  snprintf(path, sizeof(path), "%d/canfd_dbit_baud_rate", channel_state.channel_num);
+  snprintf(value, sizeof(value), "%d", kDbitTimingUSB[dbit_baud_index_]);
   int ret_d = ZCAN_SetValue(device_handle_, path, value);
   return 1 == (ret_a && ret_d);
 }
@@ -987,7 +987,7 @@ void can_driver_zlg::show_tx_queue_available(const CHANNEL_STATE_Typedef_t &chan
   char path[50] = {0};
   //  char value[100] = {0};
   QString csText;
-  sprintf(path, "%d/get_device_available_tx_count/1", channel_state.channel_num);
+  snprintf(path, sizeof(path), "%d/get_device_available_tx_count/1", channel_state.channel_num);
   const char* pRet = (const char *)ZCAN_GetValue(device_handle_, path);
   if (pRet)
   {
@@ -1020,7 +1020,7 @@ void can_driver_zlg::clear_tx_queue(const CHANNEL_STATE_Typedef_t &channel_state
 
   char path[50] = {0};
   char value[100] = {0};
-  sprintf(path, "%d/clear_delay_send_queue", channel_state.channel_num);
+  snprintf(path, sizeof(path), "%d/clear_delay_send_queue", channel_state.channel_num);
   int nRet = ZCAN_SetValue(device_handle_, path, value);
   QString csText;
   csText = QString(tr("[%1]clear tx queue [%2] ").arg(channel_state.channel_num).arg(nRet > 0 ? tr(" ok ") : tr(" failed ")));
@@ -1047,8 +1047,8 @@ bool can_driver_zlg::set_send_queue_mode(const CHANNEL_STATE_Typedef_t &channel_
   char path[50] = {0};
   char value[100] = {0};
   int nDelaySendQueueMode = (send_queue_mode == true && en == true);
-  sprintf(path, "%d/set_send_mode", channel_state.channel_num);
-  sprintf(value, "%d", nDelaySendQueueMode);
+  snprintf(path, sizeof(path), "%d/set_send_mode", channel_state.channel_num);
+  snprintf(value, sizeof(value), "%d", nDelaySendQueueMode);
   int nRet = ZCAN_SetValue(device_handle_, path, value);
   QString csText, csRet;
   csText = (nDelaySendQueueMode ? tr("[%1]open tx queue mode ").arg(channel_state.channel_num) : tr("[%1]close tx queue mode").arg(channel_state.channel_num));
@@ -1108,7 +1108,7 @@ void can_driver_zlg::show_send_mode(const CHANNEL_STATE_Typedef_t &channel_state
 
   QString csText;
   char path[50] = {0};
-  sprintf(path, "%d/get_send_mode/1", channel_state.channel_num);
+  snprintf(path, sizeof(path), "%d/get_send_mode/1", channel_state.channel_num);
   const char* pRet = (const char*)ZCAN_GetValue(device_handle_, path);
   if(pRet)
   {
@@ -1248,7 +1248,7 @@ void can_driver_zlg::add_auto_can(quint32 nEnable)
   can_frame_packed(autoObj.obj, false);
 
   char path[50] = {0};
-  sprintf(path, "%d/auto_send", channel_index_);
+  snprintf(path, sizeof(path), "%d/auto_send", channel_index_);
   int nRet = ZCAN_SetValue(device_handle_, path, (const char *)&autoObj);
   QString csText;
   csText = QString::asprintf(tr("add CAN timed transmission index:%d enable:%d period:%d ms ID:0x%X [%s] ").toUtf8().data(), \
@@ -1269,7 +1269,7 @@ void can_driver_zlg::add_auto_can_fd(quint32 nEnable)
   can_frame_packed(autoObj.obj, false);
 
   char path[50] = {0};
-  sprintf(path, "%d/auto_send_canfd", channel_index_);
+  snprintf(path, sizeof(path), "%d/auto_send_canfd", channel_index_);
   int nRet =  ZCAN_SetValue(device_handle_, path, (const char*)&autoObj);
   QString csText;
   csText = QString::asprintf(tr("add CANFD timed transmission index:%d enable:%d period:%d ms ID:0x%X [%s] ").toUtf8().data(), \
@@ -1283,7 +1283,7 @@ void can_driver_zlg::auto_send_start()
   // TODO: Add your control notification handler code here
 
   char path[50] = {0};
-  sprintf(path, "%d/apply_auto_send", channel_index_);
+  snprintf(path, sizeof(path), "%d/apply_auto_send", channel_index_);
   int nRet = ZCAN_SetValue(device_handle_, path,"0");
   QString csText = tr("start timed transmission");
   QString ret_str = nRet ? tr("[ok]") : tr("[failed]");
@@ -1296,7 +1296,7 @@ void can_driver_zlg::auto_send_stop()
   // TODO: Add your control notification handler code here
 
   char path[50] = {0};
-  sprintf(path, "%d/clear_auto_send", channel_index_);
+  snprintf(path, sizeof(path), "%d/clear_auto_send", channel_index_);
   int nRet = ZCAN_SetValue(device_handle_, path, "0");
   QString csText = tr("stop timed transmission");
   QString ret_str = nRet ? tr("[ok]") : tr("[failed]");
@@ -1346,7 +1346,7 @@ void can_driver_zlg::show_dev_auto_send()
   char path[50] = {0};
 
   //CAN
-  sprintf(path, "%d/get_auto_send_can_count/1", channel_index_);
+  snprintf(path, sizeof(path), "%d/get_auto_send_can_count/1", channel_index_);
   const char* pRet = (const char*)ZCAN_GetValue(device_handle_,path);
   if (pRet)
   {
@@ -1355,7 +1355,7 @@ void can_driver_zlg::show_dev_auto_send()
     show_message(csText);
     if (nCount > 0)
     {
-      sprintf(path, "%d/get_auto_send_can_data/1", channel_index_);
+      snprintf(path, sizeof(path), "%d/get_auto_send_can_data/1", channel_index_);
       pRet = (const char*) ZCAN_GetValue(device_handle_,path);
       if (pRet)
       {
@@ -1384,7 +1384,7 @@ void can_driver_zlg::show_dev_auto_send()
 
 
   //CANFD
-  sprintf(path, "%d/get_auto_send_canfd_count/1", channel_index_);
+  snprintf(path, sizeof(path), "%d/get_auto_send_canfd_count/1", channel_index_);
   pRet = (const char *)ZCAN_GetValue(device_handle_,path);
   if (pRet)
   {
@@ -1393,7 +1393,7 @@ void can_driver_zlg::show_dev_auto_send()
     show_message(csText);
     if (nCount > 0)
     {
-      sprintf(path, "%d/get_auto_send_canfd_data/1", channel_index_);
+      snprintf(path, sizeof(path), "%d/get_auto_send_canfd_data/1", channel_index_);
       pRet = (const char *)ZCAN_GetValue(device_handle_, path);
       if (pRet)
       {

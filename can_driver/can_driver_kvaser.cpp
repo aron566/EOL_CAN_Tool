@@ -493,12 +493,9 @@ bool can_driver_kvaser::open()
 //    show_message(tr("p_canRead load ok"));
   }
   /* 确定型号 */
-  switch(kDeviceType[device_type_index_].device_type)
-  {
-    default:
-      p_canInitializeLibrary();
-      break;
-  }
+  
+  p_canInitializeLibrary();
+
 
   /* 发送can打开状态 */
   device_opened_ = true;
@@ -517,81 +514,78 @@ bool can_driver_kvaser::read_info()
     return false;
   }
   /* 确定型号 */
-  switch(kDeviceType[device_type_index_].device_type)
+  
   {
-    default:
+    canStatus stat;
+    int number_of_channels;
+
+    int device_channel;
+    char device_name[255];
+
+    /* Get number of channels */
+    stat = p_canGetNumberOfChannels(&number_of_channels);
+    check_for_error("canGetNumberOfChannels", stat);
+
+    if (number_of_channels > 0)
+    {
+      qDebug("%s %d %s\n", "Found", number_of_channels, "channels");
+    }
+    else
+    {
+      qDebug("Could not find any CAN interface.\n");
+    }
+
+    /* Loop and print all channels */
+    for (int i = 0; i < number_of_channels; i++)
+    {
+      stat = p_canGetChannelData(i, canCHANNELDATA_DEVDESCR_ASCII, device_name, sizeof(device_name));
+      check_for_error("canGetChannelData", stat);
+
+      stat = p_canGetChannelData(i, canCHANNELDATA_CHAN_NO_ON_CARD, &device_channel, sizeof(device_channel));
+      check_for_error("canGetChannelData", stat);
+
+      qDebug("Found channel: %d %s %d\n", i, device_name, (device_channel + 1));
+    }
+
+    /* 获取驱动版本号 */
+    quint16 dl_ver[4];
+    stat = p_canGetChannelData(0, canCHANNELDATA_DLL_PRODUCT_VERSION, dl_ver, sizeof(dl_ver));
+    check_for_error("canGetChannelData", stat);
+    show_info += QString("<font size='5' color='green'><div align='legt'>dr_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(QString::asprintf("%u.%u.%u", dl_ver[1], dl_ver[2], dl_ver[3]));
+
+    stat = p_canGetChannelData(0, canCHANNELDATA_CARD_SERIAL_NO, device_name, sizeof(device_name));
+    check_for_error("canGetChannelData", stat);
+    show_info += QString("<font size='5' color='green'><div align='legt'>str_Serial_Num:</div> <div align='right'>");
+    QString serial_num = QString::asprintf("%02X%02X%02X%02X%02X%02X%02X%02X",
+                                           device_name[0],
+                                           device_name[1],
+                                           device_name[2],
+                                           device_name[3],
+                                           device_name[4],
+                                           device_name[5],
+                                           device_name[6],
+                                           device_name[7]);
+    show_info += serial_num;
+    show_info += QString("</div> </font>\r\n");
+
+    /* 获取硬件类型 */
+    quint32 hw_type = 0;
+    stat = p_canGetChannelData(0, canCHANNELDATA_CARD_TYPE, &hw_type, sizeof(hw_type));
+    check_for_error("canGetChannelData", stat);
+    show_info += QString("<font size='5' color='green'><div align='legt'>str_hw_Type:</div> <div align='right'>");
+    for(quint16 i = 0; i < sizeof(kDeviceType) / sizeof(kDeviceType[0]); i++)
+    {
+      if(kDeviceType[i].device_type == hw_type)
       {
-        canStatus stat;
-        int number_of_channels;
-
-        int device_channel;
-        char device_name[255];
-
-        /* Get number of channels */
-        stat = p_canGetNumberOfChannels(&number_of_channels);
-        check_for_error("canGetNumberOfChannels", stat);
-
-        if (number_of_channels > 0)
-        {
-          qDebug("%s %d %s\n", "Found", number_of_channels, "channels");
-        }
-        else
-        {
-          qDebug("Could not find any CAN interface.\n");
-        }
-
-        /* Loop and print all channels */
-        for (int i = 0; i < number_of_channels; i++)
-        {
-          stat = p_canGetChannelData(i, canCHANNELDATA_DEVDESCR_ASCII, device_name, sizeof(device_name));
-          check_for_error("canGetChannelData", stat);
-
-          stat = p_canGetChannelData(i, canCHANNELDATA_CHAN_NO_ON_CARD, &device_channel, sizeof(device_channel));
-          check_for_error("canGetChannelData", stat);
-
-          qDebug("Found channel: %d %s %d\n", i, device_name, (device_channel + 1));
-        }
-
-        /* 获取驱动版本号 */
-        quint16 dl_ver[4];
-        stat = p_canGetChannelData(0, canCHANNELDATA_DLL_PRODUCT_VERSION, dl_ver, sizeof(dl_ver));
-        check_for_error("canGetChannelData", stat);
-        show_info += QString("<font size='5' color='green'><div align='legt'>dr_Version:</div> <div align='right'>v%1</div> </font>\r\n").arg(QString::asprintf("%u.%u.%u", dl_ver[1], dl_ver[2], dl_ver[3]));
-
-        stat = p_canGetChannelData(0, canCHANNELDATA_CARD_SERIAL_NO, device_name, sizeof(device_name));
-        check_for_error("canGetChannelData", stat);
-        show_info += QString("<font size='5' color='green'><div align='legt'>str_Serial_Num:</div> <div align='right'>");
-        QString serial_num = QString::asprintf("%02X%02X%02X%02X%02X%02X%02X%02X",
-                                               device_name[0],
-                                               device_name[1],
-                                               device_name[2],
-                                               device_name[3],
-                                               device_name[4],
-                                               device_name[5],
-                                               device_name[6],
-                                               device_name[7]);
-        show_info += serial_num;
-        show_info += QString("</div> </font>\r\n");
-
-        /* 获取硬件类型 */
-        quint32 hw_type = 0;
-        stat = p_canGetChannelData(0, canCHANNELDATA_CARD_TYPE, &hw_type, sizeof(hw_type));
-        check_for_error("canGetChannelData", stat);
-        show_info += QString("<font size='5' color='green'><div align='legt'>str_hw_Type:</div> <div align='right'>");
-        for(quint16 i = 0; i < sizeof(kDeviceType) / sizeof(kDeviceType[0]); i++)
-        {
-          if(kDeviceType[i].device_type == hw_type)
-          {
-            show_info += QString::asprintf("%s", kDeviceType[i].device_type_str);
-          }
-        }
-        show_info += QString("</div> </font>\r\n");
-
-        /* 通道数 */
-        show_info += QString("<font size='5' color='green'><div align='legt'>can_Num:</div> <div align='right'>%1</div> </font>\r\n").arg(number_of_channels);
+        show_info += QString::asprintf("%s", kDeviceType[i].device_type_str);
       }
-      break;
+    }
+    show_info += QString("</div> </font>\r\n");
+
+    /* 通道数 */
+    show_info += QString("<font size='5' color='green'><div align='legt'>can_Num:</div> <div align='right'>%1</div> </font>\r\n").arg(number_of_channels);
   }
+
   QMessageBox message(QMessageBox::Information, tr("Info"), show_info, QMessageBox::Yes, nullptr);
   message.exec();
   return true;
@@ -600,122 +594,120 @@ bool can_driver_kvaser::read_info()
 bool can_driver_kvaser::init(CHANNEL_STATE_Typedef_t &channel_state)
 {
   /* 确定型号 */
-  switch(kDeviceType[device_type_index_].device_type)
+  
   {
-    default:
-      {
-        canStatus stat;
-        canHandle hnd;
+    canStatus stat;
+    canHandle hnd;
 
-        qDebug("canOpenChannel, channel %d... ", channel_state.channel_num);
-        hnd = p_canOpenChannel((qint32)channel_state.channel_num, canOPEN_CAN_FD | canOPEN_OVERRIDE_EXCLUSIVE);
-        if (hnd < 0)
-        {
-          check_for_error("canOpenChannel", (canStatus)hnd);
-          show_message(tr("kvaser canfd ch %1 init failed").arg(channel_state.channel_num), channel_state.channel_num);
-          return false;
-        }
+    qDebug("canOpenChannel, channel %d... ", channel_state.channel_num);
+    hnd = p_canOpenChannel((qint32)channel_state.channel_num, canOPEN_CAN_FD | canOPEN_OVERRIDE_EXCLUSIVE);
+    if (hnd < 0)
+    {
+      check_for_error("canOpenChannel", (canStatus)hnd);
+      show_message(tr("kvaser canfd ch %1 init failed").arg(channel_state.channel_num), channel_state.channel_num);
+      return false;
+    }
 
-        /* 清空 */
-        p_canIoCtl(hnd, canIOCTL_FLUSH_TX_BUFFER, NULL, NULL);
-        p_canIoCtl(hnd, canIOCTL_FLUSH_RX_BUFFER, NULL, NULL);
+    /* 清空 */
+    p_canIoCtl(hnd, canIOCTL_FLUSH_TX_BUFFER, NULL, NULL);
+    p_canIoCtl(hnd, canIOCTL_FLUSH_RX_BUFFER, NULL, NULL);
 
-        /* 设置工作模式 */
-        /* 0正常模式 1为只听模式 */
-        p_canSetBusOutputControl(hnd, (work_mode_index_ == 0) ? canDRIVER_NORMAL : canDRIVER_SILENT);
+    /* 设置工作模式 */
+    /* 0正常模式 1为只听模式 */
+    p_canSetBusOutputControl(hnd, (work_mode_index_ == 0) ? canDRIVER_NORMAL : canDRIVER_SILENT);
 
-        /*
-          Using our new shiny handle, we specify the baud rate
-          using one of the convenient canBITRATE_xxx constants.
+    /*
+      Using our new shiny handle, we specify the baud rate
+      using one of the convenient canBITRATE_xxx constants.
 
-          The bit layout is in depth discussed in most CAN
-          controller data sheets, and on the web at
-          http://www.kvaser.se.
-        */
-        qDebug("Setting the bus speed...");
-        //set up the bus
-        long m_usedBaudRate = 0;
-        switch(kAbitTimingUSB[abit_baud_index_])
-        {
-          case 1000000U:
-            m_usedBaudRate = canFD_BITRATE_1M_80P;
-            break;
-          case 500000U:
-            m_usedBaudRate = canFD_BITRATE_500K_80P;
-            break;
-          case 2000080U:
-            m_usedBaudRate = canFD_BITRATE_2M_80P;
-            break;
-          case 2000060U:
-            m_usedBaudRate = canFD_BITRATE_2M_60P;
-            break;
-          case 4000000U:
-            m_usedBaudRate = canFD_BITRATE_4M_80P;
-            break;
-          case 8000080U:
-            m_usedBaudRate = canFD_BITRATE_8M_80P;
-            break;
-          case 8000060U:
-            m_usedBaudRate = canFD_BITRATE_8M_60P;
-            break;
-          case 8000070U:
-            m_usedBaudRate = canFD_BITRATE_8M_70P;
-            break;
-          default:
-            qDebug("Baudrate set to 500 kbit/s. \n");
-            m_usedBaudRate = canFD_BITRATE_500K_80P;
-            break;
-        }
+      The bit layout is in depth discussed in most CAN
+      controller data sheets, and on the web at
+      http://www.kvaser.se.
+    */
+    qDebug("Setting the bus speed...");
+    //set up the bus
+    long m_usedBaudRate = 0;
+    switch(kAbitTimingUSB[abit_baud_index_])
+    {
+      case 1000000U:
+        m_usedBaudRate = canFD_BITRATE_1M_80P;
+        break;
+      case 500000U:
+        m_usedBaudRate = canFD_BITRATE_500K_80P;
+        break;
+      case 2000080U:
+        m_usedBaudRate = canFD_BITRATE_2M_80P;
+        break;
+      case 2000060U:
+        m_usedBaudRate = canFD_BITRATE_2M_60P;
+        break;
+      case 4000000U:
+        m_usedBaudRate = canFD_BITRATE_4M_80P;
+        break;
+      case 8000080U:
+        m_usedBaudRate = canFD_BITRATE_8M_80P;
+        break;
+      case 8000060U:
+        m_usedBaudRate = canFD_BITRATE_8M_60P;
+        break;
+      case 8000070U:
+        m_usedBaudRate = canFD_BITRATE_8M_70P;
+        break;
+      default:
+        qDebug("Baudrate set to 500 kbit/s. \n");
+        m_usedBaudRate = canFD_BITRATE_500K_80P;
+        break;
+    }
 
-        // set the arbitration bitrate to 500 kbit/s, with sampling point to 80%,
-        // and data phase bitrate to 1000 kbit/s, with sampling point at 80%
-        stat = p_canSetBusParams(hnd, m_usedBaudRate, 0, 0, 0, 0, 0);
-        check_for_error("canSetBusParams", stat);
+    // set the arbitration bitrate to 500 kbit/s, with sampling point to 80%,
+    // and data phase bitrate to 1000 kbit/s, with sampling point at 80%
+    stat = p_canSetBusParams(hnd, m_usedBaudRate, 0, 0, 0, 0, 0);
+    check_for_error("canSetBusParams", stat);
 
-        switch(kDbitTimingUSB[abit_baud_index_])
-        {
-          case 1000000U:
-            m_usedBaudRate = canFD_BITRATE_1M_80P;
-            break;
-          case 500000U:
-            m_usedBaudRate = canFD_BITRATE_500K_80P;
-            break;
-          case 2000080U:
-            m_usedBaudRate = canFD_BITRATE_2M_80P;
-            break;
-          case 2000060U:
-            m_usedBaudRate = canFD_BITRATE_2M_60P;
-            break;
-          case 4000000U:
-            m_usedBaudRate = canFD_BITRATE_4M_80P;
-            break;
-          case 8000080U:
-            m_usedBaudRate = canFD_BITRATE_8M_80P;
-            break;
-          case 8000060U:
-            m_usedBaudRate = canFD_BITRATE_8M_60P;
-            break;
-          case 8000070U:
-            m_usedBaudRate = canFD_BITRATE_8M_70P;
-            break;
-          default:
-            qDebug("Baudrate set to 500 kbit/s. \n");
-            m_usedBaudRate = canFD_BITRATE_500K_80P;
-            break;
-        }
-        stat = p_canSetBusParamsFd(hnd, m_usedBaudRate, 0, 0, 0);
-        check_for_error("canSetBusParamsFD", stat);
-        if (stat < 0)
-        {
-          qDebug("canSetBusParams failed, stat=%d\n", stat);
-          show_message(tr("kvaser canfd ch %1 init failed").arg(channel_state.channel_num), channel_state.channel_num);
-          return false;
-        }
-        channel_state.device_handle = hnd;
-        show_message(tr("kvaser canfd ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
-        return true;
-      }
+    switch(kDbitTimingUSB[abit_baud_index_])
+    {
+      case 1000000U:
+        m_usedBaudRate = canFD_BITRATE_1M_80P;
+        break;
+      case 500000U:
+        m_usedBaudRate = canFD_BITRATE_500K_80P;
+        break;
+      case 2000080U:
+        m_usedBaudRate = canFD_BITRATE_2M_80P;
+        break;
+      case 2000060U:
+        m_usedBaudRate = canFD_BITRATE_2M_60P;
+        break;
+      case 4000000U:
+        m_usedBaudRate = canFD_BITRATE_4M_80P;
+        break;
+      case 8000080U:
+        m_usedBaudRate = canFD_BITRATE_8M_80P;
+        break;
+      case 8000060U:
+        m_usedBaudRate = canFD_BITRATE_8M_60P;
+        break;
+      case 8000070U:
+        m_usedBaudRate = canFD_BITRATE_8M_70P;
+        break;
+      default:
+        qDebug("Baudrate set to 500 kbit/s. \n");
+        m_usedBaudRate = canFD_BITRATE_500K_80P;
+        break;
+    }
+    stat = p_canSetBusParamsFd(hnd, m_usedBaudRate, 0, 0, 0);
+    check_for_error("canSetBusParamsFD", stat);
+    if (stat < 0)
+    {
+      qDebug("canSetBusParams failed, stat=%d\n", stat);
+      show_message(tr("kvaser canfd ch %1 init failed").arg(channel_state.channel_num), channel_state.channel_num);
+      return false;
+    }
+    channel_state.device_handle = hnd;
+    show_message(tr("kvaser canfd ch %1 intit ok").arg(channel_state.channel_num), channel_state.channel_num);
+    return true;
   }
+
   return true;
 }
 
@@ -748,22 +740,20 @@ bool can_driver_kvaser::init()
 bool can_driver_kvaser::start(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   /* 确定型号 */
-  switch(kDeviceType[device_type_index_].device_type)
+  
   {
-    default:
-      {
-        canStatus stat;
-        stat = p_canBusOn(channel_state.device_handle);
-        if (0 > stat)
-        {
-          qDebug("canBusOn failed, stat=%d", stat);
-          show_message(tr("kvaser start can ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
-          return false;
-        }
-        show_message(tr("kvaser start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
-        return true;
-      }
+    canStatus stat;
+    stat = p_canBusOn(channel_state.device_handle);
+    if (0 > stat)
+    {
+      qDebug("canBusOn failed, stat=%d", stat);
+      show_message(tr("kvaser start can ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
+      return false;
+    }
+    show_message(tr("kvaser start can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+    return true;
   }
+
   return true;
 }
 
@@ -794,20 +784,18 @@ bool can_driver_kvaser::start()
 bool can_driver_kvaser::reset(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   /* 确定型号 */
-  switch(kDeviceType[device_type_index_].device_type)
+  
   {
-    default:
-      {
 //        canResetBus((qint32)channel_state.device_handle);
-        if(canOK != p_canBusOff((qint32)channel_state.device_handle))
-        {
-          show_message(tr("kvaser reset can ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
-          return false;
-        }
-        show_message(tr("kvaser reset can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
-        return true;
-      }
+    if(canOK != p_canBusOff((qint32)channel_state.device_handle))
+    {
+      show_message(tr("kvaser reset can ch %1 failed").arg(channel_state.channel_num), channel_state.channel_num);
+      return false;
+    }
+    show_message(tr("kvaser reset can ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
+    return true;
   }
+
   return true;
 }
 
@@ -832,13 +820,10 @@ void can_driver_kvaser::close_channel(const CHANNEL_STATE_Typedef_t &channel_sta
 {
   Q_UNUSED(channel_state)
   /* 确定型号 */
-  switch(kDeviceType[device_type_index_].device_type)
-  {
-    default:
-      (void)p_canBusOff((qint32)channel_state.device_handle);
-      (void)p_canClose((qint32)channel_state.device_handle);
-      break;
-  }
+  
+  (void)p_canBusOff((qint32)channel_state.device_handle);
+  (void)p_canClose((qint32)channel_state.device_handle);
+
 }
 
 bool can_driver_kvaser::close()
@@ -865,12 +850,9 @@ bool can_driver_kvaser::close()
 
   /* 关闭设备 */
   /* 确定型号 */
-  switch(kDeviceType[device_type_index_].device_type)
-  {
-    default:
-      p_canUnloadLibrary();
-      break;
-  }
+  
+  p_canUnloadLibrary();
+
 
   device_opened_ = false;
   return true;
@@ -885,35 +867,32 @@ quint32 can_driver_kvaser::kvaser_can_send(const CHANNEL_STATE_Typedef_t &channe
   quint32 result = 0;
 
   /* 确定型号 */
-  switch(kDeviceType[device_type_index_].device_type)
+  
   {
-    default:
-      {
-        canStatus stat;
-        quint32 flags = 0;
-        flags |= frame_type == STD_FRAME_TYPE ? canMSG_STD : canMSG_EXT;
-        flags |= protocol == CAN_PROTOCOL_TYPE ? 0 : canFDMSG_FDF;
+    canStatus stat;
+    quint32 flags = 0;
+    flags |= frame_type == STD_FRAME_TYPE ? canMSG_STD : canMSG_EXT;
+    flags |= protocol == CAN_PROTOCOL_TYPE ? 0 : canFDMSG_FDF;
 
-        /* 长度对齐 */
-        /* 0-8, 12, 16, 20, 24, 32, 48, 64. */
-        if(CANFD_PROTOCOL_TYPE == protocol)
-        {
-          size = can_driver_kvaser::get_send_len(size);
-        }
-        stat = p_canWrite((qint32)channel_state.device_handle, id, (void *)data, size, flags);
-        if (stat < 0)
-        {
-          qDebug("ERROR TransmitMessage() FAILED Err= %d <line: %d>\n", stat, __LINE__);
-          return result;
-        }
-        // After sending, we wait for at most 100 ms for the message to be sent, using
-        // canWriteSync.
-        stat = p_canWriteSync((qint32)channel_state.device_handle, 100);
-        check_for_error("canWriteSync", stat);
-        result = 1U;
-      }
-      break;
+    /* 长度对齐 */
+    /* 0-8, 12, 16, 20, 24, 32, 48, 64. */
+    if(CANFD_PROTOCOL_TYPE == protocol)
+    {
+      size = can_driver_kvaser::get_send_len(size);
+    }
+    stat = p_canWrite((qint32)channel_state.device_handle, id, (void *)data, size, flags);
+    if (stat < 0)
+    {
+      qDebug("ERROR TransmitMessage() FAILED Err= %d <line: %d>\n", stat, __LINE__);
+      return result;
+    }
+    // After sending, we wait for at most 100 ms for the message to be sent, using
+    // canWriteSync.
+    stat = p_canWriteSync((qint32)channel_state.device_handle, 100);
+    check_for_error("canWriteSync", stat);
+    result = 1U;
   }
+
   return result;
 }
 
@@ -1071,49 +1050,45 @@ void can_driver_kvaser::function_can_use_update()
 void can_driver_kvaser::receive_data(const CHANNEL_STATE_Typedef_t &channel_state)
 {
   /* 确定型号 */
-  switch(kDeviceType[device_type_index_].device_type)
+  
   {
-    default:
-      {
-        canStatus stat;
-        long id;
-        quint8 data[8];
-        quint32 dlc;
-        quint32 flags;
-        DWORD time;
+    canStatus stat;
+    long id;
+    quint8 data[8];
+    quint32 dlc;
+    quint32 flags;
+    DWORD time;
 
-        stat = p_canRead((qint32)channel_state.device_handle, &id, &data[0], &dlc, &flags, &time);
-        switch (stat)
+    stat = p_canRead((qint32)channel_state.device_handle, &id, &data[0], &dlc, &flags, &time);
+    switch (stat)
+    {
+      case canOK:
         {
-          case canOK:
-            {
-              KVASER_CAN_OBJ_Typedef_t can_data;
-              can_data.remote_flag = (flags & canMSG_RTR) > 0U ? true : false;
-              can_data.extern_flag = (flags & canMSG_EXT) > 0U ? true : false;
-              can_data.is_canfd_flag = (flags & canFDMSG_FDF) > 0U ? true : false;
-              can_data.data_len = dlc;
-              can_data.id = id;
-              can_data.time_stamp = time;
-              memcpy_s(can_data.data, sizeof(can_data.data), data, dlc);
-              if(0U < (flags & canMSG_ERROR_FRAME))
-              {
+          KVASER_CAN_OBJ_Typedef_t can_data;
+          can_data.remote_flag = (flags & canMSG_RTR) > 0U ? true : false;
+          can_data.extern_flag = (flags & canMSG_EXT) > 0U ? true : false;
+          can_data.is_canfd_flag = (flags & canFDMSG_FDF) > 0U ? true : false;
+          can_data.data_len = dlc;
+          can_data.id = id;
+          can_data.time_stamp = time;
+          memcpy_s(can_data.data, sizeof(can_data.data), data, dlc);
+          if(0U < (flags & canMSG_ERROR_FRAME))
+          {
 //                show_message(tr("receive code %1").arg(flags));
-                return;
-              }
-              show_rec_message(channel_state, &can_data, (quint32)1U, CAN_RX_DIRECT);
-            }
-            break;
-
-          case canERR_NOMSG:
-            /* No more data on this handle */
-            break;
-
-          default:
-            qDebug("ERROR canRead() FAILED, Err= %d <line: %d>\n", stat, __LINE__);
-            break;
+            return;
+          }
+          show_rec_message(channel_state, &can_data, (quint32)1U, CAN_RX_DIRECT);
         }
         break;
-      }
+
+      case canERR_NOMSG:
+        /* No more data on this handle */
+        break;
+
+      default:
+        qDebug("ERROR canRead() FAILED, Err= %d <line: %d>\n", stat, __LINE__);
+        break;
+    }
   }
 }
 

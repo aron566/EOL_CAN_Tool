@@ -910,7 +910,7 @@ QString utility::gb2312_to_unicode(const QString &gb2312_str)
 {
   QTextCodec *gb2312_codec = QTextCodec::codecForName("gb2312");
   QTextDecoder *gb2312_decoder = gb2312_codec->makeDecoder();
-  QString unicode_str = gb2312_decoder->toUnicode(gb2312_str.toStdString().data(), gb2312_str.toStdString().size());
+  QString unicode_str = gb2312_decoder->toUnicode(gb2312_str.toStdString().data(), static_cast<int>(gb2312_str.toStdString().size()));
   delete gb2312_decoder;
   return unicode_str;
 }

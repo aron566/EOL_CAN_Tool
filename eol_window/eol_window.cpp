@@ -1913,17 +1913,12 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 
         case eol_protocol::INT16_DAYA_TYPE:
           {
-            switch (common_table_info.Common_Info.Table_Type)
             {
-              default:
-                {
-                  qint16 Val = 0;
-                  memcpy_s(&Val, 2U, data + i, 2U);
-                  data_list.append(QString("%1").arg(Val));
-                  origin_data_list.append(QString("%1").arg(Val));
-                  i += sizeof(Val);
-                }
-                break;
+              qint16 Val = 0;
+              memcpy_s(&Val, 2U, data + i, 2U);
+              data_list.append(QString("%1").arg(Val));
+              origin_data_list.append(QString("%1").arg(Val));
+              i += sizeof(Val);
             }
           }
           break;

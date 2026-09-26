@@ -27,6 +27,7 @@
 #include <qtextstream.h>
 #include <QFile>
 #include <QtConcurrent>
+#include <QThreadPool>
 #include <QDebug>
 #include <QMessageBox>
 #include <tchar.h> /* RTL   */
@@ -128,7 +129,6 @@ void blf2asc::runConveter()
 {
   QByteArray blf_name_data = blf_name_str.toLocal8Bit();
   LPCSTR     pFileName     = blf_name_data.data();
-  DWORD      dwWritten;
   LONG64     sta = 0;
   QFile      asc_file(asc_name_str);
 
@@ -143,9 +143,6 @@ void blf2asc::runConveter()
     VBLCANDriverErrorExt_t erromessage;
     VBLCANErrorFrameExt    errofreammessage;
     VBLCANDriverStatistic  statistic;
-    VBLEnvironmentVariable variable;
-    VBLEthernetFrame       ethframe;
-    VBLAppText             appText;
     VBLFileStatisticsEx    statistics = {sizeof(statistics)};
     BOOL                   bSuccess;
 
@@ -458,11 +455,12 @@ void blf2asc::on_pushButton_converter_clicked()
   }
 
   /* 执行转换 */
-  QtConcurrent::run([this](){ this->runConveter(); });
+  QThreadPool::globalInstance()->start([this](){ this->runConveter(); });
 }
 
 void blf2asc::on_recConveterState(int statue)
 {
+  Q_UNUSED(statue);
 }
 
 void blf2asc::on_recInitState(int max)

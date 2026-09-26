@@ -732,7 +732,7 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_wait_reply_star
   while(run_state)
   {
     /* 检测发送任务 */
-    if(true == check_wait_send_task())
+    if(WAIT_SEND == check_wait_send_task())
     {
       continue;
     }
@@ -869,14 +869,10 @@ __META_CMD_DECDE:
       str += QString::asprintf("%02X ", temp_buf[i]);
     }
 
-    switch(wait.reg_addr)
-    {
-      default:
-        CircularQueue::CQ_manualOffsetInc(cq, meta_len);
+    CircularQueue::CQ_manualOffsetInc(cq, meta_len);
 
-        acc_error_cnt = 0;
-        return RETURN_OK;
-    }
+    acc_error_cnt = 0;
+    return RETURN_OK;
     CircularQueue::CQ_manualOffsetInc(cq, 1U);
     return RETURN_ERROR;
   }

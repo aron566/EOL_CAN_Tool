@@ -113,6 +113,7 @@
  *  <tr><td>2024-03-15 <td>v1.4.4  <td>aron566 <td>拷贝安全性优化
  *  <tr><td>2024-03-20 <td>v1.4.5  <td>aron566 <td>发送的数据长度改为索引解析方式，以及can发送安全优化
  *  <tr><td>2024-03-25 <td>v1.4.6  <td>aron566 <td>优化协议栈超时检测机制，避免升级失败，优化can打印对齐
+ *  <tr><td>2026-09-27 <td>v1.4.7  <td>aron566 <td>修复编译告警(sprintf改snprintf消除缓冲区溢出风险)，NSIS打包与GitHub Actions自动发布
  *  </table>
  */
 #include "mainwindow.h"
@@ -120,7 +121,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.4.6"
+#define PC_SOFTWARE_VERSION       "1.4.7"
 
 int main(int argc, char *argv[])
 {
