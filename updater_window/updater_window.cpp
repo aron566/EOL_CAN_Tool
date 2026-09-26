@@ -190,6 +190,7 @@ void updater_window::checkForUpdates()
   updater_obj->setUseCustomAppcast(updater_url, customAppcast);
   updater_obj->setDownloaderEnabled(updater_url, downloaderEnabled);
   updater_obj->setMandatoryUpdate(updater_url, mandatoryUpdate);
+  updater_obj->setUseCustomInstallProcedures(updater_url, true);
 
   /* 检查下载路径 */
   if(download_dir.isEmpty() == true)
@@ -248,6 +249,12 @@ void updater_window::slot_display_appcast(const QString &url, const QByteArray &
 
 /**
  * @brief slot_download_finished
+ *        Custom install procedure: create update helper script that
+ *        1. Waits for app to exit
+ *        2. Uninstalls old version via maintenancetool.exe
+ *        3. Runs new installer
+ *        4. Starts new app
+ *        5. Cleans up script
  * @param url
  * @param filepath
  */
@@ -258,6 +265,111 @@ void updater_window::slot_download_finished(const QString &url, const QString &f
     return;
   }
   qDebug() << "download finished url:" << filepath << "exe:" << qApp->applicationDirPath();
+
+  /* Ask user to install */
+  QMessageBox box;
+  box.setIcon(QMessageBox::Question);
+  box.setDefaultButton(QMessageBox::Ok);
+  box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+  box.setText("<h3>" + tr("Download complete! Click \"OK\" to install the update. "
+                          "The application will quit and restart after installation.") + "</h3>");
+
+  if (box.exec() != QMessageBox::Ok)
+  {
+    return;
+  }
+
+  /* Prepare paths (Windows backslash style) */
+  QString appDir = qApp->applicationDirPath();
+  QString appDirWin = appDir;
+  appDirWin.replace('/', '\\');
+  QString installerPath = filepath;
+  installerPath.replace('/', '\\');
+
+  /* Create update helper bat script */
+  QString scriptPath = appDir + "/update_helper.bat";
+  QFile script(scriptPath);
+  if (!script.open(QIODevice::WriteOnly | QIODevice::Text))
+  {
+    QMessageBox::critical(this, tr("Error"), tr("Cannot create update script!"));
+    return;
+  }
+
+  QTextStream stream(&script);
+  stream.setEncoding(QStringConverter::Utf8);
+  /* bat script: English comments only (cmd.exe uses GBK encoding) */
+  stream << "@echo off\n";
+  stream << "REM ===== EOL_CAN_Tool Update Helper =====\n";
+  stream << "set APP_NAME=EOL_CAN_Tool.exe\n";
+  stream << "set APP_DIR=" << appDirWin << "\n";
+  stream << "set INSTALLER=" << installerPath << "\n";
+  stream << "\n";
+  /* Step 1: Wait for main app to exit (max 30 seconds) */
+  stream << "echo Waiting for application to exit...\n";
+  stream << "set WAIT_COUNT=0\n";
+  stream << ":wait_loop\n";
+  stream << "tasklist /fi \"imagename eq %APP_NAME%\" 2>nul | find /i \"%APP_NAME%\" >nul\n";
+  stream << "if not errorlevel 1 (\n";
+  stream << "  set /a WAIT_COUNT+=1\n";
+  stream << "  if %WAIT_COUNT% GEQ 30 goto force_kill\n";
+  stream << "  timeout /t 1 /nobreak >nul\n";
+  stream << "  goto wait_loop\n";
+  stream << ")\n";
+  stream << "goto run_uninstall\n";
+  stream << ":force_kill\n";
+  stream << "echo Force closing application...\n";
+  stream << "taskkill /f /im %APP_NAME% 2>nul\n";
+  stream << "  timeout /t 2 /nobreak >nul\n";
+  stream << "\n";
+  /* Step 2: Uninstall old version via maintenance tool */
+  stream << ":run_uninstall\n";
+  stream << "set MAINTENANCE=\n";
+  stream << "REM Search maintenance tool in multiple locations\n";
+  stream << "if exist \"%APP_DIR%\\maintenancetool.exe\" set MAINTENANCE=%APP_DIR%\\maintenancetool.exe\n";
+  stream << "if not defined MAINTENANCE if exist \"%LOCALAPPDATA%\\EOL_CAN_Tool\\maintenancetool.exe\" set MAINTENANCE=%LOCALAPPDATA%\\EOL_CAN_Tool\\maintenancetool.exe\n";
+  stream << "if not defined MAINTENANCE if exist \"%ProgramFiles%\\EOL_CAN_Tool\\maintenancetool.exe\" set MAINTENANCE=%ProgramFiles%\\EOL_CAN_Tool\\maintenancetool.exe\n";
+  stream << "if defined MAINTENANCE (\n";
+  stream << "  echo Uninstalling old version...\n";
+  stream << "  \"%MAINTENANCE%\" --uninstall --confirm-command\n";
+  stream << "  timeout /t 2 /nobreak >nul\n";
+  stream << ") else (\n";
+  stream << "  echo No maintenance tool found, proceeding with install...\n";
+  stream << ")\n";
+  stream << "\n";
+  /* Step 3: Run new installer */
+  stream << "echo Running installer...\n";
+  stream << "start \"\" /wait \"%INSTALLER%\"\n";
+  stream << "\n";
+  /* Step 3: Find and start new app */
+  stream << "echo Starting application...\n";
+  stream << "REM Try original path first\n";
+  stream << "if exist \"%APP_DIR%\\%APP_NAME%\" (\n";
+  stream << "  start \"\" \"%APP_DIR%\\%APP_NAME%\"\n";
+  stream << "  goto cleanup\n";
+  stream << ")\n";
+  stream << "REM Try default QIF install path\n";
+  stream << "if exist \"%LOCALAPPDATA%\\EOL_CAN_Tool\\%APP_NAME%\" (\n";
+  stream << "  start \"\" \"%LOCALAPPDATA%\\EOL_CAN_Tool\\%APP_NAME%\"\n";
+  stream << "  goto cleanup\n";
+  stream << ")\n";
+  stream << "REM Try Program Files\n";
+  stream << "if exist \"%ProgramFiles%\\EOL_CAN_Tool\\%APP_NAME%\" (\n";
+  stream << "  start \"\" \"%ProgramFiles%\\EOL_CAN_Tool\\%APP_NAME%\"\n";
+  stream << "  goto cleanup\n";
+  stream << ")\n";
+  stream << "echo Application not found. Please start manually.\n";
+  stream << "pause\n";
+  stream << "\n";
+  /* Step 4: Cleanup this script */
+  stream << ":cleanup\n";
+  stream << "del \"%~f0\"\n";
+  script.close();
+
+  /* Start update script detached */
+  QProcess::startDetached("cmd.exe", QStringList() << "/c" << scriptPath);
+
+  /* Quit application */
+  qApp->quit();
 }
 
 /** Public application code --------------------------------------------------*/

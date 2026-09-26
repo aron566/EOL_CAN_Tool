@@ -3,6 +3,11 @@
 
 #include <QWidget>
 #include <QString>
+#include <QMessageBox>
+#include <QProcess>
+#include <QFile>
+#include <QTextStream>
+#include <QDir>
 #include "QSimpleUpdater.h"
 
 namespace Ui {

@@ -10,6 +10,34 @@
 
 [toc]
 
+## 发布新版本(GitHub Actions 自动构建 + NSIS 打包)
+
+已配置 git 工作流:打 tag 后 GitHub Actions 自动编译、NSIS 打包、发布 Release。本地也可一键打包。
+
+### 发布步骤
+
+1. **改版本号**:编辑 `resource/EOL_CAN_Tool.rc`,同步 `VER_FILEVERSION` / `VER_PRODUCTVERSION`(数值)与 `VER_FILEVERSION_STR` / `VER_PRODUCTVERSION_STR`(字符串)。
+2. **改更新说明**:编辑 `packge_release/updates.json`,同步 `windows.latest-version`、`windows.download-url`(指向新 tag 的安装包,命名 `EOL_CAN_Tool_Setup_vX.Y.Z.exe`)与 `windows.changelog`。
+3. **提交并打 tag**(版本号须与 .rc / updates.json 完全一致,否则 CI 校验失败):
+   ```bash
+   git add -A
+   git commit -m "chore: 版本 X.Y.Z"
+   git tag vX.Y.Z
+   git push origin main --tags
+   ```
+4. CI 自动执行:安装 Qt 6.8.3 MSVC + NSIS → 编译 → NSIS 打包 → 建 Release 并上传 `EOL_CAN_Tool_Setup_vX.Y.Z.exe`。
+
+### 本地一键打包
+
+```bat
+scripts\package_nsis.bat            :: 版本号自动读 .rc
+scripts\package_nsis.bat 1.4.6      :: 或显式指定版本号
+```
+
+产物在 `dist\EOL_CAN_Tool_Setup_vX.Y.Z.exe`。首次使用需将便携版 NSIS 放到 `tools\nsis-3.09\`(已从 HPLC_Wireshark 复制,不入库)。
+
+> 安装包为 per-user 安装到 `%LOCALAPPDATA%\EOL_CAN_Tool`(与原 QtIFW 路径一致,旧版可就地升级),支持静默升级 `/S`。
+
 ## 上位机功能
 
 - 多品牌厂商can设备支持
