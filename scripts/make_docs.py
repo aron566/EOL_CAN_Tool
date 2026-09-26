@@ -9,6 +9,13 @@ import shutil
 import subprocess
 import sys
 
+# CI 的 Python stdout 可能是 cp1252,中文 print 会 UnicodeEncodeError;强制 UTF-8
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 OUT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else 'nsis_pkg/docs')
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS = os.path.join(PROJ, 'docs')

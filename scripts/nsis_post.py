@@ -10,6 +10,13 @@ import glob
 import shutil
 import sys
 
+# CI 的 Python stdout 可能是 cp1252,中文 print 会 UnicodeEncodeError;强制 UTF-8
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 PKG = sys.argv[1]
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
