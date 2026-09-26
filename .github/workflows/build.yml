@@ -66,10 +66,12 @@ jobs:
         shell: bash
         run: pip install markdown
 
+      - name: 设置 MSVC 环境(cl/nmake/link)
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: 构建(qmake + nmake)
         shell: cmd
         run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           qmake EOL_CAN_Tool.pro -spec win32-msvc "CONFIG+=release"
           nmake -f Makefile.Release
 
