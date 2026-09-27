@@ -130,14 +130,26 @@ MainWindow::~MainWindow()
   /* 保存参数 */
   save_cfg();
 
-  delete can_driver_obj;
-  qDebug() << "del can_driver_obj";
+  /* 先关闭CAN驱动，close_driver内部等待驱动线程完全退出，
+     避免析构期间驱动线程继续访问cq_obj与驱动对象 */
+  if(nullptr != can_driver_obj)
+  {
+    can_driver_obj->close_driver();
+  }
+  qDebug() << "close can_driver_obj";
 
   delete more_window_obj;
   qDebug() << "del more_window_obj";
 
-  g_thread_pool->waitForDone();
+  /* 先清除线程池中尚未调度的排队任务，再等待已运行任务结束，
+     防止排队任务在对象释放后被执行 */
   g_thread_pool->clear();
+  g_thread_pool->waitForDone();
+
+  /* CAN驱动对象最后释放，此时其QObject子对象(如updatefw协议对象)
+     的线程均已停止，不会再访问can_driver的cq_obj */
+  delete can_driver_obj;
+  qDebug() << "del can_driver_obj";
 
   delete updater_window_obj;
   qDebug() << "del updater_window_obj";

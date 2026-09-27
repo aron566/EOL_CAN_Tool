@@ -95,6 +95,12 @@ updatefw_window::~updatefw_window()
   /* 保存参数 */
   save_cfg();
 
+  /* 显式停止升级协议线程，防止析构期间协议线程继续访问成员 */
+  if(nullptr != protocol_stack_obj)
+  {
+    protocol_stack_obj->stop_task();
+  }
+
   delete ui;
 }
 

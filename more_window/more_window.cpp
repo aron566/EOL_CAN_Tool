@@ -568,6 +568,12 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
     }
   }
 
+  /* 首字节即为'\0'时size为0，直接返回，避免size-1下溢 */
+  if(0U == size)
+  {
+    return false;
+  }
+
   /* 查看字符的尾部是否是换行符 */
   if(data[size - 1U] == '\r' || data[size - 1U] == '\n')
   {
@@ -577,7 +583,8 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
     {
       str_buf[size - 1U] = '\0';
     }
-    if(str_buf[size - 2U] == '\r' || str_buf[size - 2U] == '\n')
+    /* size>=2时才检查倒数第二个字符，避免size-2下溢 */
+    if((2U <= size) && (str_buf[size - 2U] == '\r' || str_buf[size - 2U] == '\n'))
     {
       str_buf[size - 2U] = '\0';
     }
@@ -648,7 +655,8 @@ bool more_window::char2str(const quint8 *data, quint32 data_len, QString &msg)
       }
       /* 剩余部分加到下一行显示 */
       memset(str_buf, 0, sizeof(str_buf));
-      memcpy_s(str_buf, sizeof(str_buf) - 1U, &data[index + 1U], data_len - index - 1U);
+      /* 拷贝长度使用截断后的size，而非完整报文长度data_len，避免memcpy_s参数超限abort */
+      memcpy_s(str_buf, sizeof(str_buf) - 1U, &data[index + 1U], size - index - 1U);
       str = QString::asprintf("%s", str_buf);
       //      qDebug() << "中间有换行符，剩余部分" << a << ":" << str;
       show_line_str.append(str);

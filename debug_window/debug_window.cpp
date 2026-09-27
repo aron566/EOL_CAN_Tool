@@ -562,7 +562,11 @@ void debug_window::on_del_quick_compelat_pushButton_clicked()
   selecttext.remove(' ');
   selecttext.remove(',');
   selecttext.remove('\n');
-  quick_complets.removeAt( quick_complets.indexOf(selecttext));
+  /* indexOf找不到返回-1，直接removeAt会断言/堆破坏，先判有效 */
+  if(0 <= quick_complets.indexOf(selecttext))
+  {
+    quick_complets.removeAt(quick_complets.indexOf(selecttext));
+  }
   ui->quick_compleat_plainTextEdit->textCursor().removeSelectedText();
 }
 
@@ -598,6 +602,11 @@ void debug_window::rec_shell_data(const quint8 *data, quint32 data_len)
 
   /* 读取数据 */
   char strbuf[512] = {0};
+  /* data_len可能远大于strbuf，截断到511(留1字节给'\0')，避免memcpy_s参数超限abort及后续越界读 */
+  if(data_len > sizeof(strbuf) - 1U)
+  {
+    data_len = sizeof(strbuf) - 1U;
+  }
   memcpy_s(strbuf, sizeof(strbuf), data, data_len);
 
   /* 检测是否是清屏命令 */
