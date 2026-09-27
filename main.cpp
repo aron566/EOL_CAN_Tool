@@ -115,6 +115,7 @@
  *  <tr><td>2024-03-25 <td>v1.4.6  <td>aron566 <td>优化协议栈超时检测机制，避免升级失败，优化can打印对齐
  *  <tr><td>2026-09-27 <td>v1.4.7  <td>aron566 <td>修复编译告警(sprintf改snprintf消除缓冲区溢出风险)，NSIS打包与GitHub Actions自动发布
  *  <tr><td>2026-09-27 <td>v1.5.0  <td>aron566 <td>新增Linux平台支持(SocketCAN/周立功/同星)，双平台CI打包发布(Windows NSIS + Linux AppImage)，更新周立功/Kvaser/同星Windows驱动
+ *  <tr><td>2026-09-27 <td>v1.5.1  <td>aron566 <td>多窗口/网络窗口消息显示优化:抽象消息日志缓冲,内存仅保留最近2000条,历史按1000条一批写入临时文件,翻查历史从文件读取;下滚回最新消息时滚动条自动跳到底部
  *  </table>
  */
 #include "mainwindow.h"
@@ -122,7 +123,7 @@
 #include <QApplication>
 #include <QTextCodec>
 
-#define PC_SOFTWARE_VERSION       "1.5.0"
+#define PC_SOFTWARE_VERSION       "1.5.1"
 
 int main(int argc, char *argv[])
 {
