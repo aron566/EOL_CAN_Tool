@@ -34,6 +34,7 @@
 #include <QObject>
 #include <QQueue>
 #include <QDebug>
+#include <QByteArray>
 #include "utilities/circularqueue.h"
 /** Private defines ----------------------------------------------------------*/
 /** Exported typedefines -----------------------------------------------------*/
@@ -90,8 +91,8 @@ signals:
    *
    * @param message 消息内容t
    */
-  void signal_show_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data, quint32 data_len = 0, QString ip = "");
-  void signal_show_thread_message(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data, quint32 data_len = 0, QString ip = "");
+  void signal_show_message(const QString &message, quint32 channel_num, quint8 direct, const QByteArray &data, quint32 data_len = 0, QString ip = "");
+  void signal_show_thread_message(const QString &message, quint32 channel_num, quint8 direct, const QByteArray &data, quint32 data_len = 0, QString ip = "");
 
   /**
    * @brief signal_show_message_bytes
@@ -183,7 +184,7 @@ public:
    * @param thread_mode 当前消息是否来自线程
    * @param ip
    */
-  void show_message(const QString &str, quint32 channel_num = 0, quint8 direct = 0xFFU, const quint8 *data = nullptr, quint32 data_len = 0, bool thread_mode = false, QString ip = "");
+  void show_message(const QString &str, quint32 channel_num = 0, quint8 direct = 0xFFU, const QByteArray &data = QByteArray(), quint32 data_len = 0, bool thread_mode = false, QString ip = "");
 
   /**
    * @brief show_message_bytes

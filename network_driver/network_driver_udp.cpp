@@ -165,7 +165,9 @@ _show_server_rx_msg:
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 1U, 1U, (const quint8 *)buf->base, buf->size(), true, info.value(0));
+          /* 回调内先拷贝到QByteArray再值传递，避免hv::Buffer回收后悬空 */
+          QByteArray data_copy((const char *)buf->base, buf->size());
+          this->show_message(tips, 1U, 1U, data_copy, buf->size(), true, info.value(0));
           this->show_message_bytes(buf->size(), 1U, 1U);
         };
 
@@ -177,7 +179,9 @@ _show_server_rx_msg:
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 1U, 0U, (const quint8 *)buf->base, buf->size(), false, QString::fromStdString(channel->peeraddr().c_str()));
+          /* 回调内先拷贝到QByteArray再值传递，避免hv::Buffer回收后悬空 */
+          QByteArray data_copy((const char *)buf->base, buf->size());
+          this->show_message(tips, 1U, 0U, data_copy, buf->size(), false, QString::fromStdString(channel->peeraddr().c_str()));
           this->show_message_bytes(buf->size(), 1U, 0U);
 
           tips = tr("[UDP SERVER]send data sucessful! to addr:%1").arg(QString::fromStdString(channel->peeraddr()));
@@ -244,7 +248,9 @@ _show_client_rx_msg:
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 0U, 1U, (const quint8 *)buf->base, buf->size(), true, info.value(0));
+          /* 回调内先拷贝到QByteArray再值传递，避免hv::Buffer回收后悬空 */
+          QByteArray data_copy((const char *)buf->base, buf->size());
+          this->show_message(tips, 0U, 1U, data_copy, buf->size(), true, info.value(0));
           this->show_message_bytes(buf->size(), 0U, 1U);
         };
 
@@ -256,7 +262,9 @@ _show_client_rx_msg:
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 0U, 0U, (const quint8 *)buf->base, buf->size(), false, QString::fromStdString(channel->peeraddr().c_str()));
+          /* 回调内先拷贝到QByteArray再值传递，避免hv::Buffer回收后悬空 */
+          QByteArray data_copy((const char *)buf->base, buf->size());
+          this->show_message(tips, 0U, 0U, data_copy, buf->size(), false, QString::fromStdString(channel->peeraddr().c_str()));
           this->show_message_bytes(buf->size(), 0U, 0U);
 
           tips = tr("[UDP CLIENT]send data sucessful! to addr:%1").arg(QString::fromStdString(channel->peeraddr()));
@@ -308,6 +316,10 @@ bool network_driver_udp::network_start()
    */
 bool network_driver_udp::network_stop()
 {
+  /* 先断开工作线程的阻塞投递连接，避免server->stop() join线程时与GUI线程死锁；
+     下次network_start()时network_window会重建该连接 */
+  this->disconnect(SIGNAL(signal_show_thread_message(QString,quint32,quint8,QByteArray,quint32,QString)));
+
   if(nullptr != server)
   {
     server->stop();

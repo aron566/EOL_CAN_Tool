@@ -95,7 +95,7 @@ bool network_driver_model::network_register_rec_msg(QString ip, CircularQueue *c
 }
 
 void network_driver_model::show_message(const QString &str, quint32 channel_num, \
-                                    quint8 direct, const quint8 *data, quint32 data_len, bool thread_mode, QString ip)
+                                    quint8 direct, const QByteArray &data, quint32 data_len, bool thread_mode, QString ip)
 {
   if(1U == direct)
   {

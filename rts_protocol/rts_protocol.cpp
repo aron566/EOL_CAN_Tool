@@ -244,7 +244,9 @@ rts_protocol::RETURN_TYPE_Typedef_t rts_protocol::protocol_stack_wait_reply_star
       {
         return RETURN_WAITTING;
       }
-      CircularQueue::CQ_manualGetDataTemp(cq, temp_buf, len);
+      /* 读取长度钳制到临时缓冲区大小，防止静态区溢出写 */
+      data_len = (uint16_t)((FRAME_TEMP_BUF_SIZE < len) ? FRAME_TEMP_BUF_SIZE : len);
+      CircularQueue::CQ_manualGetDataTemp(cq, temp_buf, data_len);
 
       /* 处理数据 */
       RETURN_TYPE_Typedef_t ret = decode_data_frame(temp_buf, data_len);
