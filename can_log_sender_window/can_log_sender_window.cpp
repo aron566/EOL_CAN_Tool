@@ -282,7 +282,9 @@ void can_log_sender_window::can_log_sender_task()
       QStringList data_list = send_info.data.split(' ');
       quint32 data_size = (quint32)data_list.length();
       data_size = data_size > send_bytes ? send_bytes : data_size;
-      for(quint8 index = 0; index < data_size; index++)
+      /* data_buf仅64字节，钳制拷贝长度，避免quint8循环变量回绕及栈溢出写 */
+      data_size = data_size > sizeof(data_buf) ? sizeof(data_buf) : data_size;
+      for(quint32 index = 0; index < data_size; index++)
       {
         data_buf[index] = (quint8)data_list[index].toUShort(nullptr, 16);
       }
