@@ -121,7 +121,7 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.4.2'
-          modules: 'qtcharts qtserialbus qtserialport qtmultimedia qt5compat qtsvg'
+          modules: 'qtcharts qtserialbus qtserialport qtmultimedia qt5compat'
           cache: true
 
       - name: 安装系统依赖
