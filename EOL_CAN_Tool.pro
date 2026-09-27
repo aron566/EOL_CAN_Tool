@@ -93,6 +93,11 @@ unix:!macx {
     include(zlg_can_lib/zlgcan_linux.pri)
 }
 
+# 同星 Linux 驱动库 (x86_64, QLibrary 动态加载官方 .so；aarch64 暂无可用库)
+unix:!macx {
+    include(ts_can_lib/tscan_linux.pri)
+}
+
 # libhv网络驱动库
 include(3third_party_lib/3third_party_lib.pri)
 

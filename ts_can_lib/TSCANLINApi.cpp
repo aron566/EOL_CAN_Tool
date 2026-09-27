@@ -31,6 +31,11 @@ byte TSCANLINApi::LoadAPI()
   QString libraryPath;
   QString tslibraryPath;
   QString exePath = QCoreApplication::applicationDirPath();
+#ifndef Q_OS_WIN
+  /* Linux (仅 x86_64): 官方 libTSCANApiOnLinux.so, 构建时已复制到程序目录 */
+  libraryPath = exePath + "/libTSCANApiOnLinux.so";
+  tslibraryPath = exePath + "/libTSH.so";
+#else
   if (QSysInfo::WordSize == 64)
   {
     /* 64位平台 */
@@ -43,6 +48,7 @@ byte TSCANLINApi::LoadAPI()
     libraryPath = exePath + "/ts_can_x86/libTSCAN.dll";
     tslibraryPath = exePath + "/ts_can_x86/libTSH.dll";
   }
+#endif
 
   myLibrary.setFileName(libraryPath);
   ts_myLibrary.setFileName(tslibraryPath);

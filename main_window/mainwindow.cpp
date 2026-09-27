@@ -206,7 +206,7 @@ void MainWindow::can_driver_init()
   ui->device_info_pushButton->setEnabled(false);
 
 #ifndef Q_OS_WIN
-  /* Linux 品牌下拉框: ["SocketCAN", "ZLG"](x86_64) 或 ["SocketCAN"](其他架构)；
+  /* Linux 品牌下拉框: ["SocketCAN", "ZLG", "TOSUN"](x86_64) 或 ["SocketCAN"](其他架构)；
      SocketCAN 保持 index 0 默认，不破坏老用户配置。
      此时 more_window_obj 尚未创建，阻塞信号防止联动槽函数访问空指针，
      设备列表在子窗口初始化完成后手动刷新 */
@@ -215,6 +215,9 @@ void MainWindow::can_driver_init()
   ui->brand_comboBox->addItem("SocketCAN");
 #ifdef ZLG_CAN_LINUX_SUPPORT
   ui->brand_comboBox->addItem("ZLG");
+#endif
+#ifdef TSCAN_CAN_LINUX_SUPPORT
+  ui->brand_comboBox->addItem("TOSUN");
 #endif
   ui->brand_comboBox->blockSignals(false);
 #endif
@@ -538,7 +541,7 @@ void MainWindow::on_open_device_pushButton_clicked()
       return;
   }
 #else
-  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG"]，按 index 映射，index 0 = SocketCAN 默认 */
+  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG", "TOSUN"](x86_64)，按 index 映射，index 0 = SocketCAN 默认 */
   switch(ui->brand_comboBox->currentIndex())
   {
     case 0:  /**< SocketCAN */
@@ -548,6 +551,11 @@ void MainWindow::on_open_device_pushButton_clicked()
 #ifdef ZLG_CAN_LINUX_SUPPORT
     case 1:  /**< 周立功 */
       can_driver_obj = new can_driver_zlg();
+      break;
+#endif
+#ifdef TSCAN_CAN_LINUX_SUPPORT
+    case 2:  /**< 同星 */
+      can_driver_obj = new can_driver_ts();
       break;
 #endif
 
@@ -754,7 +762,7 @@ void MainWindow::on_role_comboBox_currentIndexChanged(int index)
         return;
   }
 #else
-  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG"]，按 index 映射，index 0 = SocketCAN 默认 */
+  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG", "TOSUN"](x86_64)，按 index 映射，index 0 = SocketCAN 默认 */
   switch(ui->brand_comboBox->currentIndex())
   {
     case 0:  /**< SocketCAN */
@@ -764,6 +772,11 @@ void MainWindow::on_role_comboBox_currentIndexChanged(int index)
 #ifdef ZLG_CAN_LINUX_SUPPORT
     case 1:  /**< 周立功 */
       function_can_use = can_driver_zlg::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+      break;
+#endif
+#ifdef TSCAN_CAN_LINUX_SUPPORT
+    case 2:  /**< 同星 */
+      function_can_use = can_driver_ts::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
       break;
 #endif
 
@@ -801,7 +814,7 @@ void MainWindow::on_device_list_comboBox_currentTextChanged(const QString &arg1)
         return;
   }
 #else
-  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG"]，按 index 映射，index 0 = SocketCAN 默认 */
+  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG", "TOSUN"](x86_64)，按 index 映射，index 0 = SocketCAN 默认 */
   switch(ui->brand_comboBox->currentIndex())
   {
     case 0:  /**< SocketCAN */
@@ -811,6 +824,11 @@ void MainWindow::on_device_list_comboBox_currentTextChanged(const QString &arg1)
 #ifdef ZLG_CAN_LINUX_SUPPORT
     case 1:  /**< 周立功 */
       function_can_use = can_driver_zlg::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+      break;
+#endif
+#ifdef TSCAN_CAN_LINUX_SUPPORT
+    case 2:  /**< 同星 */
+      function_can_use = can_driver_ts::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
       break;
 #endif
 
@@ -882,7 +900,7 @@ void MainWindow::on_brand_comboBox_currentIndexChanged(int index)
       return;
   }
 #else
-  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG"]，按 index 映射，index 0 = SocketCAN 默认 */
+  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG", "TOSUN"](x86_64)，按 index 映射，index 0 = SocketCAN 默认 */
   switch(index)
   {
     case 0:  /**< SocketCAN */
@@ -892,6 +910,11 @@ void MainWindow::on_brand_comboBox_currentIndexChanged(int index)
 #ifdef ZLG_CAN_LINUX_SUPPORT
     case 1:  /**< 周立功 */
       function_can_use = can_driver_zlg::function_can_use_update_for_choose();
+      break;
+#endif
+#ifdef TSCAN_CAN_LINUX_SUPPORT
+    case 2:  /**< 同星 */
+      function_can_use = can_driver_ts::function_can_use_update_for_choose();
       break;
 #endif
 

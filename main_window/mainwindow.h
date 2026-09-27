@@ -13,10 +13,14 @@
 #include "can_driver_ts.h"
 #include "can_driver_kvaser.h"
 #else
-/* Linux: SocketCAN 驱动；x86_64 上周立功驱动通过 dlopen 动态加载官方 .so */
+/* Linux: SocketCAN 驱动；x86_64 上周立功驱动通过 dlopen 动态加载官方 .so，
+   同星驱动经 QLibrary 动态加载官方 .so */
 #include "can_driver_socketcan.h"
 #ifdef ZLG_CAN_LINUX_SUPPORT
 #include "can_driver_zlg.h"
+#endif
+#ifdef TSCAN_CAN_LINUX_SUPPORT
+#include "can_driver_ts.h"
 #endif
 #endif
 #include "eol_protocol.h"

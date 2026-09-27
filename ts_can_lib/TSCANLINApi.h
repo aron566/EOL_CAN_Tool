@@ -1,7 +1,13 @@
 #ifndef _TSCANLIN_API_H_
 #define _TSCANLIN_API_H_
 
+#ifdef Q_OS_WIN
 #include "TSCANDef.h"
+#else
+/* Linux: 用官方新版跨平台头 + 补齐函数指针类型的兼容头
+   (老 TSCANDef.h 含 windows.h/__stdcall, 无法在 Linux 编译) */
+#include "tscan_linux_types.h"
+#endif
 #include <QLibrary>
 #include <QDebug>
 

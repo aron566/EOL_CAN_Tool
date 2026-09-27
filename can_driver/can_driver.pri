@@ -7,7 +7,8 @@ SOURCES += \
   $$PWD/can_driver_model.cpp \
   $$PWD/can_driver_sender.cpp
 
-# 四个厂商驱动仅 Windows 编译 (仓库内只有 Windows DLL/.lib, 无 Linux 版 SDK)
+# 四个厂商驱动：Windows 全编译；Linux 下周立功/同星有官方 .so，走各自 Linux 分支编译，
+# 广成/Kvaser 暂无 Linux 版 SDK，仅 Windows
 win32 {
     HEADERS += \
       $$PWD/can_driver_gc.h \
@@ -39,6 +40,17 @@ unix:!macx {
 
         SOURCES += \
           $$PWD/can_driver_zlg.cpp
+    }
+}
+
+# 同星驱动: Linux(x86_64) 下经 QLibrary 动态加载官方 .so；aarch64 暂无可用库不编译
+unix:!macx {
+    contains(QMAKE_HOST.arch, x86_64) {
+        HEADERS += \
+          $$PWD/can_driver_ts.h
+
+        SOURCES += \
+          $$PWD/can_driver_ts.cpp
     }
 }
 

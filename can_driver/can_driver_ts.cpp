@@ -220,18 +220,30 @@ void can_driver_ts::show_rec_message(const CHANNEL_STATE_Typedef_t &channel_stat
   {
     const TLibCAN& can = data[i];
     const quint32& id = can.FIdentifier;
+#ifdef Q_OS_WIN
     const bool is_eff = can.FProperties.bits.extframe;
     const bool is_rtr = can.FProperties.bits.remoteframe;
+#else
+    /* Linux: 新官方头 FProperties 为 u8，用位掩码 */
+    const bool is_eff = (can.FProperties & MASK_CANProp_EXTEND) != 0;
+    const bool is_rtr = (can.FProperties & MASK_CANProp_REMOTE) != 0;
+#endif
     can_id = (id & 0x1FFFFFFFU);
+#ifdef Q_OS_WIN
+    const quint8* frame_data = can.FData.d;
+#else
+    /* Linux: 新官方头 FData 为 u8[8] */
+    const quint8* frame_data = can.FData;
+#endif
 
     /* 消息分发到UI显示cq */
     msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT, \
                      CAN_PROTOCOL_TYPE, is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
                      is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE, \
-                     can.FData.d, can.FDLC);
+                     frame_data, can.FDLC);
 
     /* 消息过滤分发 */
-    msg_to_cq_buf(can_id, (quint8)channel_state.channel_num, can.FData.d, can.FDLC);
+    msg_to_cq_buf(can_id, (quint8)channel_state.channel_num, frame_data, can.FDLC);
   }
 }
 
@@ -242,19 +254,33 @@ void can_driver_ts::show_rec_message(const CHANNEL_STATE_Typedef_t &channel_stat
   {
     const TLibCANFD& can = data[i];
     const quint32& id = can.FIdentifier;
+#ifdef Q_OS_WIN
     const bool is_eff = can.FProperties.bits.extframe;
     const bool is_rtr = can.FProperties.bits.remoteframe;
+#else
+    /* Linux: 新官方头 FProperties 为 u8，用位掩码 */
+    const bool is_eff = (can.FProperties & MASK_CANProp_EXTEND) != 0;
+    const bool is_rtr = (can.FProperties & MASK_CANProp_REMOTE) != 0;
+#endif
     can_id = (id & 0x1FFFFFFFU);
+#ifdef Q_OS_WIN
+    const PROTOCOL_TYPE_Typedef_t rx_protocol = (PROTOCOL_TYPE_Typedef_t)can.FFDProperties.bits.EDL;
+    const quint8* frame_data = can.FData.d;
+#else
+    /* Linux: 新官方头 FFDProperties/FData 为 u8，用位掩码 */
+    const PROTOCOL_TYPE_Typedef_t rx_protocol = (PROTOCOL_TYPE_Typedef_t)((can.FFDProperties & MASK_CANFDProp_IS_FD) != 0);
+    const quint8* frame_data = can.FData;
+#endif
 
     /* 消息分发到UI显示cq */
     msg_to_ui_cq_buf(can_id, (quint8)channel_state.channel_num, CAN_RX_DIRECT, \
-                     (PROTOCOL_TYPE_Typedef_t)can.FFDProperties.bits.EDL, \
+                     rx_protocol, \
                      is_eff ? EXT_FRAME_TYPE : STD_FRAME_TYPE, \
                      is_rtr ? REMOTE_FRAME_TYPE : DATA_FRAME_TYPE, \
-                     can.FData.d, can.FDLC);
+                     frame_data, can.FDLC);
 
     /* 消息过滤分发 */
-    msg_to_cq_buf(can_id, (quint8)channel_state.channel_num, can.FData.d, can.FDLC);
+    msg_to_cq_buf(can_id, (quint8)channel_state.channel_num, frame_data, can.FDLC);
   }
 }
 /** Public application code --------------------------------------------------*/
@@ -342,7 +368,12 @@ bool can_driver_ts::init(CHANNEL_STATE_Typedef_t &channel_state)
 {
   /* 连接设备：使用设备前必须调用 */
   ts_can_obj->InitTSCANAPI(true, false, false);
+#ifdef Q_OS_WIN
   quint32 connect_state = ts_can_obj->tscan_connect(0, &channel_state.device_handle);
+#else
+  /* Linux: tscan_connect 取 size_t*(unsigned long), device_handle 为 quint64(均为64位) */
+  quint32 connect_state = ts_can_obj->tscan_connect(0, (size_t*)&channel_state.device_handle);
+#endif
   if((connect_state == 0U) || (connect_state == 5U))
   {
     int ret = ts_can_obj->tscan_config_canfd_by_baudrate(channel_state.device_handle,
@@ -399,7 +430,7 @@ bool can_driver_ts::start(const CHANNEL_STATE_Typedef_t &channel_state)
   {
     init();
   }
-  connect_state = ts_can_obj->tscan_connect(0, (quint64 *)&channel_state.device_handle);
+  connect_state = ts_can_obj->tscan_connect(0, (size_t*)&channel_state.device_handle);
   if((connect_state == 0U) || (connect_state == 5U))
   {
     show_message(tr("ts start canfd ch %1 ok").arg(channel_state.channel_num), channel_state.channel_num);
@@ -511,13 +542,25 @@ quint32 can_driver_ts::ts_can_send(const CHANNEL_STATE_Typedef_t &channel_state,
       {
         TLibCAN canMsg;
         canMsg.FIdentifier                  = (qint32)id;
+#ifdef Q_OS_WIN
         canMsg.FProperties.value            = 0x00; // 清除原始属性
         canMsg.FProperties.bits.extframe    = (quint8)frame_type;
         canMsg.FProperties.bits.remoteframe = (quint8)DATA_FRAME_TYPE;// not remote frame，standard frame
         canMsg.FProperties.bits.istx        = 1;    // 设置属性为发送报文
+#else
+        /* Linux: 新官方头 FProperties 为 u8，用 Set 方法 */
+        canMsg.FProperties = 0x00; // 清除原始属性
+        canMsg.SetStd(frame_type == STD_FRAME_TYPE);
+        canMsg.SetData(true);      // 数据帧，非远程帧
+        canMsg.SetTX(true);        // 设置属性为发送报文
+#endif
         canMsg.FIdxChn                      = channel_state.channel_num;
         canMsg.FDLC                         = size > 8U ? 8U : size;
+#ifdef Q_OS_WIN
         memcpy_s(canMsg.FData.d, sizeof(canMsg.FData.d), data, canMsg.FDLC);
+#else
+        memcpy(canMsg.FData, data, canMsg.FDLC);
+#endif
         /* 推送到fifo */
         if(0U != ts_can_obj->tscan_transmit_can_async(channel_state.device_handle, &canMsg))
         {
@@ -532,15 +575,29 @@ quint32 can_driver_ts::ts_can_send(const CHANNEL_STATE_Typedef_t &channel_state,
       {
         TLibCANFD CANFDMsg;
         CANFDMsg.FIdentifier                  = (qint32)id;
+#ifdef Q_OS_WIN
         CANFDMsg.FProperties.value            = 0x00; // 清除原始属性
         CANFDMsg.FProperties.bits.extframe    = (quint8)frame_type;
         CANFDMsg.FProperties.bits.remoteframe = (quint8)DATA_FRAME_TYPE;// not remote frame，standard frame
         CANFDMsg.FProperties.bits.istx        = 1;    // 设置属性为发送报文
         CANFDMsg.FFDProperties.value          = 0;    /* 清除原始属性 */
         CANFDMsg.FFDProperties.bits.EDL       = 1;    /* canfd报文 */
+#else
+        /* Linux: 新官方头 FProperties/FFDProperties 为 u8 */
+        CANFDMsg.FProperties = 0x00; // 清除原始属性
+        CANFDMsg.SetStd(frame_type == STD_FRAME_TYPE);
+        CANFDMsg.SetData(true);      // 数据帧，非远程帧
+        CANFDMsg.SetTX(true);        // 设置属性为发送报文
+        CANFDMsg.FFDProperties = 0;  /* 清除原始属性 */
+        CANFDMsg.FFDProperties |= MASK_CANFDProp_IS_FD; /* canfd报文 */
+#endif
         CANFDMsg.FIdxChn                      = channel_state.channel_num;
         CANFDMsg.FDLC                         = size > 64U ? 64U : size;
+#ifdef Q_OS_WIN
         memcpy_s(CANFDMsg.FData.d, sizeof(CANFDMsg.FData.d), data, CANFDMsg.FDLC);
+#else
+        memcpy(CANFDMsg.FData, data, CANFDMsg.FDLC);
+#endif
         if(0U != ts_can_obj->tscan_transmit_canfd_async(channel_state.device_handle, &CANFDMsg))
         {
           break;
