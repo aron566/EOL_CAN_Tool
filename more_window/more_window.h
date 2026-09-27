@@ -21,6 +21,7 @@
 #include <QTimer>
 #include <QTextEdit>
 #include <QAtomicInt>
+#include <QScopedPointer>
 #include <QDebug>
 /** Private includes ---------------------------------------------------------*/
 #include "eol_window.h"
@@ -30,6 +31,7 @@
 #include "network_window/network_window.h"
 #include "updatefw_window/updatefw_window.h"
 #include "utilities/line_highlighter.h"
+#include "utilities/msg_log_buffer.h"
 #include "can_log_sender_window/can_log_sender_window.h"
 /** Private defines ----------------------------------------------------------*/
 /** Exported typedefines -----------------------------------------------------*/
@@ -161,14 +163,6 @@ private:
   void show_txt();
 
   /**
-   * @brief 获取显示的索引
-   * @param current_show_index
-   * @param total_size
-   * @return 显示索引
-   */
-  quint32 get_show_index(quint32 current_show_index, quint32 total_size);
-
-  /**
    * @brief 字符转字符串
    * @param data 字符
    * @param data_len 字符长度
@@ -279,18 +273,13 @@ private:
   quint32 last_canid_mask = 0;
   bool last_canid_mask_en = false;
 
-  typedef struct
-  {
-    QString str;
-    quint32 channel_num;
-    quint8 direct;
-  }SHOW_MSG_Typedef_t;
+  /* 消息日志缓冲:窗口只依赖抽象类,临时文件实现由工厂创建,自行管理 */
+  QScopedPointer<msg_log_buffer> ch1_msg_buf;
+  QScopedPointer<msg_log_buffer> ch2_msg_buf;
 
   line_highlighter ch1_line_highlighter;
-  QList<SHOW_MSG_Typedef_t>ch1_show_msg_list;
 
   line_highlighter ch2_line_highlighter;
-  QList<SHOW_MSG_Typedef_t>ch2_show_msg_list;
 
   /* 字符显示 */
   QString show_line_str;
@@ -300,13 +289,13 @@ private:
   quint32 limit_str_canid = 0xFFFF;
 private:
   /**
-     * @brief update_show_msg 显示指定索引消息
+     * @brief update_show_msg 显示指定全局索引消息(内存未命中时从临时文件读取)
      * @param text_edit_widget 控件
-     * @param pList 消息链表
-     * @param show_index 索引
+     * @param channel 通道 1/2
+     * @param show_index 全局索引
      * @param downward_flag true 下翻标识 false 上翻标识
      */
-  void update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag);
+  void update_show_msg(QPlainTextEdit *text_edit_widget, quint8 channel, quint32 show_index, bool downward_flag);
 
   /**
      * @brief 帧诊断窗口初始化
@@ -326,12 +315,9 @@ private:
      */
   void show_can_msg(can_driver_model::CAN_MSG_DISPLAY_Typedef_t &msg);
 private:
-  /* 已显示消息 */
+  /* 已显示消息数(全局索引游标) */
   quint32 ch1_show_msg_index = 0;
   quint32 ch2_show_msg_index = 0;
-  /* 已添加消息 */
-  quint32 ch1_add_msg_index = 0;
-  quint32 ch2_add_msg_index = 0;
 
   /* 滚动计数 */
   quint32 ch1_scroll_cnt = 0;

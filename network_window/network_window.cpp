@@ -36,7 +36,6 @@
 /** Private macros -----------------------------------------------------------*/
 #define SHOW_MSG_SAVE_NUM_MAX     200U                    /**< 最大显示消息数 */
 #define SHOW_MSG_ONE_SCORLL       (5U)                    /**< 上翻每次刷新列表数 */
-#define SAVE_MSG_BUF_MAX          (1024U*512U*1U)         /**< 最大缓存消息数 */
 
 #define SHOW_LINE_CHAR_NUM_MAX    (1024U)                 /**< 一行最大显示多少字符 */
 #define SHOW_CHAR_TIMEOUT_MS_MAX  (1000U)                 /**< 最大等待无换行符时间ms */
@@ -62,7 +61,9 @@
 
 network_window::network_window(QString title, QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::network_window)
+    ui(new Ui::network_window),
+    ch1_msg_buf(msg_log_buffer::create_file_buffer("net", 1)),
+    ch2_msg_buf(msg_log_buffer::create_file_buffer("net", 2))
 {
   ui->setupUi(this);
 
@@ -155,7 +156,8 @@ void network_window::wheelEvent(QWheelEvent *event)
 
   int xp1, yp1, xp2, yp2;
   quint32 *pchx_scroll_cnt = nullptr;
-  QList<SHOW_MSG_Typedef_t> *pList = nullptr;
+  quint8 channel = 0;
+  msg_log_buffer *pmsg_buf = nullptr;
   QPlainTextEdit *text_edit_widget = nullptr;
   QPlainTextEdit *text_edit_widget_temp = ui->client_plainTextEdit;
   QPoint A = QWidget::mapToGlobal(text_edit_widget_temp->pos());
@@ -172,7 +174,8 @@ void network_window::wheelEvent(QWheelEvent *event)
     //    qDebug() << "ch1";
     text_edit_widget = ui->client_plainTextEdit;
     pchx_scroll_cnt = &ch1_scroll_cnt;
-    pList = &ch1_show_msg_list;
+    channel = 1;
+    pmsg_buf = ch1_msg_buf.data();
   }
 
   text_edit_widget_temp = ui->server_plainTextEdit;
@@ -190,7 +193,8 @@ void network_window::wheelEvent(QWheelEvent *event)
     //    qDebug() << "ch2";
     text_edit_widget = ui->server_plainTextEdit;
     pchx_scroll_cnt = &ch2_scroll_cnt;
-    pList = &ch2_show_msg_list;
+    channel = 2;
+    pmsg_buf = ch2_msg_buf.data();
   }
 
   if(nullptr == text_edit_widget)
@@ -203,17 +207,17 @@ void network_window::wheelEvent(QWheelEvent *event)
     /* 向下滚动 */
     if(event->angleDelta().y() < 0)
     {
-      /* 是否能下翻 */
-      if((*pchx_scroll_cnt) + 1 > (quint32)pList->size())
+      /* 是否能下翻(历史总条数为界,含临时文件中的历史) */
+      if((*pchx_scroll_cnt) + 1 > pmsg_buf->size())
       {
-        //        qDebug() << " down " << (*pchx_scroll_cnt) << pList->size();
+        //        qDebug() << " down " << (*pchx_scroll_cnt) << pmsg_buf->size();
         return;
       }
       *pchx_scroll_cnt = (*pchx_scroll_cnt) + 1;
       quint32 bottom_index = (*pchx_scroll_cnt) - 1;
 
       /* 刷新当前消息到尾部 */
-      update_show_msg(text_edit_widget, pList, bottom_index, true);
+      update_show_msg(text_edit_widget, channel, bottom_index, true);
     }
 
     /* 向上滚动 */
@@ -244,7 +248,7 @@ void network_window::wheelEvent(QWheelEvent *event)
       }
 
       /* 刷新当前消息到尾部 */
-      update_show_msg(text_edit_widget, pList, top_index, false);
+      update_show_msg(text_edit_widget, channel, top_index, false);
     }
   }
 
@@ -295,9 +299,10 @@ void network_window::read_cfg()
   setting.sync();
 }
 
-void network_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag)
+void network_window::update_show_msg(QPlainTextEdit *text_edit_widget, quint8 channel, quint32 show_index, bool downward_flag)
 {
-  SHOW_MSG_Typedef_t show_messagex = pList->value(show_index);
+  /* 按全局索引读取,近期命中内存,更早的从临时文件读取 */
+  SHOW_MSG_Typedef_t show_messagex = (1 == channel) ? ch1_msg_buf->value(show_index) : ch2_msg_buf->value(show_index);
 
   /* 下翻 */
   if(downward_flag)
@@ -337,7 +342,7 @@ void network_window::update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHO
 
 bool network_window::ch1_show_msg_is_empty()
 {
-  if(ch1_add_msg_index == ch1_show_msg_index)
+  if(ch1_msg_buf->size() == ch1_show_msg_index)
   {
     return true;
   }
@@ -346,24 +351,11 @@ bool network_window::ch1_show_msg_is_empty()
 
 bool network_window::ch2_show_msg_is_empty()
 {
-  if(ch2_add_msg_index == ch2_show_msg_index)
+  if(ch2_msg_buf->size() == ch2_show_msg_index)
   {
     return true;
   }
   return false;
-}
-
-quint32 network_window::get_show_index(quint32 current_show_index, quint32 totaol_size)
-{
-  quint32 index = 0;
-  quint32 remain = totaol_size - current_show_index;
-  if(SAVE_MSG_BUF_MAX <= current_show_index)
-  {
-    index = SAVE_MSG_BUF_MAX - remain;
-    return index;
-  }
-  index = current_show_index % SAVE_MSG_BUF_MAX;
-  return index;
 }
 
 void network_window::show_txt()
@@ -374,10 +366,10 @@ void network_window::show_txt()
 
   if(ch1_show_msg_is_empty() == false)
   {
-    quint32 show_index = get_show_index(ch1_show_msg_index, ch1_add_msg_index);
-    show_messagex = ch1_show_msg_list.value(show_index);
+    /* 全局索引直接读取,无需环形换算 */
+    show_messagex = ch1_msg_buf->value(ch1_show_msg_index);
     ch1_show_msg_index++;
-    ch1_scroll_cnt = show_index + 1;
+    ch1_scroll_cnt = ch1_show_msg_index;
 
     text_edit_widget = ui->client_plainTextEdit;
     text_edit_widget->appendPlainText(show_messagex.str);
@@ -385,10 +377,9 @@ void network_window::show_txt()
 
   if(ch2_show_msg_is_empty() == false)
   {
-    quint32 show_index = get_show_index(ch2_show_msg_index, ch2_add_msg_index);
-    show_messagex = ch2_show_msg_list.value(show_index);
+    show_messagex = ch2_msg_buf->value(ch2_show_msg_index);
     ch2_show_msg_index++;
-    ch2_scroll_cnt = show_index + 1;
+    ch2_scroll_cnt = ch2_show_msg_index;
 
     text_edit_widget = ui->server_plainTextEdit;
     text_edit_widget->appendPlainText(show_messagex.str);
@@ -731,26 +722,15 @@ void network_window::slot_show_message(const QString &message, quint32 channel_n
   msg.str = show_message;
   msg.direct = direct;
 
-  /* 限制缓冲区大小 */
+  /* 追加到消息日志缓冲:内存只保留最近 2000 条,超出的按 1000 条一批写入临时文件 */
   if(0 == channel_num)
   {
-    if((quint32)ch1_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
-    {
-      ch1_show_msg_list.removeFirst();
-    }
-    ch1_show_msg_list.append(msg);
-    ch1_add_msg_index++;
-    goto __show_msg;
+    ch1_msg_buf->append(msg);
   }
-
-  if((quint32)ch2_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
+  else
   {
-    ch2_show_msg_list.removeFirst();
+    ch2_msg_buf->append(msg);
   }
-  ch2_show_msg_list.append(msg);
-  ch2_add_msg_index++;
-
-__show_msg:
 
   /* 显示 */
   show_txt();
@@ -804,27 +784,15 @@ void network_window::slot_show_message_block(const QString &message, quint32 cha
   msg.str = show_message;
   msg.direct = direct;
 
-  /* 限制缓冲区大小 */
+  /* 追加到消息日志缓冲:内存只保留最近 2000 条,超出的按 1000 条一批写入临时文件 */
   if(0 == channel_num)
   {
-    if((quint32)ch1_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
-    {
-      ch1_show_msg_list.removeFirst();
-    }
-    ch1_show_msg_list.append(msg);
-    ch1_add_msg_index++;
-
-    goto __show_msg;
+    ch1_msg_buf->append(msg);
   }
-
-  if((quint32)ch2_show_msg_list.size() >= SAVE_MSG_BUF_MAX)
+  else
   {
-    ch2_show_msg_list.removeFirst();
+    ch2_msg_buf->append(msg);
   }
-  ch2_show_msg_list.append(msg);
-  ch2_add_msg_index++;
-
-__show_msg:
 
   /* 显示 */
   show_txt();
@@ -943,6 +911,15 @@ void network_window::on_clear_pushButton_clicked()
 {
   ui->server_plainTextEdit->clear();
   ui->client_plainTextEdit->clear();
+
+  /* 清空消息日志缓冲(内存+临时文件),并重置索引 */
+  ch1_msg_buf->clear();
+  ch2_msg_buf->clear();
+  ch1_show_msg_index = 0;
+  ch2_show_msg_index = 0;
+  ch1_scroll_cnt = 0;
+  ch2_scroll_cnt = 0;
+
   rx_frame_cnt = 0;
   tx_frame_cnt = 0;
   rx_byte_cnt = 0;
@@ -983,26 +960,25 @@ void network_window::on_export_txt_pushButton_clicked()
   }
 
   QString txt;
-  SHOW_MSG_Typedef_t msg;
-  QList<SHOW_MSG_Typedef_t> *pmsg_list;
+  msg_log_buffer *pmsg_buf;
 
-  /* 轮询显示通道 */
+  /* 轮询显示通道,导出全部历史(含临时文件中的) */
   for(int i = 0; i < ui->display_ch_comboBox->count() - 1; i++)
   {
     if(0 == i)
     {
-      pmsg_list = &ch1_show_msg_list;
+      pmsg_buf = ch1_msg_buf.data();
     }
     else
     {
-      pmsg_list = &ch2_show_msg_list;
+      pmsg_buf = ch2_msg_buf.data();
     }
     txt.clear();
     txt.append(QString::asprintf("====CH %d Message====\r\n", i));
     export_txt_file.write(txt.toUtf8());
-    for(qint32 line = 0; line < pmsg_list->size(); line++)
+    for(quint32 line = 0; line < pmsg_buf->size(); line++)
     {
-      export_txt_file.write(pmsg_list->value(line).str.toUtf8() + "\r\n");
+      export_txt_file.write(pmsg_buf->value(line).str.toUtf8() + "\r\n");
     }
   }
 

@@ -34,10 +34,12 @@
 #include <QWidget>
 #include <QTimer>
 #include <QTextEdit>
+#include <QScopedPointer>
 #include <QDebug>
 #include "network_driver/network_driver_tcp.h"
 #include "network_driver/network_driver_udp.h"
 #include "utilities/line_highlighter.h"
+#include "utilities/msg_log_buffer.h"
 /** Private defines ----------------------------------------------------------*/
 /** Exported typedefines -----------------------------------------------------*/
 /** Exported constants -------------------------------------------------------*/
@@ -166,13 +168,9 @@ signals:
    */
   void signal_net_wave_msg(QByteArray data);
 private:
-  /* 消息框显示 */
-  typedef struct
-  {
-    QString str;
-    quint32 channel_num;
-    quint8 direct;
-  }SHOW_MSG_Typedef_t;
+  /* 消息日志缓冲:窗口只依赖抽象类,临时文件实现由工厂创建,自行管理 */
+  QScopedPointer<msg_log_buffer> ch1_msg_buf;
+  QScopedPointer<msg_log_buffer> ch2_msg_buf;
 
 private:
 
@@ -192,13 +190,13 @@ private:
   void read_cfg();
 
   /**
-   * @brief update_show_msg
+   * @brief update_show_msg 按全局索引显示消息(内存未命中时从临时文件读取)
    * @param text_edit_widget
-   * @param pList
-   * @param show_index
+   * @param channel 通道 1/2
+   * @param show_index 全局索引
    * @param downward_flag
    */
-  void update_show_msg(QPlainTextEdit *text_edit_widget, QList<SHOW_MSG_Typedef_t> *pList, quint32 show_index, bool downward_flag);
+  void update_show_msg(QPlainTextEdit *text_edit_widget, quint8 channel, quint32 show_index, bool downward_flag);
 
   /**
    * @brief ch1_show_msg_is_empty
@@ -211,14 +209,6 @@ private:
    * @return
    */
   bool ch2_show_msg_is_empty();
-
-  /**
-   * @brief get_show_index
-   * @param current_show_index
-   * @param totaol_size
-   * @return
-   */
-  quint32 get_show_index(quint32 current_show_index, quint32 totaol_size);
 
   /**
    * @brief char2str 字符转字符串
@@ -303,22 +293,17 @@ private:
   quint32 rx_byte_cnt = 0;
   quint32 tx_byte_cnt = 0;
 
-  /* 已显示消息 */
+  /* 已显示消息数(全局索引游标) */
   quint32 ch1_show_msg_index = 0;
   quint32 ch2_show_msg_index = 0;
-  /* 已添加消息 */
-  quint32 ch1_add_msg_index = 0;
-  quint32 ch2_add_msg_index = 0;
 
   /* 滚动计数 */
   quint32 ch1_scroll_cnt = 0;
   /* 滚动计数 */
   quint32 ch2_scroll_cnt = 0;
   line_highlighter ch1_line_highlighter;
-  QList<SHOW_MSG_Typedef_t>ch1_show_msg_list;
 
   line_highlighter ch2_line_highlighter;
-  QList<SHOW_MSG_Typedef_t>ch2_show_msg_list;
 
   /* 字符显示 */
   QString show_line_str;

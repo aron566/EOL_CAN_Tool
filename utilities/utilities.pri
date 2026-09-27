@@ -4,6 +4,7 @@ HEADERS += \
   $$PWD/circularqueue.h \
   $$PWD/line_highlighter.h \
   $$PWD/listen_data.h \
+  $$PWD/msg_log_buffer.h \
   $$PWD/safe_queue.h \
   $$PWD/utility.h
 
@@ -13,6 +14,7 @@ SOURCES += \
   $$PWD/circularqueue.cpp \
   $$PWD/line_highlighter.cpp \
   $$PWD/listen_data.cpp \
+  $$PWD/msg_log_buffer.cpp \
   $$PWD/safe_queue.cpp \
   $$PWD/utility.cpp
 
