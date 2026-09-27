@@ -1054,7 +1054,7 @@ void can_driver_kvaser::receive_data(const CHANNEL_STATE_Typedef_t &channel_stat
   {
     canStatus stat;
     long id;
-    quint8 data[8];
+    quint8 data[64];
     quint32 dlc;
     quint32 flags;
     DWORD time;
@@ -1068,7 +1068,12 @@ void can_driver_kvaser::receive_data(const CHANNEL_STATE_Typedef_t &channel_stat
           can_data.remote_flag = (flags & canMSG_RTR) > 0U ? true : false;
           can_data.extern_flag = (flags & canMSG_EXT) > 0U ? true : false;
           can_data.is_canfd_flag = (flags & canFDMSG_FDF) > 0U ? true : false;
-          can_data.data_len = dlc;
+          /* CANFD 帧最多 64 字节，dlc 钳制防止数组越界 */
+          if(64U < dlc)
+          {
+            dlc = 64U;
+          }
+          can_data.data_len = (quint8)dlc;
           can_data.id = id;
           can_data.time_stamp = time;
           memcpy_s(can_data.data, sizeof(can_data.data), data, dlc);

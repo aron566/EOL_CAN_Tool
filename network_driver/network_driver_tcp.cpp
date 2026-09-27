@@ -111,7 +111,10 @@ bool network_driver_tcp::network_init(QString &ip, QString &port, NETWORK_WORK_R
         {
           return false;
         }
-        com_info_list.clear();
+        {
+          QMutexLocker locker(&com_info_mutex);
+          com_info_list.clear();
+        }
         /* 服务器 */
         server = new hv::TcpServer;
         int bindfd = server->createsocket(port.toInt(), ip.toUtf8().data());
@@ -138,24 +141,27 @@ bool network_driver_tcp::network_init(QString &ip, QString &port, NETWORK_WORK_R
           {
             return;
           }
-          qint32 index = repeat_check(info.value(0), com_info_list);
-          if(-1 != index)
           {
-            peer_data = com_info_list.value(index);
-            /* 判断是否是重连，更新对方地址信息 */
-            if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
+            QMutexLocker locker(&com_info_mutex);
+            qint32 index = repeat_check(info.value(0), com_info_list);
+            if(-1 != index)
             {
-              peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
+              peer_data = com_info_list.value(index);
+              /* 判断是否是重连，更新对方地址信息 */
+              if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
+              {
+                peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
+              }
+              com_info_list.replace(index, peer_data);
             }
-            com_info_list.replace(index, peer_data);
-            goto _show_server_rx_msg;
+            else
+            {
+              /* 对方网络类型 */
+              peer_data.net_type = NETWORK_TCP_TYPE;
+              com_info_list.append(peer_data);
+            }
           }
 
-          /* 对方网络类型 */
-          peer_data.net_type = NETWORK_TCP_TYPE;
-          com_info_list.append(peer_data);
-
-_show_server_rx_msg:
           /* 加入数据到缓冲区 */
           network_put_data((const quint8 *)buf->base, buf->size(), info.value(0));
           QString tips;
@@ -164,7 +170,9 @@ _show_server_rx_msg:
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 1U, 1U, (const quint8 *)buf->base, buf->size(), true, info.value(0));
+          /* 回调内先拷贝到QByteArray再值传递，避免hv::Buffer回收后悬空 */
+          QByteArray data_copy((const char *)buf->base, buf->size());
+          this->show_message(tips, 1U, 1U, data_copy, buf->size(), true, info.value(0));
           this->show_message_bytes(buf->size(), 1U, 1U);
         };
 
@@ -184,23 +192,26 @@ _show_server_rx_msg:
           }
 
           QString tips;
-          if(true == channel->isConnected())
           {
-            qint32 index = repeat_check(info.value(0), com_info_list);
-            if(-1 == index)
+            QMutexLocker locker(&com_info_mutex);
+            if(true == channel->isConnected())
             {
-              com_info_list.append(peer_data);
+              qint32 index = repeat_check(info.value(0), com_info_list);
+              if(-1 == index)
+              {
+                com_info_list.append(peer_data);
+              }
+              tips = QString::asprintf("tcp server addr:%s connfd=%d connected!", channel->peeraddr().c_str(), channel->fd());
             }
-            tips = QString::asprintf("tcp server addr:%s connfd=%d connected!", channel->peeraddr().c_str(), channel->fd());
-          }
-          else
-          {
-            qint32 index = repeat_check(info.value(0), com_info_list);
-            if(-1 != index)
+            else
             {
-              com_info_list.removeAt(index);
+              qint32 index = repeat_check(info.value(0), com_info_list);
+              if(-1 != index)
+              {
+                com_info_list.removeAt(index);
+              }
+              tips = QString::asprintf("tcp server addr:%s connfd=%d disconnected!", channel->peeraddr().c_str(), channel->fd());
             }
-            tips = QString::asprintf("tcp server addr:%s connfd=%d disconnected!", channel->peeraddr().c_str(), channel->fd());
           }
           this->show_message(tips, 1U, 0xFFU);
         };
@@ -213,7 +224,9 @@ _show_server_rx_msg:
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 1U, 0U, (const quint8 *)buf->base, buf->size(), false, QString::fromStdString(channel->peeraddr().c_str()));
+          /* 回调内先拷贝到QByteArray再值传递，避免hv::Buffer回收后悬空 */
+          QByteArray data_copy((const char *)buf->base, buf->size());
+          this->show_message(tips, 1U, 0U, data_copy, buf->size(), false, QString::fromStdString(channel->peeraddr().c_str()));
           this->show_message_bytes(buf->size(), 1U, 0U);
 
           tips = tr("[TCP SERVER]send data sucessful! to addr:%1").arg(QString::fromStdString(channel->peeraddr()));
@@ -230,7 +243,10 @@ _show_server_rx_msg:
         {
           return false;
         }
-        com_info_list.clear();
+        {
+          QMutexLocker locker(&com_info_mutex);
+          com_info_list.clear();
+        }
         /* 客户端 */
         client = new hv::TcpClient;
         int bindfd = client->createsocket(port.toInt(), ip.toUtf8().data());
@@ -257,23 +273,26 @@ _show_server_rx_msg:
           }
 
           QString tips;
-          if(true == channel->isConnected())
           {
-            qint32 index = repeat_check(info.value(0), com_info_list);
-            if(-1 == index)
+            QMutexLocker locker(&com_info_mutex);
+            if(true == channel->isConnected())
             {
-              com_info_list.append(peer_data);
+              qint32 index = repeat_check(info.value(0), com_info_list);
+              if(-1 == index)
+              {
+                com_info_list.append(peer_data);
+              }
+              tips = QString::asprintf("tcp client connected! addr:%s connfd=%d", channel->peeraddr().c_str(), channel->fd());
             }
-            tips = QString::asprintf("tcp client connected! addr:%s connfd=%d", channel->peeraddr().c_str(), channel->fd());
-          }
-          else
-          {
-            qint32 index = repeat_check(info.value(0), com_info_list);
-            if(-1 != index)
+            else
             {
-              com_info_list.removeAt(index);
+              qint32 index = repeat_check(info.value(0), com_info_list);
+              if(-1 != index)
+              {
+                com_info_list.removeAt(index);
+              }
+              tips = QString::asprintf("tcp client disconnected! addr:%s connfd=%d", channel->peeraddr().c_str(), channel->fd());
             }
-            tips = QString::asprintf("tcp client disconnected! addr:%s connfd=%d", channel->peeraddr().c_str(), channel->fd());
           }
           this->show_message(tips);
         };
@@ -293,24 +312,27 @@ _show_server_rx_msg:
           }
 
           /* 地址查询 */
-          qint32 index = repeat_check(info.value(0), com_info_list);
-          if(-1 != index)
           {
-            peer_data = com_info_list.value(index);
-            /* 判断是否是重连，更新对方地址信息 */
-            if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
+            QMutexLocker locker(&com_info_mutex);
+            qint32 index = repeat_check(info.value(0), com_info_list);
+            if(-1 != index)
             {
-              peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
+              peer_data = com_info_list.value(index);
+              /* 判断是否是重连，更新对方地址信息 */
+              if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
+              {
+                peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
+              }
+              com_info_list.replace(index, peer_data);
             }
-            com_info_list.replace(index, peer_data);
-            goto _show_client_rx_msg;
+            else
+            {
+              /* 对方网络类型 */
+              peer_data.net_type = NETWORK_TCP_TYPE;
+              com_info_list.append(peer_data);
+            }
           }
 
-          /* 对方网络类型 */
-          peer_data.net_type = NETWORK_TCP_TYPE;
-          com_info_list.append(peer_data);
-
-_show_client_rx_msg:
           /* 加入数据到缓冲区 */
           network_put_data((const quint8 *)buf->base, buf->size(), info.value(0));
           QString tips;
@@ -319,7 +341,9 @@ _show_client_rx_msg:
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 0U, 1U, (const quint8 *)buf->base, buf->size(), true, info.value(0));
+          /* 回调内先拷贝到QByteArray再值传递，避免hv::Buffer回收后悬空 */
+          QByteArray data_copy((const char *)buf->base, buf->size());
+          this->show_message(tips, 0U, 1U, data_copy, buf->size(), true, info.value(0));
           this->show_message_bytes(buf->size(), 0U, 1U);
         };
 
@@ -331,7 +355,9 @@ _show_client_rx_msg:
           {
             tips += QString::asprintf("%02X ", (quint8)buf->base[i]);
           }
-          this->show_message(tips, 0U, 0U, (const quint8 *)buf->base, buf->size(), false, QString::fromStdString(channel->peeraddr().c_str()));
+          /* 回调内先拷贝到QByteArray再值传递，避免hv::Buffer回收后悬空 */
+          QByteArray data_copy((const char *)buf->base, buf->size());
+          this->show_message(tips, 0U, 0U, data_copy, buf->size(), false, QString::fromStdString(channel->peeraddr().c_str()));
           this->show_message_bytes(buf->size(), 0U, 0U);
 
           tips = tr("[TCP CLIENT]send data sucessful! to addr:%1").arg(QString::fromStdString(channel->peeraddr()));
@@ -383,6 +409,10 @@ bool network_driver_tcp::network_start()
    */
 bool network_driver_tcp::network_stop()
 {
+  /* 先断开工作线程的阻塞投递连接，避免server->stop() join线程时与GUI线程死锁；
+     下次network_start()时network_window会重建该连接 */
+  this->disconnect(SIGNAL(signal_show_thread_message(QString,quint32,quint8,QByteArray,quint32,QString)));
+
   if(nullptr != server)
   {
     server->stop();
@@ -435,7 +465,11 @@ bool network_driver_tcp::network_send_data(const quint8 *data, quint32 len, cons
 
         tips = "[TCP SERVER]";
         /* 获取通讯通道 */
-        quint32 id = get_msg_id(ip, com_info_list);
+        quint32 id;
+        {
+          QMutexLocker locker(&com_info_mutex);
+          id = get_msg_id(ip, com_info_list);
+        }
         if(0xFFFFFFFFU == id)
         {
           tips += tr("send data failed! to addr:%1 ip err").arg(addr);
@@ -443,6 +477,12 @@ bool network_driver_tcp::network_send_data(const quint8 *data, quint32 len, cons
           return false;
         }
         auto pchannel = server->getChannelById(id);
+        if(nullptr == pchannel)
+        {
+          tips += tr("send data failed! to addr:%1 channel not found").arg(addr);
+          this->show_message(tips, 1U, 0U);
+          return false;
+        }
         if(0 > pchannel->write(data, len))
         {
           tips += tr("send data failed! to addr:%1").arg(addr);
