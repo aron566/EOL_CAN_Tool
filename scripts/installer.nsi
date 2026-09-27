@@ -8,7 +8,7 @@
 !include "FileFunc.nsh"
 
 !ifndef VERSION
-  !define VERSION "1.4.7"
+  !define VERSION "1.5.0"
 !endif
 !ifndef SRC
   !define SRC "..\nsis_pkg"

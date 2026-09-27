@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=EOL_CAN_Tool
+GenericName=CAN Bus Test Tool
+Comment=EOL CAN 上位机测试工具 (SocketCAN / ZLG / TOSUN)
+Exec=EOL_CAN_Tool
+Icon=EOL_CAN_Tool
+Categories=Development;Engineering;
+Terminal=false
+StartupWMClass=EOL_CAN_Tool

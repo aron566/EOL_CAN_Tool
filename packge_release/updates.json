@@ -2,9 +2,9 @@
   "updates": {
     "windows": {
       "open-url": "",
-      "latest-version": "1.4.7",
-      "download-url": "https://github.com/aron566/EOL_CAN_Tool/releases/download/v1.4.7/EOL_CAN_Tool_Setup_v1.4.7.exe",
-      "changelog": "2026-09-27 v1.4.7 修复编译告警(sprintf改snprintf消除缓冲区溢出风险)，清理switch仅default告警，NSIS打包与GitHub Actions自动发布",
+      "latest-version": "1.5.0",
+      "download-url": "https://github.com/aron566/EOL_CAN_Tool/releases/download/v1.5.0/EOL_CAN_Tool_Setup_v1.5.0.exe",
+      "changelog": "2026-09-27 v1.5.0 新增Linux平台支持，Windows驱动更新(周立功20260203/Kvaser 5.52.559/同星1.0.0.43)，双平台CI打包发布",
       "mandatory": true
     },
     "osx": {
@@ -16,9 +16,9 @@
     },
     "linux": {
       "open-url": "",
-      "latest-version": "1.0.1",
-      "download-url": "https://github.com/aron566/EOL_CAN_Tool/releases/download/v1.4.6/EOL_CAN_Tool.zip",
-      "changelog": "This is an example changelog for Linux. Go on...",
+      "latest-version": "1.5.0",
+      "download-url": "https://github.com/aron566/EOL_CAN_Tool/releases/download/v1.5.0/EOL_CAN_Tool-1.5.0-x86_64.AppImage",
+      "changelog": "2026-09-27 v1.5.0 Linux 首次发布：SocketCAN / 周立功 / 同星三驱动，AppImage 单文件开箱即用",
       "mandatory": true
     },
     "ios": {

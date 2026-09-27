@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
     env:
       PYTHONUTF8: '1'
@@ -42,16 +42,23 @@ jobs:
         run: |
           V="${{ steps.ver.outputs.version }}"
           RC_VER=$(grep -oP 'VER_PRODUCTVERSION_STR\s+"\K[0-9.]+' resource/EOL_CAN_Tool.rc)
-          JSON_VER=$(grep -oP '"latest-version":\s*"\K[0-9.]+' packge_release/updates.json | head -1)
           if [ "$RC_VER" != "$V" ]; then
             echo "::error::tag v$V 与 resource/EOL_CAN_Tool.rc 版本 $RC_VER 不一致,请先改 .rc 再打 tag"
             exit 1
           fi
-          if [ "$JSON_VER" != "$V" ]; then
-            echo "::error::tag v$V 与 packge_release/updates.json latest-version $JSON_VER 不一致,请先改 updates.json 再打 tag"
-            exit 1
-          fi
-          echo "版本 v$V 与 .rc / updates.json 一致,校验通过"
+          python - "$V" <<'PY'
+          import json, sys
+          v = sys.argv[1]
+          d = json.load(open('packge_release/updates.json', encoding='utf-8'))['updates']
+          for plat, asset in (('windows', f'EOL_CAN_Tool_Setup_v{v}.exe'),
+                              ('linux', f'EOL_CAN_Tool-{v}-x86_64.AppImage')):
+              u = d[plat]
+              assert u['latest-version'] == v, \
+                  f"{plat}: latest-version {u['latest-version']} 与 tag v{v} 不一致,请先改 updates.json 再打 tag"
+              assert u['download-url'].endswith('/' + asset), \
+                  f"{plat}: download-url 未指向 {asset}"
+          print('版本 v' + v + ' 与 .rc / updates.json(windows+linux) 一致,校验通过')
+          PY
 
       - name: 安装 Qt 6.8.3 MSVC 2022 64-bit
         uses: jurplel/install-qt-action@v4
@@ -82,22 +89,110 @@ jobs:
         shell: bash
         run: bash scripts/package_ci.sh "${{ steps.ver.outputs.version }}"
 
-      - name: 提取 changelog 作为发布说明(仅 tag 触发)
-        if: github.event_name == 'push'
+      - name: 上传 Windows 安装包
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist/EOL_CAN_Tool_Setup_v*.exe
+          if-no-files-found: error
+
+  build-linux:
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 解析版本号
+        id: ver
+        shell: bash
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            V="${GITHUB_REF#refs/tags/v}"
+          else
+            V="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "解析版本: v$V"
+
+      - name: 安装 Qt 6.4.2(与本地验证版本一致)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.4.2'
+          modules: 'qtcharts qtserialbus qtserialport qtmultimedia qt5compat qtsvg'
+          cache: true
+
+      - name: 安装系统依赖
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends \
+            build-essential cmake git curl \
+            libgl1-mesa-dev libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0
+
+      - name: 编译安装 libhv(锁定与本地验证相同的提交)
+        shell: bash
+        run: |
+          git clone https://github.com/ithewei/libhv.git /tmp/libhv
+          cd /tmp/libhv && git checkout 62f1292
+          cmake -S /tmp/libhv -B /tmp/libhv/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/libhv/build -j"$(nproc)"
+          sudo cmake --install /tmp/libhv/build
+          sudo ldconfig
+          ldconfig -p | grep libhv
+
+      - name: 构建(qmake + make)
+        shell: bash
+        run: |
+          qmake EOL_CAN_Tool.pro -spec linux-g++ "CONFIG+=release"
+          make -j"$(nproc)"
+          ls -la "$GITHUB_WORKSPACE/bin/EOL_CAN_Tool"
+
+      - name: 打包(linuxdeploy AppImage)
+        shell: bash
+        run: bash scripts/package_linux.sh "${{ steps.ver.outputs.version }}" "$GITHUB_WORKSPACE/bin"
+
+      - name: 上传 Linux 安装包
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-installer
+          path: dist/EOL_CAN_Tool-*.AppImage
+          if-no-files-found: error
+
+  release:
+    needs: [build-windows, build-linux]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout(取 updates.json 生成发布说明)
+        uses: actions/checkout@v4
+
+      - name: 下载两个平台安装包
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: 生成发布说明(windows + linux changelog)
         shell: bash
         run: |
           python - <<'PY'
           import json
-          d = json.load(open('packge_release/updates.json', encoding='utf-8'))
-          body = d['updates']['windows']['changelog'].replace('<br/>', '\n')
-          open('release_body.md', 'w', encoding='utf-8').write(body)
+          d = json.load(open('packge_release/updates.json', encoding='utf-8'))['updates']
+          parts = []
+          for plat, title in (('windows', 'Windows'), ('linux', 'Linux')):
+              body = d[plat]['changelog'].replace('<br/>', '\n')
+              parts.append(f'## {title}\n{body}')
+          open('release_body.md', 'w', encoding='utf-8').write('\n\n'.join(parts) + '\n')
           PY
+          ls -la dist/
 
       - name: 建 Release + 传 asset(仅 tag 触发)
-        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           body_path: release_body.md
-          files: dist/EOL_CAN_Tool_Setup_v*.exe
+          files: dist/*

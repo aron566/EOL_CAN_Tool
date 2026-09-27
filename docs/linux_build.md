@@ -124,23 +124,77 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 - 真机收发尚未验证：当前版本仅验证到驱动库加载（`dlopen` + 全部符号绑定成功）与程序无崩溃；
   有硬件后需实测打开设备、收发、波特率切换。
 
-## 5. 打包
+## 5. 同星 Linux 驱动（x86_64）
 
-Windows 用 NSIS（`scripts/package_nsis.bat`，仅 Windows）。
-Linux 建议用 linuxdeploy 打 AppImage，或 CPack 打 deb——尚未实现，欢迎补充。
-注意：打 Linux 包时需把 `zlg_can_lib/zlgcan_linux_x86_64/` 下的三个 ZCAN `.so`
-（`libusbcan-4e.so`、`libusbcan-8e.so`、`libusbcanfd800u.so`）与可执行文件放在同一目录
-（构建时已自动复制到 `DESTDIR`）。
+### 5.1 支持的设备
 
-## 6. 给开发者的说明
+| 设备型号 | 通道数 | 类型 | 对应驱动库 |
+|---|---|---|---|
+| `TS_USBCANFD_1014` | 4 | CAN FD | `libTSCANApiOnLinux.so` |
+
+- 驱动库来自同星官方 GitHub（`TOSUN-Shanghai/libtscandemos` 的 `lib/linux/` 与 `include/linux/`），
+  收纳在 `ts_can_lib/tscan_linux_x86_64/`（含头文件与 README），为同星专有二进制。
+- 与周立功不同：单个 `.so` 即可，`TSCANLINApi.cpp` 本来就用 `QLibrary` 动态加载
+  （Windows 下加载 `ts_can_x64/libTSCAN.dll`），Linux 下改为加载与可执行文件同目录的
+  `libTSCANApiOnLinux.so` / `libTSH.so`。构建时 `qmake` 会把两个 `.so` 复制到可执行文件目录
+  （`$ORIGIN` rpath），运行时也可放在 `LD_LIBRARY_PATH` 下。
+- 官方 Linux 头（`TSCANDef.hpp`）已跨平台，但缺少 `TSCANLINApi.cpp` 所需的
+  `tscan_*_t` / `tsdiag_*_t` 函数指针类型，且 `TS_APP_CHANNEL` 改名为 `APP_CHANNEL`、
+  `TLibCAN(FD).FProperties/FData` 从 union 改为普通字段；兼容层
+  `tscan_linux_x86_64/include/tscan_linux_types.h` 补齐了这些差异，
+  `can_driver_ts.cpp` 的 Linux 分支据此做了适配（Windows 代码零改动）。
+- 仅 x86_64，官方无 aarch64 版本；aarch64 构建不编译同星驱动。
+- 新一代 TC 系列（如 TC114）在 Linux 下是**免驱 SocketCAN 设备**，
+  走项目自带的 SocketCAN 驱动即可，无需本库。
+
+### 5.2 系统依赖
+
+```bash
+ldd libTSCANApiOnLinux.so   # 仅依赖 libc/libdl/libpthread/libm/libgcc，无需 libusb
+```
+
+### 5.3 功能与限制
+
+- 真机收发尚未验证：当前版本仅验证到驱动库加载（`dlopen` + 全部符号绑定成功）与程序无崩溃；
+  有硬件后需实测打开设备、收发、波特率切换。
+
+## 6. 打包
+
+Windows 用 NSIS（`scripts/package_nsis.bat`，仅 Windows；CI 见 `scripts/package_ci.sh`）。
+
+Linux 用 `scripts/package_linux.sh` 打 **AppImage** 单文件安装包
+（CI 在 `.github/workflows/build.yml` 的 `build-linux` 任务中自动执行）：
+
+```bash
+# 先按第 2 节构建,产物在 $GITHUB_WORKSPACE/bin(或本地 ~/bin)
+bash scripts/package_linux.sh 1.5.0 ~/bin
+# 产物: dist/EOL_CAN_Tool-1.5.0-x86_64.AppImage
+```
+
+打包要点（脚本内已处理）：
+
+- 用 `linuxdeploy` + `linuxdeploy-plugin-qt` 把 Qt 6 依赖打进 AppImage，
+  图标/桌面项见 `scripts/EOL_CAN_Tool.desktop`；
+- 厂商驱动 `.so`（周立功 `libusbcan-*.so` x3、同星
+  `libTSCANApiOnLinux.so`/`libTSH.so`）必须与主程序**同目录**
+  （主程序 `RUNPATH=$ORIGIN`），脚本把它们复制到 `AppDir/usr/bin/`，
+  而不是 `usr/lib/`；
+- GitHub Release 同时发布 Windows(`EOL_CAN_Tool_Setup_v*.exe`)与
+  Linux(`EOL_CAN_Tool-*-x86_64.AppImage`)两个安装包，`packge_release/updates.json`
+  的 `windows`/`linux` 节分别记录各自版本、下载链接与 changelog，
+  打 tag 前两节都要更新到与 tag 一致（CI 会校验）。
+
+## 7. 给开发者的说明
 
 - 新增文件：`can_driver/can_driver_socketcan.h`、`.cpp`（`unix:!macx` 作用域编译）。
 - `utilities/utility.h` 内对非 Windows 平台提供内联 `memcpy_s` 兼容实现
   （glibc 无此函数；语义与 MSVC 一致：超限返回 `EINVAL` 且目标清零）。
 - `mainwindow.cpp` 中 4 处驱动工厂 switch 用 `#ifdef Q_OS_WIN` 包裹；
   Linux 下按品牌下拉框 index 映射：`0 → can_driver_socketcan`，`1 → can_driver_zlg`
-  （仅 x86_64，`ZLG_CAN_LINUX_SUPPORT` 宏控制）。品牌下拉框在 Linux 下 `blockSignals`
-  后重填为 `["SocketCAN", "ZLG"]`，避免 `clear()` 信号级联导致启动崩溃；
+  （仅 x86_64，`ZLG_CAN_LINUX_SUPPORT` 宏控制），`2 → can_driver_ts`
+  （仅 x86_64，`TSCAN_CAN_LINUX_SUPPORT` 宏控制）。品牌下拉框在 Linux 下 `blockSignals`
+  后重填为 `["SocketCAN", "ZLG", "TOSUN"]`（x86_64）或 `["SocketCAN"]`（其他架构），
+  避免 `clear()` 信号级联导致启动崩溃；
   `read_cfg()` 中 Linux 默认保持 index 0（SocketCAN），并对旧配置的品牌索引做越界回退。
 - 周立功 Linux 驱动（`can_driver_zlg.cpp` 的 `#else` 分支）：
   - 设备表 `kDeviceType` 在 Linux 下仅保留 3 款 dlopen 支持的设备；
