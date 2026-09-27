@@ -395,6 +395,18 @@ Show_Elapsed_Time(E - S, 2, 3);
 | CAN 设备库 | 周立功 ZLG / 同星 TS / KVASER |
 | 操作系统 | Windows 10/11 64-bit |
 
+### Linux 支持（`feat/linux-build` 分支）
+
+| 项目 | 说明 |
+| --- | --- |
+| Qt 版本 | Qt 6.4.2（Ubuntu 24.04 系统包） |
+| 构建工具 | qmake6 + make |
+| CAN 通路 | SocketCAN（默认，基于 Qt6 SerialBus 插件，波特率需 `ip link` 预配置） |
+| 周立功设备（仅 x86_64） | USBCAN-4E-U / USBCAN-8E-U / USBCANFD-800U，官方 Linux `.so` 经 `dlopen` 动态加载；需系统 `libusb-1.0-0` 与 USB 访问权限 |
+| 不支持 | 同星 / Kvaser / 广成驱动（无 Linux SDK）、aarch64 上的周立功驱动 |
+
+详细构建步骤、udev 规则与功能限制见 `docs/linux_build.md`。
+
 ### 历史版本 (v1.2.9 及以前)
 
 | 项目 | 说明 |

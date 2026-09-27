@@ -73,7 +73,7 @@ contains(QMAKE_HOST.arch, x86_64) {
 
 # win32: QMAKE_POST_LINK += $$DESTDIR/qtenvPackage.bat $$DESTDIR $${TARGET}.exe
 
-# 四个厂商 CAN 驱动库仅 Windows 编译 (仓库内无 Linux 版 SDK)
+# 四个厂商 CAN 驱动库仅 Windows 编译；周立功在 Linux(x86_64) 下通过 dlopen 动态加载官方 .so
 win32 {
     # 周立功can驱动库
     include(zlg_can_lib/zlg_can_lib.pri)
@@ -86,6 +86,11 @@ win32 {
 
     # kvasercan驱动库
     include(kvaser_can_lib/kvaser_can_lib.pri)
+}
+
+# 周立功 Linux 驱动库 (x86_64, dlopen 动态加载，不静态链接；aarch64 暂无可用库)
+unix:!macx {
+    include(zlg_can_lib/zlgcan_linux.pri)
 }
 
 # libhv网络驱动库

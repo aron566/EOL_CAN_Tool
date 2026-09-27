@@ -206,12 +206,16 @@ void MainWindow::can_driver_init()
   ui->device_info_pushButton->setEnabled(false);
 
 #ifndef Q_OS_WIN
-  /* Linux 下厂商 CAN 驱动无可用库，仅保留 SocketCAN，避免用户选中无法编译的驱动；
+  /* Linux 品牌下拉框: ["SocketCAN", "ZLG"](x86_64) 或 ["SocketCAN"](其他架构)；
+     SocketCAN 保持 index 0 默认，不破坏老用户配置。
      此时 more_window_obj 尚未创建，阻塞信号防止联动槽函数访问空指针，
      设备列表在子窗口初始化完成后手动刷新 */
   ui->brand_comboBox->blockSignals(true);
   ui->brand_comboBox->clear();
   ui->brand_comboBox->addItem("SocketCAN");
+#ifdef ZLG_CAN_LINUX_SUPPORT
+  ui->brand_comboBox->addItem("ZLG");
+#endif
   ui->brand_comboBox->blockSignals(false);
 #endif
 }
@@ -248,9 +252,11 @@ void MainWindow::read_cfg()
   QFile file("./eol_tool_cfg.ini");
   if(false == file.exists())
   {
-    /* 设置默认值 */
+    /* 设置默认值；Linux 下品牌下拉框 index 0 = SocketCAN，保持默认不破坏老用户配置 */
     ui->brand_comboBox->setCurrentIndex(can_driver_model::ZLG_CAN_BRAND);
+#ifdef Q_OS_WIN
     ui->device_list_comboBox->setCurrentText("ZCAN_USBCANFD_200U");
+#endif
     ui->arbitration_bps_comboBox->setCurrentIndex(2);
     ui->data_bps_comboBox->setCurrentIndex(2);
     /* 设置终端电阻启用状态 */
@@ -264,6 +270,14 @@ void MainWindow::read_cfg()
     return;
   }
   ui->brand_comboBox->setCurrentIndex((can_driver_model::CAN_BRAND_Typedef_t)setting.value("com_v" CONFIG_VER_STR "/device_brand").toInt());
+#ifndef Q_OS_WIN
+  /* Linux: 防止旧配置或跨平台配置的品牌索引越界/错误映射，越界时回退到 SocketCAN */
+  if(ui->brand_comboBox->currentIndex() < 0 ||
+     ui->brand_comboBox->currentIndex() >= ui->brand_comboBox->count())
+  {
+    ui->brand_comboBox->setCurrentIndex(0);
+  }
+#endif
   ui->device_list_comboBox->setCurrentText(setting.value("com_v" CONFIG_VER_STR "/device_name").toString());
   ui->arbitration_bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/arbitration_bps").toInt());
   ui->data_bps_comboBox->setCurrentIndex(setting.value("com_v" CONFIG_VER_STR "/data_bps").toInt());
@@ -524,8 +538,22 @@ void MainWindow::on_open_device_pushButton_clicked()
       return;
   }
 #else
-  /* Linux 下厂商驱动不可用，统一使用 SocketCAN 驱动 */
-  can_driver_obj = new can_driver_socketcan();
+  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG"]，按 index 映射，index 0 = SocketCAN 默认 */
+  switch(ui->brand_comboBox->currentIndex())
+  {
+    case 0:  /**< SocketCAN */
+      can_driver_obj = new can_driver_socketcan();
+      break;
+
+#ifdef ZLG_CAN_LINUX_SUPPORT
+    case 1:  /**< 周立功 */
+      can_driver_obj = new can_driver_zlg();
+      break;
+#endif
+
+    default:
+      return;
+  }
 #endif
 
   /* 设置所选设备 */
@@ -726,8 +754,22 @@ void MainWindow::on_role_comboBox_currentIndexChanged(int index)
         return;
   }
 #else
-  /* Linux 下厂商驱动不可用，统一使用 SocketCAN 驱动 */
-  function_can_use = can_driver_socketcan::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG"]，按 index 映射，index 0 = SocketCAN 默认 */
+  switch(ui->brand_comboBox->currentIndex())
+  {
+    case 0:  /**< SocketCAN */
+      function_can_use = can_driver_socketcan::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+      break;
+
+#ifdef ZLG_CAN_LINUX_SUPPORT
+    case 1:  /**< 周立功 */
+      function_can_use = can_driver_zlg::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+      break;
+#endif
+
+    default:
+      return;
+  }
 #endif
   update_can_use(function_can_use);
 }
@@ -759,8 +801,22 @@ void MainWindow::on_device_list_comboBox_currentTextChanged(const QString &arg1)
         return;
   }
 #else
-  /* Linux 下厂商驱动不可用，统一使用 SocketCAN 驱动 */
-  function_can_use = can_driver_socketcan::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG"]，按 index 映射，index 0 = SocketCAN 默认 */
+  switch(ui->brand_comboBox->currentIndex())
+  {
+    case 0:  /**< SocketCAN */
+      function_can_use = can_driver_socketcan::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+      break;
+
+#ifdef ZLG_CAN_LINUX_SUPPORT
+    case 1:  /**< 周立功 */
+      function_can_use = can_driver_zlg::function_can_use_update_for_choose(ui->device_list_comboBox->currentText());
+      break;
+#endif
+
+    default:
+      return;
+  }
 #endif
 
   /* 更新功能项 */
@@ -826,8 +882,22 @@ void MainWindow::on_brand_comboBox_currentIndexChanged(int index)
       return;
   }
 #else
-  /* Linux 下厂商驱动不可用，统一使用 SocketCAN 驱动 */
-  function_can_use = can_driver_socketcan::function_can_use_update_for_choose();
+  /* Linux: 品牌下拉框为 ["SocketCAN", "ZLG"]，按 index 映射，index 0 = SocketCAN 默认 */
+  switch(index)
+  {
+    case 0:  /**< SocketCAN */
+      function_can_use = can_driver_socketcan::function_can_use_update_for_choose();
+      break;
+
+#ifdef ZLG_CAN_LINUX_SUPPORT
+    case 1:  /**< 周立功 */
+      function_can_use = can_driver_zlg::function_can_use_update_for_choose();
+      break;
+#endif
+
+    default:
+      return;
+  }
 #endif
   /* 更新列表 */
   ui->device_list_comboBox->clear();

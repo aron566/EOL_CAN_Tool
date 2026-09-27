@@ -13,8 +13,11 @@
 #include "can_driver_ts.h"
 #include "can_driver_kvaser.h"
 #else
-/* Linux 下厂商驱动无可用库，仅使用 SocketCAN 驱动 */
+/* Linux: SocketCAN 驱动；x86_64 上周立功驱动通过 dlopen 动态加载官方 .so */
 #include "can_driver_socketcan.h"
+#ifdef ZLG_CAN_LINUX_SUPPORT
+#include "can_driver_zlg.h"
+#endif
 #endif
 #include "eol_protocol.h"
 #include "updater_window.h"

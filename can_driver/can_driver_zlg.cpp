@@ -33,7 +33,8 @@
 
 /** Private constants --------------------------------------------------------*/
 
-/* 列表数据需要和对话框中设备列表数据一一对应 */
+#ifdef Q_OS_WIN
+/* 列表数据需要和对话框中设备列表数据一一对应 (Windows 全设备列表) */
 static const can_driver_model::DEVICE_INFO_Typedef_t kDeviceType[] = {
   /* 周立功can */
   {"ZCAN_USBCAN1",            can_driver_model::ZLG_CAN_BRAND, ZCAN_USBCAN1,            1},
@@ -60,6 +61,263 @@ static const can_driver_model::DEVICE_INFO_Typedef_t kDeviceType[] = {
   {"ZCAN_CANFDNET_400U_TCP",  can_driver_model::ZLG_CAN_BRAND, ZCAN_CANFDNET_400U_TCP,  4},
   {"ZCAN_CANFDNET_400U_UDP",  can_driver_model::ZLG_CAN_BRAND, ZCAN_CANFDNET_400U_UDP,  4},
 };
+#else
+/* ================= Linux 兼容层 ================= */
+#include <dlfcn.h>
+#include <cstdio>
+#include <cstring>
+#include <QCoreApplication>
+#include <QDir>
+#include <QFile>
+#include <QStringList>
+
+/* Linux 头文件缺失的宏 (取值与 Windows 版 zlgcan 头文件一致) */
+#ifndef MAKE_CAN_ID
+#define MAKE_CAN_ID(id, eff, rtr, err) CAN_ID(id, eff, rtr, err)
+#endif
+#ifndef GET_ID
+#define GET_ID(id) ((id) & CAN_ID_FLAG)
+#endif
+#ifndef TX_DELAY_SEND_FLAG
+#define TX_DELAY_SEND_FLAG 0x80
+#endif
+/* ZCAN_USBCANFD_800U 在 Linux 版头文件中未定义，取值与 Windows 版头文件一致 */
+#ifndef ZCAN_USBCANFD_800U
+#define ZCAN_USBCANFD_800U 59
+#endif
+
+/* 列表数据需要和对话框中设备列表数据一一对应
+   Linux 仅支持可通过 dlopen 动态加载的 3 款 ZCAN 设备 */
+static const can_driver_model::DEVICE_INFO_Typedef_t kDeviceType[] = {
+  /* 周立功can (Linux) */
+  {"ZCAN_USBCAN_4E_U",   can_driver_model::ZLG_CAN_BRAND, ZCAN_USBCAN_4E_U,   4},
+  {"ZCAN_USBCAN_8E_U",   can_driver_model::ZLG_CAN_BRAND, ZCAN_USBCAN_8E_U,   8},
+  {"ZCAN_USBCANFD_800U", can_driver_model::ZLG_CAN_BRAND, ZCAN_USBCANFD_800U, 8},
+};
+
+/* ---------- ZCAN 动态加载器 (Linux) ----------
+ * 三个 .so 导出同名 ZCAN_* 符号，不可静态链接；按设备类型 dlopen(RTLD_LOCAL) + dlsym。
+ * 4E/8E 库不导出 ZCAN_TransmitFD/ZCAN_ReceiveFD，该符号按可选绑定(仅 800U 使用)。
+ */
+typedef struct _ZlgLinuxApi {
+  void *handle;
+  /* 用 decltype 直接取头文件中的函数类型，保证与官方头文件签名一致
+     (注意: 此处 ZCAN_* 宏尚未定义，取的是头文件中的真实声明) */
+  decltype(&ZCAN_OpenDevice) OpenDevice;
+  decltype(&ZCAN_CloseDevice) CloseDevice;
+  decltype(&ZCAN_GetDeviceInf) GetDeviceInf;
+  decltype(&ZCAN_InitCAN) InitCAN;
+  decltype(&ZCAN_StartCAN) StartCAN;
+  decltype(&ZCAN_ResetCAN) ResetCAN;
+  decltype(&ZCAN_Transmit) Transmit;
+  decltype(&ZCAN_GetReceiveNum) GetReceiveNum;
+  decltype(&ZCAN_Receive) Receive;
+  decltype(&ZCAN_TransmitFD) TransmitFD;
+  decltype(&ZCAN_ReceiveFD) ReceiveFD;
+  decltype(&GetIProperty) pGetIProperty;
+  decltype(&ReleaseIProperty) pReleaseIProperty;
+} ZlgLinuxApi;
+
+static ZlgLinuxApi g_zlgApi;      /**< 零初始化，函数指针初始全为 nullptr */
+static QString g_zlgLoadedSo;    /**< 已加载的 .so 文件名(不含路径) */
+
+static const char *zlg_so_name_for_device(quint32 device_type)
+{
+  switch(device_type)
+  {
+    case ZCAN_USBCAN_4E_U:   return "libusbcan-4e.so";
+    case ZCAN_USBCAN_8E_U:   return "libusbcan-8e.so";
+    case ZCAN_USBCANFD_800U: return "libusbcanfd800u.so";
+    default:                 return nullptr;
+  }
+}
+
+static void *zlg_dlopen_from_dirs(const QString &soName)
+{
+  /* 搜索顺序: 程序目录 -> 程序目录/../lib -> 系统默认路径 */
+  QStringList dirs;
+  dirs << QCoreApplication::applicationDirPath()
+       << QCoreApplication::applicationDirPath() + "/../lib"
+       << "/usr/local/lib"
+       << "/usr/lib/x86_64-linux-gnu"
+       << "/usr/lib";
+  for(const QString &dir : dirs)
+  {
+    QString path = QDir(dir).filePath(soName);
+    if(QFile::exists(path))
+    {
+      void *h = dlopen(path.toUtf8().constData(), RTLD_NOW | RTLD_LOCAL);
+      if(nullptr != h)
+      {
+        return h;
+      }
+      qDebug() << "zlg dlopen failed:" << path << dlerror();
+    }
+  }
+  /* 最后让动态链接器按默认规则搜索 */
+  return dlopen(soName.toUtf8().constData(), RTLD_NOW | RTLD_LOCAL);
+}
+
+static bool zlg_load_api(quint32 device_type)
+{
+  const char *soName = zlg_so_name_for_device(device_type);
+  if(nullptr == soName)
+  {
+    qDebug() << "zlg unsupported device type:" << device_type;
+    return false;
+  }
+
+  /* 同库已加载则直接复用 */
+  if(nullptr != g_zlgApi.handle && g_zlgLoadedSo == QString::fromLatin1(soName))
+  {
+    return true;
+  }
+
+  void *h = zlg_dlopen_from_dirs(QString::fromLatin1(soName));
+  if(nullptr == h)
+  {
+    qDebug() << "zlg dlopen failed:" << soName << dlerror();
+    return false;
+  }
+
+#define ZLG_BIND_REQUIRED(zcan_sym, member) \
+  do { \
+    g_zlgApi.member = (decltype(g_zlgApi.member))dlsym(h, #zcan_sym); \
+    if(nullptr == g_zlgApi.member) { qDebug() << "zlg dlsym failed:" << #zcan_sym; dlclose(h); return false; } \
+  } while(0)
+
+#define ZLG_BIND_OPTIONAL(zcan_sym, member) \
+  do { \
+    g_zlgApi.member = (decltype(g_zlgApi.member))dlsym(h, #zcan_sym); \
+  } while(0)
+
+  ZLG_BIND_REQUIRED(ZCAN_OpenDevice, OpenDevice);
+  ZLG_BIND_REQUIRED(ZCAN_CloseDevice, CloseDevice);
+  ZLG_BIND_REQUIRED(ZCAN_GetDeviceInf, GetDeviceInf);
+  ZLG_BIND_REQUIRED(ZCAN_InitCAN, InitCAN);
+  ZLG_BIND_REQUIRED(ZCAN_StartCAN, StartCAN);
+  ZLG_BIND_REQUIRED(ZCAN_ResetCAN, ResetCAN);
+  ZLG_BIND_REQUIRED(ZCAN_Transmit, Transmit);
+  ZLG_BIND_REQUIRED(ZCAN_GetReceiveNum, GetReceiveNum);
+  ZLG_BIND_REQUIRED(ZCAN_Receive, Receive);
+  /* FD 接口仅 800U 的库导出，4E/8E 缺失不报错(驱动逻辑仅对 CANFD 设备调用) */
+  ZLG_BIND_OPTIONAL(ZCAN_TransmitFD, TransmitFD);
+  ZLG_BIND_OPTIONAL(ZCAN_ReceiveFD, ReceiveFD);
+  ZLG_BIND_REQUIRED(GetIProperty, pGetIProperty);
+  ZLG_BIND_REQUIRED(ReleaseIProperty, pReleaseIProperty);
+
+#undef ZLG_BIND_REQUIRED
+#undef ZLG_BIND_OPTIONAL
+
+  /* 旧句柄不再关闭: 不同 .so 符号同名但 RTLD_LOCAL 隔离，保留避免悬垂；
+     进程退出时由系统回收 */
+  g_zlgApi.handle = h;
+  g_zlgLoadedSo = QString::fromLatin1(soName);
+  qDebug() << "zlg linux api loaded:" << soName;
+  return true;
+}
+
+/* ---------- ZCAN_SetValue/GetValue 兼容层 (Linux) ----------
+ * Linux 库不导出全局 ZCAN_SetValue/ZCAN_GetValue，改经由 IProperty::SetValue/GetValue 实现。
+ * Windows 属性路径形如 "通道号/属性名"(如 "0/baud_rate")，
+ * Linux 为 "info/channel/channel_通道号/属性名"，此处做转换。
+ * 经核实的路径: "N/baud_rate" -> "info/channel/channel_N/baud_rate" (4E/8E 标准波特率)。
+ * 库不支持的属性返回失败(0)，调用方按原有逻辑处理并提示。
+ */
+static void zlg_translate_property_path(const char *winPath, char *out, size_t outSize)
+{
+  unsigned int ch = 0;
+  int n = 0;
+  if(nullptr != winPath && 1 == sscanf(winPath, "%u/%n", &ch, &n) && '\0' != winPath[n])
+  {
+    snprintf(out, outSize, "info/channel/channel_%u/%s", ch, winPath + n);
+  }
+  else if(nullptr != winPath)
+  {
+    snprintf(out, outSize, "%s", winPath);
+  }
+  else
+  {
+    out[0] = '\0';
+  }
+}
+
+static UINT zlg_SetValue_linux(DEVICE_HANDLE device_handle, const char *path, const void *value)
+{
+  if(nullptr == g_zlgApi.pGetIProperty || INVALID_DEVICE_HANDLE == device_handle || nullptr == path)
+  {
+    return 0;
+  }
+  IProperty *prop = g_zlgApi.pGetIProperty(device_handle);
+  if(nullptr == prop || nullptr == prop->SetValue)
+  {
+    return 0;
+  }
+  char linuxPath[160];
+  zlg_translate_property_path(path, linuxPath, sizeof(linuxPath));
+  /* Windows 侧字符串属性传 const char*，与 IProperty::SetValue(const char*, const char*) 一致 */
+  int ret = prop->SetValue(linuxPath, (const char *)value);
+  if(nullptr != g_zlgApi.pReleaseIProperty)
+  {
+    g_zlgApi.pReleaseIProperty(prop);
+  }
+  return (UINT)ret;
+}
+
+static const void *zlg_GetValue_linux(DEVICE_HANDLE device_handle, const char *path)
+{
+  if(nullptr == g_zlgApi.pGetIProperty || INVALID_DEVICE_HANDLE == device_handle || nullptr == path)
+  {
+    return nullptr;
+  }
+  IProperty *prop = g_zlgApi.pGetIProperty(device_handle);
+  if(nullptr == prop || nullptr == prop->GetValue)
+  {
+    return nullptr;
+  }
+  char linuxPath[160];
+  zlg_translate_property_path(path, linuxPath, sizeof(linuxPath));
+  const char *ret = prop->GetValue(linuxPath);
+  /* 诊断类 GetValue 的返回值在 Linux 侧为字符串，与 Windows 侧语义不同，
+     仅做透传；此处不释放 IProperty，保证返回指针在本次调用后仍有效(诊断路径低频调用) */
+  return (const void *)ret;
+}
+
+/* FD 接口在 4E/8E 库中不存在，调用前判空，避免非 FD 设备误选 CANFD 协议时崩溃 */
+static INT zlg_TransmitFD_linux(CHANNEL_HANDLE h, ZCAN_TransmitFD_Data *d, UINT n)
+{
+  if(nullptr == g_zlgApi.TransmitFD)
+  {
+    return 0;
+  }
+  return g_zlgApi.TransmitFD(h, d, n);
+}
+static INT zlg_ReceiveFD_linux(CHANNEL_HANDLE h, ZCAN_ReceiveFD_Data *d, UINT n, INT t)
+{
+  if(nullptr == g_zlgApi.ReceiveFD)
+  {
+    return 0;
+  }
+  return g_zlgApi.ReceiveFD(h, d, n, t);
+}
+
+/* 把驱动代码中的 ZCAN_* 调用重定向到动态加载的函数指针 / 兼容层。
+ * 注意: 这些宏必须定义在 #include "can_driver_zlg.h"(内含 zlgcan.h 声明) 之后，
+ * 否则会破坏头文件中的函数声明。 */
+#define ZCAN_OpenDevice    g_zlgApi.OpenDevice
+#define ZCAN_CloseDevice   g_zlgApi.CloseDevice
+#define ZCAN_GetDeviceInf  g_zlgApi.GetDeviceInf
+#define ZCAN_InitCAN       g_zlgApi.InitCAN
+#define ZCAN_StartCAN      g_zlgApi.StartCAN
+#define ZCAN_ResetCAN      g_zlgApi.ResetCAN
+#define ZCAN_Transmit      g_zlgApi.Transmit
+#define ZCAN_GetReceiveNum g_zlgApi.GetReceiveNum
+#define ZCAN_Receive       g_zlgApi.Receive
+#define ZCAN_TransmitFD    zlg_TransmitFD_linux
+#define ZCAN_ReceiveFD     zlg_ReceiveFD_linux
+#define ZCAN_SetValue      zlg_SetValue_linux
+#define ZCAN_GetValue      zlg_GetValue_linux
+#endif /* Q_OS_WIN / Linux */
 
 /* USBCANFD */
 static const quint32 kAbitTimingUSB[] = {
@@ -156,6 +414,7 @@ can_driver_model::SET_FUNCTION_CAN_USE_Typedef_t can_driver_zlg::function_can_us
   }
 
   quint32 type = kDeviceType[index].device_type;
+#ifdef Q_OS_WIN
   const bool cloudDevice = type == ZCAN_CLOUD;
   const bool netcanfd = is_net_can_fd_type(type);
   const bool netcan = is_net_can_type(type);
@@ -172,6 +431,21 @@ can_driver_model::SET_FUNCTION_CAN_USE_Typedef_t can_driver_zlg::function_can_us
 
   const bool canfdDevice = usbcanfd || pciecanfd || netcanfd;
   const bool accFilter = pciecanfd || type == ZCAN_USBCAN1 || type == ZCAN_USBCAN2;
+#else
+  /* Linux 仅支持 USB 直连的 3 款设备，无网络/云/PCIE 设备；
+     ZCAN_USBCANFD_800U 为 CAN FD 设备 */
+  const bool cloudDevice = false;
+  const bool netcanfd = false;
+  const bool netcan = false;
+  const bool netDevice = false;
+  const bool tcpDevice = false;
+  const bool udpDevice = false;
+  const bool usbcanfd = (type == ZCAN_USBCANFD_800U);
+  const bool pciecanfd = false;
+
+  const bool canfdDevice = usbcanfd;
+  const bool accFilter = false;
+#endif
 
   /* 工作模式是否可选 */
   function_can_use.work_mode_can_use = ((false == cloudDevice && false == netDevice));
@@ -294,6 +568,14 @@ bool can_driver_zlg::open()
   //    }
   //    device_index_ = dlg.GetDeviceIndex();
   //  }
+#ifndef Q_OS_WIN
+  /* Linux: 按设备类型 dlopen 对应的官方 .so 并绑定 ZCAN_* 符号，失败则直接返回 */
+  if(false == zlg_load_api(kDeviceType[device_type_index_].device_type))
+  {
+    show_message(tr("load zlg linux driver library failed"));
+    return false;
+  }
+#endif
   device_handle_ = ZCAN_OpenDevice(kDeviceType[device_type_index_].device_type, device_index_, 0);
   if(INVALID_DEVICE_HANDLE == device_handle_)
   {
@@ -347,12 +629,12 @@ bool can_driver_zlg::init(CHANNEL_STATE_Typedef_t &channel_state)
   memset(&config, 0, sizeof(config));
 
   quint32 type = kDeviceType[device_type_index_].device_type;
+#ifdef Q_OS_WIN
   const bool cloudDevice = type == ZCAN_CLOUD;
   const bool netcanfd = is_net_can_fd_type(type);
   const bool netcan = is_net_can_type(type);
   const bool netDevice = (netcan || netcanfd);
   const bool tcpDevice = is_net_tcp_type(type);
-  const bool server = net_mode_index_ == 0;
   const bool usbcanfd = type == ZCAN_USBCANFD_100U ||
                         type == ZCAN_USBCANFD_200U ||
                         type == ZCAN_USBCANFD_MINI;
@@ -360,6 +642,19 @@ bool can_driver_zlg::init(CHANNEL_STATE_Typedef_t &channel_state)
                          type == ZCAN_PCIE_CANFD_200U ||
                          type == ZCAN_PCIE_CANFD_400U_EX;
   const bool canfdDevice = usbcanfd || pciecanfd;
+#else
+  /* Linux 仅支持 USB 直连的 3 款设备，无网络/云/PCIE 设备；
+     ZCAN_USBCANFD_800U 为 CAN FD 设备 */
+  const bool cloudDevice = false;
+  const bool netcanfd = false;
+  const bool netcan = false;
+  const bool netDevice = false;
+  const bool tcpDevice = false;
+  const bool usbcanfd = (type == ZCAN_USBCANFD_800U);
+  const bool pciecanfd = false;
+  const bool canfdDevice = usbcanfd;
+#endif
+  const bool server = net_mode_index_ == 0;
 
   if(cloudDevice)
   {
@@ -463,6 +758,7 @@ bool can_driver_zlg::init(CHANNEL_STATE_Typedef_t &channel_state)
       config.canfd.acc_code = acc_code_.toUInt(&ok, 16);
       config.canfd.acc_mask = acc_mask_.toUInt(&ok, 16);
     }
+#ifdef Q_OS_WIN
     else if(pciecanfd)
     {
 
@@ -489,6 +785,7 @@ bool can_driver_zlg::init(CHANNEL_STATE_Typedef_t &channel_state)
       config.canfd.acc_mask = acc_mask_.toUInt(&ok, 16);
 
     }
+#endif
     else
     {
       config.can_type = TYPE_CAN;
@@ -636,10 +933,13 @@ bool can_driver_zlg::close()
   }
 
   /* 关闭设备 */
+#ifdef Q_OS_WIN
+  /* ZCLOUD 接口仅 Windows 版 zlgcan 库提供 */
   if(ZCLOUD_IsConnected())
   {
     ZCLOUD_DisconnectServer();
   }
+#endif
   ZCAN_CloseDevice(device_handle_);
 
   device_opened_ = false;
@@ -752,6 +1052,7 @@ bool can_driver_zlg::send(const CHANNEL_STATE_Typedef_t &channel_state, \
 void can_driver_zlg::function_can_use_update()
 {
   quint32 type = kDeviceType[device_type_index_].device_type;
+#ifdef Q_OS_WIN
   const bool cloudDevice = type == ZCAN_CLOUD;
   const bool netcanfd = is_net_can_fd_type(type);
   const bool netcan = is_net_can_type(type);
@@ -768,6 +1069,21 @@ void can_driver_zlg::function_can_use_update()
 
   const bool canfdDevice = usbcanfd || pciecanfd || netcanfd;
   const bool accFilter = pciecanfd || type == ZCAN_USBCAN1 || type == ZCAN_USBCAN2;
+#else
+  /* Linux 仅支持 USB 直连的 3 款设备，无网络/云/PCIE 设备；
+     ZCAN_USBCANFD_800U 为 CAN FD 设备 */
+  const bool cloudDevice = false;
+  const bool netcanfd = false;
+  const bool netcan = false;
+  const bool netDevice = false;
+  const bool tcpDevice = false;
+  const bool udpDevice = false;
+  const bool usbcanfd = (type == ZCAN_USBCANFD_800U);
+  const bool pciecanfd = false;
+
+  const bool canfdDevice = usbcanfd;
+  const bool accFilter = false;
+#endif
 
   /* 更新设备通道列表 */
   channel_state_list.clear();
@@ -803,9 +1119,14 @@ void can_driver_zlg::function_can_use_update()
   const bool support_autosend_index = (support_autosend_can && !pciecanfd);   // PCIECANFD 不支持使用索引控制定时，PCIECANFD添加一条即立即发送
   const bool support_stop_single_autosend = usbcanfd;
   const bool support_get_autosend_list = netcanfd;
+#ifdef Q_OS_WIN
   auto_send_can_use_update(support_autosend_can, support_autosend_canfd, \
                            support_autosend_index, support_stop_single_autosend, \
                            support_get_autosend_list);
+#else
+  /* Linux: 定时发送功能暂不支持 (Linux 版 ZCAN(AUTO)_TRANSMIT_OBJ 结构与 Windows 不兼容)，禁用 */
+  auto_send_can_use_update(false, false, false, false, false);
+#endif
 
   /* 工作模式是否可选 */
   emit signal_work_mode_can_use((false == cloudDevice && false == netDevice));
@@ -1073,6 +1394,7 @@ bool can_driver_zlg::set_send_queue_mode(bool en)
   return ret;
 }
 
+#ifdef Q_OS_WIN
 bool can_driver_zlg::is_net_can_type(quint32 type)
 {
   return (type == ZCAN_CANETUDP || type == ZCAN_CANETTCP ||
@@ -1101,6 +1423,13 @@ bool can_driver_zlg::is_net_udp_type(quint32 type)
           type == ZCAN_CANFDNET_UDP || type == ZCAN_CANFDNET_400U_UDP ||
           type == ZCAN_CANFDWIFI_UDP);
 }
+#else
+/* Linux 仅支持 USB 直连的 3 款设备，无网络/云设备 */
+bool can_driver_zlg::is_net_can_type(quint32) { return false; }
+bool can_driver_zlg::is_net_can_fd_type(quint32) { return false; }
+bool can_driver_zlg::is_net_tcp_type(quint32) { return false; }
+bool can_driver_zlg::is_net_udp_type(quint32) { return false; }
+#endif
 
 void can_driver_zlg::show_send_mode(const CHANNEL_STATE_Typedef_t &channel_state)
 {
@@ -1263,18 +1592,30 @@ void can_driver_zlg::add_auto_can_fd(quint32 nEnable)
 
   ZCANFD_AUTO_TRANSMIT_OBJ autoObj;
   memset(&autoObj, 0, sizeof(autoObj));
+#ifdef Q_OS_WIN
   autoObj.enable = nEnable;
+#endif
   autoObj.interval = auto_send_period_;
+#ifdef Q_OS_WIN
+  /* Linux 版 ZCANFD_AUTO_TRANSMIT_OBJ 无 index 字段 */
   autoObj.index = auto_send_index_;
+#endif
   can_frame_packed(autoObj.obj, false);
 
   char path[50] = {0};
   snprintf(path, sizeof(path), "%d/auto_send_canfd", channel_index_);
   int nRet =  ZCAN_SetValue(device_handle_, path, (const char*)&autoObj);
   QString csText;
+#ifdef Q_OS_WIN
   csText = QString::asprintf(tr("add CANFD timed transmission index:%d enable:%d period:%d ms ID:0x%X [%s] ").toUtf8().data(), \
             autoObj.index, autoObj.enable, autoObj.interval, autoObj.obj.frame.can_id, \
             (nRet ? tr(" ok ").toUtf8().data() : tr(" failed ").toUtf8().data()));
+#else
+  /* Linux 版 ZCANFD_AUTO_TRANSMIT_OBJ 无 index/enable 字段 */
+  csText = QString::asprintf(tr("add CANFD timed transmission period:%d ms ID:0x%X [%s] ").toUtf8().data(), \
+            autoObj.interval, autoObj.obj.frame.can_id, \
+            (nRet ? tr(" ok ").toUtf8().data() : tr(" failed ").toUtf8().data()));
+#endif
   show_message(csText);
 }
 
@@ -1400,8 +1741,14 @@ void can_driver_zlg::show_dev_auto_send()
         const ZCANFD_AUTO_TRANSMIT_OBJ *pData = (ZCANFD_AUTO_TRANSMIT_OBJ *)pRet;
         for (quint32 i = 0; i < nCount; i++)
         {
-          csText = QString::asprintf(tr("CANFD timer index:%d period:%d ms ID:0x%08X").toUtf8().data(), \
+#ifdef Q_OS_WIN
+          csText = QString::asprintf(tr("CANFD timer index:%d period:%d ms ID:0x%08X").toUtf8().data(),
                     pData[i].index, pData[i].interval, pData[i].obj.frame.can_id);
+#else
+          /* Linux 版 ZCANFD_AUTO_TRANSMIT_OBJ 无 index 字段，用循环序号代替 */
+          csText = QString::asprintf(tr("CANFD timer index:%d period:%d ms ID:0x%08X").toUtf8().data(),
+                    i, pData[i].interval, pData[i].obj.frame.can_id);
+#endif
           show_message(csText);
         }
       }

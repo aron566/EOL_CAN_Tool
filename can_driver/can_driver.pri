@@ -31,4 +31,15 @@ unix:!macx {
       $$PWD/can_driver_socketcan.cpp
 }
 
+# 周立功驱动: Linux(x86_64) 下通过 dlopen 动态加载官方 .so；aarch64 暂无可用库不编译
+unix:!macx {
+    contains(QMAKE_HOST.arch, x86_64) {
+        HEADERS += \
+          $$PWD/can_driver_zlg.h
+
+        SOURCES += \
+          $$PWD/can_driver_zlg.cpp
+    }
+}
+
 INCLUDEPATH += $$PWD
