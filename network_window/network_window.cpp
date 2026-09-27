@@ -25,6 +25,7 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QWheelEvent>
+#include <QScrollBar>
 #include <QSettings>
 #include <QRegularExpression>
 /** Private includes ---------------------------------------------------------*/
@@ -61,9 +62,9 @@
 
 network_window::network_window(QString title, QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::network_window),
     ch1_msg_buf(msg_log_buffer::create_file_buffer("net", 1)),
-    ch2_msg_buf(msg_log_buffer::create_file_buffer("net", 2))
+    ch2_msg_buf(msg_log_buffer::create_file_buffer("net", 2)),
+    ui(new Ui::network_window)
 {
   ui->setupUi(this);
 
@@ -218,6 +219,12 @@ void network_window::wheelEvent(QWheelEvent *event)
 
       /* 刷新当前消息到尾部 */
       update_show_msg(text_edit_widget, channel, bottom_index, true);
+      /* 已翻到最新消息:回到实时模式,滚动条跳到底部 */
+      if(*pchx_scroll_cnt >= pmsg_buf->size())
+      {
+        QScrollBar *v_scroll_bar = text_edit_widget->verticalScrollBar();
+        v_scroll_bar->setValue(v_scroll_bar->maximum());
+      }
     }
 
     /* 向上滚动 */

@@ -26,6 +26,7 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QWheelEvent>
+#include <QScrollBar>
 #include <QRegularExpression>
 /** Private includes ---------------------------------------------------------*/
 #include "more_window.h"
@@ -313,6 +314,12 @@ void more_window::wheelEvent(QWheelEvent *event)
       // qDebug() << " down" << bottom_index;
       /* 刷新当前消息到尾部 */
       update_show_msg(text_edit_widget, channel, bottom_index, true);
+      /* 已翻到最新消息:回到实时模式,滚动条跳到底部 */
+      if(*pchx_scroll_cnt >= pmsg_buf->size())
+      {
+        QScrollBar *v_scroll_bar = text_edit_widget->verticalScrollBar();
+        v_scroll_bar->setValue(v_scroll_bar->maximum());
+      }
     }
 
     /* 向上滚动 */
