@@ -1510,7 +1510,16 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
   /* 0帧为表信息数据 */
   if(0 == frame_num)
   {
-    memcpy_s(&common_table_info.Common_Info, sizeof(common_table_info), data, data_len);
+    /* 表头最小长度校验：数据不足以容纳公共表头时直接返回 */
+    if(data_len < (quint16)sizeof(common_table_info.Common_Info))
+    {
+      qWarning("table header too short, data_len %u", data_len);
+      return;
+    }
+
+    /* 拷贝长度不超过结构体容量，防止 memcpy_s 参数非法导致进程终止 */
+    quint16 copy_len = (data_len > (quint16)sizeof(common_table_info)) ? (quint16)sizeof(common_table_info) : data_len;
+    memcpy_s(&common_table_info.Common_Info, sizeof(common_table_info), data, copy_len);
 
     /* 组织表头信息 */
     ui->transfer_progressBar->setMaximum((qint32)common_table_info.Common_Info.Data_Size);
@@ -1524,6 +1533,13 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
 
     /* 数据个数 */
     quint32 data_num = utility::num_type_to_bytes((utility::NUM_TYPE_Typedef_t)common_table_info.Common_Info.Data_Type);
+
+    /* 未知数据类型时 num_type_to_bytes 返回0，除零保护 */
+    if(0U == data_num)
+    {
+      qWarning("unknown data type %u, can not calc data num", common_table_info.Common_Info.Data_Type);
+      return;
+    }
     data_num = common_table_info.Common_Info.Data_Size / data_num;
 
     qDebug() << "data size " << common_table_info.Common_Info.Data_Size << " crc " << common_table_info.Common_Info.Crc_Val;
@@ -1924,6 +1940,8 @@ void eol_window::slot_recv_eol_table_data(quint16 frame_num, const quint8 *data,
           break;
 
         default:
+          /* 未知数据类型：退出解析，防止死循环 */
+          i = data_len;
           break;
       }
     }
