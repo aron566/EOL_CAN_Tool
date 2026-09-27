@@ -1,7 +1,10 @@
 #ifndef _TSCANLIN_API_H_
 #define _TSCANLIN_API_H_
 
-#ifdef Q_OS_WIN
+#ifdef _WIN32
+/* 注意: Q_OS_WIN 由 Qt 头文件定义,此处位于任何 Qt 头文件之前,不能用 Q_OS_WIN
+   判断(此时它尚未定义,Windows 编译会误入 Linux 分支)。_WIN32 由 MSVC 编译器
+   预定义,无需包含任何头文件。*/
 #include "TSCANDef.h"
 #else
 /* Linux: 用官方新版跨平台头 + 补齐函数指针类型的兼容头
