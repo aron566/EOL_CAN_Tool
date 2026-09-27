@@ -25,8 +25,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-# 设置目标生成路径
-unix:!macx: DESTDIR = ../../bin
+# 设置目标生成路径(用 $$PWD 绝对路径,避免相对路径在 CI 上解析到仓库外)
+unix:!macx: DESTDIR = $$PWD/bin
 win32: DESTDIR = "$$PWD/bin"
 
 # 执行打包工具
