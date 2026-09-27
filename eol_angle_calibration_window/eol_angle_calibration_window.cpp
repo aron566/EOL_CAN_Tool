@@ -170,12 +170,19 @@ void eol_angle_calibration_window::on_add_config_pushButton_clicked()
     /* 配置数 */
     FFT_REQUEST_CONDITION_Typedef_t condition;
 
-    for(int i = 0; i < calibration_profile_info_list.size(); i++)
+    /* 数组越界保护：profile_id[4]/channel_num[4]，超限的配置丢弃 */
+    int azi_profile_cnt = calibration_profile_info_list.size();
+    if(4 < azi_profile_cnt)
+    {
+      qWarning("profile num %d exceeds max 4, truncated", azi_profile_cnt);
+      azi_profile_cnt = 4;
+    }
+    for(int i = 0; i < azi_profile_cnt; i++)
     {
       condition.profile_id[i] = calibration_profile_info_list.value(i).profile_id;
       condition.channel_num[i] = calibration_profile_info_list.value(i).channel_num;
     }
-    condition.profile_num = (quint8)calibration_profile_info_list.size();
+    condition.profile_num = (quint8)azi_profile_cnt;
     condition.s_angle = azi_left_angle_start;
     condition.e_angle = azi_right_angle_end;
     condition.step_angle = azi_step_angle;
@@ -220,12 +227,19 @@ void eol_angle_calibration_window::on_add_config_pushButton_clicked()
     /* 配置数 */
     FFT_REQUEST_CONDITION_Typedef_t condition;
 
-    for(int i = 0; i < calibration_profile_info_list.size(); i++)
+    /* 数组越界保护：profile_id[4]/channel_num[4]，超限的配置丢弃 */
+    int ele_profile_cnt = calibration_profile_info_list.size();
+    if(4 < ele_profile_cnt)
+    {
+      qWarning("profile num %d exceeds max 4, truncated", ele_profile_cnt);
+      ele_profile_cnt = 4;
+    }
+    for(int i = 0; i < ele_profile_cnt; i++)
     {
       condition.profile_id[i] = calibration_profile_info_list.value(i).profile_id;
       condition.channel_num[i] = calibration_profile_info_list.value(i).channel_num;
     }
-    condition.profile_num = (quint8)calibration_profile_info_list.size();
+    condition.profile_num = (quint8)ele_profile_cnt;
     condition.s_angle = ele_down_angle_start;
     condition.e_angle = ele_up_angle_end;
     condition.step_angle = ele_step_angle;
@@ -425,6 +439,13 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
 
   for(quint16 i = 0; i < calibration_profile_info_list.size(); i++)
   {
+    /* 数组越界保护：bit_tx_order[4]/fft_data[4][16]，超限的配置丢弃 */
+    if(4U <= i)
+    {
+      qWarning("profile num %d exceeds max 4, extra profiles discarded", calibration_profile_info_list.size());
+      break;
+    }
+
     /* 过程合法性检查 */
     if(size < (index + 6U))
     {
@@ -460,8 +481,13 @@ bool eol_angle_calibration_window::update_2dfft_result(const quint8 *data, quint
 
     profile_fft_list.append(QString("profile:%1").arg(profile_id));
     profile_fft_list.append(QString("channel_num:%1").arg(channel_num));
+    /* 数组越界保护：fft_data 第二维为[16]，超限通道只解析不存储 */
+    if(16U < channel_num)
+    {
+      qWarning("channel_num %u exceeds max 16, extra channels discarded", channel_num);
+    }
     /* 添加配置下所有通道fft */
-    for(quint8 ch = 0; ch < channel_num; ch++)
+    for(quint8 ch = 0; (ch < channel_num) && (ch < 16U); ch++)
     {
       QString real = utility::data2str(data + index, data_type);
       index += (utility::num_type_to_bytes(data_type) / 2U);
@@ -625,9 +651,9 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
       data.append(QString::asprintf("%d", (int)condition.current_angle));
 
       /* 配置下所有通道fft */
-      for(quint16 i = 0; i < calibration_profile_info_list.size(); i++)
+      for(quint16 i = 0; (i < calibration_profile_info_list.size()) && (i < 4U); i++)
       {
-        for(quint8 ch = 0; ch < calibration_profile_info_list.value(i).channel_num; ch++)
+        for(quint8 ch = 0; (ch < calibration_profile_info_list.value(i).channel_num) && (ch < 16U); ch++)
         {
           data.append(QString::asprintf("%d", condition.fft_data[i][ch].real));
           data.append(QString::asprintf("%d", condition.fft_data[i][ch].image));
@@ -704,9 +730,9 @@ void eol_angle_calibration_window::export_2dfft_csv_file()
       data.append(QString::asprintf("%d", (int)condition.current_angle));
 
       /* 配置下所有通道fft */
-      for(quint16 i = 0; i < calibration_profile_info_list.size(); i++)
+      for(quint16 i = 0; (i < calibration_profile_info_list.size()) && (i < 4U); i++)
       {
-        for(quint8 ch = 0; ch < calibration_profile_info_list.value(i).channel_num; ch++)
+        for(quint8 ch = 0; (ch < calibration_profile_info_list.value(i).channel_num) && (ch < 16U); ch++)
         {
           data.append(QString::asprintf("%f", (float)condition.fft_data[i][ch].real / (float)fft_data_factor));
           data.append(QString::asprintf("%f", (float)condition.fft_data[i][ch].image / (float)fft_data_factor));

@@ -423,6 +423,12 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
       send_buf[index++] = static_cast<uint8_t>(reg_addr << 1 | (quint8)command);
       send_buf[index++] = static_cast<uint8_t>(data_len&0x00FF);
       send_buf[index++] = static_cast<uint8_t>((data_len>>8)&0xFF);
+
+      /* 发送缓冲区越界保护：预留2字节CRC */
+      if((index + data_len + 2U) > FRAME_TEMP_BUF_SIZE)
+      {
+        return RETURN_ERROR;
+      }
       for(uint16_t data_index = 0; data_index < data_len; data_index++)
       {
         send_buf[index++] = data[data_index];
@@ -447,6 +453,11 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::protocol_stack_create_task( \
     /* 数据裸露发送 */
     case EOL_META_CMD:
       {
+        /* 发送缓冲区越界保护 */
+        if(data_len > FRAME_TEMP_BUF_SIZE)
+        {
+          return RETURN_ERROR;
+        }
         index = data_len;
         memcpy_s(send_buf, sizeof(send_buf), data, data_len);
         break;
@@ -632,6 +643,19 @@ eol_protocol::RETURN_TYPE_Typedef_t eol_protocol::decode_data_frame(quint8 reg_a
 
     case EOL_RW_TABLE_DATA_REG:
       {
+        /* data 实际指向静态 temp_buf + 5，设备声明的 data_len 未校验，
+           钳制到实际可用长度，防止下游越界读 */
+        if(data_len > (FRAME_TEMP_BUF_SIZE - 5U))
+        {
+          data_len = (quint16)(FRAME_TEMP_BUF_SIZE - 5U);
+        }
+
+        /* 帧号占2字节，长度不足则为非法帧 */
+        if(data_len < 2U)
+        {
+          return RETURN_ERROR;
+        }
+
         quint16 frame_num;
         memcpy(&frame_num, data, 2);
 
