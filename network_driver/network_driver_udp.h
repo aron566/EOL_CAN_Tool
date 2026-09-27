@@ -32,6 +32,7 @@
 //#include <setjmp.h> /**< need jmp_buf buf setjmp(buf); longjmp(buf,1) */
 /** Private includes ---------------------------------------------------------*/
 #include <QDebug>
+#include <QMutex>
 #include "network_driver_model.h"
 #include "hv/UdpServer.h"
 #include "hv/UdpClient.h"
@@ -105,6 +106,7 @@ private:
 
   hv::UdpServer *server = nullptr;/**< udp服务端 */
   hv::UdpClient *client = nullptr;/**< udp客户端 */
+  QMutex com_info_mutex;/**< 保护com_info_list，hv回调线程与UI线程并发访问 */
 };
 
 #endif // NETWORK_DRIVER_UDP_H

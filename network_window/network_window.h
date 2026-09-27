@@ -252,10 +252,10 @@ public slots:
    * @param ip
    */
   void slot_show_message(const QString &message, quint32 channel_num, \
-                         quint8 direct, const quint8 *data, \
+                         quint8 direct, const QByteArray &data, \
                          quint32 data_len, QString ip);
   void slot_show_message_block(const QString &message, quint32 channel_num, \
-                               quint8 direct, const quint8 *data, \
+                               quint8 direct, const QByteArray &data, \
                                quint32 data_len, QString ip);
 
   /**

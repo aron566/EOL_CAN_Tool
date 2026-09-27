@@ -373,6 +373,11 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
 
           task.reg = reg;
           task.command = eol_protocol::EOL_WRITE_CMD;
+          /* data_len 为设备声明值，钳制后拷贝，防止 memcpy_s 参数超限 abort */
+          if(data_len > sizeof(version_info))
+          {
+            data_len = sizeof(version_info);
+          }
           memcpy_s(task.buf, sizeof(task.buf), data, data_len);
           memcpy_s(version_info, sizeof(version_info), data, data_len);
           task.len = data_len;
@@ -406,6 +411,11 @@ void eol_sub_window::slot_rw_device_ok(quint8 reg, const quint8 *data, quint16 d
 
           task.reg = reg;
           task.command = eol_protocol::EOL_WRITE_CMD;
+          /* data_len 为设备声明值，钳制后拷贝，防止 memcpy_s 参数超限 abort */
+          if(data_len > sizeof(task.buf))
+          {
+            data_len = sizeof(task.buf);
+          }
           memcpy_s(task.buf, sizeof(task.buf), data, data_len);
           task.len = data_len;
           eol_protocol_obj->eol_master_common_rw_device(task);

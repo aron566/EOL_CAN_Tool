@@ -602,7 +602,7 @@ bool network_window::network_start(NETWORK_DEVICE_Typedef_t device_type)
         t.network_driver_rec_obj = new network_driver_udp(this);
       }
       connect(t.network_driver_rec_obj, &network_driver_model::signal_show_message, this, &network_window::slot_show_message);
-      connect(t.network_driver_rec_obj, &network_driver_model::signal_show_thread_message, this, &network_window::slot_show_message_block, Qt::BlockingQueuedConnection);
+      connect(t.network_driver_rec_obj, &network_driver_model::signal_show_thread_message, this, &network_window::slot_show_message_block, Qt::QueuedConnection);
       connect(t.network_driver_rec_obj, &network_driver_model::signal_show_message_bytes, this, &network_window::slot_show_message_bytes);
       QString rec_ip_str = "0.0.0.0";
       QString rec_port_str = QString::number(t._port.toInt());
@@ -632,7 +632,7 @@ bool network_window::network_start(NETWORK_DEVICE_Typedef_t device_type)
   /* 修改配置 */
   network_device_list.replace(index, t);
   connect(t.network_driver_obj, &network_driver_model::signal_show_message, this, &network_window::slot_show_message);
-  connect(t.network_driver_obj, &network_driver_model::signal_show_thread_message, this, &network_window::slot_show_message_block, Qt::BlockingQueuedConnection);
+  connect(t.network_driver_obj, &network_driver_model::signal_show_thread_message, this, &network_window::slot_show_message_block, Qt::QueuedConnection);
   connect(t.network_driver_obj, &network_driver_model::signal_show_message_bytes, this, &network_window::slot_show_message_bytes);
   if(false == t.network_driver_obj->network_init(t.ip, t.port, t.role, t.net_type))
   {
@@ -678,9 +678,12 @@ bool network_window::network_stop(NETWORK_DEVICE_Typedef_t device_type)
 }
 
 void network_window::slot_show_message(const QString &message, quint32 channel_num, \
-                                    quint8 direct, const quint8 *data, quint32 data_len, QString ip)
+                                    quint8 direct, const QByteArray &data, quint32 data_len, QString ip)
 {
   QString show_message;
+
+  /* 数据长度钳制，防止越界（data 现为值传递的 QByteArray） */
+  data_len = qMin(data_len, (quint32)data.size());
 
   /* 时间戳 */
   if(ui->display_time_stamp_checkBox->isChecked())
@@ -705,10 +708,10 @@ void network_window::slot_show_message(const QString &message, quint32 channel_n
       /* 是否需要转发图表 */
       if(ui->net_wave_checkBox->isChecked())
       {
-        QByteArray a = QByteArray((const char *)data, data_len);
+        QByteArray a(data.constData(), data_len);
         emit signal_net_wave_msg(a);
       }
-      if(false == char2str(data, data_len, show_message))
+      if(false == char2str((const quint8 *)data.constData(), data_len, show_message))
       {
         return;
       }
@@ -753,10 +756,13 @@ __show_msg:
   show_txt();
 }
 
-void network_window::slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const quint8 *data, quint32 data_len, QString ip)
+void network_window::slot_show_message_block(const QString &message, quint32 channel_num, quint8 direct, const QByteArray &data, quint32 data_len, QString ip)
 {
   /* 线程刷新显示 */
   QString show_message;
+
+  /* 数据长度钳制，防止越界（data 现为值传递的 QByteArray） */
+  data_len = qMin(data_len, (quint32)data.size());
 
   /* 时间戳 */
   if(ui->display_time_stamp_checkBox->isChecked())
@@ -778,7 +784,7 @@ void network_window::slot_show_message_block(const QString &message, quint32 cha
       {
         return;
       }
-      if(false == char2str(data, data_len, show_message))
+      if(false == char2str((const quint8 *)data.constData(), data_len, show_message))
       {
         return;
       }

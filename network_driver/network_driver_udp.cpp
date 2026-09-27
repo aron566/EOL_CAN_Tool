@@ -69,6 +69,7 @@ qint32 network_driver_udp::repeat_check(const QString &ip, const QQueue<network_
 
 qint32 network_driver_udp::get_peer_port(const QString &ip)
 {
+  QMutexLocker locker(&com_info_mutex);
   for(qint32 i = 0; i < com_info_list.size(); i++)
   {
     if(true == com_info_list.value(i).peer_addr.contains(ip))
@@ -115,7 +116,10 @@ bool network_driver_udp::network_init(QString &ip, QString &port, NETWORK_WORK_R
         {
           return false;
         }
-        com_info_list.clear();
+        {
+          QMutexLocker locker(&com_info_mutex);
+          com_info_list.clear();
+        }
         /* 服务器 */
         server = new hv::UdpServer;
         int bindfd = server->createsocket(port.toInt(), ip.toUtf8().data());
@@ -139,22 +143,25 @@ bool network_driver_udp::network_init(QString &ip, QString &port, NETWORK_WORK_R
           {
             return;
           }
-          qint32 index = repeat_check(info.value(0), com_info_list);
-          if(-1 != index)
           {
-            peer_data = com_info_list.value(index);
-            /* 判断是否是重连，更新对方地址信息 */
-            if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
+            QMutexLocker locker(&com_info_mutex);
+            qint32 index = repeat_check(info.value(0), com_info_list);
+            if(-1 != index)
             {
-              peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
+              peer_data = com_info_list.value(index);
+              /* 判断是否是重连，更新对方地址信息 */
+              if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
+              {
+                peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
+              }
+              com_info_list.replace(index, peer_data);
+              goto _show_server_rx_msg;
             }
-            com_info_list.replace(index, peer_data);
-            goto _show_server_rx_msg;
-          }
 
-          /* 对方网络类型 */
-          peer_data.net_type = NETWORK_UDP_TYPE;
-          com_info_list.append(peer_data);
+            /* 对方网络类型 */
+            peer_data.net_type = NETWORK_UDP_TYPE;
+            com_info_list.append(peer_data);
+          }
 
 _show_server_rx_msg:
           /* 加入数据到缓冲区 */
@@ -198,7 +205,10 @@ _show_server_rx_msg:
         {
           return false;
         }
-        com_info_list.clear();
+        {
+          QMutexLocker locker(&com_info_mutex);
+          com_info_list.clear();
+        }
         /* 客户端 */
         client = new hv::UdpClient;
         int bindfd = client->createsocket(port.toInt(), ip.toUtf8().data());
@@ -222,22 +232,25 @@ _show_server_rx_msg:
           {
             return;
           }
-          qint32 index = repeat_check(info.value(0), com_info_list);
-          if(-1 != index)
           {
-            peer_data = com_info_list.value(index);
-            /* 判断是否是重连，更新对方地址信息 */
-            if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
+            QMutexLocker locker(&com_info_mutex);
+            qint32 index = repeat_check(info.value(0), com_info_list);
+            if(-1 != index)
             {
-              peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
+              peer_data = com_info_list.value(index);
+              /* 判断是否是重连，更新对方地址信息 */
+              if(peer_data.peer_addr != QString::fromStdString(channel->peeraddr()))
+              {
+                peer_data.peer_addr = QString::fromStdString(channel->peeraddr());
+              }
+              com_info_list.replace(index, peer_data);
+              goto _show_client_rx_msg;
             }
-            com_info_list.replace(index, peer_data);
-            goto _show_client_rx_msg;
-          }
 
-          /* 对方网络类型 */
-          peer_data.net_type = NETWORK_UDP_TYPE;
-          com_info_list.append(peer_data);
+            /* 对方网络类型 */
+            peer_data.net_type = NETWORK_UDP_TYPE;
+            com_info_list.append(peer_data);
+          }
 
 _show_client_rx_msg:
           /* 加入数据到缓冲区 */
