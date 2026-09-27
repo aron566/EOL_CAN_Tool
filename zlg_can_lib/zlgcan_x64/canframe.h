@@ -1,7 +1,6 @@
 #ifndef CANFRAME_H_
 #define CANFRAME_H_
 
-
 #include "typedef.h"
 
 /* special address description flags for the MAKE_CAN_ID */
@@ -18,21 +17,21 @@
 /*
 * Controller Area Network Identifier structure
 *
-* bit 0-28	: CAN identifier (11/29 bit)
-* bit 29	: error message frame flag (0 = data frame, 1 = error message)
-* bit 30	: remote transmission request flag (1 = rtr frame)
-* bit 31	: frame format flag (0 = standard 11 bit, 1 = extended 29 bit)
+* bit 0-28    : CAN identifier (11/29 bit)
+* bit 29    : error message frame flag (0 = data frame, 1 = error message)
+* bit 30    : remote transmission request flag (1 = rtr frame)
+* bit 31    : frame format flag (0 = standard 11 bit, 1 = extended 29 bit)
 */
 typedef UINT canid_t;
 
-#define CAN_SFF_ID_BITS		11
-#define CAN_EFF_ID_BITS		29
+#define CAN_SFF_ID_BITS        11
+#define CAN_EFF_ID_BITS        29
 
 /*
 * Controller Area Network Error Message Frame Mask structure
 *
-* bit 0-28	: error class mask (see include/linux/can/error.h)
-* bit 29-31	: set to zero
+* bit 0-28    : error class mask (see include/linux/can/error.h)
+* bit 29-31    : set to zero
 */
 typedef UINT can_err_mask_t;
 
@@ -44,7 +43,7 @@ typedef UINT can_err_mask_t;
 #define CANFD_MAX_DLC 15
 #define CANFD_MAX_DLEN 64
 
- // make id
+// make id
 #define MAKE_CAN_ID(id, eff, rtr, err) (id | (!!(eff) << 31) | (!!(rtr) << 30) | (!!(err) << 29))
 #define IS_EFF(id) (!!(id & CAN_EFF_FLAG)) //1:extend frame 0:standard frame
 #define IS_RTR(id) (!!(id & CAN_RTR_FLAG)) //1:remote frame 0:data frame
@@ -74,13 +73,13 @@ typedef UINT can_err_mask_t;
 * @data:    CAN frame payload (up to 8 byte)
 */
 typedef struct {
-	canid_t can_id;  /* 32 bit MAKE_CAN_ID + EFF/RTR/ERR flags */
-	BYTE    can_dlc; /* frame payload length in byte (0 .. CAN_MAX_DLEN) */
-	BYTE    __pad;   /* padding */
-	BYTE    __res0;  /* reserved / padding */
-	BYTE    __res1;  /* reserved / padding */
-	BYTE    data[CAN_MAX_DLEN]/* __attribute__((aligned(8)))*/;
-}can_frame;
+    canid_t can_id;  /* 32 bit MAKE_CAN_ID + EFF/RTR/ERR flags */
+    BYTE    can_dlc; /* frame payload length in byte (0 .. CAN_MAX_DLEN) */
+    BYTE    __pad;   /* padding */
+    BYTE    __res0;  /* reserved / padding */
+    BYTE    __res1;  /* reserved / padding */
+    BYTE    data[CAN_MAX_DLEN]/* __attribute__((aligned(8)))*/;
+} can_frame;
 
 /*
 * defined bits for canfd_frame.flags
@@ -111,15 +110,15 @@ typedef struct {
 * @data:   CAN FD frame payload (up to CANFD_MAX_DLEN byte)
 */
 typedef struct {
-	canid_t can_id;  /* 32 bit MAKE_CAN_ID + EFF/RTR/ERR flags */
-	BYTE    len;     /* frame payload length in byte */
-	BYTE    flags;   /* additional flags for CAN FD,i.e error code */
-	BYTE    __res0;  /* reserved / padding */
-	BYTE    __res1;  /* reserved / padding */
-	BYTE    data[CANFD_MAX_DLEN]/* __attribute__((aligned(8)))*/;
-}canfd_frame;
+    canid_t can_id;  /* 32 bit MAKE_CAN_ID + EFF/RTR/ERR flags */
+    BYTE    len;     /* frame payload length in byte */
+    BYTE    flags;   /* additional flags for CAN FD,i.e error code */
+    BYTE    __res0;  /* reserved / padding */
+    BYTE    __res1;  /* reserved / padding */
+    BYTE    data[CANFD_MAX_DLEN]/* __attribute__((aligned(8)))*/;
+} canfd_frame;
 
-#define CAN_MTU		(sizeof(struct can_frame))
-#define CANFD_MTU	(sizeof(struct canfd_frame))
+#define CAN_MTU (sizeof(struct can_frame))
+#define CANFD_MTU (sizeof(struct canfd_frame))
 
 #endif //CANFRAME_H_
