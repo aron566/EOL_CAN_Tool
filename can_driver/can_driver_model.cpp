@@ -25,6 +25,7 @@
 #include "can_driver_model.h"
 #include <QDateTime>
 #include "can_driver_sender.h"
+#include "utility.h" /**< Linux 下 memcpy_s 兼容实现 */
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/

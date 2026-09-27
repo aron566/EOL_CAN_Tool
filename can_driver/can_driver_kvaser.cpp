@@ -1057,7 +1057,11 @@ void can_driver_kvaser::receive_data(const CHANNEL_STATE_Typedef_t &channel_stat
     quint8 data[64];
     quint32 dlc;
     quint32 flags;
+#ifdef Q_OS_WIN
     DWORD time;
+#else
+    unsigned long time; /**< Linux canlib 时间戳为 unsigned long */
+#endif
 
     stat = p_canRead((qint32)channel_state.device_handle, &id, &data[0], &dlc, &flags, &time);
     switch (stat)

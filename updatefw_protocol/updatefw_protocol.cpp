@@ -25,6 +25,7 @@
 #include <QFileInfo>
 /** Private includes ---------------------------------------------------------*/
 #include "updatefw_protocol.h"
+#include "utility.h" /**< Linux 下 memcpy_s 兼容实现 */
 
 /** Use C compiler -----------------------------------------------------------*/
 

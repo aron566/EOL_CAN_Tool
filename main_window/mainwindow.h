@@ -7,10 +7,15 @@
 #include "more_window.h"
 #include "eol_window.h"
 #include "can_driver_model.h"
+#ifdef Q_OS_WIN
 #include "can_driver_zlg.h"
 #include "can_driver_gc.h"
 #include "can_driver_ts.h"
 #include "can_driver_kvaser.h"
+#else
+/* Linux 下厂商驱动无可用库，仅使用 SocketCAN 驱动 */
+#include "can_driver_socketcan.h"
+#endif
 #include "eol_protocol.h"
 #include "updater_window.h"
 

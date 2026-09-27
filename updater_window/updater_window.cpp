@@ -266,6 +266,7 @@ void updater_window::slot_download_finished(const QString &url, const QString &f
   }
   qDebug() << "download finished url:" << filepath << "exe:" << qApp->applicationDirPath();
 
+#ifdef Q_OS_WIN
   /* Ask user to install */
   QMessageBox box;
   box.setIcon(QMessageBox::Question);
@@ -370,6 +371,11 @@ void updater_window::slot_download_finished(const QString &url, const QString &f
 
   /* Quit application */
   qApp->quit();
+#else
+  /* Linux 下暂不支持自动更新，提示用户手动安装下载的文件 */
+  QMessageBox::information(this, tr("更新下载完成"),
+                           tr("Linux 下暂不支持自动更新，请手动安装下载的文件：\n") + filepath);
+#endif
 }
 
 /** Public application code --------------------------------------------------*/

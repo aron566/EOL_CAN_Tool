@@ -26,6 +26,7 @@
 /** Private includes ---------------------------------------------------------*/
 #include "eol_angle_calibration_window.h"
 #include "ui_eol_angle_calibration_window.h"
+#include "utility.h" /**< Linux 下 memcpy_s 兼容实现 */
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/

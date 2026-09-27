@@ -26,6 +26,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QDateTime>
+#include "utility.h" /**< Linux 下 memcpy_s 兼容实现 */
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/

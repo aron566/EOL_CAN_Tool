@@ -32,7 +32,8 @@ win32: DESTDIR = "$$PWD/bin"
 # 执行打包工具
 QMAKE_PRE_LINK += echo start Build $$TARGET
 
-# 拷贝libhv库文件
+# 拷贝libhv库文件 (仅 Windows: Linux 下无 powershell)
+win32 {
 contains(QMAKE_HOST.arch, x86_64) {
     # 64位编译器链接的库文件
     copy_hvfiles.commands = powershell -Command "Copy-Item -Path $$PWD/3third_party_lib/hv/bin/hv.dll -Destination $$DESTDIR/hv.dll -Force"
@@ -56,8 +57,10 @@ contains(QMAKE_HOST.arch, x86_64) {
     QMAKE_EXTRA_TARGETS += copy_sslfiles
     PRE_TARGETDEPS += copy_sslfiles
 }
+}
 
-# 拷贝binlog库文件
+# 拷贝binlog库文件 (仅 Windows: Linux 下无 powershell)
+win32 {
 contains(QMAKE_HOST.arch, x86_64) {
     # 64位编译器链接的库文件
     copy_binlogfiles.commands = powershell -Command "Copy-Item -Path $$PWD/3third_party_lib/blf/LIB/x64_Release/binlog.dll -Destination $$DESTDIR/binlog.dll -Force"
@@ -66,20 +69,24 @@ contains(QMAKE_HOST.arch, x86_64) {
 } else {
     # 32位编译器链接的库文件
 }
+}
 
 # win32: QMAKE_POST_LINK += $$DESTDIR/qtenvPackage.bat $$DESTDIR $${TARGET}.exe
 
-# 周立功can驱动库
-include(zlg_can_lib/zlg_can_lib.pri)
+# 四个厂商 CAN 驱动库仅 Windows 编译 (仓库内无 Linux 版 SDK)
+win32 {
+    # 周立功can驱动库
+    include(zlg_can_lib/zlg_can_lib.pri)
 
-# 广成can驱动库
-include(gc_can_lib/gc_can_lib.pri)
+    # 广成can驱动库
+    include(gc_can_lib/gc_can_lib.pri)
 
-# 同星can驱动库
-include(ts_can_lib/ts_can_lib.pri)
+    # 同星can驱动库
+    include(ts_can_lib/ts_can_lib.pri)
 
-# kvasercan驱动库
-include(kvaser_can_lib/kvaser_can_lib.pri)
+    # kvasercan驱动库
+    include(kvaser_can_lib/kvaser_can_lib.pri)
+}
 
 # libhv网络驱动库
 include(3third_party_lib/3third_party_lib.pri)
@@ -188,7 +195,8 @@ RESOURCES += \
     resource/EOL_CAN_Tool.qrc \
     resource/qdarkstyle/dark/style.qrc
 
-RC_FILE = resource/EOL_CAN_Tool.rc
+# Windows 资源文件 (仅 win32; 非 win32 下 qmake 本来也会忽略, 这里显式限定)
+win32: RC_FILE = resource/EOL_CAN_Tool.rc
 
 # Disable auto manifest embedding (manifest is included in .rc file)
 CONFIG -= embed_manifest_exe

@@ -29,6 +29,30 @@
 #include <QTableWidget>
 
 /** Private defines ----------------------------------------------------------*/
+#ifndef Q_OS_WIN
+/**
+ * @brief memcpy_s Linux 兼容实现
+ *
+ * glibc 未实现 C11 Annex K 的 memcpy_s，此处提供与 MSVC 相同约束语义的内联替代，
+ * 保证 Linux 构建通过；Windows 下使用 MSVC 原生实现，本分支不参与编译。
+ */
+#include <cerrno>
+inline int memcpy_s(void *dest, size_t destsz, const void *src, size_t count)
+{
+  if(nullptr == dest || 0U == destsz)
+  {
+    return EINVAL;
+  }
+  if(nullptr == src || count > destsz)
+  {
+    /* 与 MSVC 行为一致：约束违反时目标清零且不拷贝 */
+    memset(dest, 0, destsz);
+    return EINVAL;
+  }
+  memcpy(dest, src, count);
+  return 0;
+}
+#endif
 /* 包重复检测 */
 #define EVEN_PACKAGE_REPEAT_CHECK_SIZE 10U    /**< 10包偶数循环检测 */
 #define ODD_PACKAGE_REPEAT_CHECK_SIZE  (EVEN_PACKAGE_REPEAT_CHECK_SIZE / 2U)

@@ -30,6 +30,7 @@
 /** Private includes ---------------------------------------------------------*/
 #include "more_window.h"
 #include "ui_more_window.h"
+#include "utility.h" /**< Linux 下 memcpy_s 兼容实现 */
 /** Use C compiler -----------------------------------------------------------*/
 
 /** Private macros -----------------------------------------------------------*/
