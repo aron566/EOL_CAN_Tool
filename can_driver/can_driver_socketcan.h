@@ -161,7 +161,7 @@ private:
    * @brief 枚举本机可用的 socketcan 接口
    * @return 接口名列表，如 {"can0", "vcan0"}，无接口或无插件时返回空
    * @note 底层通过 QCanBus::availableDevices("socketcan") 实现，
-   *       socketcan 插件即按 /sys/class/net/*/type == ARPHRD_CAN(280) 枚举
+   *       socketcan 插件即按 /sys/class/net 下各接口的 type 属性是否为 ARPHRD_CAN(280) 来枚举
    */
   static QStringList enumerate_interfaces();
 

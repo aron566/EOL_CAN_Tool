@@ -178,7 +178,7 @@ QStringList can_driver_socketcan::enumerate_interfaces()
 
 QString can_driver_socketcan::read_sys_net_attr(const QString &if_name, const QString &attr)
 {
-  QFile file(QString("/sys/class/net/%1/%2").arg(if_name, attr));
+  QFile file(QString("/sys/class/net/%1/%2").arg(if_name).arg(attr));
   if(false == file.open(QIODevice::ReadOnly | QIODevice::Text))
   {
     return QString();
@@ -316,7 +316,7 @@ bool can_driver_socketcan::open_channel(CHANNEL_STATE_Typedef_t &channel_state)
   QCanBusDevice *device = QCanBus::instance()->createDevice(QString::fromLatin1(kSocketCanPluginName), if_name, &error_str);
   if(nullptr == device)
   {
-    show_message(tr("创建 socketcan 设备 %1 失败：%2").arg(if_name, error_str), channel_state.channel_num);
+    show_message(tr("创建 socketcan 设备 %1 失败：%2").arg(if_name).arg(error_str), channel_state.channel_num);
     show_message(tr("请确认接口存在且已启用，例如先执行：sudo ip link set %1 up type can bitrate 500000").arg(if_name), \
                  channel_state.channel_num);
     return false;
@@ -334,7 +334,7 @@ bool can_driver_socketcan::open_channel(CHANNEL_STATE_Typedef_t &channel_state)
   {
     const QString err = device->errorString();
     delete device;
-    show_message(tr("连接 socketcan 接口 %1 失败：%2").arg(if_name, err), channel_state.channel_num);
+    show_message(tr("连接 socketcan 接口 %1 失败：%2").arg(if_name).arg(err), channel_state.channel_num);
     show_message(tr("请先执行：sudo ip link set %1 up type can bitrate 500000").arg(if_name), channel_state.channel_num);
     return false;
   }
@@ -408,7 +408,7 @@ bool can_driver_socketcan::reset_channel(const CHANNEL_STATE_Typedef_t &channel_
   device->disconnectDevice();
   if(false == device->connectDevice())
   {
-    show_message(tr("socketcan ch %1 reconnect failed: %2").arg(channel_state.channel_num, device->errorString()), \
+    show_message(tr("socketcan ch %1 reconnect failed: %2").arg(channel_state.channel_num).arg(device->errorString()), \
                  channel_state.channel_num);
     return false;
   }
@@ -600,7 +600,7 @@ bool can_driver_socketcan::send(const CHANNEL_STATE_Typedef_t &channel_state, \
     }
     else
     {
-      show_message(tr("[%1]socketcan write frame failed: %2").arg(channel_state.channel_num, device->errorString()), \
+      show_message(tr("[%1]socketcan write frame failed: %2").arg(channel_state.channel_num).arg(device->errorString()), \
                    channel_state.channel_num);
     }
   }
